@@ -9,5 +9,7 @@ export default defineConfig({
     maxWorkers: 1,
     fileParallelism: false,
     watch: false,
+    // Let `tokens.css?raw` reach the token test (Vitest stubs CSS out by default).
+    css: { include: [/tokens\.css/] },
   },
 });

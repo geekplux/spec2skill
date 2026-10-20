@@ -1,6 +1,6 @@
 // Gzip size budgets for the initial page load (PLAN.md section 4, P1).
 // Usage: pnpm build && pnpm check:size
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { gzipSync } from 'node:zlib';
@@ -14,7 +14,7 @@ export function initialAssets(html) {
 
 const kb = (bytes) => bytes / 1024;
 
-/** sizes: { [path]: gzipBytes } for index.html + initial assets. */
+/** sizes: { [path]: bytes } (gzip; raw for woff2) for index.html, initial assets and fonts. */
 export function evaluateSizes(sizes, budget) {
   let js = 0;
   let total = 0;
@@ -23,6 +23,10 @@ export function evaluateSizes(sizes, budget) {
     if (path.endsWith('.js')) js += bytes;
   }
   const failures = [];
+  for (const [path, bytes] of Object.entries(sizes)) {
+    if (path.endsWith('.woff2') && budget.fontWoff2KB && kb(bytes) > budget.fontWoff2KB)
+      failures.push(`font ${path} ${kb(bytes).toFixed(1)} KB > ${budget.fontWoff2KB} KB`);
+  }
   if (kb(js) > budget.initialJsGzipKB)
     failures.push(`initial JS ${kb(js).toFixed(1)} KB gzip > ${budget.initialJsGzipKB} KB`);
   if (kb(total) > budget.initialTotalGzipKB)
@@ -41,6 +45,10 @@ function main() {
   const sizes = { 'index.html': gzipSync(html, { level: 9 }).length };
   for (const asset of initialAssets(html.toString('utf8'))) {
     sizes[asset] = gzipSync(readFileSync(join('dist', asset)), { level: 9 }).length;
+  }
+  // Fonts are already compressed (woff2): count their raw size, in the total and per file.
+  for (const font of readdirSync(join('dist', 'assets')).filter((f) => f.endsWith('.woff2'))) {
+    sizes[`assets/${font}`] = readFileSync(join('dist', 'assets', font)).length;
   }
   for (const [path, bytes] of Object.entries(sizes)) {
     console.log(`  ${kb(bytes).toFixed(1).padStart(7)} KB  ${path}`);

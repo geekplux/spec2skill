@@ -18,4 +18,10 @@ describe('check-size', () => {
     expect(over.failures).toHaveLength(2);
     expect(over.failures[0]).toMatch(/^initial JS 1\.5 KB/);
   });
+
+  it('checks each woff2 font against its own budget', () => {
+    const fonts = { ...budget, initialTotalGzipKB: 100, fontWoff2KB: 1 };
+    expect(evaluateSizes({ 'assets/a.woff2': 1024 }, fonts).failures).toEqual([]);
+    expect(evaluateSizes({ 'assets/a.woff2': 1100 }, fonts).failures).toEqual(['font assets/a.woff2 1.1 KB > 1 KB']);
+  });
 });
