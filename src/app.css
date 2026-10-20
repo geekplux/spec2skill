@@ -1,0 +1,17 @@
+:root {
+  color-scheme: light;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #f7f3ea;
+  color: #1c2430;
+  line-height: 1.5;
+}
+body { margin: 0; }
+.app { max-width: 52rem; margin: 0 auto; padding: 2rem 1rem; }
+.wordmark { margin: 0; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #59636f; }
+h1 { margin: 0.25rem 0 0.5rem; font-size: 1.75rem; }
+.lede { margin: 0 0 1.5rem; color: #59636f; }
+.ops { list-style: none; margin: 0; padding: 0; border-top: 1px solid #d9d1c0; }
+.ops li { padding: 0.5rem 0; border-bottom: 1px solid #d9d1c0; overflow-wrap: anywhere; }
+.method { display: inline-block; min-width: 4.5em; font-weight: 700; font-family: ui-monospace, monospace; }
+.ops code { font-family: ui-monospace, monospace; }
+.summary { color: #59636f; }
