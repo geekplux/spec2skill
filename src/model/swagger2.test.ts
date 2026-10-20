@@ -73,3 +73,14 @@ describe('normaliseSwagger2: edge cases', () => {
     expect(byId(ops, 'getNote').responses.map((r) => r.status)).toEqual(['200', 'default']);
   });
 });
+
+const authFor = (flow: string) =>
+  buildSwagger2({ swagger: '2.0', info: { title: 't', version: '1' }, paths: {}, securityDefinitions: { o: { type: 'oauth2', flow, scopes: { s: '' } } } }).auth;
+
+describe('normaliseSwagger2: oauth2 flow names', () => {
+  it('maps only the four Swagger flow names and passes inherited Object keys through unchanged', () => {
+    expect(authFor('application')).toEqual([{ id: 'o', type: 'oauth2', flows: ['clientCredentials'], scopes: ['s'] }]);
+    expect(authFor('constructor')).toEqual([{ id: 'o', type: 'oauth2', flows: ['constructor'], scopes: ['s'] }]);
+    expect(authFor('__proto__')).toEqual([{ id: 'o', type: 'oauth2', flows: ['__proto__'], scopes: ['s'] }]);
+  });
+});

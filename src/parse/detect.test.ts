@@ -35,6 +35,9 @@ describe('detect', () => {
     expect(found([1, 2])).toMatch(/JSON array that is not a list of MCP tools/);
     expect(found([])).toMatch(/empty JSON array/);
     expect(found({})).toMatch(/empty JSON object/);
+    expect(found({ tools: 'x' })).toBe(
+      'This looks like an object whose `tools` is not an array (an MCP tools/list result needs `tools: [...]`). tool-atlas reads OpenAPI 3.0/3.1, Swagger 2.0 and MCP tools/list responses.',
+    );
   });
 
   it('normalise() dispatches by kind and rejects unsupported documents', async () => {

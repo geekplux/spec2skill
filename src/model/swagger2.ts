@@ -85,7 +85,7 @@ function securitySchemes(raw: unknown): Obj {
     if (!isRecord(def)) return [id, def];
     if (def.type === 'basic') return [id, { type: 'http', scheme: 'basic', description: def.description }];
     if (def.type !== 'oauth2' || typeof def.flow !== 'string') return [id, def];
-    const flow = OAUTH_FLOWS[def.flow] ?? def.flow;
+    const flow = Object.hasOwn(OAUTH_FLOWS, def.flow) ? OAUTH_FLOWS[def.flow]! : def.flow;
     return [id, { type: 'oauth2', description: def.description, flows: { [flow]: { scopes: def.scopes } } }];
   });
   return Object.fromEntries(entries);

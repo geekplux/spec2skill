@@ -46,6 +46,9 @@ export function detect(doc: unknown): Detection {
     return unsupported('a JSON-RPC response', ' without a tools/list result');
   }
   if (Array.isArray(doc.tools)) return { kind: 'mcp', shape: 'result' };
+  if ('tools' in doc) {
+    return unsupported('an object whose `tools` is not an array', ' (an MCP tools/list result needs `tools: [...]`)');
+  }
   if ('__schema' in doc || (isRecord(doc.data) && '__schema' in doc.data)) {
     return unsupported('a GraphQL introspection result', '; GraphQL is not supported');
   }

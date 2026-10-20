@@ -4,7 +4,8 @@
 //   node scripts/record-mcp-sample.mjs
 //
 // The server runs as a short-lived child in its own process group, scoped to an empty
-// temporary directory, and is killed (group-wide) on success, failure and timeout.
+// temporary directory, and is killed (group-wide) on success, failure, timeout, early server
+// exit and SIGINT/SIGTERM; the sandbox is removed in every case.
 // No tool is ever called: only initialize, notifications/initialized and tools/list.
 import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -54,17 +55,45 @@ function request(method, params) {
   });
 }
 
+let stopped = false;
 function stop() {
+  if (stopped) return;
+  stopped = true;
   try {
-    process.kill(-child.pid, 'SIGKILL');
+    if (child.pid !== undefined) process.kill(-child.pid, 'SIGKILL');
   } catch {
     // already gone
   }
   rmSync(sandbox, { recursive: true, force: true });
 }
 
+// Fail fast (and clean up) if the server cannot start or dies before we are done.
+let finished = false;
+child.on('error', (error) => {
+  console.error(`could not start the server: ${error.message}`);
+  stop();
+  process.exit(1);
+});
+child.on('exit', (code, signal) => {
+  if (finished) return;
+  console.error(`server exited early (code ${code}, signal ${signal})`);
+  stop();
+  process.exit(1);
+});
+
+// Ctrl-C or a kill must not leave the detached server group or the sandbox behind.
+for (const [signal, code] of [['SIGINT', 130], ['SIGTERM', 143]]) {
+  process.on(signal, () => {
+    console.error(`received ${signal}, stopping the server`);
+    finished = true;
+    stop();
+    process.exit(code);
+  });
+}
+
 let exitCode = 0;
 const timer = setTimeout(() => {
+  finished = true;
   console.error(`timed out after ${TIMEOUT_MS / 1000} s`);
   stop();
   process.exit(1);
@@ -90,6 +119,7 @@ try {
   exitCode = 1;
   console.error(error instanceof Error ? error.message : error);
 } finally {
+  finished = true;
   clearTimeout(timer);
   stop();
 }
