@@ -16,7 +16,7 @@ describe('sample registry', () => {
       expect(sampleModel(sample)).toBe(sampleModel(sample));
       counts[sample.id] = model.operations.length;
     }
-    expect(counts).toEqual({ tasks: 21, petstore: 16, filesystem: 14 });
+    expect(counts).toEqual({ tasks: 22, petstore: 16, filesystem: 14 });
   });
 
   it('petstore is trimmed to the pet and user tags (no store/order)', async () => {

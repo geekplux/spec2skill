@@ -1,7 +1,7 @@
 // Phase 3: three sample chips; each lists its normalised operations; ?sample= preselects;
 // chips are keyboard operable (Tab to a chip, Enter or Space selects it).
 const SAMPLES = [
-  { label: 'Tasks API', heading: 'Tasks API (sample)', count: 21, item: ['POST', '/projects/{projectId}/tasks'] },
+  { label: 'Tasks API', heading: 'Tasks API (sample)', count: 22, item: ['POST', '/projects/{projectId}/tasks'] },
   { label: 'Petstore', heading: 'Swagger Petstore (sample)', count: 16, item: ['GET', '/pet/{petId}'] },
   { label: 'Filesystem MCP', heading: 'secure-filesystem-server (sample)', count: 14, item: ['TOOL', 'read_text_file'] },
 ];

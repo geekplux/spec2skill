@@ -27,14 +27,14 @@ describe('normaliseOpenApi3: Tasks sample', async () => {
     expect(model.warnings).toEqual([]);
   });
 
-  it('has exactly 21 operations sorted by path then method, all behind bearerAuth', () => {
-    expect(ops).toHaveLength(21);
+  it('has exactly 22 operations sorted by path then method, all behind bearerAuth', () => {
+    expect(ops).toHaveLength(22);
     expect(ops.slice(0, 3).map((op) => `${op.method} ${op.path} ${op.id}`)).toEqual([
       'patch /comments/{commentId} updateComment',
       'delete /comments/{commentId} deleteComment',
       'delete /labels/{labelId} deleteLabel',
     ]);
-    expect(new Set(ops.map((op) => op.id)).size).toBe(21);
+    expect(new Set(ops.map((op) => op.id)).size).toBe(22);
     for (const op of ops) expect(op.security).toEqual([['bearerAuth']]);
   });
 

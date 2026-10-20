@@ -348,6 +348,17 @@ paths:
         in: path
         required: true
         schema: { type: string }
+    get:
+      operationId: getMember
+      summary: Get a member of a project
+      tags: [members]
+      responses:
+        '200':
+          description: The member.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+        '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: removeMember
       summary: Remove a member from a project
