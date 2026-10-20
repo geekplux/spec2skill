@@ -1,0 +1,426 @@
+{
+  "clusters": [
+    {
+      "id": "cluster-pet",
+      "name": "Pet",
+      "description": "8 operations: list, create, read, update, delete, action",
+      "nameSource": "deterministic",
+      "operationIds": [
+        "findPetsByStatus",
+        "findPetsByTags",
+        "addPet",
+        "getPetById",
+        "updatePet",
+        "deletePet",
+        "updatePetWithForm",
+        "uploadFile"
+      ]
+    },
+    {
+      "id": "cluster-user",
+      "name": "User",
+      "description": "8 operations: create, read, update, delete, action",
+      "nameSource": "deterministic",
+      "operationIds": [
+        "createUser",
+        "createUsersWithArrayInput",
+        "createUsersWithListInput",
+        "getUserByName",
+        "updateUser",
+        "deleteUser",
+        "loginUser",
+        "logoutUser"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "sub-path:addPet->findPetsByStatus",
+      "kind": "sub-path",
+      "from": "addPet",
+      "to": "findPetsByStatus",
+      "label": "/findByStatus",
+      "evidence": "/pet/findByStatus is under /pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:addPet->findPetsByTags",
+      "kind": "sub-path",
+      "from": "addPet",
+      "to": "findPetsByTags",
+      "label": "/findByTags",
+      "evidence": "/pet/findByTags is under /pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:addPet->getPetById",
+      "kind": "sub-path",
+      "from": "addPet",
+      "to": "getPetById",
+      "label": "/{petId}",
+      "evidence": "/pet/{petId} is under /pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:addPet->updatePetWithForm",
+      "kind": "sub-path",
+      "from": "addPet",
+      "to": "updatePetWithForm",
+      "label": "/{petId}",
+      "evidence": "/pet/{petId} is under /pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:addPet->deletePet",
+      "kind": "sub-path",
+      "from": "addPet",
+      "to": "deletePet",
+      "label": "/{petId}",
+      "evidence": "/pet/{petId} is under /pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:getPetById->uploadFile",
+      "kind": "sub-path",
+      "from": "getPetById",
+      "to": "uploadFile",
+      "label": "/uploadImage",
+      "evidence": "/pet/{petId}/uploadImage is under /pet/{petId}",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:createUser->createUsersWithArrayInput",
+      "kind": "sub-path",
+      "from": "createUser",
+      "to": "createUsersWithArrayInput",
+      "label": "/createWithArray",
+      "evidence": "/user/createWithArray is under /user",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:createUser->createUsersWithListInput",
+      "kind": "sub-path",
+      "from": "createUser",
+      "to": "createUsersWithListInput",
+      "label": "/createWithList",
+      "evidence": "/user/createWithList is under /user",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:createUser->loginUser",
+      "kind": "sub-path",
+      "from": "createUser",
+      "to": "loginUser",
+      "label": "/login",
+      "evidence": "/user/login is under /user",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:createUser->logoutUser",
+      "kind": "sub-path",
+      "from": "createUser",
+      "to": "logoutUser",
+      "label": "/logout",
+      "evidence": "/user/logout is under /user",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:createUser->getUserByName",
+      "kind": "sub-path",
+      "from": "createUser",
+      "to": "getUserByName",
+      "label": "/{username}",
+      "evidence": "/user/{username} is under /user",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:createUser->updateUser",
+      "kind": "sub-path",
+      "from": "createUser",
+      "to": "updateUser",
+      "label": "/{username}",
+      "evidence": "/user/{username} is under /user",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:createUser->deleteUser",
+      "kind": "sub-path",
+      "from": "createUser",
+      "to": "deleteUser",
+      "label": "/{username}",
+      "evidence": "/user/{username} is under /user",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:addPet->updatePet",
+      "kind": "shared-schema",
+      "from": "addPet",
+      "to": "updatePet",
+      "label": "Pet",
+      "evidence": "both use Pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:addPet->findPetsByStatus",
+      "kind": "shared-schema",
+      "from": "addPet",
+      "to": "findPetsByStatus",
+      "label": "Pet",
+      "evidence": "both use Pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:addPet->findPetsByTags",
+      "kind": "shared-schema",
+      "from": "addPet",
+      "to": "findPetsByTags",
+      "label": "Pet",
+      "evidence": "both use Pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:addPet->getPetById",
+      "kind": "shared-schema",
+      "from": "addPet",
+      "to": "getPetById",
+      "label": "Pet",
+      "evidence": "both use Pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:updatePet->findPetsByStatus",
+      "kind": "shared-schema",
+      "from": "updatePet",
+      "to": "findPetsByStatus",
+      "label": "Pet",
+      "evidence": "both use Pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:updatePet->findPetsByTags",
+      "kind": "shared-schema",
+      "from": "updatePet",
+      "to": "findPetsByTags",
+      "label": "Pet",
+      "evidence": "both use Pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:updatePet->getPetById",
+      "kind": "shared-schema",
+      "from": "updatePet",
+      "to": "getPetById",
+      "label": "Pet",
+      "evidence": "both use Pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:findPetsByStatus->findPetsByTags",
+      "kind": "shared-schema",
+      "from": "findPetsByStatus",
+      "to": "findPetsByTags",
+      "label": "Pet",
+      "evidence": "both use Pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:findPetsByStatus->getPetById",
+      "kind": "shared-schema",
+      "from": "findPetsByStatus",
+      "to": "getPetById",
+      "label": "Pet",
+      "evidence": "both use Pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:findPetsByTags->getPetById",
+      "kind": "shared-schema",
+      "from": "findPetsByTags",
+      "to": "getPetById",
+      "label": "Pet",
+      "evidence": "both use Pet",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createUser->createUsersWithArrayInput",
+      "kind": "shared-schema",
+      "from": "createUser",
+      "to": "createUsersWithArrayInput",
+      "label": "User",
+      "evidence": "both use User",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createUser->createUsersWithListInput",
+      "kind": "shared-schema",
+      "from": "createUser",
+      "to": "createUsersWithListInput",
+      "label": "User",
+      "evidence": "both use User",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createUser->getUserByName",
+      "kind": "shared-schema",
+      "from": "createUser",
+      "to": "getUserByName",
+      "label": "User",
+      "evidence": "both use User",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createUser->updateUser",
+      "kind": "shared-schema",
+      "from": "createUser",
+      "to": "updateUser",
+      "label": "User",
+      "evidence": "both use User",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createUsersWithArrayInput->createUsersWithListInput",
+      "kind": "shared-schema",
+      "from": "createUsersWithArrayInput",
+      "to": "createUsersWithListInput",
+      "label": "User",
+      "evidence": "both use User",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createUsersWithArrayInput->getUserByName",
+      "kind": "shared-schema",
+      "from": "createUsersWithArrayInput",
+      "to": "getUserByName",
+      "label": "User",
+      "evidence": "both use User",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createUsersWithArrayInput->updateUser",
+      "kind": "shared-schema",
+      "from": "createUsersWithArrayInput",
+      "to": "updateUser",
+      "label": "User",
+      "evidence": "both use User",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createUsersWithListInput->getUserByName",
+      "kind": "shared-schema",
+      "from": "createUsersWithListInput",
+      "to": "getUserByName",
+      "label": "User",
+      "evidence": "both use User",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createUsersWithListInput->updateUser",
+      "kind": "shared-schema",
+      "from": "createUsersWithListInput",
+      "to": "updateUser",
+      "label": "User",
+      "evidence": "both use User",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:getUserByName->updateUser",
+      "kind": "shared-schema",
+      "from": "getUserByName",
+      "to": "updateUser",
+      "label": "User",
+      "evidence": "both use User",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:findPetsByStatus->getPetById",
+      "kind": "feeds",
+      "from": "findPetsByStatus",
+      "to": "getPetById",
+      "label": "id -> petId",
+      "evidence": "Pet.id -> petId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:findPetsByStatus->updatePetWithForm",
+      "kind": "feeds",
+      "from": "findPetsByStatus",
+      "to": "updatePetWithForm",
+      "label": "id -> petId",
+      "evidence": "Pet.id -> petId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:findPetsByStatus->deletePet",
+      "kind": "feeds",
+      "from": "findPetsByStatus",
+      "to": "deletePet",
+      "label": "id -> petId",
+      "evidence": "Pet.id -> petId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:findPetsByStatus->uploadFile",
+      "kind": "feeds",
+      "from": "findPetsByStatus",
+      "to": "uploadFile",
+      "label": "id -> petId",
+      "evidence": "Pet.id -> petId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:findPetsByTags->getPetById",
+      "kind": "feeds",
+      "from": "findPetsByTags",
+      "to": "getPetById",
+      "label": "id -> petId",
+      "evidence": "Pet.id -> petId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:findPetsByTags->updatePetWithForm",
+      "kind": "feeds",
+      "from": "findPetsByTags",
+      "to": "updatePetWithForm",
+      "label": "id -> petId",
+      "evidence": "Pet.id -> petId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:findPetsByTags->deletePet",
+      "kind": "feeds",
+      "from": "findPetsByTags",
+      "to": "deletePet",
+      "label": "id -> petId",
+      "evidence": "Pet.id -> petId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:findPetsByTags->uploadFile",
+      "kind": "feeds",
+      "from": "findPetsByTags",
+      "to": "uploadFile",
+      "label": "id -> petId",
+      "evidence": "Pet.id -> petId (path)",
+      "confidence": "exact"
+    }
+  ],
+  "crud": {
+    "addPet": "create",
+    "updatePet": "update",
+    "findPetsByStatus": "list",
+    "findPetsByTags": "list",
+    "getPetById": "read",
+    "updatePetWithForm": "action",
+    "deletePet": "delete",
+    "uploadFile": "action",
+    "createUser": "create",
+    "createUsersWithArrayInput": "create",
+    "createUsersWithListInput": "create",
+    "loginUser": "action",
+    "logoutUser": "action",
+    "getUserByName": "read",
+    "updateUser": "update",
+    "deleteUser": "delete"
+  },
+  "hubSchemas": []
+}

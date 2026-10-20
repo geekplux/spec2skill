@@ -1,0 +1,863 @@
+{
+  "clusters": [
+    {
+      "id": "cluster-comments",
+      "name": "Comments",
+      "description": "4 operations: list, create, update, delete",
+      "nameSource": "deterministic",
+      "operationIds": [
+        "listComments",
+        "createComment",
+        "updateComment",
+        "deleteComment"
+      ]
+    },
+    {
+      "id": "cluster-labels",
+      "name": "Labels",
+      "description": "3 operations: list, create, delete",
+      "nameSource": "deterministic",
+      "operationIds": [
+        "listLabels",
+        "createLabel",
+        "deleteLabel"
+      ]
+    },
+    {
+      "id": "cluster-projects",
+      "name": "Projects",
+      "description": "5 operations: list, create, read, update, delete",
+      "nameSource": "deterministic",
+      "operationIds": [
+        "listProjects",
+        "createProject",
+        "getProject",
+        "updateProject",
+        "deleteProject"
+      ]
+    },
+    {
+      "id": "cluster-members",
+      "name": "Members",
+      "description": "4 operations: list, create, read, delete",
+      "nameSource": "deterministic",
+      "operationIds": [
+        "listMembers",
+        "addMember",
+        "getMember",
+        "removeMember"
+      ]
+    },
+    {
+      "id": "cluster-tasks",
+      "name": "Tasks",
+      "description": "6 operations: list, create, read, update, delete, action",
+      "nameSource": "deterministic",
+      "operationIds": [
+        "listTasks",
+        "createTask",
+        "getTask",
+        "updateTask",
+        "deleteTask",
+        "completeTask"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "sub-path:listProjects->getProject",
+      "kind": "sub-path",
+      "from": "listProjects",
+      "to": "getProject",
+      "label": "/{projectId}",
+      "evidence": "/projects/{projectId} is under /projects",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:listProjects->updateProject",
+      "kind": "sub-path",
+      "from": "listProjects",
+      "to": "updateProject",
+      "label": "/{projectId}",
+      "evidence": "/projects/{projectId} is under /projects",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:listProjects->deleteProject",
+      "kind": "sub-path",
+      "from": "listProjects",
+      "to": "deleteProject",
+      "label": "/{projectId}",
+      "evidence": "/projects/{projectId} is under /projects",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:getProject->listLabels",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "listLabels",
+      "label": "/labels",
+      "evidence": "/projects/{projectId}/labels is under /projects/{projectId}",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:getProject->createLabel",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "createLabel",
+      "label": "/labels",
+      "evidence": "/projects/{projectId}/labels is under /projects/{projectId}",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:getProject->listMembers",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "listMembers",
+      "label": "/members",
+      "evidence": "/projects/{projectId}/members is under /projects/{projectId}",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:getProject->addMember",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "addMember",
+      "label": "/members",
+      "evidence": "/projects/{projectId}/members is under /projects/{projectId}",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:getProject->listTasks",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "listTasks",
+      "label": "/tasks",
+      "evidence": "/projects/{projectId}/tasks is under /projects/{projectId}",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:getProject->createTask",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "createTask",
+      "label": "/tasks",
+      "evidence": "/projects/{projectId}/tasks is under /projects/{projectId}",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:listMembers->getMember",
+      "kind": "sub-path",
+      "from": "listMembers",
+      "to": "getMember",
+      "label": "/{memberId}",
+      "evidence": "/projects/{projectId}/members/{memberId} is under /projects/{projectId}/members",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:listMembers->removeMember",
+      "kind": "sub-path",
+      "from": "listMembers",
+      "to": "removeMember",
+      "label": "/{memberId}",
+      "evidence": "/projects/{projectId}/members/{memberId} is under /projects/{projectId}/members",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:getTask->listComments",
+      "kind": "sub-path",
+      "from": "getTask",
+      "to": "listComments",
+      "label": "/comments",
+      "evidence": "/tasks/{taskId}/comments is under /tasks/{taskId}",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:getTask->createComment",
+      "kind": "sub-path",
+      "from": "getTask",
+      "to": "createComment",
+      "label": "/comments",
+      "evidence": "/tasks/{taskId}/comments is under /tasks/{taskId}",
+      "confidence": "exact"
+    },
+    {
+      "id": "sub-path:getTask->completeTask",
+      "kind": "sub-path",
+      "from": "getTask",
+      "to": "completeTask",
+      "label": "/complete",
+      "evidence": "/tasks/{taskId}/complete is under /tasks/{taskId}",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:updateComment->createComment",
+      "kind": "shared-schema",
+      "from": "updateComment",
+      "to": "createComment",
+      "label": "Comment, CommentInput",
+      "evidence": "both use Comment and CommentInput",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createProject->getProject",
+      "kind": "shared-schema",
+      "from": "createProject",
+      "to": "getProject",
+      "label": "Project",
+      "evidence": "both use Project",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createProject->updateProject",
+      "kind": "shared-schema",
+      "from": "createProject",
+      "to": "updateProject",
+      "label": "Project",
+      "evidence": "both use Project",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:getProject->updateProject",
+      "kind": "shared-schema",
+      "from": "getProject",
+      "to": "updateProject",
+      "label": "Project",
+      "evidence": "both use Project",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:addMember->getMember",
+      "kind": "shared-schema",
+      "from": "addMember",
+      "to": "getMember",
+      "label": "Member",
+      "evidence": "both use Member",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createTask->getTask",
+      "kind": "shared-schema",
+      "from": "createTask",
+      "to": "getTask",
+      "label": "Task",
+      "evidence": "both use Task",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createTask->updateTask",
+      "kind": "shared-schema",
+      "from": "createTask",
+      "to": "updateTask",
+      "label": "Task",
+      "evidence": "both use Task",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:createTask->completeTask",
+      "kind": "shared-schema",
+      "from": "createTask",
+      "to": "completeTask",
+      "label": "Task",
+      "evidence": "both use Task",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:getTask->updateTask",
+      "kind": "shared-schema",
+      "from": "getTask",
+      "to": "updateTask",
+      "label": "Task",
+      "evidence": "both use Task",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:getTask->completeTask",
+      "kind": "shared-schema",
+      "from": "getTask",
+      "to": "completeTask",
+      "label": "Task",
+      "evidence": "both use Task",
+      "confidence": "exact"
+    },
+    {
+      "id": "shared-schema:updateTask->completeTask",
+      "kind": "shared-schema",
+      "from": "updateTask",
+      "to": "completeTask",
+      "label": "Task",
+      "evidence": "both use Task",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->getProject",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "getProject",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->updateProject",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "updateProject",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->deleteProject",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "deleteProject",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->listLabels",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "listLabels",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->createLabel",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "createLabel",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->listMembers",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "listMembers",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->addMember",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "addMember",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->getMember",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "getMember",
+      "label": "id -> projectId, ownerId -> memberId",
+      "evidence": "Project.id -> projectId (path); Project.ownerId -> memberId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->removeMember",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "removeMember",
+      "label": "id -> projectId, ownerId -> memberId",
+      "evidence": "Project.id -> projectId (path); Project.ownerId -> memberId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->listTasks",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "listTasks",
+      "label": "id -> projectId, ownerId -> assigneeId",
+      "evidence": "Project.id -> projectId (path); Project.ownerId -> assigneeId (query)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listProjects->createTask",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "createTask",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->getProject",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "getProject",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->updateProject",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "updateProject",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->deleteProject",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "deleteProject",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->listLabels",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "listLabels",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->createLabel",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "createLabel",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->listMembers",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "listMembers",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->addMember",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "addMember",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->getMember",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "getMember",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->removeMember",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "removeMember",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->listTasks",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "listTasks",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createProject->createTask",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "createTask",
+      "label": "id -> projectId",
+      "evidence": "Project.id -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getProject->getMember",
+      "kind": "feeds",
+      "from": "getProject",
+      "to": "getMember",
+      "label": "ownerId -> memberId",
+      "evidence": "Project.ownerId -> memberId (path)",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:getProject->removeMember",
+      "kind": "feeds",
+      "from": "getProject",
+      "to": "removeMember",
+      "label": "ownerId -> memberId",
+      "evidence": "Project.ownerId -> memberId (path)",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:listLabels->deleteLabel",
+      "kind": "feeds",
+      "from": "listLabels",
+      "to": "deleteLabel",
+      "label": "id -> labelId",
+      "evidence": "Label.id -> labelId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listLabels->listTasks",
+      "kind": "feeds",
+      "from": "listLabels",
+      "to": "listTasks",
+      "label": "id -> labelId",
+      "evidence": "Label.id -> labelId (query)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createLabel->deleteLabel",
+      "kind": "feeds",
+      "from": "createLabel",
+      "to": "deleteLabel",
+      "label": "id -> labelId",
+      "evidence": "Label.id -> labelId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createLabel->listTasks",
+      "kind": "feeds",
+      "from": "createLabel",
+      "to": "listTasks",
+      "label": "id -> labelId",
+      "evidence": "Label.id -> labelId (query)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listMembers->getMember",
+      "kind": "feeds",
+      "from": "listMembers",
+      "to": "getMember",
+      "label": "id -> memberId",
+      "evidence": "Member.id -> memberId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listMembers->removeMember",
+      "kind": "feeds",
+      "from": "listMembers",
+      "to": "removeMember",
+      "label": "id -> memberId",
+      "evidence": "Member.id -> memberId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listMembers->listTasks",
+      "kind": "feeds",
+      "from": "listMembers",
+      "to": "listTasks",
+      "label": "id -> assigneeId",
+      "evidence": "Member.id -> assigneeId (query)",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:addMember->getMember",
+      "kind": "feeds",
+      "from": "addMember",
+      "to": "getMember",
+      "label": "id -> memberId",
+      "evidence": "Member.id -> memberId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:addMember->removeMember",
+      "kind": "feeds",
+      "from": "addMember",
+      "to": "removeMember",
+      "label": "id -> memberId",
+      "evidence": "Member.id -> memberId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listTasks->getTask",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "getTask",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listTasks->updateTask",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "updateTask",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listTasks->deleteTask",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "deleteTask",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listTasks->listComments",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "listComments",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listTasks->createComment",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "createComment",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listTasks->completeTask",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "completeTask",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createTask->getTask",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "getTask",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createTask->updateTask",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "updateTask",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createTask->deleteTask",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "deleteTask",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createTask->listComments",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "listComments",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createTask->createComment",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "createComment",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createTask->completeTask",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "completeTask",
+      "label": "id -> taskId",
+      "evidence": "Task.id -> taskId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->getProject",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "getProject",
+      "label": "projectId -> projectId",
+      "evidence": "Task.projectId -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->updateProject",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "updateProject",
+      "label": "projectId -> projectId",
+      "evidence": "Task.projectId -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->deleteProject",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "deleteProject",
+      "label": "projectId -> projectId",
+      "evidence": "Task.projectId -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->listLabels",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "listLabels",
+      "label": "projectId -> projectId",
+      "evidence": "Task.projectId -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->createLabel",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "createLabel",
+      "label": "projectId -> projectId",
+      "evidence": "Task.projectId -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->listMembers",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "listMembers",
+      "label": "projectId -> projectId",
+      "evidence": "Task.projectId -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->addMember",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "addMember",
+      "label": "projectId -> projectId",
+      "evidence": "Task.projectId -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->getMember",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "getMember",
+      "label": "projectId -> projectId, assigneeId -> memberId",
+      "evidence": "Task.projectId -> projectId (path); Task.assigneeId -> memberId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->removeMember",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "removeMember",
+      "label": "projectId -> projectId, assigneeId -> memberId",
+      "evidence": "Task.projectId -> projectId (path); Task.assigneeId -> memberId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->listTasks",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "listTasks",
+      "label": "projectId -> projectId, assigneeId -> assigneeId",
+      "evidence": "Task.projectId -> projectId (path); Task.assigneeId -> assigneeId (query)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:getTask->createTask",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "createTask",
+      "label": "projectId -> projectId",
+      "evidence": "Task.projectId -> projectId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listComments->updateComment",
+      "kind": "feeds",
+      "from": "listComments",
+      "to": "updateComment",
+      "label": "id -> commentId",
+      "evidence": "Comment.id -> commentId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:listComments->deleteComment",
+      "kind": "feeds",
+      "from": "listComments",
+      "to": "deleteComment",
+      "label": "id -> commentId",
+      "evidence": "Comment.id -> commentId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createComment->updateComment",
+      "kind": "feeds",
+      "from": "createComment",
+      "to": "updateComment",
+      "label": "id -> commentId",
+      "evidence": "Comment.id -> commentId (path)",
+      "confidence": "exact"
+    },
+    {
+      "id": "feeds:createComment->deleteComment",
+      "kind": "feeds",
+      "from": "createComment",
+      "to": "deleteComment",
+      "label": "id -> commentId",
+      "evidence": "Comment.id -> commentId (path)",
+      "confidence": "exact"
+    }
+  ],
+  "crud": {
+    "updateComment": "update",
+    "deleteComment": "delete",
+    "deleteLabel": "delete",
+    "listProjects": "list",
+    "createProject": "create",
+    "getProject": "read",
+    "updateProject": "update",
+    "deleteProject": "delete",
+    "listLabels": "list",
+    "createLabel": "create",
+    "listMembers": "list",
+    "addMember": "create",
+    "getMember": "read",
+    "removeMember": "delete",
+    "listTasks": "list",
+    "createTask": "create",
+    "getTask": "read",
+    "updateTask": "update",
+    "deleteTask": "delete",
+    "listComments": "list",
+    "createComment": "create",
+    "completeTask": "action"
+  },
+  "hubSchemas": [
+    {
+      "name": "Error",
+      "usedBy": 20
+    }
+  ]
+}

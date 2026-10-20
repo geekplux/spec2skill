@@ -1,0 +1,350 @@
+{
+  "clusters": [
+    {
+      "id": "cluster-file",
+      "name": "File",
+      "description": "9 tools: list, create, read, update",
+      "nameSource": "deterministic",
+      "operationIds": [
+        "search_files",
+        "write_file",
+        "read_file",
+        "read_text_file",
+        "read_media_file",
+        "read_multiple_files",
+        "get_file_info",
+        "edit_file",
+        "move_file"
+      ]
+    },
+    {
+      "id": "cluster-directory",
+      "name": "Directory",
+      "description": "5 tools: list, create, read",
+      "nameSource": "deterministic",
+      "operationIds": [
+        "list_directory",
+        "list_directory_with_sizes",
+        "list_allowed_directories",
+        "create_directory",
+        "directory_tree"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "feeds:list_directory->read_file",
+      "kind": "feeds",
+      "from": "list_directory",
+      "to": "read_file",
+      "label": "listed path",
+      "evidence": "list_directory lists directory entries; read_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory->read_text_file",
+      "kind": "feeds",
+      "from": "list_directory",
+      "to": "read_text_file",
+      "label": "listed path",
+      "evidence": "list_directory lists directory entries; read_text_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory->read_media_file",
+      "kind": "feeds",
+      "from": "list_directory",
+      "to": "read_media_file",
+      "label": "listed path",
+      "evidence": "list_directory lists directory entries; read_media_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory->edit_file",
+      "kind": "feeds",
+      "from": "list_directory",
+      "to": "edit_file",
+      "label": "listed path",
+      "evidence": "list_directory lists directory entries; edit_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory->list_directory_with_sizes",
+      "kind": "feeds",
+      "from": "list_directory",
+      "to": "list_directory_with_sizes",
+      "label": "listed path",
+      "evidence": "list_directory lists directory entries; list_directory_with_sizes takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory->directory_tree",
+      "kind": "feeds",
+      "from": "list_directory",
+      "to": "directory_tree",
+      "label": "listed path",
+      "evidence": "list_directory lists directory entries; directory_tree takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory->search_files",
+      "kind": "feeds",
+      "from": "list_directory",
+      "to": "search_files",
+      "label": "listed path",
+      "evidence": "list_directory lists directory entries; search_files takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory->get_file_info",
+      "kind": "feeds",
+      "from": "list_directory",
+      "to": "get_file_info",
+      "label": "listed path",
+      "evidence": "list_directory lists directory entries; get_file_info takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory_with_sizes->read_file",
+      "kind": "feeds",
+      "from": "list_directory_with_sizes",
+      "to": "read_file",
+      "label": "listed path",
+      "evidence": "list_directory_with_sizes lists directory entries; read_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory_with_sizes->read_text_file",
+      "kind": "feeds",
+      "from": "list_directory_with_sizes",
+      "to": "read_text_file",
+      "label": "listed path",
+      "evidence": "list_directory_with_sizes lists directory entries; read_text_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory_with_sizes->read_media_file",
+      "kind": "feeds",
+      "from": "list_directory_with_sizes",
+      "to": "read_media_file",
+      "label": "listed path",
+      "evidence": "list_directory_with_sizes lists directory entries; read_media_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory_with_sizes->edit_file",
+      "kind": "feeds",
+      "from": "list_directory_with_sizes",
+      "to": "edit_file",
+      "label": "listed path",
+      "evidence": "list_directory_with_sizes lists directory entries; edit_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory_with_sizes->list_directory",
+      "kind": "feeds",
+      "from": "list_directory_with_sizes",
+      "to": "list_directory",
+      "label": "listed path",
+      "evidence": "list_directory_with_sizes lists directory entries; list_directory takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory_with_sizes->directory_tree",
+      "kind": "feeds",
+      "from": "list_directory_with_sizes",
+      "to": "directory_tree",
+      "label": "listed path",
+      "evidence": "list_directory_with_sizes lists directory entries; directory_tree takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory_with_sizes->search_files",
+      "kind": "feeds",
+      "from": "list_directory_with_sizes",
+      "to": "search_files",
+      "label": "listed path",
+      "evidence": "list_directory_with_sizes lists directory entries; search_files takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_directory_with_sizes->get_file_info",
+      "kind": "feeds",
+      "from": "list_directory_with_sizes",
+      "to": "get_file_info",
+      "label": "listed path",
+      "evidence": "list_directory_with_sizes lists directory entries; get_file_info takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:search_files->read_file",
+      "kind": "feeds",
+      "from": "search_files",
+      "to": "read_file",
+      "label": "listed path",
+      "evidence": "search_files lists file entries; read_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:search_files->read_text_file",
+      "kind": "feeds",
+      "from": "search_files",
+      "to": "read_text_file",
+      "label": "listed path",
+      "evidence": "search_files lists file entries; read_text_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:search_files->read_media_file",
+      "kind": "feeds",
+      "from": "search_files",
+      "to": "read_media_file",
+      "label": "listed path",
+      "evidence": "search_files lists file entries; read_media_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:search_files->edit_file",
+      "kind": "feeds",
+      "from": "search_files",
+      "to": "edit_file",
+      "label": "listed path",
+      "evidence": "search_files lists file entries; edit_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:search_files->list_directory",
+      "kind": "feeds",
+      "from": "search_files",
+      "to": "list_directory",
+      "label": "listed path",
+      "evidence": "search_files lists file entries; list_directory takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:search_files->list_directory_with_sizes",
+      "kind": "feeds",
+      "from": "search_files",
+      "to": "list_directory_with_sizes",
+      "label": "listed path",
+      "evidence": "search_files lists file entries; list_directory_with_sizes takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:search_files->directory_tree",
+      "kind": "feeds",
+      "from": "search_files",
+      "to": "directory_tree",
+      "label": "listed path",
+      "evidence": "search_files lists file entries; directory_tree takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:search_files->get_file_info",
+      "kind": "feeds",
+      "from": "search_files",
+      "to": "get_file_info",
+      "label": "listed path",
+      "evidence": "search_files lists file entries; get_file_info takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_allowed_directories->read_file",
+      "kind": "feeds",
+      "from": "list_allowed_directories",
+      "to": "read_file",
+      "label": "listed path",
+      "evidence": "list_allowed_directories lists directory entries; read_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_allowed_directories->read_text_file",
+      "kind": "feeds",
+      "from": "list_allowed_directories",
+      "to": "read_text_file",
+      "label": "listed path",
+      "evidence": "list_allowed_directories lists directory entries; read_text_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_allowed_directories->read_media_file",
+      "kind": "feeds",
+      "from": "list_allowed_directories",
+      "to": "read_media_file",
+      "label": "listed path",
+      "evidence": "list_allowed_directories lists directory entries; read_media_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_allowed_directories->edit_file",
+      "kind": "feeds",
+      "from": "list_allowed_directories",
+      "to": "edit_file",
+      "label": "listed path",
+      "evidence": "list_allowed_directories lists directory entries; edit_file takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_allowed_directories->list_directory",
+      "kind": "feeds",
+      "from": "list_allowed_directories",
+      "to": "list_directory",
+      "label": "listed path",
+      "evidence": "list_allowed_directories lists directory entries; list_directory takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_allowed_directories->list_directory_with_sizes",
+      "kind": "feeds",
+      "from": "list_allowed_directories",
+      "to": "list_directory_with_sizes",
+      "label": "listed path",
+      "evidence": "list_allowed_directories lists directory entries; list_directory_with_sizes takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_allowed_directories->directory_tree",
+      "kind": "feeds",
+      "from": "list_allowed_directories",
+      "to": "directory_tree",
+      "label": "listed path",
+      "evidence": "list_allowed_directories lists directory entries; directory_tree takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_allowed_directories->search_files",
+      "kind": "feeds",
+      "from": "list_allowed_directories",
+      "to": "search_files",
+      "label": "listed path",
+      "evidence": "list_allowed_directories lists directory entries; search_files takes path",
+      "confidence": "inferred"
+    },
+    {
+      "id": "feeds:list_allowed_directories->get_file_info",
+      "kind": "feeds",
+      "from": "list_allowed_directories",
+      "to": "get_file_info",
+      "label": "listed path",
+      "evidence": "list_allowed_directories lists directory entries; get_file_info takes path",
+      "confidence": "inferred"
+    }
+  ],
+  "crud": {
+    "read_file": "read",
+    "read_text_file": "read",
+    "read_media_file": "read",
+    "read_multiple_files": "read",
+    "write_file": "create",
+    "edit_file": "update",
+    "create_directory": "create",
+    "list_directory": "list",
+    "list_directory_with_sizes": "list",
+    "directory_tree": "read",
+    "move_file": "update",
+    "search_files": "list",
+    "get_file_info": "read",
+    "list_allowed_directories": "list"
+  },
+  "hubSchemas": []
+}
