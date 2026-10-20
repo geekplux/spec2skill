@@ -12,3 +12,12 @@ These files are bundled into the app so the samples render offline, with no API 
   - changed the `user` tag's `externalDocs.description` from "Find out more about our store" to "Find out more";
   - re-indented with 2 spaces.
 - Kept: 16 operations, `uploadFile` (multipart), the `api_key` and `petstore_auth` (OAuth2) security schemes.
+
+## `tasks-openapi31.yaml`
+
+- **Source:** hand-written for tool-atlas (OpenAPI 3.1, YAML), 2026-10-19.
+- **Licence:** MIT, same as this repository.
+- **What it exercises:** 21 operations over projects, tasks, comments, labels and members; cursor pagination
+  (`cursor` + `limit`, `nextCursor` via an `allOf` page schema); bearer auth; path-level parameters;
+  shared `components/parameters` and `components/responses`; 3.1 type arrays (`[string, 'null']`); and
+  `projectId` / `assigneeId` / `authorId` / `ownerId` fields that later phases link output-to-input.
