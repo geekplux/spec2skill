@@ -48,11 +48,11 @@ export default {
     await page.goto(`${origin}/?sample=nope`, { waitUntil: 'load' });
     await expectSample(page, SAMPLES[0]);
 
-    // Keyboard: the chips are the first tab stops; Enter and Space select.
-    await page.keyboard.press('Tab');
+    // Keyboard: chips are adjacent tab stops (after the phase-5 header); Enter and Space select.
+    await page.locator('.chip').first().focus();
     await page.keyboard.press('Tab');
     const focused = await page.evaluate(() => document.activeElement?.textContent ?? '');
-    if (!focused.includes('Petstore')) throw new Error(`second Tab focused "${focused}", expected the Petstore chip`);
+    if (!focused.includes('Petstore')) throw new Error(`Tab from the first chip focused "${focused}", expected the Petstore chip`);
     await page.keyboard.press('Enter');
     await expectSample(page, SAMPLES[1]);
     await page.keyboard.press('Tab');

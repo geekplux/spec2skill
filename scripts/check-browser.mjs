@@ -1,7 +1,9 @@
 // Headless-browser check: serves dist/ with `vite preview`, drives the system Chrome
 // through playwright-core, runs the flows for phases <= --phase, saves screenshots.
 //
-//   pnpm build && pnpm check:browser -- --phase 1 [--flow <name>]
+//   pnpm build && pnpm check:browser -- --phase 1 [--flow <name>] [--no-axe] [--no-cvd]
+//   axe (serious/critical violations fail; run after every flow and wherever a flow calls
+//   axe(label)) and CVD simulation screenshots (flows call cvd(type)) are on by default.
 //   env: CHROME_PATH (default /usr/bin/google-chrome), CHROME_ARGS (extra flags),
 //        CHECK_FAIL=1 (force a failure after startup, to test cleanup),
 //        CHECK_PORT (default 4173; for when another project's preview holds the port)
@@ -16,6 +18,8 @@ import { connect } from 'node:net';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
+import { runAxe } from './browser/axe.mjs';
+import { simulateCvd } from './browser/cvd.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const HOST = '127.0.0.1';
@@ -32,10 +36,15 @@ let browser = null;
 let cleaning = null;
 
 function parseArgs(argv) {
-  const args = { phase: 1, flow: null };
+  const args = { phase: 1, flow: null, axe: true, cvd: true };
   for (let i = 0; i < argv.length; i++) {
     const [key, inline] = argv[i].split('=', 2);
     if (key === '--') continue;
+    const toggle = /^--(no-)?(axe|cvd)$/.exec(key);
+    if (toggle) {
+      args[toggle[2]] = !toggle[1];
+      continue;
+    }
     if (key !== '--phase' && key !== '--flow') throw new Error(`unknown argument: ${argv[i]}`);
     const value = inline ?? argv[++i];
     if (!value) throw new Error(`${key} needs a value`);
@@ -156,8 +165,12 @@ async function main() {
       await page.screenshot({ path });
       console.log(`  screenshot ${path.slice(ROOT.length + 1)}`);
     };
+    const axe = async (label) => args.axe && problems.push(...(await runAxe(page, `${flow.name}: ${label}`)));
+    // null when --no-cvd, so flows skip their simulated screenshots.
+    const cvd = args.cvd ? (type) => simulateCvd(page, type) : null;
     console.log(`flow ${flow.name} (phase ${flow.phase})`);
-    await flow.run({ page, context, origin: ORIGIN, viewports: VIEWPORTS, screenshot });
+    await flow.run({ page, context, origin: ORIGIN, viewports: VIEWPORTS, screenshot, axe, cvd });
+    await axe('end of flow');
     await page.close();
   }
   await context.close();
