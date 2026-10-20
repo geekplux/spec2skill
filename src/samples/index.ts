@@ -23,7 +23,7 @@ export const SAMPLES: readonly Sample[] = [
   { id: 'petstore', label: 'Petstore', kind: 'swagger2', load: () => petstore },
   {
     id: 'filesystem',
-    label: 'Filesystem MCP',
+    label: 'Filesystem', // the chip appends the kind tag, so it reads "Filesystem MCP"
     kind: 'mcp',
     load: () => filesystem,
     options: { serverInfo: { name: 'secure-filesystem-server', version: '2.0.0' }, protocolVersion: '2025-06-18' },

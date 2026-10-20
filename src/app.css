@@ -3,7 +3,7 @@
 body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.45 var(--font-body); }
 h1, h2, .territory { font-family: var(--font-display); }
 code { font-family: var(--font-mono); font-size: 0.93em; }
-:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--marker); }
+:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--marker); }
 .skip { position: absolute; left: var(--space-2); top: -100px; padding: var(--space-2); background: var(--vellum); color: var(--ink); }
 .skip:focus { top: var(--space-2); z-index: 2; }
 
@@ -41,7 +41,7 @@ code { font-family: var(--font-mono); font-size: 0.93em; }
   font-size: 0.8rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase;
 }
 .chip { border-radius: var(--radius-pill); border-color: var(--graphite); }
-.chip[aria-pressed='true']::before { content: '\2713  '; }
+.chip[aria-pressed='true']::before { content: '\2713  ' / ''; }
 .chip-kind { font: 0.8em var(--font-mono); opacity: 0.9; }
 
 .stage {
@@ -83,13 +83,15 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .flag { margin-left: var(--space-2); padding: 0 var(--space-1); border: 1px solid var(--graphite); border-radius: var(--radius-sm); font-size: 0.8em; }
 
 @media (max-width: 639px) {
+  html { scroll-padding-bottom: 72px; } /* keep focused controls clear of the sticky Generate button */
   body { font-size: 15px; padding-bottom: 72px; }
   .header, .samples { padding-inline: var(--space-3); }
   .header .logo { margin-right: auto; }
   .source { order: 1; flex-basis: 100%; }
   .views { order: 2; }
+  .theme { order: 3; }
   .generate { position: fixed; z-index: 1; left: var(--space-3); right: var(--space-3); bottom: var(--space-3); min-height: 48px; }
-  .chips { flex-wrap: nowrap; overflow-x: auto; padding-block: 2px var(--space-1); }
+  .chips { flex-wrap: nowrap; overflow-x: auto; padding-block: var(--space-2); scroll-padding-inline: var(--space-2); }
   .chips legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .chip { flex: none; }
   .stage { padding: var(--space-3); }

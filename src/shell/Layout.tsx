@@ -16,7 +16,9 @@ export function Layout({ samples, children, panel }: LayoutProps) {
         Skip to content
       </a>
       <Header />
-      <div className="samples">{samples}</div>
+      <section className="samples" aria-label="Built-in samples">
+        {samples}
+      </section>
       <div className="stage" data-panel={panel ? 'open' : undefined}>
         <main id="main" className="sheet" tabIndex={-1}>
           {children}

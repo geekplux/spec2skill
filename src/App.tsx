@@ -1,4 +1,4 @@
-import { type CSSProperties, Suspense, startTransition, use, useMemo, useState } from 'react';
+import { type CSSProperties, type FocusEvent, Suspense, startTransition, use, useEffect, useMemo, useRef, useState } from 'react';
 import { type EdgeKind, buildGraph } from './graph';
 import type { ApiModel, Operation, SourceKind } from './model/types';
 import { DEFAULT_SAMPLE_ID, SAMPLES, type Sample, getSample, sampleModel } from './samples';
@@ -7,6 +7,10 @@ import { Layout } from './shell/Layout';
 /** Territory washes cycle through the hues deterministically; decoration only. */
 const WASH = ['meridian', 'fir', 'ochre', 'plum', 'brick'];
 const KIND_LABEL: Record<SourceKind, string> = { openapi3: 'OpenAPI', swagger2: 'Swagger', mcp: 'MCP' };
+
+/** Keep a chip fully visible inside the horizontally scrolling mobile chip row. */
+const NEAREST: ScrollIntoViewOptions = { block: 'nearest', inline: 'nearest' };
+const revealChip = (e: FocusEvent<HTMLButtonElement>) => e.currentTarget.scrollIntoView?.(NEAREST);
 
 function initialSample(): Sample {
   const id = new URLSearchParams(window.location.search).get('sample');
@@ -83,6 +87,10 @@ function OperationList({ sample }: { sample: Sample }) {
 
 export function App() {
   const [sample, setSample] = useState(initialSample);
+  const chipRow = useRef<HTMLFieldSetElement>(null);
+  useEffect(() => {
+    chipRow.current?.querySelector<HTMLElement>(`[data-sample="${sample.id}"]`)?.scrollIntoView?.(NEAREST);
+  }, [sample.id]);
   const select = (next: Sample) => {
     const url = new URL(window.location.href);
     url.searchParams.set('sample', next.id);
@@ -91,10 +99,18 @@ export function App() {
   };
 
   const chips = (
-    <fieldset className="chips">
+    <fieldset className="chips" ref={chipRow}>
       <legend>Built-in samples</legend>
       {SAMPLES.map((s) => (
-        <button type="button" className="chip" key={s.id} aria-pressed={s.id === sample.id} onClick={() => select(s)}>
+        <button
+          type="button"
+          className="chip"
+          key={s.id}
+          data-sample={s.id}
+          aria-pressed={s.id === sample.id}
+          onClick={() => select(s)}
+          onFocus={revealChip}
+        >
           {s.label} <span className="chip-kind">{KIND_LABEL[s.kind]}</span>
         </button>
       ))}
