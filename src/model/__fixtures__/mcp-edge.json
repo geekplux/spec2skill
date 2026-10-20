@@ -1,0 +1,29 @@
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "nextCursor": "page-2",
+    "tools": [
+      {
+        "name": "create_note",
+        "description": "Creates a note.‮",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "note": { "$ref": "#/$defs/Note" },
+            "folder": { "type": ["string", "null"], "description": "Folder path" }
+          },
+          "required": ["note"],
+          "$defs": {
+            "Note": { "type": "object", "properties": { "title": { "type": "string" }, "child": { "$ref": "#/$defs/Note" } } }
+          }
+        },
+        "outputSchema": { "type": "object", "properties": { "id": { "type": "string" } }, "required": ["id"] },
+        "annotations": { "title": "Create note", "readOnlyHint": false, "destructiveHint": false }
+      },
+      { "name": "loop", "inputSchema": { "$ref": "#/$defs/A", "$defs": { "A": { "$ref": "#/$defs/A" } } } },
+      { "title": "nameless", "inputSchema": { "type": "object" } },
+      { "name": "create_note", "inputSchema": { "type": "object" }, "_meta": { "deprecated": true } }
+    ]
+  }
+}

@@ -119,7 +119,8 @@ export type WarningCode =
   | 'missing-operation-id'
   | 'duplicate-operation-id'
   | 'invalid-parameter'
-  | 'unknown-security-scheme';
+  | 'unknown-security-scheme'
+  | 'invalid-tool';
 
 export interface Warning {
   code: WarningCode;
