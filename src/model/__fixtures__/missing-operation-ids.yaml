@@ -1,0 +1,24 @@
+openapi: 3.0.3
+info: { title: No ids, version: '1' }
+paths:
+  /pets/{petId}:
+    get:
+      summary: Get a pet
+      parameters:
+        - { name: petId, in: path, schema: { type: string } }
+      responses: { '200': { description: ok } }
+    delete:
+      operationId: removePet
+      responses: { '204': { description: gone } }
+  /:
+    get:
+      responses: { '200': { description: root } }
+  /pets:
+    get:
+      operationId: removePet
+      responses: { '200': { description: duplicate id } }
+    post:
+      parameters:
+        - { name: '', in: query }
+        - { name: x, in: nowhere }
+      responses: { '201': { description: created } }
