@@ -26,3 +26,4 @@ Record every non-trivial decision here: date, decision, alternatives considered,
 | 2026-10-19 | D18 External `$ref`s unsupported in v1 (warning). | Same-origin resolution. | Scope; roadmap item. |
 | 2026-10-19 | D19 Rate limiting via Workers rate limiting binding. | KV counters; none. | No KV writes per request. |
 | 2026-10-19 | The in-browser 1000-operation check moves from phase 8 to phase 10 (paste-text input exists only from phase 10); phase 9 SSRF defence is literal-IP + hostname checks (no DNS resolution available in Workers); phase 11 may move `kit/mcp.mjs` to phase 12 if over budget; Workers AI model chosen in phase 14. | Keep as originally drafted. | Planner findings during plan completion. |
+| 2026-10-19 | Accept phase 1 at ~647 changed lines (over the ~400 target). | Split the browser-check script into its own phase. | It is toolchain plumbing (lifecycle/cleanup code + tests), quick to review; noted under Known gaps in PR #1. |
