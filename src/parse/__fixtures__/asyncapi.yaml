@@ -1,0 +1,4 @@
+asyncapi: 3.0.0
+info: { title: Lights, version: 1.0.0 }
+channels:
+  lightMeasured: { address: 'light/measured', messages: { m: { payload: { type: object } } } }
