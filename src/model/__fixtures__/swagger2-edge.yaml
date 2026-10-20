@@ -1,0 +1,49 @@
+# Swagger 2 edge cases: shared (path-level) body param, $ref'd params and responses,
+# basic auth, accessCode OAuth2, no host, global consumes/produces, a missing ref.
+swagger: '2.0'
+info: { title: Edge, version: '1' }
+basePath: /api/
+consumes: [application/json]
+produces: [application/json]
+securityDefinitions:
+  basicAuth: { type: basic }
+  oauth: { type: oauth2, flow: accessCode, authorizationUrl: 'https://a.example/auth', tokenUrl: 'https://a.example/token', scopes: { 'notes:read': read } }
+security: [{ basicAuth: [] }]
+parameters:
+  limit: { name: limit, in: query, type: integer, format: int32 }
+  noteBody: { name: note, in: body, required: true, schema: { $ref: '#/definitions/Note' } }
+responses:
+  NoteOk: { description: OK, schema: { $ref: '#/definitions/Note' } }
+definitions:
+  Note:
+    type: object
+    required: [id]
+    properties:
+      id: { type: string }
+      tags: { type: array, items: { type: string } }
+      parent: { $ref: '#/definitions/Note' }
+paths:
+  /notes:
+    get:
+      operationId: listNotes
+      parameters:
+        - $ref: '#/parameters/limit'
+        - { name: tag, in: query, type: array, items: { type: string, enum: [a, b] }, collectionFormat: multi }
+        - $ref: '#/parameters/missing'
+      responses:
+        '200': { description: OK, schema: { type: array, items: { $ref: '#/definitions/Note' } } }
+  /notes/{id}:
+    parameters:
+      - { name: id, in: path, required: true, type: string }
+      - $ref: '#/parameters/noteBody'
+    put:
+      operationId: replaceNote
+      security: [{ oauth: ['notes:read'] }]
+      responses:
+        '200': { $ref: '#/responses/NoteOk' }
+    get:
+      operationId: getNote
+      produces: [application/xml]
+      responses:
+        '200': { $ref: '#/responses/NoteOk' }
+        default: { description: Error }

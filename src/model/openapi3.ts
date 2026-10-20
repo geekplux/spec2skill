@@ -6,13 +6,12 @@
 import { ParseError } from '../parse/text';
 import { RefResolver, encodePointer } from '../parse/ref';
 import { hashModel } from './hash';
-import type { ApiModel, ApiModelBody, AuthScheme, HttpMethod, Operation, Param, SchemaField, SchemaNode, SchemaRef } from './types';
+import type { ApiModel, ApiModelBody, AuthScheme, HttpMethod, Operation, Param, SchemaField, SchemaNode, SchemaRef, SourceKind } from './types';
 import { cleanName, cleanText, isRecord } from './util';
 
 // Read, create, replace, update, delete, then the rest: the order operations are listed in per path.
-const METHODS: readonly HttpMethod[] = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'];
+export const METHODS: readonly HttpMethod[] = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'];
 const PARAM_IN = new Set(['path', 'query', 'header', 'cookie']);
-const SCHEMA_PREFIX = '#/components/schemas/';
 const MAX_FIELDS = 200;
 const MAX_ENUM = 50;
 const MAX_VARIANTS = 20;
@@ -22,7 +21,8 @@ const CURSOR_PARAMS = new Set(['cursor', 'after', 'before', 'pagetoken', 'page_t
 const CURSOR_FIELDS = new Set(['nextcursor', 'next_cursor', 'nextpagetoken', 'next_page_token', 'cursor']);
 const LIMIT_PARAMS = new Set(['limit', 'per_page', 'perpage', 'page_size', 'pagesize', 'size', 'max_results', 'maxresults', 'first']);
 
-type Ctx = { r: RefResolver; schemaNames: Set<string> };
+/** `schemaPrefix`: where named schemas live (`#/components/schemas/`, Swagger 2 `#/definitions/`). */
+export type Ctx = { r: RefResolver; schemaNames: Set<string>; schemaPrefix: string };
 
 function str(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
@@ -32,8 +32,8 @@ function str(value: unknown): string | undefined {
 
 /** Named component schema for a ref, or undefined if the ref points elsewhere. */
 function componentName(ref: string, ctx: Ctx): string | undefined {
-  if (!ref.startsWith(SCHEMA_PREFIX)) return undefined;
-  const name = ref.slice(SCHEMA_PREFIX.length).replace(/~1/g, '/').replace(/~0/g, '~');
+  if (!ref.startsWith(ctx.schemaPrefix)) return undefined;
+  const name = ref.slice(ctx.schemaPrefix.length).replace(/~1/g, '/').replace(/~0/g, '~');
   return !name.includes('/') && ctx.schemaNames.has(name) ? name : undefined;
 }
 
@@ -62,7 +62,7 @@ function collectObject(raw: Record<string, unknown>, ctx: Ctx, stack: Set<object
  * Converts a raw schema. `full` includes object fields (top level and array items);
  * fields themselves are shallow. Component refs become `{ ref: name }` and are not followed.
  */
-function toSchemaRef(raw: unknown, ctx: Ctx, full = true, depth = 0, stack = new Set<object>()): SchemaRef {
+export function toSchemaRef(raw: unknown, ctx: Ctx, full = true, depth = 0, stack = new Set<object>()): SchemaRef {
   if (!isRecord(raw) || depth > MAX_DEPTH || !ctx.r.spend()) return {};
   const ref = str(raw.$ref);
   if (ref !== undefined) {
@@ -263,10 +263,22 @@ export function buildOpenApi3(doc: unknown, { url }: { url?: string } = {}): Api
   if (!isRecord(doc) || typeof doc.openapi !== 'string' || !/^3\.\d+/.test(doc.openapi)) {
     throw new ParseError('unsupported', 'Not an OpenAPI 3.x document (missing `openapi: 3.x`).');
   }
+  return buildFromOpenApi3Shape(doc, { kind: 'openapi3', specVersion: doc.openapi.slice(0, 20) }, { url });
+}
+
+/**
+ * Builds a model from an OpenAPI 3-shaped document. Shared with swagger2.ts, which upgrades
+ * Swagger 2 in memory and keeps `#/definitions/` refs (hence `schemaPrefix`).
+ */
+export function buildFromOpenApi3Shape(
+  doc: Record<string, unknown>,
+  { kind, specVersion }: { kind: SourceKind; specVersion: string },
+  { url, schemaPrefix = '#/components/schemas/' }: { url?: string; schemaPrefix?: string },
+): ApiModelBody {
   const r = new RefResolver(doc);
   const components = isRecord(doc.components) ? doc.components : {};
   const rawSchemas = isRecord(components.schemas) ? components.schemas : {};
-  const ctx: Ctx = { r, schemaNames: new Set(Object.keys(rawSchemas)) };
+  const ctx: Ctx = { r, schemaNames: new Set(Object.keys(rawSchemas)), schemaPrefix };
 
   const auth = toAuth(components.securitySchemes, ctx);
   const known = new Set(auth.map((a) => a.id));
@@ -385,8 +397,8 @@ export function buildOpenApi3(doc: unknown, { url }: { url?: string } = {}): Api
   const description = cleanText(info.description);
   return {
     source: {
-      kind: 'openapi3',
-      specVersion: doc.openapi.slice(0, 20),
+      kind,
+      specVersion,
       ...(url && { url }),
       title: cleanName(info.title) ?? 'Untitled API',
       ...(version && { version }),
