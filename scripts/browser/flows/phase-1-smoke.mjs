@@ -1,11 +1,12 @@
-// Phase 1: the landing page renders the built-in Petstore sample (no network beyond the app).
+// Phase 1: the built-in Petstore sample renders (no network beyond the app). Since phase 3 the
+// default sample is Tasks, so this regression flow selects Petstore through ?sample=petstore.
 export default {
   name: 'phase-1-smoke',
   phase: 1,
   async run({ page, origin, viewports, screenshot }) {
     for (const [label, size] of Object.entries(viewports)) {
       await page.setViewportSize(size);
-      await page.goto(`${origin}/`, { waitUntil: 'load' });
+      await page.goto(`${origin}/?sample=petstore`, { waitUntil: 'load' });
       const list = page.getByTestId('sample-list');
       await list.waitFor();
       const heading = (await page.getByRole('heading', { level: 1 }).textContent())?.trim();
