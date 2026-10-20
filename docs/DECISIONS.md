@@ -4,3 +4,25 @@ Record every non-trivial decision here: date, decision, alternatives considered,
 
 | Date | Decision | Alternatives | Why |
 |---|---|---|---|
+| 2026-10-19 | Commit Sean's updated CLAUDE.md (new "North star" section, present as an uncommitted working-tree change) to `main` together with PLAN.md. | Leave it uncommitted; commit on the phase-1 branch. | It is an instruction/planning doc; CLAUDE.md allows only planning docs on `main`, and every phase branch should inherit the binding rules. |
+| 2026-10-19 | Planner sub-agent hit repeated API connection drops; resumed the same agent (keeping its research) and had it write PLAN.md in smaller chunks. | Write PLAN.md myself. | CLAUDE.md says the main agent does not author the plan; resuming kept the research. |
+| 2026-10-19 | Accept PLAN.md v1 with 17 phases (above the planner's 10-14 target). | Merge phases into fewer, larger PRs. | The ~400-changed-line / 20-minute review cap dominates; phases 15-16 are mostly docs. |
+| 2026-10-19 | D1 Hosting: one Worker with static assets (`run_worker_first: ["/api/*"]`). | Pages + Functions. | Single deployable, current Cloudflare recommendation. |
+| 2026-10-19 | D2 Vite and Worker built separately (Vite -> dist/, wrangler bundles worker/). | `@cloudflare/vite-plugin`. | Plugin runs workerd inside Vite dev; too heavy for this RAM-tight box. |
+| 2026-10-19 | D3 Worker tests in Vitest node env with injected deps. | `@cloudflare/vitest-pool-workers`. | Lighter; one short `wrangler dev` smoke in phase 9 only. |
+| 2026-10-19 | D4 YAML: js-yaml. | `yaml`. | Smaller, safe load by default. |
+| 2026-10-19 | D5 Zip: fflate. | JSZip. | ~8 KB gz, no deps. |
+| 2026-10-19 | D6/D7 Custom deterministic cluster-shelf layout rendered in SVG. | dagre, elkjs, d3-force; Canvas. | Zero deps, stable snapshots, accessible focusable nodes; force layouts are non-deterministic. |
+| 2026-10-19 | D8 Browser checks: playwright-core + system Chrome, axe-core injected, CVD via feColorMatrix. | Downloaded Playwright browsers. | CLAUDE.md resource rules; no downloads. |
+| 2026-10-19 | D9 Node 22 via pnpm `use-node-version`; generated skills target Node 20+. | Node 20 (system default). | Current Vitest/wrangler require Node >= 22. |
+| 2026-10-19 | D10 OpenAPI URLs fetched directly first, proxy on CORS/network failure; MCP always via proxy. | Always proxy. | Fewer Worker calls, works in `pnpm dev`. |
+| 2026-10-19 | D11 No MCP auth in v1; 401 explains how to paste a recorded `tools/list`. | Bearer passthrough, OAuth. | Keeps user tokens off the Worker. |
+| 2026-10-19 | D12 Spec text rendered as plain text only. | Markdown + sanitiser. | No XSS surface, no extra dependency. |
+| 2026-10-19 | D13 No state/router library (useReducer + URL params). | Redux/Zustand, React Router. | Small dependency footprint. |
+| 2026-10-19 | D14 Self-hosted Bricolage Grotesque (Latin subset) for display type; system fonts for body. | System fonts only. | Distinctive identity (North star) while working offline. |
+| 2026-10-19 | D15 Generated skill licence: MIT default, editable. | Spec licence; none. | Anatomy bar needs a `license` field; user can change it. |
+| 2026-10-19 | D16 Gallery built by a Vite SSR loader script. | tsx. | No extra dependency. |
+| 2026-10-19 | D17 Petstore sample trimmed to `pet` + `user` tags (no store/order). | Full Petstore; another spec. | "Nothing finance-related" rule. |
+| 2026-10-19 | D18 External `$ref`s unsupported in v1 (warning). | Same-origin resolution. | Scope; roadmap item. |
+| 2026-10-19 | D19 Rate limiting via Workers rate limiting binding. | KV counters; none. | No KV writes per request. |
+| 2026-10-19 | The in-browser 1000-operation check moves from phase 8 to phase 10 (paste-text input exists only from phase 10); phase 9 SSRF defence is literal-IP + hostname checks (no DNS resolution available in Workers); phase 11 may move `kit/mcp.mjs` to phase 12 if over budget; Workers AI model chosen in phase 14. | Keep as originally drafted. | Planner findings during plan completion. |
