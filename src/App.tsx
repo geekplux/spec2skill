@@ -1,8 +1,11 @@
-import { Suspense, startTransition, use, useMemo, useState } from 'react';
+import { type CSSProperties, Suspense, startTransition, use, useMemo, useState } from 'react';
 import { type EdgeKind, buildGraph } from './graph';
 import type { ApiModel, Operation, SourceKind } from './model/types';
 import { DEFAULT_SAMPLE_ID, SAMPLES, type Sample, getSample, sampleModel } from './samples';
+import { Layout } from './shell/Layout';
 
+/** Territory washes cycle through the hues deterministically; decoration only. */
+const WASH = ['meridian', 'fir', 'ochre', 'plum', 'brick'];
 const KIND_LABEL: Record<SourceKind, string> = { openapi3: 'OpenAPI', swagger2: 'Swagger', mcp: 'MCP' };
 
 function initialSample(): Sample {
@@ -27,10 +30,11 @@ function GraphSummary({ model }: { model: ApiModel }) {
   return (
     <section className="graph" data-testid="graph-summary" aria-labelledby="graph-heading">
       <h2 id="graph-heading">Clusters and relationships</h2>
-      <ul>
-        {graph.clusters.map((c) => (
-          <li key={c.id}>
-            <strong>{c.name}</strong>: {c.description}
+      <ul className="territories">
+        {graph.clusters.map((c, i) => (
+          <li key={c.id} style={{ '--wash': `var(--${WASH[i % WASH.length]})` } as CSSProperties}>
+            <strong className="territory">{c.name}</strong>
+            <span>{c.description}</span>
           </li>
         ))}
       </ul>
@@ -50,16 +54,20 @@ function OperationList({ sample }: { sample: Sample }) {
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
   return (
     <>
+      <p className="kicker">
+        Surveyed from {KIND_LABEL[model.source.kind]} {model.source.specVersion}
+      </p>
       <h1>{title}</h1>
       <p className="lede">
-        {model.operations.length} {noun}, read from {KIND_LABEL[model.source.kind]} {model.source.specVersion}. The
-        interactive atlas arrives in a later phase.
+        {model.operations.length} {noun}, charted as text for now; the interactive map arrives in a later phase.
       </p>
       <GraphSummary model={model} />
       <ul className="ops" data-testid="sample-list" aria-label={`${noun} in ${title}`}>
         {model.operations.map((op) => (
           <li key={op.id}>
-            <span className="method">{op.method?.toUpperCase() ?? 'TOOL'}</span> <code>{op.path ?? op.id}</code>
+            <span className="method" data-method={op.method ?? 'tool'}>
+              {op.method?.toUpperCase() ?? 'TOOL'}
+            </span> <code>{op.path ?? op.id}</code>
             {op.title !== op.id && <span className="summary"> {op.title}</span>}
             {flags(op).map((flag) => (
               <span className="flag" key={flag}>
@@ -82,20 +90,21 @@ export function App() {
     startTransition(() => setSample(next)); // keep the current list visible while the next one is read
   };
 
+  const chips = (
+    <fieldset className="chips">
+      <legend>Built-in samples</legend>
+      {SAMPLES.map((s) => (
+        <button type="button" className="chip" key={s.id} aria-pressed={s.id === sample.id} onClick={() => select(s)}>
+          {s.label} <span className="chip-kind">{KIND_LABEL[s.kind]}</span>
+        </button>
+      ))}
+    </fieldset>
+  );
   return (
-    <main className="app">
-      <p className="wordmark">tool-atlas</p>
-      <fieldset className="chips">
-        <legend>Built-in samples</legend>
-        {SAMPLES.map((s) => (
-          <button type="button" className="chip" key={s.id} aria-pressed={s.id === sample.id} onClick={() => select(s)}>
-            {s.label} <span className="chip-kind">{KIND_LABEL[s.kind]}</span>
-          </button>
-        ))}
-      </fieldset>
+    <Layout samples={chips}>
       <Suspense fallback={<p className="lede">Reading the sample…</p>}>
         <OperationList sample={sample} />
       </Suspense>
-    </main>
+    </Layout>
   );
 }
