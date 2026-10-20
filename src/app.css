@@ -26,3 +26,6 @@ h1 { margin: 0.25rem 0 0.5rem; font-size: 1.75rem; }
 .chip:focus-visible { outline: 3px solid #1c2430; outline-offset: 2px; }
 .chip-kind { font-size: 0.8em; opacity: 0.85; }
 .flag { margin-left: 0.5rem; padding: 0 0.375rem; border: 1px solid #8a8272; border-radius: 4px; font-size: 0.8em; }
+.graph { margin: 0 0 1.5rem; }
+.graph h2 { margin: 0 0 0.5rem; font-size: 1.125rem; }
+.graph ul { margin: 0 0 0.5rem; padding-left: 1.25rem; }
