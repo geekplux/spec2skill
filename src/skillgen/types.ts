@@ -19,11 +19,13 @@ export interface SkillProse {
 /** `license` defaults to "MIT" (D15), `version` to package.json's. */
 export interface SkillOptions { slug?: string; license?: string; prose?: SkillProse; version?: string }
 
-/** Calls where each output feeds the next input: `via[i]` maps `ops[i]` into `ops[i + 1]`. */
-export interface Chain { ops: string[]; via: string[] }
+/** Calls where each output feeds the next input: `via[i]` maps `ops[i]` into `ops[i + 1]`; `inferred[i]` when that match is a guess. */
+export interface Chain { ops: string[]; via: string[]; inferred: boolean[] }
 
 /** What the file builders share. `env` prefixes credential variables (TASKS_API); `refFiles` maps cluster id -> file name. */
 export interface SkillContext {
   model: ApiModel; graph: AtlasGraph; slug: string; license: string; prose: SkillProse; generator: string;
   env: string; chains: Chain[]; refFiles: Map<string, string>;
+  /** The worked examples: a chain and its `examples/<name>/` directory. */
+  examples: { chain: Chain; dir: string }[];
 }

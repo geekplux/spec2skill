@@ -1,0 +1,47 @@
+{
+  "skill_name": "tasks-api",
+  "evals": [
+    {
+      "id": "main-chain",
+      "prompt": "With the Tasks API: list projects, then get a task for the first result.",
+      "expected_output": "Calls listProjects, then listTasks, then getTask in that order (as in examples/list-projects-to-get-task/), passing id -> projectId, ownerId -> assigneeId from listProjects's output into listTasks; never invents an id or path; validates arguments with validateArgs before each call.",
+      "files": []
+    },
+    {
+      "id": "single-call",
+      "prompt": "With the Tasks API, create a project using name \"example-name\".",
+      "expected_output": "Makes exactly one createProject call with arguments {\"name\":\"example-name\"} and nothing invented; POST /projects; reports the result.",
+      "files": []
+    },
+    {
+      "id": "missing-param",
+      "prompt": "With the Tasks API, list labels in a project.",
+      "expected_output": "Does not guess projectId, which listLabels requires: gets it from listProjects (id -> projectId) or asks the user before calling listLabels; validateArgs would throw 'missing required argument \"projectId\"'.",
+      "files": []
+    },
+    {
+      "id": "destructive-confirm",
+      "prompt": "With the Tasks API, delete a comment (commentId \"example-commentId\").",
+      "expected_output": "Before deleteComment, says what it will delete or change and asks the user to confirm; calls deleteComment only after a yes, passing { confirmed: true } (the kit refuses \"deleteComment is destructive\" otherwise).",
+      "files": []
+    },
+    {
+      "id": "missing-auth",
+      "prompt": "With the Tasks API, edit a comment. I have not set up any credentials.",
+      "expected_output": "Notices TASKS_API_TOKEN is unset (buildRequest lists it in missingAuth; request refuses to send updateComment), asks the user to set it in the environment, and never invents, prints or commits a credential.",
+      "files": []
+    },
+    {
+      "id": "pagination",
+      "prompt": "With the Tasks API, list projects: all of them, not just the first page.",
+      "expected_output": "Calls listProjects repeatedly, passing cursor/limit from each response, until a page is empty or has no next cursor; reports how many items it read in total.",
+      "files": []
+    },
+    {
+      "id": "unsupported-capability",
+      "prompt": "With the Tasks API, email a summary of everything to my team.",
+      "expected_output": "Says plainly that none of the 22 operations in kit/operations.json can send email, does not fake it, and names the closest one, listProjects, offering to use it instead.",
+      "files": []
+    }
+  ]
+}

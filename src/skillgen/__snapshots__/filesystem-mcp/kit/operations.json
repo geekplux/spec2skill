@@ -1,9 +1,9 @@
 {
   "generator": "spec2skill 0.0.0",
-  "skill": "secure-filesystem-mcp",
+  "skill": "filesystem-mcp",
   "kind": "mcp",
   "sourceHash": "ff41ecd2d7af5ad15bd649c926e1c7dcbe28354082e692d16af409a293892400",
-  "envPrefix": "SECURE_FILESYSTEM_SERVER",
+  "envPrefix": "FILESYSTEM_MCP",
   "servers": [],
   "auth": [],
   "operations": [
@@ -531,66 +531,76 @@
     {
       "ops": [
         "list_allowed_directories",
-        "list_directory",
         "search_files",
         "read_text_file"
       ],
       "via": [
         "listed path",
-        "listed path",
         "listed path"
+      ],
+      "inferred": [
+        true,
+        true
       ]
     },
     {
       "ops": [
-        "list_allowed_directories",
-        "list_directory_with_sizes",
+        "list_directory",
         "search_files",
         "read_media_file"
       ],
       "via": [
         "listed path",
-        "listed path",
         "listed path"
-      ]
-    },
-    {
-      "ops": [
-        "list_allowed_directories",
-        "search_files",
-        "list_directory",
-        "directory_tree"
       ],
-      "via": [
-        "listed path",
-        "listed path",
-        "listed path"
+      "inferred": [
+        true,
+        true
       ]
     },
     {
       "ops": [
-        "list_directory",
         "list_directory_with_sizes",
         "search_files",
         "get_file_info"
       ],
       "via": [
         "listed path",
-        "listed path",
         "listed path"
+      ],
+      "inferred": [
+        true,
+        true
       ]
     },
     {
       "ops": [
-        "list_directory_with_sizes",
-        "list_directory",
         "search_files",
-        "edit_file"
+        "list_directory",
+        "directory_tree"
       ],
       "via": [
         "listed path",
+        "listed path"
+      ],
+      "inferred": [
+        true,
+        true
+      ]
+    },
+    {
+      "ops": [
+        "list_allowed_directories",
+        "list_directory",
+        "search_files"
+      ],
+      "via": [
         "listed path",
         "listed path"
+      ],
+      "inferred": [
+        true,
+        true
       ]
     }
   ]

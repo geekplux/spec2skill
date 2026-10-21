@@ -10,6 +10,15 @@ export class ArgsError extends Error {
   name = 'ArgsError';
 }
 
+/** A call the server answered with a non-2xx status (or a JSON-RPC error): `status` and the response `body`. */
+export class HttpError extends Error {
+  name = 'HttpError';
+  constructor(message, status, body) {
+    super(message);
+    Object.assign(this, { status, body });
+  }
+}
+
 /** The operation (or tool) with this id; throws for an id the API does not have. */
 export function operation(id) {
   const op = byId.get(id);
@@ -36,7 +45,25 @@ export function validateArgs(id, args = {}) {
     if (v === undefined && p.required) throw new ArgsError(`${id}: missing required argument "${p.name}"`);
     if (v === undefined || (v === null && p.nullable)) continue;
     if (!fits(p.type, v)) throw new ArgsError(`${id}: argument "${p.name}" must be ${p.type}, got ${typeOf(v)}`);
-    if (p.enum && !p.enum.includes(v)) throw new ArgsError(`${id}: argument "${p.name}" must be one of ${p.enum.join(', ')}`);
+    if (p.enum && ![v].flat().every((x) => p.enum.includes(x))) throw new ArgsError(`${id}: argument "${p.name}" must be one of ${p.enum.join(', ')}`);
   }
   return op;
+}
+
+/** Destructive calls (deletes, removals) run only after the user agreed: pass `{ confirmed: true }`. */
+export function guard(id, confirmed) {
+  const op = operation(id);
+  if (op.destructive && confirmed !== true) throw new ArgsError(`${id} is destructive: ask the user first, then pass { confirmed: true }`);
+  return op;
+}
+
+const placeholder = (p) =>
+  p.enum ? (p.type === 'array' ? [p.enum[0]] : p.enum[0])
+  : { integer: 0, number: 0, boolean: false, array: [], object: {} }[p.type?.split('|')[0]] ?? `<${p.name}>`;
+
+/** Placeholder arguments of the right types: the required inputs (all of them when none is required). */
+export function exampleArgs(id) {
+  const { inputs } = operation(id);
+  const picked = inputs.some((p) => p.required) ? inputs.filter((p) => p.required) : inputs;
+  return Object.fromEntries(picked.map((p) => [p.name, placeholder(p)]));
 }

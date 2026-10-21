@@ -20,8 +20,8 @@ describe('curl examples', () => {
 
   it('Petstore: api key header, oauth2 bearer, form and multipart bodies, required query params', async () => {
     const pets = await load('petstore');
-    expect(ex(pets, 'getPetById')).toBe(`curl 'https://petstore.swagger.io/v2/pet/<petId>' \\\n  -H "api_key: $SWAGGER_PETSTORE_API_KEY"`);
-    expect(ex(pets, 'updatePetWithForm')).toContain(`-H "Authorization: Bearer $SWAGGER_PETSTORE_TOKEN" \\\n  --data-urlencode 'name=<name>'`);
+    expect(ex(pets, 'getPetById')).toBe(`curl 'https://petstore.swagger.io/v2/pet/<petId>' \\\n  -H "api_key: $PETSTORE_API_API_KEY"`);
+    expect(ex(pets, 'updatePetWithForm')).toContain(`-H "Authorization: Bearer $PETSTORE_API_TOKEN" \\\n  --data-urlencode 'name=<name>'`);
     expect(ex(pets, 'uploadFile')).toContain(`-F 'file=@<file>'`);
     expect(ex(pets, 'loginUser')).toBe(`curl 'https://petstore.swagger.io/v2/user/login?username=<username>&password=<password>'`);
     expect(ex(pets, 'addPet')).toContain(`-d '{\n  "name": "<name>",\n  "photoUrls": []\n}'`);

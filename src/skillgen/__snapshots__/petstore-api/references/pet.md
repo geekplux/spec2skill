@@ -12,7 +12,7 @@
 
 | Param | In | Required | Type | Notes |
 | --- | --- | --- | --- | --- |
-| `status` | query | yes | string\[\] | Status values that need to be considered for filter |
+| `status` | query | yes | string\[\] | each one of available, pending, sold. Status values that need to be considered for filter |
 
 Returns `Pet[]` with `category`, `id`, `name`, `photoUrls`, `status`, `tags`.
 

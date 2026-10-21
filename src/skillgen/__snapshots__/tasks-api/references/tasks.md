@@ -13,7 +13,7 @@
 | `projectId` | path | yes | string |  |
 | `cursor` | query | no | string | The 'nextCursor' of the previous page. Omit for the first page. |
 | `limit` | query | no | integer | Page size. |
-| `status` | query | no | TaskStatus |  |
+| `status` | query | no | TaskStatus | one of todo, in_progress, done |
 | `assigneeId` | query | no | string | Only tasks assigned to this member. |
 | `labelId` | query | no | string | Only tasks with this label. |
 
@@ -75,7 +75,7 @@ Fed by: `listTasks` (`id -> taskId`), `createTask` (`id -> taskId`).
 | `description` | body | no | string |  |
 | `dueDate` | body | no | string (date) |  |
 | `labelIds` | body | no | string\[\] |  |
-| `status` | body | no | TaskStatus |  |
+| `status` | body | no | TaskStatus | one of todo, in_progress, done |
 | `title` | body | no | string |  |
 
 Returns `Task` with `assigneeId`, `createdAt`, `description`, `dueDate`, `id`, `labelIds`, `projectId`, `status`, `title`.

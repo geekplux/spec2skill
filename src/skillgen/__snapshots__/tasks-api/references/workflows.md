@@ -1,24 +1,24 @@
 # Workflows
 
-Chains where one call's output feeds the next call's input, strongest first (exact name matches before inferred ones). `kit/chains.mjs` exports them as `chains`, with `nextSteps(id)` and `sources(id)` for single steps. Back to [SKILL.md](../SKILL.md).
+Chains where one call's output feeds the next call's input, strongest first. A step marked inferred matches by meaning, not by name: check the value before you rely on it. Each step names the output field and the input it fills, so you know where every required id comes from. `kit/chains.mjs` exports them as `chains`, with `nextSteps(id)` and `sources(id)` for single steps. Back to [SKILL.md](../SKILL.md).
 
-## 1. `listProjects` -> `listTasks` -> `getTask` -> `getMember`
+## 1. `listProjects` -> `listTasks` -> `getTask`
 
-`listProjects` -> `listTasks` (`id -> projectId, ownerId -> assigneeId`) -> `getTask` (`id -> taskId`) -> `getMember` (`projectId -> projectId, assigneeId -> memberId`)
+`listProjects` -> `listTasks` (`id -> projectId, ownerId -> assigneeId`) -> `getTask` (`id -> taskId`)
 
-## 2. `listProjects` -> `listLabels` -> `listTasks` -> `getTask`
+## 2. `listProjects` -> `listMembers` -> `getMember`
 
-`listProjects` -> `listLabels` (`id -> projectId`) -> `listTasks` (`id -> labelId`) -> `getTask` (`id -> taskId`)
+`listProjects` -> `listMembers` (`id -> projectId`) -> `getMember` (`id -> memberId`)
 
-## 3. `listProjects` -> `listMembers` -> `listTasks` -> `listComments`
+## 3. `listTasks` -> `getTask` -> `getProject`
 
-`listProjects` -> `listMembers` (`id -> projectId`) -> `listTasks` (`id -> assigneeId`) -> `listComments` (`id -> taskId`)
+`listTasks` -> `getTask` (`id -> taskId`) -> `getProject` (`projectId -> projectId`)
 
-## 4. `createProject` -> `listTasks` -> `getTask` -> `listLabels`
+## 4. `listProjects` -> `listLabels` -> `listTasks`
 
-`createProject` -> `listTasks` (`id -> projectId`) -> `getTask` (`id -> taskId`) -> `listLabels` (`projectId -> projectId`)
+`listProjects` -> `listLabels` (`id -> projectId`) -> `listTasks` (`id -> labelId`)
 
-## 5. `listLabels` -> `listTasks` -> `getTask` -> `getProject`
+## 5. `listProjects` -> `getProject` -> `removeMember` (inferred)
 
-`listLabels` -> `listTasks` (`id -> labelId`) -> `getTask` (`id -> taskId`) -> `getProject` (`projectId -> projectId`)
+`listProjects` -> `getProject` (`id -> projectId`) -> `removeMember` (`ownerId -> memberId`, inferred)
 

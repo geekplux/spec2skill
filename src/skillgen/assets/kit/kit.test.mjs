@@ -16,7 +16,7 @@ const keep = process.env.SKILL_DUMP_DIR;
 const root = keep ?? mkdtempSync(join(tmpdir(), 'spec2skill-kit-'));
 const skills = {};
 const kit = (id, file) => import(/* @vite-ignore */ pathToFileURL(join(skills[id].dir, 'kit', file)).href);
-const ENV = { TASKS_API_TOKEN: 'tok', SWAGGER_PETSTORE_API_KEY: 'key', SWAGGER_PETSTORE_TOKEN: 'oauth' };
+const ENV = { TASKS_API_TOKEN: 'tok', PETSTORE_API_API_KEY: 'key', PETSTORE_API_TOKEN: 'oauth' };
 
 beforeAll(async () => {
   for (const sample of SAMPLES) {
@@ -127,7 +127,7 @@ describe('kit/mcp.mjs and kit/chains.mjs', () => {
 
   it('exposes the chains and next steps from operations.json', async () => {
     const { chains, nextSteps, sources } = await kit('tasks', 'chains.mjs');
-    expect(chains[0].ops).toEqual(['listProjects', 'listTasks', 'getTask', 'getMember']);
+    expect(chains[0].ops).toEqual(['listProjects', 'listTasks', 'getTask']);
     expect(nextSteps('listTasks')).toContainEqual({ to: 'getTask', via: 'id -> taskId', confidence: 'exact' });
     expect(sources('getTask').map((s) => s.from)).toEqual(['listTasks', 'createTask']);
   });

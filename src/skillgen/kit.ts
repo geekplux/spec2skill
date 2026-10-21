@@ -22,7 +22,8 @@ export function operationsJson({ model, graph, slug, generator, env, chains }: S
   const input = (p: Param) => {
     const s = named(p.schema);
     const type = s.type ?? (s.fields ? 'object' : undefined);
-    return { name: p.name, in: p.in, required: p.required, ...(type && { type }), ...(s.enum && { enum: s.enum }), ...(s.nullable && { nullable: true }) };
+    const values = s.enum ?? (s.items && named(s.items).enum); // an array's enum applies to each item
+    return { name: p.name, in: p.in, required: p.required, ...(type && { type }), ...(values && { enum: values }), ...(s.nullable && { nullable: true }) };
   };
   const operations = model.operations.map((op) => ({
     id: op.id,

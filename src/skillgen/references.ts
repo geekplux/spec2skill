@@ -2,7 +2,7 @@
 // Spec text appears only as blockquotes or table cells (sanitize.ts).
 import type { Edge } from '../graph/types';
 import { outputFields, typeLabel } from '../model/examples';
-import type { Operation } from '../model/types';
+import type { Operation, SchemaRef } from '../model/types';
 import { authEnv } from './kit';
 import { chainText } from './prose';
 import { CAP, code, inert, label, quote } from './sanitize';
@@ -28,8 +28,14 @@ function operationBlock(ctx: SkillContext, op: Operation): string[] {
   const next = feeds.filter((e) => e.from === op.id);
   const from = feeds.filter((e) => e.to === op.id);
   const where = op.method ? code(`${op.method.toUpperCase()} ${op.path}`) : `MCP tool ${code(op.id)}`;
-  const params = op.inputs.map((p) => [code(p.name), p.in, p.required ? 'yes' : 'no', inert(typeLabel(p.schema), 80),
-    inert([p.schema.enum && `one of ${p.schema.enum.map(String).join(', ')}`, p.description].filter(Boolean).join('. '), 300)]);
+  const named = (s?: SchemaRef) => (s?.ref && ctx.model.schemas[s.ref]) || s;
+  const values = (s: SchemaRef) => named(s)?.enum ?? (named(s)?.type === 'array' ? named(named(s)!.items)?.enum : undefined);
+  const params = op.inputs.map((p) => {
+    const one = values(p.schema);
+    const many = one && named(p.schema)?.type === 'array' ? 'each one of' : 'one of';
+    return [code(p.name), p.in, p.required ? 'yes' : 'no', inert(typeLabel(p.schema), 80),
+      inert([one && `${many} ${one.map(String).join(', ')}`, p.description].filter(Boolean).join('. '), 300)];
+  });
   const fields = outputFields(ctx.model, op.output?.schema).map((f) => code(f.name));
   return [
     `## ${code(op.id)}`, '', `${where} · ${hints(op, ctx.graph.crud[op.id])}`, '', quote(op.title, CAP.summary),
@@ -59,9 +65,9 @@ export function referenceFiles(ctx: SkillContext): FileTree {
       : ['The source declares no auth. If calls are refused, ask the user how the server authenticates; never guess a credential.'],
     [open.length ? `No auth needed: ${open.map((op) => code(op.id)).join(', ')}.` : 'Every operation needs auth.']);
 
-  files['references/workflows.md'] = page('Workflows', `Chains where one call's output feeds the next call's input, strongest first (exact name matches before inferred ones). \`kit/chains.mjs\` exports them as \`chains\`, with \`nextSteps(id)\` and \`sources(id)\` for single steps. ${BACK}`,
+  files['references/workflows.md'] = page('Workflows', `Chains where one call's output feeds the next call's input, strongest first. A step marked inferred matches by meaning, not by name: check the value before you rely on it. Each step names the output field and the input it fills, so you know where every required id comes from. \`kit/chains.mjs\` exports them as \`chains\`, with \`nextSteps(id)\` and \`sources(id)\` for single steps. ${BACK}`,
     chains.length
-      ? chains.flatMap((chain, i) => [`## ${i + 1}. ${chain.ops.map(code).join(' -> ')}`, '', chainText(chain), ''])
+      ? chains.flatMap((chain, i) => [`## ${i + 1}. ${chain.ops.map(code).join(' -> ')}${chain.inferred.some(Boolean) ? ' (inferred)' : ''}`, '', chainText(chain), ''])
       : ['No output of one operation matches an input of another: take ids from the user, never invent them.']);
 
   const paged = model.operations.filter((op) => op.pagination);

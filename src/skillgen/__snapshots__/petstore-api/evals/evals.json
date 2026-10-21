@@ -1,0 +1,41 @@
+{
+  "skill_name": "petstore-api",
+  "evals": [
+    {
+      "id": "main-chain",
+      "prompt": "With the Swagger Petstore: finds pets by status, then find pet by ID for the first result.",
+      "expected_output": "Calls findPetsByStatus, then getPetById in that order (as in examples/find-pets-by-status-to-get-pet-by-id/), passing id -> petId from findPetsByStatus's output into getPetById; never invents an id or path; validates arguments with validateArgs before each call.",
+      "files": []
+    },
+    {
+      "id": "single-call",
+      "prompt": "With the Swagger Petstore, add a new pet to the store using name \"example-name\" and photoUrls [\"example-photoUrls\"].",
+      "expected_output": "Makes exactly one addPet call with arguments {\"name\":\"example-name\",\"photoUrls\":[\"example-photoUrls\"]} and nothing invented; POST /pet; reports the result.",
+      "files": []
+    },
+    {
+      "id": "missing-param",
+      "prompt": "With the Swagger Petstore, finds pets by status.",
+      "expected_output": "Does not guess status, which findPetsByStatus requires: asks the user for it before calling findPetsByStatus; validateArgs would throw 'missing required argument \"status\"'.",
+      "files": []
+    },
+    {
+      "id": "destructive-confirm",
+      "prompt": "With the Swagger Petstore, deletes a pet (petId 7).",
+      "expected_output": "Before deletePet, says what it will delete or change and asks the user to confirm; calls deletePet only after a yes, passing { confirmed: true } (the kit refuses \"deletePet is destructive\" otherwise).",
+      "files": []
+    },
+    {
+      "id": "missing-auth",
+      "prompt": "With the Swagger Petstore, add a new pet to the store. I have not set up any credentials.",
+      "expected_output": "Notices PETSTORE_API_TOKEN is unset (buildRequest lists it in missingAuth; request refuses to send addPet), asks the user to set it in the environment, and never invents, prints or commits a credential.",
+      "files": []
+    },
+    {
+      "id": "unsupported-capability",
+      "prompt": "With the Swagger Petstore, email a summary of everything to my team.",
+      "expected_output": "Says plainly that none of the 16 operations in kit/operations.json can send email, does not fake it, and names the closest one, findPetsByStatus, offering to use it instead.",
+      "files": []
+    }
+  ]
+}

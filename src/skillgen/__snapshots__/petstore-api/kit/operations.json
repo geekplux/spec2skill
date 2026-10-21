@@ -3,7 +3,7 @@
   "skill": "petstore-api",
   "kind": "http",
   "sourceHash": "1c8c5b08bbe56ddd770e4d4f18c3c18397fff7979ff8d2cc70fd072e1f65e09c",
-  "envPrefix": "SWAGGER_PETSTORE",
+  "envPrefix": "PETSTORE_API",
   "servers": [
     "https://petstore.swagger.io/v2",
     "http://petstore.swagger.io/v2"
@@ -15,14 +15,14 @@
       "in": "header",
       "name": "api_key",
       "env": [
-        "SWAGGER_PETSTORE_API_KEY"
+        "PETSTORE_API_API_KEY"
       ]
     },
     {
       "id": "petstore_auth",
       "type": "oauth2",
       "env": [
-        "SWAGGER_PETSTORE_TOKEN"
+        "PETSTORE_API_TOKEN"
       ]
     }
   ],
@@ -164,7 +164,12 @@
           "name": "status",
           "in": "query",
           "required": true,
-          "type": "array"
+          "type": "array",
+          "enum": [
+            "available",
+            "pending",
+            "sold"
+          ]
         }
       ],
       "output": [
@@ -686,6 +691,9 @@
       ],
       "via": [
         "id -> petId"
+      ],
+      "inferred": [
+        false
       ]
     },
     {
@@ -695,6 +703,9 @@
       ],
       "via": [
         "id -> petId"
+      ],
+      "inferred": [
+        false
       ]
     },
     {
@@ -704,6 +715,9 @@
       ],
       "via": [
         "id -> petId"
+      ],
+      "inferred": [
+        false
       ]
     },
     {
@@ -713,6 +727,9 @@
       ],
       "via": [
         "id -> petId"
+      ],
+      "inferred": [
+        false
       ]
     }
   ]

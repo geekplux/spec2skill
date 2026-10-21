@@ -30,7 +30,7 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`),
 | --- | --- | --- | --- | --- |
 | `projectId` | path | yes | string |  |
 | `email` | body | yes | string (email) |  |
-| `role` | body | no | Role | Defaults to editor. |
+| `role` | body | no | Role | one of owner, editor, viewer. Defaults to editor. |
 
 Returns `Member` with `email`, `id`, `name`, `projectId`, `role`.
 

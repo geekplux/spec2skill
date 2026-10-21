@@ -1,18 +1,18 @@
-// The strongest call chains (2-4 operations) along feeds edges: what the skill's one idea,
+// The strongest call chains (2-3 operations) along feeds edges: what the skill's one idea,
 // workflows and (phase 10) examples are built from. Pure and deterministic.
 import type { AtlasGraph, Edge } from '../graph/types';
 import type { ApiModel } from '../model/types';
 import type { Chain } from './types';
 
-const MAX_LENGTH = 4;
+const MAX_LENGTH = 3;
 /** Out-edges explored per operation, best first: keeps large specs cheap. */
 const FAN_OUT = 8;
 
 /**
  * Chains scored by: a start that needs no arguments (+3); per step: exact (+2) or inferred
  * (+1), into a list/read operation (+1), each required input it fills (+1), the same kind of
- * call on the same resource (-3), back into a resource already visited (-3). Deprecated
- * operations are skipped. Ties: longer, then model order.
+ * call on the same resource (-3), back into a resource already visited (-3); ending in a read
+ * (+2). Deprecated operations are skipped.
  * Picked greedily so no two chains share their first step or their last operation.
  */
 export function topChains(model: ApiModel, graph: AtlasGraph, max = 5): Chain[] {
@@ -34,28 +34,31 @@ export function topChains(model: ApiModel, graph: AtlasGraph, max = 5): Chain[] 
   }
 
   const found: (Chain & { score: number })[] = [];
-  const walk = (ops: string[], via: string[], score: number) => {
-    if (ops.length > 1) found.push({ ops, via, score });
+  const walk = (ops: string[], via: string[], inferred: boolean[], score: number) => {
+    if (ops.length > 1) found.push({ ops, via, inferred, score: score + (graph.crud[ops.at(-1)!] === 'read' ? 2 : 0) });
     if (ops.length === MAX_LENGTH) return;
     const seen = new Set(ops.map((id) => clusterOf.get(id)));
     const last = clusterOf.get(ops.at(-1)!);
     for (const e of out.get(ops.at(-1)!) ?? []) {
       if (ops.includes(e.to)) continue;
       const back = clusterOf.get(e.to) !== last && seen.has(clusterOf.get(e.to)) ? 3 : 0;
-      walk([...ops, e.to], [...via, e.label], score + step(e) - back);
+      walk([...ops, e.to], [...via, e.label], [...inferred, e.confidence !== 'exact'], score + step(e) - back);
     }
   };
   for (const op of model.operations) {
-    if (out.has(op.id)) walk([op.id], [], op.inputs.some((p) => p.required) ? 0 : 3);
+    if (out.has(op.id)) walk([op.id], [], [], op.inputs.some((p) => p.required) ? 0 : 3);
   }
 
   const order = (c: Chain) => c.ops.map((id) => String(index.get(id)).padStart(6, '0')).join();
-  found.sort((a, b) => b.score - a.score || b.ops.length - a.ops.length || order(a).localeCompare(order(b)));
+  // Ties: longer, then through bigger resources (the API's main objects), then model order.
+  const size = new Map(graph.clusters.map((c) => [c.id, c.operationIds.length]));
+  const weight = (c: Chain) => c.ops.reduce((sum, id) => sum + (size.get(clusterOf.get(id)!) ?? 0), 0);
+  found.sort((a, b) => b.score - a.score || b.ops.length - a.ops.length || weight(b) - weight(a) || order(a).localeCompare(order(b)));
   const picked: Chain[] = [];
-  for (const { ops, via } of found) {
+  for (const { ops, via, inferred } of found) {
     if (picked.length === max) break;
     if (picked.some((c) => c.ops.at(-1) === ops.at(-1) || (c.ops[0] === ops[0] && c.ops[1] === ops[1]))) continue;
-    picked.push({ ops, via });
+    picked.push({ ops, via, inferred });
   }
   return picked;
 }

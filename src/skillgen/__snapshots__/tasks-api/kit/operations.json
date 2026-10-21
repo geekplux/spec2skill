@@ -1277,65 +1277,75 @@
       "ops": [
         "listProjects",
         "listTasks",
-        "getTask",
-        "getMember"
-      ],
-      "via": [
-        "id -> projectId, ownerId -> assigneeId",
-        "id -> taskId",
-        "projectId -> projectId, assigneeId -> memberId"
-      ]
-    },
-    {
-      "ops": [
-        "listProjects",
-        "listLabels",
-        "listTasks",
         "getTask"
       ],
       "via": [
-        "id -> projectId",
-        "id -> labelId",
+        "id -> projectId, ownerId -> assigneeId",
         "id -> taskId"
+      ],
+      "inferred": [
+        false,
+        false
       ]
     },
     {
       "ops": [
         "listProjects",
         "listMembers",
-        "listTasks",
-        "listComments"
+        "getMember"
       ],
       "via": [
         "id -> projectId",
-        "id -> assigneeId",
-        "id -> taskId"
+        "id -> memberId"
+      ],
+      "inferred": [
+        false,
+        false
       ]
     },
     {
       "ops": [
-        "createProject",
-        "listTasks",
-        "getTask",
-        "listLabels"
-      ],
-      "via": [
-        "id -> projectId",
-        "id -> taskId",
-        "projectId -> projectId"
-      ]
-    },
-    {
-      "ops": [
-        "listLabels",
         "listTasks",
         "getTask",
         "getProject"
       ],
       "via": [
-        "id -> labelId",
         "id -> taskId",
         "projectId -> projectId"
+      ],
+      "inferred": [
+        false,
+        false
+      ]
+    },
+    {
+      "ops": [
+        "listProjects",
+        "listLabels",
+        "listTasks"
+      ],
+      "via": [
+        "id -> projectId",
+        "id -> labelId"
+      ],
+      "inferred": [
+        false,
+        false
+      ]
+    },
+    {
+      "ops": [
+        "listProjects",
+        "getProject",
+        "removeMember"
+      ],
+      "via": [
+        "id -> projectId",
+        "ownerId -> memberId"
+      ],
+      "inferred": [
+        false,
+        true
       ]
     }
   ]

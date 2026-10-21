@@ -1,5 +1,6 @@
 // Ready-to-paste examples for one operation (F10): curl for HTTP endpoints, a JSON-RPC
 // `tools/call` body for MCP tools; plus the short type names the detail panel shows. Pure.
+import { envPrefix, skillSlug } from '../skillgen/slug';
 import type { ApiModel, Operation, Param, SchemaField, SchemaRef } from './types';
 
 export const typeLabel = (s: SchemaRef | undefined): string => {
@@ -17,17 +18,25 @@ export function outputFields(model: ApiModel, s: SchemaRef | undefined): SchemaF
   return own?.fields ?? items?.fields ?? [];
 }
 
-/** A placeholder of the right JSON type: the first enum value, 0, false, [], {} or "<name>". */
-function placeholder(p: Param): unknown {
-  if (p.schema.enum?.length) return p.schema.enum[0];
-  const t = p.schema.type ?? (p.schema.ref ? 'object' : 'string');
+type Schemas = ApiModel['schemas'];
+/**
+ * A placeholder of the right JSON type: the first enum value (`[first]` for an array of enums),
+ * 0, false, [], {} or "<name>". Named schemas resolve through `schemas` when given.
+ */
+function placeholder(p: Param, schemas: Schemas = {}): unknown {
+  const named = (s?: SchemaRef) => (s?.ref && schemas[s.ref]) || s;
+  const s = named(p.schema)!;
+  const items = s.type === 'array' ? named(s.items) : undefined;
+  if (s.enum?.length) return s.enum[0];
+  if (items?.enum?.length) return [items.enum[0]];
+  const t = s.type ?? (s.ref || s.fields ? 'object' : 'string');
   return t === 'integer' || t === 'number' ? 0 : t === 'boolean' ? false : t === 'array' ? [] : t === 'object' ? {} : `<${p.name}>`;
 }
 
 /** The required ones, or all of them when none is required. */
 const pick = (ps: Param[]) => (ps.some((p) => p.required) ? ps.filter((p) => p.required) : ps);
 /** Placeholder arguments: the required ones, or all of them when none is required. */
-export const exampleArgs = (ps: Param[]) => Object.fromEntries(pick(ps).map((p) => [p.name, placeholder(p)]));
+export const exampleArgs = (ps: Param[], schemas?: Schemas) => Object.fromEntries(pick(ps).map((p) => [p.name, placeholder(p, schemas)]));
 /** POSIX single quotes: spec text can never break out of them. */
 const sq = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;
 /** curl -F reads a file for `name=@path`. */
@@ -35,9 +44,8 @@ const file = (p: Param) => (p.schema.type === 'file' || p.schema.format === 'bin
 /** Spec-provided names used inside double quotes keep only token characters. */
 const token = (s = '') => s.replace(/[^\w-]/g, '');
 
-/** `TASKS_API` from "Tasks API": the prefix of the environment variable holding the credential. */
-export const envName = (model: ApiModel): string =>
-  model.source.title.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'API';
+/** `TASKS_API` for the `tasks-api` skill: the prefix of the environment variables holding credentials. */
+export const envName = (model: ApiModel): string => envPrefix(skillSlug(model));
 
 /** curl flags for the operation's first security requirement, reading secrets from the environment. */
 function authFlags(model: ApiModel, op: Operation): string[] {
@@ -63,7 +71,7 @@ export function curlExample(model: ApiModel, op: Operation): string {
   const type = op.requestBody?.contentType ?? '';
   if (type.includes('multipart')) lines.push(...pick(body).map((p) => `-F ${sq(`${p.name}=${file(p)}<${p.name}>`)}`));
   else if (type.includes('urlencoded')) lines.push(...pick(body).map((p) => `--data-urlencode ${sq(`${p.name}=<${p.name}>`)}`));
-  else if (op.requestBody) lines.push(`-H ${sq(`Content-Type: ${type}`)}`, `-d ${sq(JSON.stringify(exampleArgs(body), null, 2))}`);
+  else if (op.requestBody) lines.push(`-H ${sq(`Content-Type: ${type}`)}`, `-d ${sq(JSON.stringify(exampleArgs(body, model.schemas), null, 2))}`);
   return lines.join(' \\\n  ');
 }
 

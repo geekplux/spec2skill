@@ -4,7 +4,7 @@ How calls authenticate. `buildRequest` in `kit/client.mjs` reads the variables b
 
 | Scheme | Type | Environment variables | Notes |
 | --- | --- | --- | --- |
-| `api_key` | apiKey in header as api_key | `SWAGGER_PETSTORE_API_KEY` |  |
-| `petstore_auth` | oauth2 | `SWAGGER_PETSTORE_TOKEN` |  |
+| `api_key` | apiKey in header as api_key | `PETSTORE_API_API_KEY` |  |
+| `petstore_auth` | oauth2 | `PETSTORE_API_TOKEN` |  |
 
 No auth needed: `createUser`, `createUsersWithArrayInput`, `createUsersWithListInput`, `loginUser`, `logoutUser`, `getUserByName`, `updateUser`, `deleteUser`.
