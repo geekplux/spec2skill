@@ -1,7 +1,7 @@
 /* App shell and the phase-4 text atlas, styled with the Survey tokens (src/design/tokens.css). */
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.45 var(--font-body); }
-h1, h2, .territory { font-family: var(--font-display); }
+h1, h2 { font-family: var(--font-display); }
 code { font-family: var(--font-mono); font-size: 0.93em; }
 :focus-visible { position: relative; z-index: 1; outline: 2px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--marker); }
 .skip { position: absolute; left: var(--space-2); top: -100px; padding: var(--space-2); background: var(--vellum); color: var(--ink); }
@@ -36,7 +36,7 @@ code { font-family: var(--font-mono); font-size: 0.93em; }
 
 .samples { padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--rule); }
 .chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; padding: 0; border: 0; }
-.chips legend, .kicker, .territory {
+.chips legend, .kicker {
   float: left; margin: 0 var(--space-2) 0 0; padding: 0; color: var(--graphite);
   font-size: 0.8rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase;
 }
@@ -60,17 +60,8 @@ code { font-family: var(--font-mono); font-size: 0.93em; }
 h1 { margin: 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
 h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .lede { margin: 0; color: var(--graphite); }
-.graph { margin: 0 0 var(--space-6); }
 .title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-4); margin-bottom: var(--space-3); }
 .title .kicker { flex-basis: 100%; }
-.territories { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: var(--space-3); margin: 0 0 var(--space-3); padding: 0; list-style: none; }
-.territories li {
-  padding: var(--space-3); border: 1px solid var(--rule); border-left: 3px solid var(--ink); border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--wash) 6%, var(--vellum)); color: var(--graphite);
-}
-.territory { display: block; float: none; color: var(--ink); font-size: 0.85rem; }
-.ops { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ink); }
-.ops li { padding: var(--space-2) 0; border-bottom: 1px solid var(--rule); overflow-wrap: anywhere; }
 .method {
   display: inline-block; min-width: 4.6em; padding: 0 var(--space-1); margin-right: var(--space-2);
   border: 1px solid; border-radius: var(--radius-sm); font: 600 0.8rem var(--font-mono); text-align: center;
@@ -258,3 +249,42 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
   .banner { display: block; margin: var(--space-1) 0 0; }
   .map { height: clamp(300px, 50vh, 560px); }
 }
+
+/* Search, filters and dimmed nodes (phase 12, F11): faded and dashed, never colour alone. */
+.search { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-2); }
+.search label[for] { font-weight: 650; }
+.search .field { flex: 1 1 8rem; min-width: 0; min-height: 36px; }
+.search-count { margin: 0; color: var(--graphite); font-size: 0.9em; }
+.filters summary { cursor: pointer; min-height: 36px; display: flex; align-items: center; color: var(--meridian); text-decoration: underline; }
+.filters[open] { flex-basis: 100%; order: 1; padding: 0 var(--space-2) var(--space-2); border: 1px solid var(--rule); background: var(--paper); }
+.filters fieldset { margin: 0 0 var(--space-1); padding: 0; border: 0; }
+.filters legend { float: left; min-width: 8.5rem; padding: 0; margin-right: var(--space-2); line-height: 28px; font-weight: 650; }
+.filters label { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 28px; margin-right: var(--space-3); }
+.node[data-dim] { opacity: 0.45; }
+.node[data-dim] .shape { stroke-dasharray: 4 3; }
+.filter-note { margin: var(--space-2) 0 0; color: var(--graphite); font-size: 0.85em; }
+
+/* List view (F12, A3): one table per cluster, edges in words. */
+.list { min-width: 0; overflow-x: auto; outline-offset: 2px; }
+.list-summary { margin: 0 0 var(--space-3); color: var(--graphite); }
+.list table { width: 100%; min-width: 40rem; margin: 0 0 var(--space-5); border-collapse: collapse; font-size: 0.9em; }
+.list caption { padding: var(--space-1) 0; border-bottom: 2px solid var(--ink); text-align: left; font: 650 0.95rem var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; }
+.crud-summary { font: 0.85rem var(--font-body); letter-spacing: 0; text-transform: none; color: var(--graphite); }
+.list th, .list td { padding: var(--space-1); border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; overflow-wrap: break-word; }
+.list td:nth-child(4) { min-width: 7rem; }
+.list thead th { font-size: 0.85em; color: var(--graphite); }
+.list td ul { margin: 0; padding-left: var(--space-3); }
+.list tr[data-open] > * { background: var(--paper); }
+.list tr[data-open] > th { box-shadow: inset 4px 0 0 var(--ink); font-weight: 700; }
+.list-empty { padding: var(--space-3); border: 1px dashed var(--graphite); }
+
+/* Shortcut help: a native modal dialog. */
+.help-dialog { max-width: min(40rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: var(--space-4); color: var(--ink); background: var(--vellum); border: 1px solid var(--ink); border-radius: var(--radius-sm); }
+.help-dialog::backdrop { background: color-mix(in srgb, var(--ink) 40%, transparent); }
+.help-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); border-bottom: 3px double var(--ink); }
+.help-head h2 { margin: 0; }
+.help-head form { margin: 0; }
+.help-dialog table { width: 100%; margin-top: var(--space-3); border-collapse: collapse; font-size: 0.9em; }
+.help-dialog caption { text-align: left; font-weight: 650; padding-bottom: var(--space-1); }
+.help-dialog th, .help-dialog td { padding: 3px var(--space-2); border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+.help-dialog th { width: 40%; font-weight: 400; }

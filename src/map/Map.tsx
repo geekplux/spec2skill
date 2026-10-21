@@ -6,13 +6,13 @@ import { type CSSProperties, type KeyboardEvent, useEffect, useId, useLayoutEffe
 import { useAnnounce } from '../a11y/Announcer';
 import { DetailPanel } from '../detail/DetailPanel';
 import { WASH } from '../design/tokens';
-import type { AtlasGraph } from '../graph';
+import type { AtlasGraph, Edge } from '../graph';
 import type { Rect } from '../layout/geometry';
 import { layout } from '../layout/layout';
 import type { ApiModel } from '../model/types';
 import { type Camera, LABEL_ZOOM, fit, follow, pan, toCss, zoomAt } from './camera';
 import { EdgeLabel, EdgeLine, MapDefs } from './Edge';
-import { describeEdge, edgesOf, keyAction, nodeName, opFromHash, otherEnd } from './keyboard';
+import { describeEdge, edgesOf, keyAction, nodeName, otherEnd } from './keyboard';
 import { Legend } from './Legend';
 import { Node } from './Node';
 import { Toolbar } from './Toolbar';
@@ -26,9 +26,15 @@ interface AtlasMapProps {
   /** The skill file documenting an operation, once the skill is written ("In the skill"). */
   skillFile?: (id: string) => string | undefined;
   onSkillFile: (path: string) => void;
+  /** The operation whose details are open (`#op=`); `onSelect` pushes a history entry when `push`. */
+  selected?: string;
+  onSelect: (id: string | undefined, push: boolean) => void;
+  /** Search and filter matches (null: all) and the edges left shown (F11). */
+  match: Set<string> | null;
+  edges: Edge[];
 }
 
-export function AtlasMap({ model, graph, skillFile, onSkillFile }: AtlasMapProps) {
+export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSelect, match, edges: shownEdges }: AtlasMapProps) {
   const atlas = useMemo(() => layout(model, graph), [model, graph]);
   const ops = useMemo(() => new Map(model.operations.map((op) => [op.id, op])), [model]);
   const degree = useMemo(() => new Map(model.operations.map((op) => [op.id, edgesOf(graph.edges, op.id).length])), [model, graph]);
@@ -42,16 +48,25 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile }: AtlasMapProps
   const [animate, setAnimate] = useState(false);
   const [hover, setHover] = useState<string | null>(null);
   // The roving focus (also the operation the detail panel shows), and whether DOM focus is on a node.
-  const [cursor, setCursor] = useState(() => opFromHash(window.location.hash, (id) => ops.has(id)));
-  const [open, setOpen] = useState(() => cursor !== undefined);
+  const [cursor, setCursor] = useState(selected);
+  const [seen, setSeen] = useState(selected);
+  if (seen !== selected) {
+    // Selected from outside (back/forward, an edited #op=): focus follows.
+    setSeen(selected);
+    if (selected) setCursor(selected);
+  }
+  const open = selected !== undefined;
   const [focusIn, setFocusIn] = useState(false);
   const [edge, setEdge] = useState<number | null>(null);
   const setSay = useAnnounce();
   const helpId = useId();
 
-  const stop = cursor ?? atlas.nodes[0]?.id;
+  // Keyboard navigation only visits matches; a focused node the search hides gives up the Tab stop.
+  const nav = useMemo(() => (match ? { ...atlas, nodes: atlas.nodes.filter((n) => match.has(n.id)), clusters: atlas.clusters.filter((c) => atlas.nodes.some((n) => n.cluster === c.id && match.has(n.id))) } : atlas), [atlas, match]);
+  const shown = useMemo(() => new Set(shownEdges.map((e) => e.id)), [shownEdges]);
+  const stop = cursor && (open || !match || match.has(cursor)) ? cursor : (nav.nodes[0]?.id ?? cursor ?? atlas.nodes[0]?.id);
   const node = atlas.nodes.find((n) => n.id === stop);
-  const edges = useMemo(() => (stop ? edgesOf(graph.edges, stop) : []), [graph, stop]);
+  const edges = useMemo(() => (stop ? edgesOf(shownEdges, stop) : []), [shownEdges, stop]);
   const cycled = edge === null ? undefined : edges[edge];
   const hot = hover ?? (focusIn || open ? (stop ?? null) : null);
 
@@ -99,19 +114,21 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile }: AtlasMapProps
   };
   /** Open the panel, then (once it is laid out) keep the node clear of it. */
   const openPanel = (id: string) => {
-    setOpen(true);
+    onSelect(id, true);
     requestAnimationFrame(() => reveal(id));
   };
 
-  /** Move focus to a node: DOM focus, camera follows, position announced; keyboard focus outranks hover. */
-  const focusNode = (id: string) => {
+  /** Move focus to a node: DOM focus, camera follows, position announced; keyboard focus outranks hover.
+   *  Open details follow it (replacing the history entry, or adding one when `push`). */
+  const focusNode = (id: string, push = false) => {
+    if (open || push) onSelect(id, push);
     const n = atlas.nodes.find((x) => x.id === id)!;
     setCursor(id);
     setEdge(null);
     setHover(null);
     svg.current!.querySelector<SVGRectElement>(`.hit[data-op="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
     reveal(id);
-    const peers = atlas.nodes.filter((p) => p.cluster === n.cluster);
+    const peers = nav.nodes.filter((p) => p.cluster === n.cluster);
     setSay(`${names.get(n.cluster)} cluster, ${peers.indexOf(n) + 1} of ${peers.length}.`);
   };
 
@@ -152,32 +169,15 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile }: AtlasMapProps
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
-  // `#op=<id>` names the open operation, so the view can be shared; an edited hash opens its node.
-  useEffect(() => {
-    const onHash = () => {
-      const id = opFromHash(window.location.hash, (x) => ops.has(x));
-      if (!id) return;
-      setCursor(id);
-      setOpen(true);
-    };
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, [ops]);
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    url.hash = open && stop ? `op=${encodeURIComponent(stop)}` : '';
-    if (url.href !== window.location.href) window.history.replaceState(window.history.state, '', url);
-  }, [open, stop]);
-
   const close = () => {
-    setOpen(false);
     if (stop) focusNode(stop);
+    onSelect(undefined, true);
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey || e.altKey || (e.target as Element).closest('input, textarea, select, [contenteditable]')) return;
-    const a = keyAction(atlas, { focus: node, edges, edge }, e.key, e.shiftKey);
-    if (!a || a.type === 'help') return; // the `?` shortcut dialog is deferred to phase 8
+    const a = keyAction(nav, { focus: node, edges, edge }, e.key, e.shiftKey);
+    if (!a || a.type === 'help') return; // `?` bubbles to the app, which opens the shortcut help
     e.preventDefault();
     if (a.type === 'focus') focusNode(a.id);
     else if (a.type === 'edge') {
@@ -186,7 +186,7 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile }: AtlasMapProps
     } else if (a.type === 'open') {
       openPanel(stop!);
       setSay('Details open after the map; Tab to read them.');
-    } else if (a.type === 'close') setOpen(false);
+    } else if (a.type === 'close') onSelect(undefined, true);
     else if (a.type === 'zoom') zoomBy(a.factor);
     else if (a.type === 'fit') fitAll(true);
     else move((c) => pan(c, a.dx, a.dy), true);
@@ -227,8 +227,8 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile }: AtlasMapProps
           const id = dragged.current ? null : (e.target as Element).closest('.node')?.getAttribute('data-op');
           dragged.current = false;
           if (!id) return;
-          focusNode(id);
-          openPanel(id);
+          focusNode(id, true);
+          requestAnimationFrame(() => reveal(id));
         }}
         onPointerDown={(e) => {
           drag.current = { x: e.clientX, y: e.clientY };
@@ -264,18 +264,18 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile }: AtlasMapProps
                 <text className="hub" x={c.w - 12} y={23} textAnchor="end">{c.hubs.map((h) => `${h.name} on ${h.count} ops`).join(', ')}</text>
               </g>
             ))}
-            <g aria-hidden="true">{atlas.edges.map((e) => <EdgeLine key={e.id} edge={e} hot={linked(e.from, e.to)} cycled={e.id === cycled?.id} />)}</g>
+            <g aria-hidden="true">{atlas.edges.filter((e) => shown.has(e.id)).map((e) => <EdgeLine key={e.id} edge={e} hot={linked(e.from, e.to)} cycled={e.id === cycled?.id} />)}</g>
             {atlas.nodes.map((n) => (
               <Node key={n.id} node={n} op={ops.get(n.id)!} crud={graph.crud[n.id]} label={nodeName(ops.get(n.id)!, n.state, names.get(n.cluster)!, degree.get(n.id)!)}
-                tabbable={n.id === stop} hot={n.id === hot} target={!!cycled && n.id === otherEnd(cycled, stop!)} onHover={setHover} />
+                tabbable={n.id === stop} hot={n.id === hot} dim={!!match && !match.has(n.id)} target={!!cycled && n.id === otherEnd(cycled, stop!)} onHover={setHover} />
             ))}
-            <g className="labels" aria-hidden="true">{atlas.edges.map((e) => <EdgeLabel key={e.id} edge={e} hot={linked(e.from, e.to)} />)}</g>
+            <g className="labels" aria-hidden="true">{atlas.edges.filter((e) => shown.has(e.id)).map((e) => <EdgeLabel key={e.id} edge={e} hot={linked(e.from, e.to)} />)}</g>
           </g>
         )}
       </svg>
-      <p className="visually-hidden" id={helpId}>Arrow keys move between {noun}, Page Up and Page Down change cluster, E cycles edges, Enter opens details. A text list follows the map.</p>
+      <p className="visually-hidden" id={helpId}>Arrow keys move between {noun}, Page Up and Page Down change cluster, E cycles edges, Enter opens details, question mark lists every shortcut. The List view shows the same map as text.</p>
     </div>
-    {op && <DetailPanel model={model} graph={graph} op={op} onGo={focusNode} onClose={close} announce={setSay} inSkill={skillFile?.(op.id)} onInSkill={onSkillFile} />}
+    {op && <DetailPanel model={model} graph={graph} op={op} onGo={(id) => focusNode(id, true)} onClose={close} announce={setSay} inSkill={skillFile?.(op.id)} onInSkill={onSkillFile} />}
     </div>
     <Legend />
     </>

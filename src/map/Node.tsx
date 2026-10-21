@@ -10,6 +10,8 @@ interface NodeProps {
   node: LayoutNode; op: Operation; crud: Crud | undefined;
   /** Full accessible name (A2); the visible text is decoration for assistive tech. */
   label: string; tabbable: boolean; hot: boolean;
+  /** Not matching the search or filters: faded with a dashed outline, skipped by the keyboard. */
+  dim: boolean;
   /** The far end of the edge `E` highlighted (where Enter goes). */
   target: boolean;
   onHover: (id: string | null) => void;
@@ -17,12 +19,12 @@ interface NodeProps {
 
 /** One operation: rounded rect + method (endpoint) or notched rect + `fn` (MCP tool); a solid bar
  *  marks writes, a hatched bar + `!` destructive ones; struck-through name + text for deprecated. */
-export function Node({ node, op, crud, label, tabbable, hot, target, onHover }: NodeProps) {
+export function Node({ node, op, crud, label, tabbable, hot, dim, target, onHover }: NodeProps) {
   const tool = op.kind === 'tool';
   const name = op.path ?? op.id;
   const sub = op.title !== op.id && op.title !== op.path ? op.title : (op.description ?? '');
   return (
-    <g className="node" data-op={op.id} data-state={node.state} data-hot={hot || undefined} data-target={target || undefined}
+    <g className="node" data-op={op.id} data-state={node.state} data-hot={hot || undefined} data-target={target || undefined} data-dim={dim || undefined}
       transform={`translate(${node.x} ${node.y})`} onPointerEnter={() => onHover(op.id)} onPointerLeave={() => onHover(null)}>
       <g aria-hidden="true">
         {tool ? <path className="shape" d={`M0 0H${W - 10}L${W} 10V${H}H0Z`} /> : <rect className="shape" width={W} height={H} rx={6} />}
@@ -46,7 +48,7 @@ export function Node({ node, op, crud, label, tabbable, hot, target, onHover }: 
       {/* Focus ring: 2 px ink outside the marker halo, so focus never relies on colour alone (A1). */}
       <rect className="ring" aria-hidden="true" x={-8} y={-8} width={W + 16} height={H + 16} rx={12} />
       {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG cannot contain a <button> */}
-      <rect className="hit" role="button" tabIndex={tabbable ? 0 : -1} aria-label={label} data-op={op.id} x={-5} y={-5} width={W + 10} height={H + 10} rx={10} />
+      <rect className="hit" role="button" tabIndex={tabbable ? 0 : -1} aria-label={dim ? `${label}, not matching the search` : label} data-op={op.id} x={-5} y={-5} width={W + 10} height={H + 10} rx={10} />
     </g>
   );
 }

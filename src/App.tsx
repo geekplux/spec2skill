@@ -1,9 +1,11 @@
-import { type CSSProperties, type FocusEvent, Suspense, startTransition, use, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type FocusEvent, Suspense, startTransition, use, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAnnounce } from './a11y/Announcer';
-import { WASH } from './design/tokens';
-import { type AtlasGraph, type EdgeKind, buildGraph } from './graph';
+import { buildGraph } from './graph';
+import { ListView } from './list/ListView';
 import { AtlasMap } from './map/Map';
-import type { Operation, SourceKind } from './model/types';
+import { Search } from './map/Search';
+import { ShortcutHelp } from './map/ShortcutHelp';
+import type { SourceKind } from './model/types';
 import { DEFAULT_SAMPLE_ID, SAMPLES, type Sample, getSample, sampleModel } from './samples';
 import { Layout } from './shell/Layout';
 import { revealInRow } from './shell/reveal';
@@ -12,64 +14,39 @@ import { skillSlug } from './skillgen/slug';
 import { SkillPane } from './skillpane/SkillPane';
 import { opFile } from './skillpane/tree';
 import { type Skill, useSkill } from './skillpane/useSkill';
+import { type Hidden, SHOW_ALL, edgeShown, facets, matches, searchIndex } from './state/filter';
+import { type UrlState, type View, readUrl, writeUrl } from './state/url';
 
 const KIND_LABEL: Record<SourceKind, string> = { openapi3: 'OpenAPI', swagger2: 'Swagger', mcp: 'MCP' };
 
 /** Keep a chip fully visible inside the horizontally scrolling mobile chip row (scrolls the row, not focus). */
 const revealChip = (e: FocusEvent<HTMLButtonElement>) => revealInRow(e.currentTarget.parentElement, e.currentTarget);
 
-function initialSample(): Sample {
-  const id = new URLSearchParams(window.location.search).get('sample');
-  return getSample(id ?? '') ?? getSample(DEFAULT_SAMPLE_ID)!;
-}
-
-/** Text flags, so state never relies on colour. */
-function flags(op: Operation): string[] {
-  const out: string[] = [];
-  if (op.deprecated) out.push('deprecated');
-  if (op.kind === 'tool' && op.hints.readOnly) out.push('read-only');
-  if (op.kind === 'tool' && op.hints.destructive) out.push('destructive');
-  return out;
-}
-
-/** Plain-text view of the graph (phase 4): the list view until phase 12, and the map's text alternative. */
-function GraphSummary({ graph }: { graph: AtlasGraph }) {
-  const count = (kind: EdgeKind) => graph.edges.filter((e) => e.kind === kind).length;
-  const inferred = graph.edges.filter((e) => e.confidence === 'inferred').length;
-  return (
-    <section className="graph" data-testid="graph-summary" aria-labelledby="graph-heading">
-      <h2 id="graph-heading">Clusters and relationships</h2>
-      <ul className="territories">
-        {graph.clusters.map((c, i) => (
-          <li key={c.id} style={{ '--wash': `var(--${WASH[i % WASH.length]})` } as CSSProperties}>
-            <strong className="territory">{c.name}</strong>
-            <span>{c.description}</span>
-          </li>
-        ))}
-      </ul>
-      <p>
-        {count('feeds')} feeds edges ({inferred} inferred), {count('sub-path')} sub-path edges, {count('shared-schema')}{' '}
-        shared-schema edges.
-        {graph.hubSchemas.length > 0 &&
-          ` Hub schemas (shown as badges, not edges): ${graph.hubSchemas.map((h) => `${h.name} on ${h.usedBy} operations`).join(', ')}.`}
-      </p>
-    </section>
-  );
-}
-
-type Tab = 'skill' | 'map' | 'list';
+type Tab = View;
 const TABS: TabDef<Tab>[] = [
   { id: 'skill', label: 'Skill', panel: 'panel-skill' },
   { id: 'map', label: 'Map', panel: 'panel-map' },
   { id: 'list', label: 'List', panel: 'panel-map' },
 ];
 
-interface WorkspaceProps { sample: Sample; tab: Tab; onTab: (tab: Tab) => void; wide: boolean; run: number }
+interface WorkspaceProps {
+  sample: Sample; tab: Tab; onTab: (tab: Tab) => void; wide: boolean; run: number;
+  /** `#op=`: the operation whose details are open. */
+  op?: string; onOp: (id: string | undefined, push: boolean) => void;
+  q: string; onQ: (q: string) => void; hidden: Hidden; onHidden: (h: Hidden) => void;
+}
 
 /** The skill pane beside the map (desktop) or behind Skill | Map | List tabs (below 1024 px), D21. */
-function Workspace({ sample, tab, onTab, wide, run }: WorkspaceProps) {
+function Workspace({ sample, tab, onTab, wide, run, op, onOp, q, onQ, hidden, onHidden }: WorkspaceProps) {
   const model = use(sampleModel(sample));
   const graph = useMemo(() => buildGraph(model), [model]);
+  const index = useMemo(() => searchIndex(model, graph), [model, graph]);
+  const match = useMemo(() => matches(index, q, hidden), [index, q, hidden]);
+  const shown = useMemo(() => graph.edges.filter((e) => edgeShown(e, match, hidden)), [graph, match, hidden]);
+  const choices = useMemo(() => facets(model, graph), [model, graph]);
+  const selected = model.operations.some((o) => o.id === op) ? op : undefined;
+  const search = useRef<HTMLInputElement>(null);
+  const [help, setHelp] = useState(false);
   const [opts, setOpts] = useState({ hash: '', slug: '', license: 'MIT' });
   const slug = (opts.hash === model.hash && opts.slug) || skillSlug(model);
   const { skill, error } = useSkill(model, graph, slug, opts.license, run);
@@ -79,10 +56,10 @@ function Workspace({ sample, tab, onTab, wide, run }: WorkspaceProps) {
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
   const summary = `${model.operations.length} ${noun} in ${graph.clusters.length} clusters, ${graph.edges.length} relationships`;
   const view = tab === 'list' ? 'list' : 'map';
+  const announce = useAnnounce();
 
   // Each new skill is announced with its audit (A2), after the sample's summary when the sample changed;
   // not on first load, where the page itself is the news.
-  const announce = useAnnounce();
   const said = useRef<{ hash: string; skill?: Skill }>({ hash: model.hash });
   useEffect(() => {
     if (!skill || skill.hash !== model.hash || said.current.skill === skill) return;
@@ -102,12 +79,30 @@ function Workspace({ sample, tab, onTab, wide, run }: WorkspaceProps) {
     // oxlint-disable-next-line react/exhaustive-effect-dependencies -- the title above changes with the sample and the tabs with `wide`
   }, [wide, model.hash]);
 
+  // `/` focuses search (from the Skill tab it opens the Map tab first) and `?` opens the shortcut help,
+  // from anywhere but a text field or the dialog itself (A1).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || (e.target as Element).closest?.('input, textarea, select, [contenteditable], dialog')) return;
+      if (e.key === '?') setHelp(true);
+      else if (e.key !== '/') return;
+      else if (!wide && tab === 'skill') {
+        onTab('map');
+        requestAnimationFrame(() => search.current?.focus());
+      } else search.current?.focus();
+      e.preventDefault();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [wide, tab, onTab]);
+
   /** "In the skill": show that file in the pane (switching to the Skill tab on small screens). */
   const openFile = (path: string) => {
     setFile(path);
     if (!wide) onTab('skill');
     requestAnimationFrame(() => document.getElementById('skill-preview')?.focus());
   };
+  const skillFile = skill?.hash === model.hash ? (id: string) => opFile(skill.tree, id) : undefined;
   const tabs = (
     <Tabs label="View" tabs={wide ? TABS.slice(1) : TABS} value={wide ? view : tab} onChange={onTab} />
   );
@@ -128,36 +123,35 @@ function Workspace({ sample, tab, onTab, wide, run }: WorkspaceProps) {
         <div className="map-pane">
           {wide && tabs}
           <div className="sheet" id="panel-map" role="tabpanel" aria-labelledby={`tab-${view}`} hidden={!wide && tab === 'skill'} data-view={view}>
-            {view === 'map' && (
-              <AtlasMap key={model.hash} model={model} graph={graph} skillFile={skill?.hash === model.hash ? (id) => opFile(skill.tree, id) : undefined} onSkillFile={openFile} />
+            <Search q={q} onQ={onQ} hidden={hidden} onHidden={onHidden} facets={choices} count={match && match.size}
+              total={model.operations.length} noun={noun} onHelp={() => setHelp(true)} input={search} />
+            {view === 'map' ? (
+              <AtlasMap key={model.hash} model={model} graph={graph} skillFile={skillFile} onSkillFile={openFile} selected={selected} onSelect={onOp} match={match} edges={shown} />
+            ) : (
+              <ListView model={model} graph={graph} match={match} edges={shown} selected={selected} onSelect={(id) => onOp(id, true)} skillFile={skillFile} onSkillFile={openFile} announce={announce} />
             )}
-            <GraphSummary graph={graph} />
-            <ul className="ops" data-testid="sample-list" aria-label={`${noun} in ${title}`}>
-              {model.operations.map((op) => (
-                <li key={op.id}>
-                  <span className="method" data-method={op.method ?? 'tool'}>
-                    {op.method?.toUpperCase() ?? 'TOOL'}
-                  </span> <code>{op.path ?? op.id}</code>
-                  {op.title !== op.id && <span className="summary"> {op.title}</span>}
-                  {flags(op).map((flag) => (
-                    <span className="flag" key={flag}>
-                      {flag}
-                    </span>
-                  ))}
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </div>
+      <p className="filter-note">Search and filters apply to the map and list; the skill always covers every {noun === 'tools' ? 'tool' : 'operation'}.</p>
+      {help && <ShortcutHelp onClose={() => setHelp(false)} />}
     </>
   );
 }
 
+const NO_FILTER = { q: '', hidden: SHOW_ALL };
+/** The URL's state; a link to an operation (#op=) opens on the Map tab, otherwise the skill comes first (D21). */
+const here = (): UrlState => {
+  const u = readUrl(window.location.href);
+  return u.op && !u.view ? { ...u, view: 'map' } : u;
+};
+
 export function App() {
-  const [sample, setSample] = useState(initialSample);
-  // A link to an operation (#op=) opens on the Map tab; otherwise the skill comes first (D21).
-  const [tab, setTab] = useState<Tab>(() => (window.location.hash.includes('op=') ? 'map' : 'skill'));
+  // The URL is the source of truth (F13): each change writes history; back/forward re-read it.
+  const [url, setUrl] = useState(here);
+  const [find, setFind] = useState({ q: url.q, hidden: SHOW_ALL });
+  const sample = getSample(url.sample ?? '') ?? getSample(DEFAULT_SAMPLE_ID)!;
+  const tab: Tab = url.view ?? 'skill';
   const [run, setRun] = useState(0);
   const wide = useWide();
   const chipRow = useRef<HTMLFieldSetElement>(null);
@@ -165,16 +159,38 @@ export function App() {
     const row = chipRow.current;
     revealInRow(row, row?.querySelector<HTMLElement>(`[data-sample="${sample.id}"]`));
   }, [sample.id]);
+  useEffect(() => {
+    const onPop = () => {
+      const next = here();
+      startTransition(() => setUrl(next));
+      setFind((f) => (f.q === next.q ? f : { ...f, q: next.q }));
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+  /** Merge `patch` into the URL: a new history entry when `push`, else replace the current one. */
+  const go = (patch: Partial<UrlState>, push = false) => {
+    const next = { ...here(), ...patch };
+    const href = writeUrl(window.location.href, next);
+    if (href !== window.location.href) window.history[push ? 'pushState' : 'replaceState'](null, '', href);
+    setUrl(next);
+  };
+  // The search reaches the URL once typing pauses.
+  useEffect(() => {
+    const t = setTimeout(() => readUrl(window.location.href).q !== find.q && go({ q: find.q }), 400);
+    return () => clearTimeout(t);
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `go` reads the URL itself; only the query matters
+  }, [find.q]);
   const select = (next: Sample) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('sample', next.id);
-    window.history.replaceState(null, '', url);
-    startTransition(() => setSample(next)); // keep the current list visible while the next one is read
+    if (next.id === sample.id) return go({ sample: next.id }); // name it in the URL, no new entry
+    setFind(NO_FILTER);
+    // keep the current sample visible while the next one is read
+    startTransition(() => go({ sample: next.id, q: '', op: undefined }, true));
   };
   /** Generate skill: write it again with the pane's options and bring the pane into view. */
   const generate = () => {
     setRun((n) => n + 1);
-    if (!wide) setTab('skill');
+    if (!wide) go({ view: 'skill' });
   };
 
   const chips = (
@@ -198,7 +214,8 @@ export function App() {
   return (
     <Layout samples={chips} onGenerate={generate}>
       <Suspense fallback={<p className="lede">Reading the sample…</p>}>
-        <Workspace sample={sample} tab={tab} onTab={setTab} wide={wide} run={run} />
+        <Workspace sample={sample} tab={tab} onTab={(view) => go({ view })} wide={wide} run={run} op={url.op} onOp={(op, push) => go({ op }, push)}
+          q={find.q} onQ={(q) => setFind((f) => ({ ...f, q }))} hidden={find.hidden} onHidden={(hidden) => setFind((f) => ({ ...f, hidden }))} />
       </Suspense>
     </Layout>
   );
