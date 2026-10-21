@@ -48,7 +48,7 @@ export function Node({ node, op, crud, label, tabbable, hot, dim, target, onHove
       {/* Focus ring: 2 px ink outside the marker halo, so focus never relies on colour alone (A1). */}
       <rect className="ring" aria-hidden="true" x={-8} y={-8} width={W + 16} height={H + 16} rx={12} />
       {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG cannot contain a <button> */}
-      <rect className="hit" role="button" tabIndex={tabbable ? 0 : -1} aria-label={dim ? `${label}, not matching the search` : label} data-op={op.id} x={-5} y={-5} width={W + 10} height={H + 10} rx={10} />
+      <rect className="hit" role="button" tabIndex={tabbable ? 0 : -1} aria-label={dim ? `${label}, filtered out` : label} data-op={op.id} x={-5} y={-5} width={W + 10} height={H + 10} rx={10} />
     </g>
   );
 }

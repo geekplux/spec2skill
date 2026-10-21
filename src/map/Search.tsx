@@ -22,13 +22,15 @@ export function Search({ q, onQ, hidden, onHidden, facets, count, total, noun, o
   const off = hiddenCount(hidden);
   const status = count === null ? `${total} ${noun}` : `${count} of ${total} ${noun} match`;
   const announce = useAnnounce();
-  const first = useRef(true);
-  // Announced once typing pauses, not per keystroke (and not on load).
+  const last = useRef<number | null>(null);
+  // Announced once typing pauses; not on load or a sample switch (the skill's announcement has the news).
   useEffect(() => {
-    if (first.current) return void (first.current = false);
+    const quiet = last.current !== total;
+    last.current = total;
+    if (quiet) return;
     const t = setTimeout(() => announce(count === null ? `Showing all ${status}.` : `${status}.`), 500);
     return () => clearTimeout(t);
-  }, [announce, status, count]);
+  }, [announce, status, count, total]);
   const group = <K extends keyof Hidden>(key: K, legend: string, items: { id: Hidden[K][number]; name: string }[]) => (
     <fieldset>
       <legend>{legend}</legend>
