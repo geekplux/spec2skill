@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_ZOOM, MIN_ZOOM, fit, pan, toCss, zoomAt } from './camera';
+import { MAX_ZOOM, MIN_ZOOM, fit, follow, pan, toCss, zoomAt } from './camera';
 
 describe('camera', () => {
   const c = { x: 10, y: 20, k: 1 };
@@ -32,5 +32,15 @@ describe('camera', () => {
 
   it('writes a CSS transform', () => {
     expect(toCss({ x: 1, y: 2, k: 0.5 })).toBe('translate(1px, 2px) scale(0.5)');
+  });
+});
+
+describe('follow', () => {
+  const c = { x: 0, y: 0, k: 1 };
+  it('leaves the camera alone when the rect is comfortably on screen', () => {
+    expect(follow(c, { x: 100, y: 100, w: 50, h: 20 }, 800, 600)).toBe(c);
+  });
+  it('centres an off-screen rect at the same zoom', () => {
+    expect(follow({ ...c, k: 2 }, { x: 1000, y: 10, w: 100, h: 40 }, 800, 600)).toEqual({ k: 2, x: 400 - 1050 * 2, y: 300 - 30 * 2 });
   });
 });
