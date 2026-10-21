@@ -8,6 +8,6 @@
     "no-console": "off",
     "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }]
   },
-  "overrides": [{ "files": ["scripts/**/*.mjs", "src/skillgen/assets/**/*.mjs", "*.config.ts"], "env": { "node": true } }],
+  "overrides": [{ "files": ["scripts/**/*.mjs", "src/skillgen/assets/**/*.mjs", "examples/**/*.mjs", "*.config.ts"], "env": { "node": true } }],
   "ignorePatterns": ["dist", "node_modules", "docs/screenshots", ".wrangler"]
 }
