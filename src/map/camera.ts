@@ -18,10 +18,10 @@ export function zoomAt(c: Camera, factor: number, px: number, py: number): Camer
   return { k, x: px - (px - c.x) * f, y: py - (py - c.y) * f };
 }
 
-/** Centre `b` in a `w` x `h` viewport, as large as fits (never above 1.25x). */
-export function fit(b: Rect, w: number, h: number, pad = 16): Camera {
-  const k = clampZoom(Math.min((w - 2 * pad) / b.w, (h - 2 * pad) / b.h, 1.25));
-  return { k, x: (w - b.w * k) / 2 - b.x * k, y: (h - b.h * k) / 2 - b.y * k };
+/** Centre `b` in a `w` x `h` viewport below a `top` strip (the toolbar), as large as fits (never above 1.25x). */
+export function fit(b: Rect, w: number, h: number, pad = 16, top = 0): Camera {
+  const k = clampZoom(Math.min((w - 2 * pad) / b.w, (h - top - 2 * pad) / b.h, 1.25));
+  return { k, x: (w - b.w * k) / 2 - b.x * k, y: top + (h - top - b.h * k) / 2 - b.y * k };
 }
 
 export const toCss = (c: Camera): string => `translate(${c.x}px, ${c.y}px) scale(${c.k})`;

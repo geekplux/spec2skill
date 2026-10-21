@@ -28,6 +28,9 @@ describe('camera', () => {
     expect(f.y + -50 * f.k + (500 * f.k) / 2).toBe(200); // vertically centred
     expect(fit({ x: 0, y: 0, w: 10, h: 10 }, 1000, 1000).k).toBe(1.25);
     expect(fit({ x: 0, y: 0, w: 100_000, h: 10 }, 100, 100).k).toBe(MIN_ZOOM);
+    const below = fit({ x: 0, y: 0, w: 100, h: 100 }, 1000, 240, 20, 40);
+    expect([below.k, below.y]).toEqual([1.25, 40 + (200 - 125) / 2]); // centred in the 200 px under the toolbar
+
   });
 
   it('writes a CSS transform', () => {

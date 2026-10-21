@@ -22,12 +22,8 @@ export function Node({ node, op, crud, label, tabbable, hot, target, onHover }: 
   const name = op.path ?? op.id;
   const sub = op.title !== op.id && op.title !== op.path ? op.title : (op.description ?? '');
   return (
-    // Roving tabindex (one node is the map's Tab stop); keys and clicks are handled on the map.
-    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG cannot contain a <button>
-    <g className="node" role="button" tabIndex={tabbable ? 0 : -1} aria-label={label} data-op={op.id} data-state={node.state}
-      data-hot={hot || undefined} data-target={target || undefined} transform={`translate(${node.x} ${node.y})`}
-      onPointerEnter={() => onHover(op.id)} onPointerLeave={() => onHover(null)}>
-      <rect className="halo" x={-5} y={-5} width={W + 10} height={H + 10} rx={10} />
+    <g className="node" data-op={op.id} data-state={node.state} data-hot={hot || undefined} data-target={target || undefined}
+      transform={`translate(${node.x} ${node.y})`} onPointerEnter={() => onHover(op.id)} onPointerLeave={() => onHover(null)}>
       <g aria-hidden="true">
         {tool ? <path className="shape" d={`M0 0H${W - 10}L${W} 10V${H}H0Z`} /> : <rect className="shape" width={W} height={H} rx={6} />}
         {node.state !== 'read' && <rect className={`bar ${node.state === 'destructive' ? 'hatched' : ''}`} x={1} y={1} width={node.state === 'destructive' ? 6 : 3} height={H - 2} />}
@@ -45,6 +41,10 @@ export function Node({ node, op, crud, label, tabbable, hot, target, onHover }: 
           </g>
         )}
       </g>
+      {/* The button is a transparent hit area on top (its ring is the focus halo), so its name never
+          competes with the truncated visible text. Roving tabindex: one node is the map's Tab stop. */}
+      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG cannot contain a <button> */}
+      <rect className="hit" role="button" tabIndex={tabbable ? 0 : -1} aria-label={label} data-op={op.id} x={-5} y={-5} width={W + 10} height={H + 10} rx={10} />
     </g>
   );
 }

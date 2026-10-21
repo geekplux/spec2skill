@@ -16,6 +16,9 @@ import { Node } from './Node';
 import { ShortcutHelp } from './ShortcutHelp';
 import { Toolbar } from './Toolbar';
 
+/** Height kept clear for the floating toolbar when fitting. */
+const TOOLBAR_H = 40;
+
 export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph }) {
   const atlas = useMemo(() => layout(model, graph), [model, graph]);
   const ops = useMemo(() => new Map(model.operations.map((op) => [op.id, op])), [model]);
@@ -52,7 +55,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
     const el = frame.current!;
     touched.current = false;
     setAnimate(smooth);
-    setCam(fit(atlas.bounds, el.clientWidth, el.clientHeight));
+    setCam(fit(atlas.bounds, el.clientWidth, el.clientHeight, 16, TOOLBAR_H));
   };
   const zoomBy = (f: number) => move((c) => zoomAt(c, f, frame.current!.clientWidth / 2, frame.current!.clientHeight / 2), true);
 
@@ -61,7 +64,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
     const n = atlas.nodes.find((x) => x.id === id)!;
     setCursor(id);
     setEdge(null);
-    svg.current!.querySelector<SVGGElement>(`[data-op="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
+    svg.current!.querySelector<SVGRectElement>(`.hit[data-op="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
     const el = frame.current!;
     const next = cam && follow(cam, n, el.clientWidth, el.clientHeight);
     if (next && next !== cam) move(() => next, true);
@@ -85,7 +88,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
     const observer = new ResizeObserver(() => {
       if (touched.current) return;
       setAnimate(false);
-      setCam(fit(atlas.bounds, el.clientWidth, el.clientHeight));
+      setCam(fit(atlas.bounds, el.clientWidth, el.clientHeight, 16, TOOLBAR_H));
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -106,7 +109,17 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
-  // `#op=<id>` names the open operation, so the view can be shared.
+  // `#op=<id>` names the open operation, so the view can be shared; an edited hash opens its node.
+  useEffect(() => {
+    const onHash = () => {
+      const id = opFromHash(window.location.hash, (x) => ops.has(x));
+      if (!id) return;
+      setCursor(id);
+      setOpen(true);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, [ops]);
   useEffect(() => {
     const url = new URL(window.location.href);
     url.hash = open && stop ? `op=${encodeURIComponent(stop)}` : '';
