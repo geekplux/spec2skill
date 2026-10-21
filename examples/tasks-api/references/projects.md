@@ -45,7 +45,7 @@ Feeds: `getProject` (`id -> projectId`), `updateProject` (`id -> projectId`), `d
 
 Returns `Project` with `archived`, `createdAt`, `description`, `id`, `name`, `ownerId`.
 
-Feeds: `getMember` (`ownerId -> memberId`, inferred), `removeMember` (`ownerId -> memberId`, inferred).
+Feeds: `getMember` (`ownerId -> memberId`, inferred).
 
 Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`), `getTask` (`projectId -> projectId`).
 
@@ -64,7 +64,7 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`),
 
 Returns `Project` with `archived`, `createdAt`, `description`, `id`, `name`, `ownerId`.
 
-Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`), `getTask` (`projectId -> projectId`).
+Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`).
 
 ## `deleteProject`
 
@@ -80,4 +80,4 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`),
 
 Returns no documented body.
 
-Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`), `getTask` (`projectId -> projectId`).
+Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`).

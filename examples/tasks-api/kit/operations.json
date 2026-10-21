@@ -341,11 +341,6 @@
           "to": "getMember",
           "via": "ownerId -> memberId",
           "confidence": "inferred"
-        },
-        {
-          "to": "removeMember",
-          "via": "ownerId -> memberId",
-          "confidence": "inferred"
         }
       ]
     },
@@ -971,22 +966,7 @@
           "confidence": "exact"
         },
         {
-          "to": "updateProject",
-          "via": "projectId -> projectId",
-          "confidence": "exact"
-        },
-        {
-          "to": "deleteProject",
-          "via": "projectId -> projectId",
-          "confidence": "exact"
-        },
-        {
           "to": "listLabels",
-          "via": "projectId -> projectId",
-          "confidence": "exact"
-        },
-        {
-          "to": "createLabel",
           "via": "projectId -> projectId",
           "confidence": "exact"
         },
@@ -996,28 +976,13 @@
           "confidence": "exact"
         },
         {
-          "to": "addMember",
-          "via": "projectId -> projectId",
-          "confidence": "exact"
-        },
-        {
           "to": "getMember",
-          "via": "projectId -> projectId, assigneeId -> memberId",
-          "confidence": "exact"
-        },
-        {
-          "to": "removeMember",
           "via": "projectId -> projectId, assigneeId -> memberId",
           "confidence": "exact"
         },
         {
           "to": "listTasks",
           "via": "projectId -> projectId, assigneeId -> assigneeId",
-          "confidence": "exact"
-        },
-        {
-          "to": "createTask",
-          "via": "projectId -> projectId",
           "confidence": "exact"
         }
       ]
@@ -1335,17 +1300,17 @@
     },
     {
       "ops": [
-        "listProjects",
-        "getProject",
-        "removeMember"
+        "createTask",
+        "getTask",
+        "listMembers"
       ],
       "via": [
-        "id -> projectId",
-        "ownerId -> memberId"
+        "id -> taskId",
+        "projectId -> projectId"
       ],
       "inferred": [
         false,
-        true
+        false
       ]
     }
   ]

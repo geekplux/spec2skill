@@ -42,7 +42,7 @@ Returns `Task` with `assigneeId`, `createdAt`, `description`, `dueDate`, `id`, `
 
 Feeds: `getTask` (`id -> taskId`), `updateTask` (`id -> taskId`), `deleteTask` (`id -> taskId`), `listComments` (`id -> taskId`), `createComment` (`id -> taskId`), `completeTask` (`id -> taskId`).
 
-Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`), `getTask` (`projectId -> projectId`).
+Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`).
 
 ## `getTask`
 
@@ -56,7 +56,7 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`),
 
 Returns `Task` with `assigneeId`, `createdAt`, `description`, `dueDate`, `id`, `labelIds`, `projectId`, `status`, `title`.
 
-Feeds: `getProject` (`projectId -> projectId`), `updateProject` (`projectId -> projectId`), `deleteProject` (`projectId -> projectId`), `listLabels` (`projectId -> projectId`), `createLabel` (`projectId -> projectId`), `listMembers` (`projectId -> projectId`), `addMember` (`projectId -> projectId`), `getMember` (`projectId -> projectId, assigneeId -> memberId`) and 3 more.
+Feeds: `getProject` (`projectId -> projectId`), `listLabels` (`projectId -> projectId`), `listMembers` (`projectId -> projectId`), `getMember` (`projectId -> projectId, assigneeId -> memberId`), `listTasks` (`projectId -> projectId, assigneeId -> assigneeId`).
 
 Fed by: `listTasks` (`id -> taskId`), `createTask` (`id -> taskId`).
 

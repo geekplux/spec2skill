@@ -36,7 +36,7 @@ Returns `Label` with `color`, `id`, `name`, `projectId`.
 
 Feeds: `deleteLabel` (`id -> labelId`), `listTasks` (`id -> labelId`).
 
-Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`), `getTask` (`projectId -> projectId`).
+Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`).
 
 ## `deleteLabel`
 

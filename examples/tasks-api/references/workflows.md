@@ -18,7 +18,7 @@ Chains where one call's output feeds the next call's input, strongest first. A s
 
 `listProjects` -> `listLabels` (`id -> projectId`) -> `listTasks` (`id -> labelId`)
 
-## 5. `listProjects` -> `getProject` -> `removeMember` (inferred)
+## 5. `createTask` -> `getTask` -> `listMembers`
 
-`listProjects` -> `getProject` (`id -> projectId`) -> `removeMember` (`ownerId -> memberId`, inferred)
+`createTask` -> `getTask` (`id -> taskId`) -> `listMembers` (`projectId -> projectId`)
 
