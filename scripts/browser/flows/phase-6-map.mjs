@@ -13,7 +13,13 @@ const expect = (ok, message) => {
 };
 const atlas = (page) => page.getByTestId('atlas');
 const transform = (page) => page.locator('.camera').evaluate((g) => getComputedStyle(g).transform);
-const ready = (page) => page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
+// Below 1024 px the map sits behind the Map tab (phase 11): select it before waiting for the map.
+const ready = async (page) => {
+  const tab = page.locator('#tab-map');
+  await tab.waitFor();
+  if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.click();
+  await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
+};
 
 async function expectAtlas(page, id) {
   const want = SAMPLES[id];
@@ -174,10 +180,10 @@ export default {
     await expectAtlas(page, 'tasks');
 
     // Map | List: List hides the map and keeps the text atlas; Map brings it back.
-    const views = page.getByRole('group', { name: 'View' });
-    await views.getByRole('button', { name: 'List' }).click();
+    const views = page.getByRole('tablist', { name: 'View' });
+    await views.getByRole('tab', { name: 'List' }).click();
     expect((await atlas(page).count()) === 0 && (await page.getByTestId('sample-list').count()) === 1, 'List view');
-    await views.getByRole('button', { name: 'Map' }).click();
+    await views.getByRole('tab', { name: 'Map' }).click();
     await expectAtlas(page, 'tasks');
 
     if (cvd) {

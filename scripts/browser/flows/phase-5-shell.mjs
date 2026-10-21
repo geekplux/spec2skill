@@ -11,7 +11,7 @@ const expect = (ok, message) => {
 
 async function load(page, origin) {
   await page.goto(`${origin}/?sample=tasks`, { waitUntil: 'load' });
-  await page.getByTestId('sample-list').waitFor();
+  await page.getByTestId('sample-list').waitFor({ state: 'attached' });
   await page.evaluate(() => document.fonts.ready);
 }
 
@@ -39,8 +39,8 @@ export default {
     const toggle = page.getByRole('button', { name: 'Dark theme' });
     expect((await toggle.getAttribute('aria-pressed')) === 'false', 'light system: toggle should not be pressed');
     const generate = page.getByRole('button', { name: /Generate skill/ });
-    expect((await generate.getAttribute('aria-disabled')) === 'true', 'Generate skill should be aria-disabled');
-    await page.getByRole('group', { name: 'View' }).getByRole('button', { name: 'List' }).waitFor();
+    expect((await generate.getAttribute('aria-disabled')) === null, 'Generate skill is real since phase 11');
+    await page.getByRole('tablist', { name: 'View' }).getByRole('tab', { name: 'List' }).waitFor();
     await page.getByRole('img', { name: 'spec2skill' }).first().waitFor();
 
     // Display font from our own origin, used by the headings.

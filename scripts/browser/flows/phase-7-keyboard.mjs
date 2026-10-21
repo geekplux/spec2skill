@@ -6,7 +6,13 @@ const CURL = `curl 'https://tasks.example.com/v1/tasks/<taskId>' \\\n  -H "Autho
 const expect = (ok, message) => {
   if (!ok) throw new Error(message);
 };
-const ready = (page) => page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
+// Below 1024 px the map sits behind the Map tab (phase 11): select it before waiting for the map.
+const ready = async (page) => {
+  const tab = page.locator('#tab-map');
+  await tab.waitFor();
+  if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.click();
+  await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
+};
 const active = (page) => page.evaluate(() => document.activeElement?.getAttribute('data-op') ?? document.activeElement?.textContent?.trim() ?? null);
 // The announcer clears, then sets the message on the next frame: read it two frames later.
 const frames = (page) => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
@@ -220,7 +226,7 @@ export default {
     // 390 px: the preselected chip is scrolled into view inside the chip row, and Tab still starts at the skip link.
     for (const id of ['filesystem', 'tasks']) {
       await page.goto(`${origin}/?sample=${id}`);
-      await ready(page);
+      await page.locator('.skill-pane[data-ready="true"]').waitFor(); // the Skill tab, no click
       const [row, chip] = [await page.locator('.chips').boundingBox(), await page.locator(`[data-sample="${id}"]`).boundingBox()];
       expect(chip.x >= row.x - 1 && chip.x + chip.width <= row.x + row.width + 1, `390 px: ?sample=${id} chip ${JSON.stringify(chip)} outside the row ${JSON.stringify(row)}`);
       await page.keyboard.press('Tab');
@@ -248,6 +254,6 @@ export default {
     await page.goto(`${origin}/?sample=tasks`);
     await ready(page);
     await page.locator('[data-sample="filesystem"]').click();
-    await page.getByTestId('announcer').filter({ hasText: /: \d+ tools in \d+ clusters, \d+ relationships\.$/ }).waitFor();
+    await page.getByTestId('announcer').filter({ hasText: /: \d+ tools in \d+ clusters, \d+ relationships\. Skill written: audit passed, (\d+) of \1 checks\.$/ }).waitFor();
   },
 };

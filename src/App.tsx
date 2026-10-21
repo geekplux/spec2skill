@@ -156,7 +156,8 @@ function Workspace({ sample, tab, onTab, wide, run }: WorkspaceProps) {
 
 export function App() {
   const [sample, setSample] = useState(initialSample);
-  const [tab, setTab] = useState<Tab>('skill');
+  // A link to an operation (#op=) opens on the Map tab; otherwise the skill comes first (D21).
+  const [tab, setTab] = useState<Tab>(() => (window.location.hash.includes('op=') ? 'map' : 'skill'));
   const [run, setRun] = useState(0);
   const wide = useWide();
   const chipRow = useRef<HTMLFieldSetElement>(null);

@@ -8,7 +8,7 @@ export default {
       await page.setViewportSize(size);
       await page.goto(`${origin}/?sample=petstore`, { waitUntil: 'load' });
       const list = page.getByTestId('sample-list');
-      await list.waitFor();
+      await list.waitFor({ state: 'attached' });
       const heading = (await page.getByRole('heading', { level: 1 }).textContent())?.trim();
       if (heading !== 'Swagger Petstore (sample)') throw new Error(`unexpected heading: ${heading}`);
       const items = await list.locator('li').allTextContents();

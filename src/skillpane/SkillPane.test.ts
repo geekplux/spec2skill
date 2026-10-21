@@ -24,13 +24,12 @@ describe('SkillPane', () => {
   it('states every audit check in text, with a glyph that is not the only signal', () => {
     const html = render();
     expect(html).toContain('<span class="mark" aria-hidden="true">✗</span> Audit failed: 1 of 2 checks</summary>');
-    expect(html).toContain('<span class="mark" aria-hidden="true">✓</span> Frontmatter valid: <span class="status">passed</span>');
+    expect(html).toContain('<span class="mark" aria-hidden="true">✓</span> Frontmatter: <span class="status">passed</span>');
     expect(html).toContain('<span class="status">failed: only 4 evals (need at least 5)</span>');
   });
   it('names the zip and the install commands after the slug', () => {
     const html = render();
     expect(html).toContain('<code>unzip tasks-api-skill.zip -d .claude/skills/</code>');
-    expect(html).toContain('<code>node .claude/skills/tasks-api/scripts/audit.mjs .claude/skills/tasks-api</code>');
   });
   it('shows the static outline while writing, and disables Download with a reason when there are no operations', () => {
     expect(render({ skill: undefined, ready: false })).toContain('Writing skill…');

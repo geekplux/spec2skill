@@ -9,8 +9,8 @@ import type { Skill } from './useSkill';
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const OUTLINE = ['SKILL.md', 'kit/', 'references/', 'examples/', 'scripts/', 'evals/', 'ci/'];
 const SHORT: Record<string, string> = {
-  frontmatter: 'Frontmatter valid', body: 'SKILL.md within 200 lines', operations: 'Every operation referenced', links: 'Every link resolves',
-  references: 'Every reference linked', kit: 'Kit and tests present', examples: 'Worked examples present', evals: 'Evals well-formed', ci: 'CI runs it all',
+  frontmatter: 'Frontmatter', body: 'Body ≤ 200 lines', operations: 'Every operation', links: 'Links resolve',
+  references: 'References linked', kit: 'Kit and tests', examples: 'Worked examples', evals: 'Evals', ci: 'CI workflow',
 };
 
 const mark = (ok: boolean) => <span className="mark" aria-hidden="true">{ok ? '✓' : '✗'}</span>;
@@ -45,10 +45,10 @@ function Checklist({ audit }: { audit: AuditResult }) {
       <summary>{mark(audit.ok)} {audit.ok ? 'Audit passed' : 'Audit failed'}: {passed} of {audit.checks.length} checks</summary>
       <ul>
         {audit.checks.map((c) => (
-          <li key={c.id} data-ok={c.ok}>{mark(c.ok)} {SHORT[c.id] ?? c.label}: <span className="status">{c.ok ? 'passed' : `failed: ${c.reason}`}</span></li>
+          <li key={c.id} data-ok={c.ok} title={c.label}>{mark(c.ok)} {SHORT[c.id] ?? c.label}: <span className="status">{c.ok ? 'passed' : `failed: ${c.reason}`}</span></li>
         ))}
       </ul>
-      <p className="help">Examples are executed by <code>node scripts/audit.mjs</code> or the CLI, not in the browser.</p>
+      <p className="help">Examples run in <code>node scripts/audit.mjs</code> or the CLI, not in the browser.</p>
     </details>
   );
 }
@@ -119,7 +119,7 @@ export function SkillPane({ skill, error, ready, empty, options, onOptions, file
         </button>
         <button type="button" className="btn" onClick={copy} disabled={empty}>Copy install command</button>
       </div>
-      <p className="install">Then <code>{install[0]}</code> and <code>{install[1]}</code> prints <samp>audit passed</samp>.</p>
+      <p className="install">Install: <code>{install[0]}</code></p>
     </section>
   );
 }
