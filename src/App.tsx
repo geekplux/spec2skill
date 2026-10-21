@@ -1,19 +1,23 @@
 import { type FocusEvent, Suspense, startTransition, use, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAnnounce } from './a11y/Announcer';
-import { buildGraph } from './graph';
+import { graphOf } from './graph';
 import { ListView } from './list/ListView';
 import { AtlasMap } from './map/Map';
 import { Search } from './map/Search';
 import { ShortcutHelp } from './map/ShortcutHelp';
-import type { SourceKind } from './model/types';
+import type { ApiModel, SourceKind } from './model/types';
 import { DEFAULT_SAMPLE_ID, SAMPLES, type Sample, getSample, sampleModel } from './samples';
 import { Layout } from './shell/Layout';
 import { revealInRow } from './shell/reveal';
 import { type TabDef, Tabs, useWide } from './shell/Tabs';
 import { skillSlug } from './skillgen/slug';
+import { type Explained, explain } from './source/errors';
+import { type Input, type Mode, loadSource } from './source/fetchSource';
+import { SourceInput } from './source/SourceInput';
+import { EmptyChart, ErrorPanel, LoadingSteps, type Progress } from './source/Status';
 import { SkillPane } from './skillpane/SkillPane';
 import { opFile } from './skillpane/tree';
-import { type Skill, useSkill } from './skillpane/useSkill';
+import { type Skill, useSkill, writeSkill } from './skillpane/useSkill';
 import { type Hidden, SHOW_ALL, edgeShown, facets, matches, searchIndex } from './state/filter';
 import { type UrlState, type View, canonicalUrl, readUrl, writeUrl } from './state/url';
 
@@ -30,16 +34,18 @@ const TABS: TabDef<Tab>[] = [
 ];
 
 interface WorkspaceProps {
-  sample: Sample; tab: Tab; onTab: (tab: Tab) => void; wide: boolean; run: number;
+  /** A built-in sample's model (being read) or a loaded source's. */
+  source: ApiModel | Promise<ApiModel>; tab: Tab; onTab: (tab: Tab) => void; wide: boolean; run: number;
   /** `#op=`: the operation whose details are open. */
   op?: string; onOp: (id: string | undefined, push: boolean) => void;
   q: string; onQ: (q: string) => void; hidden: Hidden; onHidden: (h: Hidden) => void;
 }
 
 /** The skill pane beside the map (desktop) or behind Skill | Map | List tabs (below 1024 px), D21. */
-function Workspace({ sample, tab, onTab, wide, run, op, onOp, q, onQ, hidden, onHidden }: WorkspaceProps) {
-  const model = use(sampleModel(sample));
-  const graph = useMemo(() => buildGraph(model), [model]);
+function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, onHidden }: WorkspaceProps) {
+  const isSample = source instanceof Promise;
+  const model = isSample ? use(source) : source;
+  const graph = graphOf(model);
   const index = useMemo(() => searchIndex(model, graph), [model, graph]);
   const match = useMemo(() => matches(index, q, hidden), [index, q, hidden]);
   const shown = useMemo(() => graph.edges.filter((e) => edgeShown(e, match, hidden)), [graph, match, hidden]);
@@ -52,7 +58,7 @@ function Workspace({ sample, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
   const { skill, error } = useSkill(model, graph, slug, opts.license, run);
   const [file, setFile] = useState('SKILL.md');
   const panes = useRef<HTMLDivElement>(null);
-  const title = `${model.source.title} (sample)`;
+  const title = isSample ? `${model.source.title} (sample)` : model.source.title;
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
   const summary = `${model.operations.length} ${noun} in ${graph.clusters.length} clusters, ${graph.edges.length} relationships`;
   const view = tab === 'list' ? 'list' : 'map';
@@ -112,8 +118,14 @@ function Workspace({ sample, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
         <p className="kicker">Surveyed from {KIND_LABEL[model.source.kind]} {model.source.specVersion}</p>
         <h1>{title}</h1>
         <p className="lede">
-          {summary}. <span className="banner">This is a sample. Paste an OpenAPI or MCP URL above, or try another sample.</span>
+          {summary}.{isSample && <span className="banner"> This is a sample. Paste an OpenAPI or MCP URL above, or try another sample.</span>}
         </p>
+        {model.warnings.length > 0 && (
+          <details className="warnings">
+            <summary>{model.warnings.length} {model.warnings.length === 1 ? 'warning' : 'warnings'}</summary>
+            <ul>{model.warnings.slice(0, 100).map((w, i) => <li key={i}>{w.message}</li>)}</ul>
+          </details>
+        )}
       </div>
       {!wide && tabs}
       <div className="panes" ref={panes}>
@@ -123,6 +135,7 @@ function Workspace({ sample, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
         <div className="map-pane">
           {wide && tabs}
           <div className="sheet" id="panel-map" role="tabpanel" aria-labelledby={`tab-${view}`} hidden={!wide && tab === 'skill'} data-view={view}>
+            {model.operations.length === 0 ? <EmptyChart /> : <>
             <Search q={q} onQ={onQ} hidden={hidden} onHidden={onHidden} facets={choices} count={match && match.size}
               total={model.operations.length} noun={noun} edges={{ shown: shown.length, total: graph.edges.length }} onHelp={() => setHelp(true)} input={search} />
             {view === 'map' ? (
@@ -130,6 +143,7 @@ function Workspace({ sample, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
             ) : (
               <ListView model={model} graph={graph} match={match} edges={shown} selected={selected} onSelect={(id) => onOp(id, true)} skillFile={skillFile} onSkillFile={openFile} announce={announce} />
             )}
+            </>}
           </div>
         </div>
       </div>
@@ -154,6 +168,14 @@ export function App() {
   const tab: Tab = url.view ?? 'skill';
   const [run, setRun] = useState(0);
   const wide = useWide();
+  // A loaded source (URL, text or file) is shown while the URL names no sample and the same `?url=`.
+  const [user, setUser] = useState<{ url?: string; model: ApiModel }>();
+  const mine = user && !url.sample && user.url === url.url ? user.model : undefined;
+  const folded = !!mine;
+  const [job, setJob] = useState<{ ctl: AbortController; progress: Progress }>();
+  const [failure, setFailure] = useState<Explained & { retry?: () => void }>();
+  const field = useRef<HTMLTextAreaElement>(null);
+  const [draft, setDraft] = useState('');
   const chipRow = useRef<HTMLFieldSetElement>(null);
   useEffect(() => {
     const row = chipRow.current;
@@ -171,7 +193,8 @@ export function App() {
       row.removeEventListener('scroll', check);
       window.removeEventListener('resize', check);
     };
-  }, []);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- the row moves into a disclosure once a source is loaded
+  }, [folded]);
   // A link with an unknown sample or view falls back; the address then says what is shown
   // (checked after every render, as back/forward can also land on such a link).
   useEffect(() => {
@@ -200,11 +223,49 @@ export function App() {
     return () => clearTimeout(t);
     // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `go` reads the URL itself; only the query matters
   }, [find.q]);
+  /** A loaded source's skill is written before it is shown (the "Writing skill" step). */
+  const write = (model: ApiModel) => writeSkill(model, graphOf(model), skillSlug(model), 'MIT', run);
+  /** Load a URL, text or file: steps while it loads, then its skill and map together (or an error). */
+  const load = (input: Input, mode: Mode, opened = false) => {
+    job?.ctl.abort();
+    const ctl = new AbortController();
+    setFailure(undefined);
+    setJob({ ctl, progress: { at: 'fetch', labels: {} } });
+    const step = (at: Progress['at'], label: string) => setJob((j) => j?.ctl === ctl ? { ctl, progress: { at, labels: { ...j.progress.labels, [at]: label } } } : j);
+    loadSource(input, mode, { fetch: (i, init) => fetch(i, init), signal: ctl.signal, step, write }).then(({ model }) => {
+      if (ctl.signal.aborted) return;
+      const at = 'url' in input ? input.url.trim() : undefined;
+      setUser({ url: at, model });
+      setDraft(at ?? ''); // pasted text has become the skill; a URL stays to say what is shown
+      setJob(undefined);
+      setFind(NO_FILTER);
+      if (opened) return;
+      const now = here();
+      if (!now.sample && !now.url && !mine) go({ sample: sample.id }); // so back returns to it
+      go({ sample: undefined, url: at, op: undefined, q: '' }, true);
+    }, (error: unknown) => {
+      if (ctl.signal.aborted) return;
+      setJob(undefined);
+      const retry = 'url' in input && mode === 'auto' && ['not-a-spec', 'unsupported', 'html-page'].includes(explain(error).code);
+      setFailure({ ...explain(error), retry: retry ? () => load(input, 'mcp') : undefined });
+    });
+  };
+  // `?url=` on open (and back/forward to one): load it unless it is already shown.
+  useEffect(() => {
+    if (url.url && user?.url !== url.url) load({ url: url.url }, 'auto', true);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- only a new ?url= starts a load
+  }, [url.url]);
+  const stop = () => {
+    job?.ctl.abort();
+    setJob(undefined);
+    setFailure(undefined);
+  };
   const select = (next: Sample) => {
-    if (next.id === sample.id) return go({ sample: next.id }); // name it in the URL, no new entry
+    stop();
+    if (next.id === sample.id && !mine) return go({ sample: next.id }); // name it in the URL, no new entry
     setFind(NO_FILTER);
     // keep the current sample visible while the next one is read
-    startTransition(() => go({ sample: next.id, q: '', op: undefined }, true));
+    startTransition(() => go({ sample: next.id, url: undefined, q: '', op: undefined }, true));
   };
   /** Generate skill: write it again with the pane's options and bring the pane into view. */
   const generate = () => {
@@ -234,10 +295,14 @@ export function App() {
     {more && <span className="chips-more" aria-hidden="true" data-testid="chips-more">More samples ›</span>}
     </>
   );
+  const status = job ? <LoadingSteps progress={job.progress} onCancel={() => (stop(), field.current?.focus())} />
+    : failure && <ErrorPanel error={failure} onMcp={failure.retry} onSample={() => select(getSample(DEFAULT_SAMPLE_ID)!)}
+      onPaste={() => (stop(), field.current?.select(), field.current?.focus())} />;
   return (
-    <Layout samples={chips} onGenerate={generate}>
+    <Layout source={<SourceInput value={draft} onValue={setDraft} onLoad={(input, mode) => load(input, mode)} field={field} />} status={status} busy={!!job}
+      samples={mine ? <details className="samples-fold"><summary>Try a built-in sample</summary>{chips}</details> : chips} onGenerate={generate}>
       <Suspense fallback={<p className="lede">Reading the sample…</p>}>
-        <Workspace sample={sample} tab={tab} onTab={(view) => go({ view })} wide={wide} run={run} op={url.op} onOp={(op, push) => go({ op }, push)}
+        <Workspace source={mine ?? sampleModel(sample)} tab={tab} onTab={(view) => go({ view })} wide={wide} run={run} op={url.op} onOp={(op, push) => go({ op }, push)}
           q={find.q} onQ={(q) => setFind((f) => ({ ...f, q }))} hidden={find.hidden} onHidden={(hidden) => setFind((f) => ({ ...f, hidden }))} />
       </Suspense>
     </Layout>

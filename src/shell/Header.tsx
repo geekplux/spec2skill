@@ -5,7 +5,8 @@ import { applyTheme, followSystem, initialTheme, safeStorage } from '../design/t
 const prefersDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
 
 interface HeaderProps {
-  source?: ReactNode;
+  /** The source input (paste a URL or spec text, More options). */
+  source: ReactNode;
   /** Write the skill again and bring the skill pane into view. */
   onGenerate: () => void;
 }
@@ -35,21 +36,11 @@ export function Header({ source, onGenerate }: HeaderProps) {
         <Logo />
         <p className="pitch">Turn any OpenAPI spec or MCP server into an agent skill in one click.</p>
       </div>
-      {/* Before the source: phones show it on the wordmark row; app.css restores its place on wider screens. */}
+      {/* DOM order is the visual order at every width (logo, source, theme, Generate): no CSS `order`. */}
+      {source}
       <button type="button" className="btn theme" aria-pressed={theme === 'dark'} onClick={toggle}>
         <span aria-hidden="true">☾</span> Dark theme
       </button>
-      <div className="source">
-        {source ?? (
-          <input
-            className="input"
-            type="url"
-            disabled
-            aria-label="OpenAPI or MCP server URL (coming soon)"
-            placeholder="Paste an OpenAPI or MCP server URL (soon)"
-          />
-        )}
-      </div>
       <button type="button" className="btn primary generate" onClick={onGenerate}>
         Generate skill
       </button>
