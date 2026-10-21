@@ -20,6 +20,8 @@ export type ColorToken = keyof typeof PALETTE;
 
 /** Which hue marks which method/kind badge (the text label is always shown too). */
 export const METHOD_HUE = { get: 'meridian', post: 'fir', put: 'ochre', patch: 'ochre', delete: 'brick', tool: 'plum' } as const;
+/** Cluster territory washes, cycled in cluster order; decoration only. */
+export const WASH = ['meridian', 'fir', 'ochre', 'plum', 'brick'] as const;
 /** Edge hues; each edge kind also has its own line style, marker and label. */
 export const EDGE_HUE = { feeds: 'meridian', 'sub-path': 'graphite', 'shared-schema': 'plum' } as const;
 

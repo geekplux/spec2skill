@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Header } from './Header';
+import { Header, type View } from './Header';
 
 interface LayoutProps {
   /** The sample chip row (and, later, the loaded-source summary). */
@@ -7,20 +7,22 @@ interface LayoutProps {
   children: ReactNode;
   /** Right-hand detail panel (phase 7); omitted when nothing is selected. */
   panel?: ReactNode;
+  view: View;
+  onView: (view: View) => void;
 }
 
-export function Layout({ samples, children, panel }: LayoutProps) {
+export function Layout({ samples, children, panel, view, onView }: LayoutProps) {
   return (
     <div className="shell">
       <a className="skip" href="#main">
         Skip to content
       </a>
-      <Header />
+      <Header view={view} onView={onView} />
       <section className="samples" aria-label="Built-in samples">
         {samples}
       </section>
       <div className="stage" data-panel={panel ? 'open' : undefined}>
-        <main id="main" className="sheet" tabIndex={-1}>
+        <main id="main" className="sheet" data-view={view} tabIndex={-1}>
           {children}
         </main>
         {panel && (

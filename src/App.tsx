@@ -1,11 +1,12 @@
 import { type CSSProperties, type FocusEvent, Suspense, startTransition, use, useEffect, useMemo, useRef, useState } from 'react';
-import { type EdgeKind, buildGraph } from './graph';
-import type { ApiModel, Operation, SourceKind } from './model/types';
+import { WASH } from './design/tokens';
+import { type AtlasGraph, type EdgeKind, buildGraph } from './graph';
+import { AtlasMap } from './map/Map';
+import type { Operation, SourceKind } from './model/types';
 import { DEFAULT_SAMPLE_ID, SAMPLES, type Sample, getSample, sampleModel } from './samples';
+import type { View } from './shell/Header';
 import { Layout } from './shell/Layout';
 
-/** Territory washes cycle through the hues deterministically; decoration only. */
-const WASH = ['meridian', 'fir', 'ochre', 'plum', 'brick'];
 const KIND_LABEL: Record<SourceKind, string> = { openapi3: 'OpenAPI', swagger2: 'Swagger', mcp: 'MCP' };
 
 /** Keep a chip fully visible inside the horizontally scrolling mobile chip row. */
@@ -26,9 +27,8 @@ function flags(op: Operation): string[] {
   return out;
 }
 
-/** Temporary plain-text view of the graph (phase 4); the seed of the list view. */
-function GraphSummary({ model }: { model: ApiModel }) {
-  const graph = useMemo(() => buildGraph(model), [model]);
+/** Plain-text view of the graph (phase 4): the list view until phase 8, and the map's text alternative. */
+function GraphSummary({ graph }: { graph: AtlasGraph }) {
   const count = (kind: EdgeKind) => graph.edges.filter((e) => e.kind === kind).length;
   const inferred = graph.edges.filter((e) => e.confidence === 'inferred').length;
   return (
@@ -52,8 +52,9 @@ function GraphSummary({ model }: { model: ApiModel }) {
   );
 }
 
-function OperationList({ sample }: { sample: Sample }) {
+function OperationList({ sample, view }: { sample: Sample; view: View }) {
   const model = use(sampleModel(sample));
+  const graph = useMemo(() => buildGraph(model), [model]);
   const title = `${model.source.title} (sample)`;
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
   return (
@@ -63,9 +64,11 @@ function OperationList({ sample }: { sample: Sample }) {
       </p>
       <h1>{title}</h1>
       <p className="lede">
-        {model.operations.length} {noun}, charted as text for now; the interactive map arrives in a later phase.
+        {model.operations.length} {noun} in {graph.clusters.length} clusters, {graph.edges.length} relationships.{' '}
+        <span className="banner">You are looking at a sample. Paste an OpenAPI or MCP URL above, or try another sample.</span>
       </p>
-      <GraphSummary model={model} />
+      {view === 'map' && <AtlasMap key={model.hash} model={model} graph={graph} />}
+      <GraphSummary graph={graph} />
       <ul className="ops" data-testid="sample-list" aria-label={`${noun} in ${title}`}>
         {model.operations.map((op) => (
           <li key={op.id}>
@@ -87,6 +90,7 @@ function OperationList({ sample }: { sample: Sample }) {
 
 export function App() {
   const [sample, setSample] = useState(initialSample);
+  const [view, setView] = useState<View>('map');
   const chipRow = useRef<HTMLFieldSetElement>(null);
   useEffect(() => {
     chipRow.current?.querySelector<HTMLElement>(`[data-sample="${sample.id}"]`)?.scrollIntoView?.(NEAREST);
@@ -117,9 +121,9 @@ export function App() {
     </fieldset>
   );
   return (
-    <Layout samples={chips}>
+    <Layout samples={chips} view={view} onView={setView}>
       <Suspense fallback={<p className="lede">Reading the sample…</p>}>
-        <OperationList sample={sample} />
+        <OperationList sample={sample} view={view} />
       </Suspense>
     </Layout>
   );

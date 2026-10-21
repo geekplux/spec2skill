@@ -13,7 +13,15 @@ function Soon({ children, className = 'btn' }: { children: ReactNode; className?
   );
 }
 
-export function Header({ source }: { source?: ReactNode }) {
+export type View = 'map' | 'list';
+
+interface HeaderProps {
+  source?: ReactNode;
+  view: View;
+  onView: (view: View) => void;
+}
+
+export function Header({ source, view, onView }: HeaderProps) {
   const [theme, setTheme] = useState(() => initialTheme(safeStorage(), prefersDark()));
   const toggle = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -36,10 +44,11 @@ export function Header({ source }: { source?: ReactNode }) {
       </div>
       <fieldset className="views">
         <legend className="visually-hidden">View</legend>
-        <Soon>Map</Soon>
-        <button type="button" className="btn" aria-pressed="true">
-          List
-        </button>
+        {(['map', 'list'] as const).map((v) => (
+          <button type="button" className="btn" key={v} aria-pressed={view === v} onClick={() => onView(v)}>
+            {v === 'map' ? 'Map' : 'List'}
+          </button>
+        ))}
       </fieldset>
       <button type="button" className="btn theme" aria-pressed={theme === 'dark'} onClick={toggle}>
         <span aria-hidden="true">☾</span> Dark theme
