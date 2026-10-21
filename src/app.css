@@ -93,7 +93,7 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .camera { transform-origin: 0 0; }
 .camera[data-animate] { transition: transform var(--motion-camera) ease-out; }
 .grid-line { fill: none; stroke: var(--rule); opacity: 0.6; }
-.card { fill: color-mix(in srgb, var(--wash) 7%, var(--vellum)); stroke: var(--graphite); stroke-opacity: 0.45; }
+.card { fill: color-mix(in srgb, var(--wash) 7%, var(--vellum)); stroke: var(--graphite); stroke-opacity: 0.8; }
 .card-rule { stroke: var(--rule); }
 .territory-label { font: 650 13px var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; fill: var(--ink); }
 .hub, .sub, .crud text { font: 11px var(--font-mono); fill: var(--graphite); }

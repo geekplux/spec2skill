@@ -1,5 +1,5 @@
 // Phase 6: the SVG atlas. Every sample renders all nodes/edges in cluster cards; edges keep line
-// style + marker + label; camera (buttons, keys, wheel, drag, fit); data-ready timing (P3);
+// style + marker + label; camera (buttons, keys, Ctrl + wheel, no plain-wheel trap, drag, fit); data-ready timing (P3);
 // reduced motion; 390 px and 200 % zoom; offline sample switching; CVD screenshots.
 const SAMPLES = {
   tasks: { chip: 'Tasks API', nodes: 22, edges: 85, clusters: 5 },
@@ -116,12 +116,24 @@ export default {
     await page.waitForTimeout(300);
     const keyed = await transform(page);
     expect(keyed !== before, '+ key did not zoom');
-    const box = await atlas(page).boundingBox();
+    let box = await atlas(page).boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    // A plain wheel is not trapped: the event's default (page scroll) is kept and the camera stays put.
+    const plain = page.evaluate(() => new Promise((done) => window.addEventListener('wheel', (e) => setTimeout(() => done(e.defaultPrevented)), { once: true })));
+    await page.mouse.wheel(0, 120);
+    expect((await plain) === false, 'plain wheel was preventDefault-ed (scroll trap)');
+    await page.waitForTimeout(50);
+    expect((await transform(page)) === keyed, 'plain wheel zoomed the map');
+    expect(await page.getByText('Ctrl + scroll to zoom').isVisible(), 'legend does not explain Ctrl + scroll');
+    await page.evaluate(() => window.scrollTo(0, 0));
+    box = await atlas(page).boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.keyboard.down('Control');
     await page.mouse.wheel(0, -200);
+    await page.keyboard.up('Control');
     await page.waitForTimeout(50);
     const wheeled = await transform(page);
-    expect(wheeled !== keyed, 'wheel did not zoom');
+    expect(wheeled !== keyed, 'Ctrl + wheel did not zoom');
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2 - 120, box.y + box.height / 2 - 60, { steps: 4 });
     await page.mouse.up();

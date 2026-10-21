@@ -1,7 +1,6 @@
 // The atlas map (PLAN 5.5): pure SVG, one camera transform, survey grid, cards, edges, nodes, labels.
 // The SVG is one composite, focusable widget (zoom keys now, node navigation in phase 7, which
-// settles its role per A1/A2), so the static-element a11y lint rules do not fit it:
-/* oxlint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role */
+// settles its role per A1/A2), so the static-element a11y lint rules are disabled on its opening tag only.
 import { type CSSProperties, type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { WASH } from '../design/tokens';
 import type { AtlasGraph } from '../graph';
@@ -51,10 +50,11 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
     return () => observer.disconnect();
   }, [atlas.bounds]);
 
-  // Wheel zoom is non-passive on the map only, so page scrolling elsewhere is unaffected.
+  // Ctrl/Cmd + wheel zooms (trackpad pinch arrives as ctrlKey); a plain wheel scrolls the page, never trapped.
   useEffect(() => {
     const el = svg.current!;
     const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       const r = el.getBoundingClientRect();
       touched.current = true;
@@ -77,6 +77,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
   return (
     <>
     <div className="map" ref={frame}>
+      {/* oxlint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role -- composite atlas widget, see phase 7 */}
       <svg
         ref={svg}
         className="atlas"
@@ -101,6 +102,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
         onPointerUp={() => (drag.current = null)}
         onPointerCancel={() => (drag.current = null)}
       >
+        {/* oxlint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role */}
         <MapDefs />
         <pattern id="grid" width={48} height={48} patternUnits="userSpaceOnUse">
           <path className="grid-line" d="M48 0H0V48" />
