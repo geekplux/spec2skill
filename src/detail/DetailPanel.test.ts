@@ -7,8 +7,8 @@ import { getSample, sampleModel } from '../samples';
 import hostile from './__fixtures__/hostile-strings.json';
 import { DetailPanel } from './DetailPanel';
 
-const render = async (model: Awaited<ReturnType<typeof normalise>>, id: string) =>
-  renderToStaticMarkup(createElement(DetailPanel, { model, graph: buildGraph(model), op: model.operations.find((o) => o.id === id)!, onGo: () => {}, onClose: () => {}, announce: () => {} }));
+const render = async (model: Awaited<ReturnType<typeof normalise>>, id: string, inSkill?: string) =>
+  renderToStaticMarkup(createElement(DetailPanel, { model, graph: buildGraph(model), op: model.operations.find((o) => o.id === id)!, onGo: () => {}, onClose: () => {}, announce: () => {}, inSkill, onInSkill: () => {} }));
 
 describe('DetailPanel', () => {
   it('shows inputs, output fields, auth, related operations and the example for getTask', async () => {
@@ -20,6 +20,12 @@ describe('DetailPanel', () => {
     expect(html).toContain('<code>bearerAuth</code>: http bearer JWT');
     expect(html).toMatch(/<div role="group" aria-labelledby="([^"]+)"><h4 id="\1">Fed by<\/h4><ul class="related"><li><button[^>]*>GET \/projects\/\{projectId\}\/tasks<\/button> via <code>id -&gt; taskId<\/code>/);
     expect(html).toContain('curl &#x27;https://tasks.example.com/v1/tasks/&lt;taskId&gt;&#x27;');
+  });
+
+  it('links the skill file that documents the operation, once there is one', async () => {
+    const model = await sampleModel(getSample('tasks')!);
+    expect(await render(model, 'getTask', 'references/tasks.md')).toMatch(/In the skill: <button type="button" class="link"><code>references\/tasks\.md<\/code><\/button>/);
+    expect(await render(model, 'getTask')).not.toContain('In the skill');
   });
 
   it('renders spec strings as literal text, never markup (S3)', async () => {

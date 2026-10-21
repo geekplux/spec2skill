@@ -14,11 +14,14 @@ interface DetailProps {
   onGo: (id: string) => void;
   onClose: () => void;
   announce: (text: string) => void;
+  /** The skill file that documents `op`, shown in the skill pane by `onInSkill`. */
+  inSkill?: string;
+  onInSkill: (path: string) => void;
 }
 
 export const opName = (op: Operation): string => (op.kind === 'tool' ? op.id : `${op.method!.toUpperCase()} ${op.path}`);
 
-export function DetailPanel({ model, graph, op, onGo, onClose, announce }: DetailProps) {
+export function DetailPanel({ model, graph, op, onGo, onClose, announce, inSkill, onInSkill }: DetailProps) {
   const root = useRef<HTMLElement>(null);
   const ids = useId();
   const [copied, setCopied] = useState(false);
@@ -58,6 +61,11 @@ export function DetailPanel({ model, graph, op, onGo, onClose, announce }: Detai
       <h2 id="detail-title"><code>{opName(op)}</code></h2>
       <p>{op.title}{op.deprecated && <span className="flag">deprecated</span>}</p>
       {op.description && op.description !== op.title && <p className="desc">{op.description}</p>}
+      {inSkill && (
+        <p className="in-skill">
+          In the skill: <button type="button" className="link" onClick={() => onInSkill(inSkill)}><code>{inSkill}</code></button>
+        </p>
+      )}
 
       <h3>Inputs</h3>
       {op.inputs.length === 0 ? <p>None.</p> : (

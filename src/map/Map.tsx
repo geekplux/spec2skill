@@ -20,7 +20,15 @@ import { Toolbar } from './Toolbar';
 /** Height kept clear for the floating toolbar when fitting. */
 const TOOLBAR_H = 40;
 
-export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph }) {
+interface AtlasMapProps {
+  model: ApiModel;
+  graph: AtlasGraph;
+  /** The skill file documenting an operation, once the skill is written ("In the skill"). */
+  skillFile?: (id: string) => string | undefined;
+  onSkillFile: (path: string) => void;
+}
+
+export function AtlasMap({ model, graph, skillFile, onSkillFile }: AtlasMapProps) {
   const atlas = useMemo(() => layout(model, graph), [model, graph]);
   const ops = useMemo(() => new Map(model.operations.map((op) => [op.id, op])), [model]);
   const degree = useMemo(() => new Map(model.operations.map((op) => [op.id, edgesOf(graph.edges, op.id).length])), [model, graph]);
@@ -267,7 +275,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
       </svg>
       <p className="visually-hidden" id={helpId}>Arrow keys move between {noun}, Page Up and Page Down change cluster, E cycles edges, Enter opens details. A text list follows the map.</p>
     </div>
-    {op && <DetailPanel model={model} graph={graph} op={op} onGo={focusNode} onClose={close} announce={setSay} />}
+    {op && <DetailPanel model={model} graph={graph} op={op} onGo={focusNode} onClose={close} announce={setSay} inSkill={skillFile?.(op.id)} onInSkill={onSkillFile} />}
     </div>
     <Legend />
     </>

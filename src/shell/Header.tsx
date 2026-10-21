@@ -4,24 +4,13 @@ import { applyTheme, initialTheme, safeStorage } from '../design/theme';
 
 const prefersDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-/** A real, focusable control that announces why it does nothing yet. */
-function Soon({ children, className = 'btn' }: { children: ReactNode; className?: string }) {
-  return (
-    <button type="button" className={className} aria-disabled="true" aria-describedby="soon-note" title="Coming soon">
-      {children} <span className="soon">soon</span>
-    </button>
-  );
-}
-
-export type View = 'map' | 'list';
-
 interface HeaderProps {
   source?: ReactNode;
-  view: View;
-  onView: (view: View) => void;
+  /** Write the skill again and bring the skill pane into view. */
+  onGenerate: () => void;
 }
 
-export function Header({ source, view, onView }: HeaderProps) {
+export function Header({ source, onGenerate }: HeaderProps) {
   const [theme, setTheme] = useState(() => initialTheme(safeStorage(), prefersDark()));
   const toggle = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -45,21 +34,12 @@ export function Header({ source, view, onView }: HeaderProps) {
           />
         )}
       </div>
-      <fieldset className="views">
-        <legend className="visually-hidden">View</legend>
-        {(['map', 'list'] as const).map((v) => (
-          <button type="button" className="btn" key={v} aria-pressed={view === v} onClick={() => onView(v)}>
-            {v === 'map' ? 'Map' : 'List'}
-          </button>
-        ))}
-      </fieldset>
       <button type="button" className="btn theme" aria-pressed={theme === 'dark'} onClick={toggle}>
         <span aria-hidden="true">☾</span> Dark theme
       </button>
-      <Soon className="btn primary generate">Generate skill</Soon>
-      <span id="soon-note" hidden>
-        Coming soon
-      </span>
+      <button type="button" className="btn primary generate" onClick={onGenerate}>
+        Generate skill
+      </button>
     </header>
   );
 }
