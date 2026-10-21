@@ -18,7 +18,7 @@ const PROTOCOL_VERSION = '2025-06-18';
 const OUT = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'samples', 'mcp-filesystem.tools-list.json');
 const TIMEOUT_MS = 180_000;
 
-const sandbox = mkdtempSync(join(tmpdir(), 'tool-atlas-mcp-'));
+const sandbox = mkdtempSync(join(tmpdir(), 'spec2skill-mcp-'));
 const child = spawn('pnpm', ['dlx', PACKAGE, sandbox], { detached: true, stdio: ['pipe', 'pipe', 'inherit'] });
 console.log(`server started (pid ${child.pid}, process group ${child.pid})`);
 
@@ -102,7 +102,7 @@ try {
   const init = await request('initialize', {
     protocolVersion: PROTOCOL_VERSION,
     capabilities: {},
-    clientInfo: { name: 'tool-atlas-recorder', version: '0.0.0' },
+    clientInfo: { name: 'spec2skill-recorder', version: '0.0.0' },
   });
   child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })}\n`);
   const tools = [];

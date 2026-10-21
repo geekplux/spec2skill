@@ -75,7 +75,7 @@ function OperationList({ sample, view }: { sample: Sample; view: View }) {
       <h1>{title}</h1>
       <p className="lede">
         {summary}.{' '}
-        <span className="banner">You are looking at a sample. Paste an OpenAPI or MCP URL above, or try another sample.</span>
+        <span className="banner">This is a sample. Paste an OpenAPI or MCP URL above, or try another sample.</span>
       </p>
       {view === 'map' && <AtlasMap key={model.hash} model={model} graph={graph} />}
       <GraphSummary graph={graph} />

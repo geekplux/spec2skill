@@ -23,9 +23,9 @@ describe('detect', () => {
   });
 
   it('names what it found when it is not supported', () => {
-    expect(found(parseText(asyncapiText).value)).toMatch(/^This looks like an AsyncAPI 3\.0\.0 document; AsyncAPI .* not supported\. tool-atlas reads/);
+    expect(found(parseText(asyncapiText).value)).toMatch(/^This looks like an AsyncAPI 3\.0\.0 document; AsyncAPI .* not supported\. spec2skill reads/);
     expect(found({ hello: 'world', items: [1, 2] })).toBe(
-      'This looks like JSON with the top-level keys "hello", "items" but no `openapi`, `swagger` or `tools` key. tool-atlas reads OpenAPI 3.0/3.1, Swagger 2.0 and MCP tools/list responses.',
+      'This looks like JSON with the top-level keys "hello", "items" but no `openapi`, `swagger` or `tools` key. spec2skill reads OpenAPI 3.0/3.1, Swagger 2.0 and MCP tools/list responses.',
     );
     expect(found({ openapi: '4.0.0' })).toMatch(/OpenAPI 4\.0\.0, which is not supported/);
     expect(found({ swaggerVersion: '1.2' })).toMatch(/Swagger 1\.2, which is not supported/);
@@ -36,7 +36,7 @@ describe('detect', () => {
     expect(found([])).toMatch(/empty JSON array/);
     expect(found({})).toMatch(/empty JSON object/);
     expect(found({ tools: 'x' })).toBe(
-      'This looks like an object whose `tools` is not an array (an MCP tools/list result needs `tools: [...]`). tool-atlas reads OpenAPI 3.0/3.1, Swagger 2.0 and MCP tools/list responses.',
+      'This looks like an object whose `tools` is not an array (an MCP tools/list result needs `tools: [...]`). spec2skill reads OpenAPI 3.0/3.1, Swagger 2.0 and MCP tools/list responses.',
     );
   });
 

@@ -15,7 +15,7 @@ These files are bundled into the app so the samples render offline, with no API 
 
 ## `tasks-openapi31.yaml`
 
-- **Source:** hand-written for tool-atlas (OpenAPI 3.1, YAML), 2026-10-19.
+- **Source:** hand-written for spec2skill (OpenAPI 3.1, YAML), 2026-10-19.
 - **Licence:** MIT, same as this repository.
 - **What it exercises:** 22 operations over projects, tasks, comments, labels and members; cursor pagination
   (`cursor` + `limit`, `nextCursor` via an `allOf` page schema); bearer auth; path-level parameters;

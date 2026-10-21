@@ -9,7 +9,7 @@ export type Detection =
   /** `found` names what the document looks like; `message` is a full sentence for the user. */
   | { kind: 'unsupported'; found: string; message: string };
 
-const SUPPORTED = 'tool-atlas reads OpenAPI 3.0/3.1, Swagger 2.0 and MCP tools/list responses.';
+const SUPPORTED = 'spec2skill reads OpenAPI 3.0/3.1, Swagger 2.0 and MCP tools/list responses.';
 
 function unsupported(found: string, why = ''): Detection {
   return { kind: 'unsupported', found, message: `This looks like ${found}${why}. ${SUPPORTED}` };

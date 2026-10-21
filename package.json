@@ -1,8 +1,8 @@
 {
-  "name": "tool-atlas",
+  "name": "spec2skill",
   "version": "0.0.0",
   "private": true,
-  "description": "Paste an MCP server or OpenAPI spec URL and get an interactive atlas of everything it can do, plus a generated agent skill.",
+  "description": "Turn any OpenAPI spec or MCP server into an agent skill in one click.",
   "license": "MIT",
   "type": "module",
   "engines": {

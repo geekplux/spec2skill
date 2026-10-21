@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   summary: Projects, tasks, comments, labels and members for a small team task tracker.
   description: |
-    A hand-written sample for tool-atlas. Projects hold tasks; tasks have comments and
+    A hand-written sample for spec2skill. Projects hold tasks; tasks have comments and
     labels; members belong to projects and can be assigned tasks. Lists use cursor
     pagination: pass `nextCursor` from one page as `cursor` to get the next.
   license:
