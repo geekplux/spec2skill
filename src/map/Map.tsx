@@ -12,7 +12,7 @@ import { layout } from '../layout/layout';
 import type { ApiModel } from '../model/types';
 import { type Camera, LABEL_ZOOM, fit, follow, pan, toCss, zoomAt } from './camera';
 import { EdgeLabel, EdgeLine, MapDefs } from './Edge';
-import { describeEdge, edgesOf, keyAction, nodeName, otherEnd } from './keyboard';
+import { describeEdge, edgesOf, keyAction, mapName, nodeName, otherEnd } from './keyboard';
 import { Legend } from './Legend';
 import { Node } from './Node';
 import { Toolbar } from './Toolbar';
@@ -37,7 +37,7 @@ interface AtlasMapProps {
 export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSelect, match, edges: shownEdges }: AtlasMapProps) {
   const atlas = useMemo(() => layout(model, graph), [model, graph]);
   const ops = useMemo(() => new Map(model.operations.map((op) => [op.id, op])), [model]);
-  const degree = useMemo(() => new Map(model.operations.map((op) => [op.id, edgesOf(graph.edges, op.id).length])), [model, graph]);
+  const degree = useMemo(() => new Map(model.operations.map((op) => [op.id, edgesOf(shownEdges, op.id).length])), [model, shownEdges]);
   const names = useMemo(() => new Map(atlas.clusters.map((c) => [c.id, c.name])), [atlas]);
   const frame = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
@@ -211,7 +211,7 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
         tabIndex={-1}
         role="group"
         aria-roledescription="atlas"
-        aria-label={`${model.source.title}: ${model.operations.length} ${noun} in ${graph.clusters.length} clusters, ${graph.edges.length} relationships`}
+        aria-label={mapName(model.source.title, noun, model.operations.length, graph.clusters.length, graph.edges.length, match && match.size, shownEdges.length)}
         aria-describedby={helpId}
         onKeyDown={onKeyDown}
         onFocus={(e) => {

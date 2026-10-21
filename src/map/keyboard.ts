@@ -112,8 +112,8 @@ export const describeEdge = (e: Edge, id: string, index: number, count: number):
 /** Every shortcut, by where it works: the help dialog renders this table and a test checks that
  *  every key `keyAction`, the file tree and the tabs handle is in it. Keys are `KeyboardEvent.key`. */
 export const SHORTCUTS: { where: string; keys: string[]; what: string }[] = [
-  { where: 'Anywhere', keys: ['/'], what: 'Search operations' },
-  { where: 'Anywhere', keys: ['?'], what: 'Show these shortcuts' },
+  { where: 'Anywhere outside a text field', keys: ['/'], what: 'Search operations' },
+  { where: 'Anywhere outside a text field', keys: ['?'], what: 'Show these shortcuts' },
   { where: 'Search box', keys: ['Escape'], what: 'Clear the search' },
   { where: 'Map', keys: ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'], what: 'Move to the nearest operation that way (skips ones the search hides)' },
   { where: 'Map', keys: ['PageUp', 'PageDown'], what: 'Previous or next cluster' },
@@ -138,6 +138,14 @@ const KEY_LABEL: Record<string, string> = {
 export const keyLabel = (key: string): string => key.split(/\+(?=.)/).map((k) => KEY_LABEL[k] ?? k).join(' + ');
 
 /** A2 node name: "GET /tasks/{taskId}, Get a task, cluster Tasks, 4 relationships" (full, never truncated). */
+/** The map's accessible name; once search or filters narrow it, what matches and what is shown:
+ *  "Tasks API: 4 of 22 operations match, 18 of 85 relationships shown". */
+export function mapName(title: string, noun: string, operations: number, clusters: number, edges: number, match: number | null, shownEdges: number): string {
+  const all = `${operations} ${noun}`;
+  if (match === null && shownEdges === edges) return `${title}: ${all} in ${clusters} clusters, ${edges} relationships`;
+  return `${title}: ${match === null ? `${all} in ${clusters} clusters` : `${match} of ${all} match`}, ${shownEdges} of ${edges} relationships shown`;
+}
+
 export function nodeName(op: Operation, state: NodeState, cluster: string, relationships: number): string {
   const parts = [op.kind === 'tool' ? `Tool ${op.id}` : `${op.method!.toUpperCase()} ${op.path}`];
   if (op.title !== op.id && op.title !== op.path) parts.push(op.title);

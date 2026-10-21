@@ -124,7 +124,7 @@ function Workspace({ sample, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
           {wide && tabs}
           <div className="sheet" id="panel-map" role="tabpanel" aria-labelledby={`tab-${view}`} hidden={!wide && tab === 'skill'} data-view={view}>
             <Search q={q} onQ={onQ} hidden={hidden} onHidden={onHidden} facets={choices} count={match && match.size}
-              total={model.operations.length} noun={noun} onHelp={() => setHelp(true)} input={search} />
+              total={model.operations.length} noun={noun} edges={{ shown: shown.length, total: graph.edges.length }} onHelp={() => setHelp(true)} input={search} />
             {view === 'map' ? (
               <AtlasMap key={model.hash} model={model} graph={graph} skillFile={skillFile} onSkillFile={openFile} selected={selected} onSelect={onOp} match={match} edges={shown} />
             ) : (

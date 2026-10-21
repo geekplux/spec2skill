@@ -31,7 +31,7 @@ describe('shortcut help', () => {
         return action ? [shift && action.type === 'pan' ? `Shift+${key}` : key] : [];
       }),
     );
-    const known = new Set([...listed('Map'), ...listed('Anywhere')]);
+    const known = new Set([...listed('Map'), ...listed('Anywhere outside a text field')]);
     expect(handled.length).toBeGreaterThan(20);
     expect(handled.filter((k) => !known.has(k))).toEqual([]);
   });
@@ -46,7 +46,7 @@ describe('shortcut help', () => {
   });
 
   it('documents search keys and prints keys readably', () => {
-    expect(listed('Anywhere')).toEqual(new Set(['/', '?']));
+    expect(listed('Anywhere outside a text field')).toEqual(new Set(['/', '?']));
     expect(listed('Search box').has('Escape')).toBe(true);
     expect(SHORTCUTS.every((s) => s.keys.length > 0 && s.what.length > 0)).toBe(true);
     expect([keyLabel('ArrowLeft'), keyLabel('Shift+ArrowUp'), keyLabel('+'), keyLabel(' '), keyLabel('Escape')]).toEqual(['←', 'Shift + ↑', '+', 'Space', 'Esc']);

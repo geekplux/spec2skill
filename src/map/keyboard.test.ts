@@ -3,7 +3,7 @@ import { type AtlasGraph, buildGraph } from '../graph';
 import { type AtlasLayout, layout } from '../layout/layout';
 import type { ApiModel } from '../model/types';
 import { getSample, sampleModel } from '../samples';
-import { type NavState, RELATIONS, describeEdge, edgesOf, keyAction, nearest, nodeName, opFromHash, relation } from './keyboard';
+import { type NavState, RELATIONS, describeEdge, edgesOf, keyAction, mapName, nearest, nodeName, opFromHash, relation } from './keyboard';
 
 let model: ApiModel, graph: AtlasGraph, atlas: AtlasLayout;
 beforeAll(async () => {
@@ -91,6 +91,12 @@ describe('keyAction on the Tasks layout', () => {
 });
 
 describe('words for screen readers', () => {
+  it('names the map with what search and filters leave', () => {
+    expect(mapName('Tasks API', 'operations', 22, 5, 85, null, 85)).toBe('Tasks API: 22 operations in 5 clusters, 85 relationships');
+    expect(mapName('Tasks API', 'operations', 22, 5, 85, 4, 18)).toBe('Tasks API: 4 of 22 operations match, 18 of 85 relationships shown');
+    expect(mapName('Tasks API', 'operations', 22, 5, 85, null, 30)).toBe('Tasks API: 22 operations in 5 clusters, 30 of 85 relationships shown');
+  });
+
   it('names nodes per A2 with the full path', () => {
     const op = model.operations.find((o) => o.id === 'getTask')!;
     expect(nodeName(op, 'read', 'Tasks', 19)).toBe('GET /tasks/{taskId}, Get a task, cluster Tasks, 19 relationships');

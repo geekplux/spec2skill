@@ -1,6 +1,7 @@
 // The list view (F12, A3): the whole map as text. One table per cluster, every operation a row,
 // every edge in words with its kind and label; obeys search and filters; rows open the same
 // detail panel as the map. Spec strings are React text only (S3).
+import { useEffect, useRef } from 'react';
 import { CRUD_LETTER, CRUD_ORDER, type AtlasGraph, type Edge } from '../graph';
 import { DetailPanel } from '../detail/DetailPanel';
 import { edgeText, edgesOf } from '../map/keyboard';
@@ -41,6 +42,15 @@ export function ListView({ model, graph, match, edges, selected, onSelect, skill
     onSelect(id);
     announce(`Details for ${id} open after the list.`);
   };
+  // Back/forward opens or closes details from outside; if that dropped focus (the panel unmounted),
+  // it goes to the row of the selection, or of the one just closed.
+  const previous = useRef(selected);
+  useEffect(() => {
+    const id = selected ?? previous.current;
+    previous.current = selected;
+    const lost = !document.activeElement || document.activeElement === document.body || !document.activeElement.isConnected;
+    if (id && lost) document.querySelector<HTMLElement>(`tr[data-op="${CSS.escape(id)}"] th button`)?.focus();
+  }, [selected]);
   const close = () => {
     onSelect(undefined);
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`tr[data-op="${CSS.escape(selected!)}"] th button`)?.focus());

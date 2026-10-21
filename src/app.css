@@ -260,7 +260,8 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .filters fieldset { margin: 0 0 var(--space-1); padding: 0; border: 0; }
 .filters legend { float: left; min-width: 8.5rem; padding: 0; margin-right: var(--space-2); line-height: 28px; font-weight: 650; }
 .filters label { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 28px; margin-right: var(--space-3); }
-.node[data-dim] { opacity: 0.45; }
+.node[data-dim] :is(.shape, .bar, .crud rect) { opacity: 0.45; }
+.node[data-dim] text { opacity: 0.75; }
 .node[data-dim] .shape { stroke-dasharray: 4 3; }
 .filter-note { margin: var(--space-2) 0 0; color: var(--graphite); font-size: 0.85em; }
 

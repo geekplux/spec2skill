@@ -44,6 +44,9 @@ export default {
     expect((await page.locator('.node[data-dim]').count()) === total - matching, 'dimmed node count');
     expect((await page.locator('.node[data-dim] .shape').first().evaluate((el) => getComputedStyle(el).strokeDasharray)) !== 'none', 'dimmed nodes have no dashed outline');
     await page.waitForFunction(() => new URL(location.href).searchParams.get('q') === 'member');
+    // The map's name and node degrees follow the search.
+    const mapLabel = await page.getByTestId('atlas').getAttribute('aria-label');
+    expect(new RegExp(`^Tasks API: ${matching} of 22 operations match, \\d+ of \\d+ relationships shown$`).test(mapLabel), `filtered map name: ${mapLabel}`);
     const dim = new Set(await page.locator('.node[data-dim]').evaluateAll((els) => els.map((el) => el.getAttribute('data-op'))));
     await page.locator('.hit[tabindex="0"]').focus();
     const seen = new Set([await active(page)]);
@@ -71,6 +74,7 @@ export default {
     await page.locator('.filters summary').click();
     for (const name of ['sub path', 'shared schema']) await page.getByRole('group', { name: 'Edges' }).getByLabel(name).uncheck();
     expect((await page.locator('.filters summary').textContent()) === 'Filters (2 off)', 'filter summary');
+    await announced(page, /^\d+ of \d+ relationships shown\.$/);
     const kinds = new Set((await list(page).locator('li[data-edge]').allTextContents()).map((t) => t.split(' ')[0] + (t.startsWith('fed') ? ' by' : '')));
     expect([...kinds].every((k) => k === 'feeds' || k === 'fed by') && kinds.size > 0, `list edges with feeds only: ${[...kinds]}`);
     await axe('list feeds only');
@@ -81,6 +85,8 @@ export default {
     await page.mouse.move(5, 5);
     await screenshot('filter-feeds');
     await page.getByRole('button', { name: 'Show all' }).click();
+    expect(await page.evaluate(() => document.activeElement?.matches('.filters summary')), `focus after Show all: ${await active(page)}`);
+    await announced(page, 'All filters on.');
     await page.locator('.filters summary').click();
 
     // 3. The list view is the whole map as text, for every sample (AC3, A3, F12).
@@ -141,6 +147,21 @@ export default {
     await page.goForward();
     await page.getByRole('heading', { level: 2, name: 'tasks-api skill' }).waitFor();
     expect((await page.getByTestId('detail').count()) === 0, 'forward to tasks reopened details');
+    // Back/forward never drops focus to the page: it lands on the row of the selection.
+    const rowButton = (op) => page.evaluate((o) => document.activeElement === document.querySelector(`tr[data-op="${o}"] th button`), op);
+    await list(page).getByRole('button', { name: 'getTask, details' }).click();
+    await page.getByTestId('detail').getByRole('button', { name: 'Close details' }).focus();
+    await page.evaluate(() => history.back());
+    await page.getByTestId('detail').waitFor({ state: 'detached' });
+    await page.waitForFunction(() => document.activeElement?.closest('tr')?.getAttribute('data-op') === 'getTask');
+    expect(await rowButton('getTask'), `focus after back: ${await active(page)}`);
+    await page.evaluate(() => document.activeElement.blur());
+    await page.evaluate(() => history.forward());
+    await page.getByTestId('detail').waitFor();
+    await page.waitForFunction(() => document.activeElement?.closest('tr')?.getAttribute('data-op') === 'getTask');
+    expect(await rowButton('getTask'), `focus after forward: ${await active(page)}`);
+    await page.goBack();
+    await page.getByTestId('detail').waitFor({ state: 'detached' });
     // Map selections push entries too.
     await views(page).getByRole('tab', { name: 'Map' }).click();
     await mapReady(page);
