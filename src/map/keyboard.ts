@@ -93,18 +93,49 @@ export function relation(e: Edge, id: string): { group: Relation; other: string;
   return { group: 'Shares a schema', other, via: e.label };
 }
 
-/** "Edge 2 of 4: feeds getMember via assigneeId -> memberId". */
-export function describeEdge(e: Edge, id: string, index: number, count: number): string {
+/** An edge from one end, in words with its kind and label: "feeds getMember via assigneeId -> memberId". */
+export function edgeText(e: Edge, id: string): string {
   const { group, other, via } = relation(e, id);
-  const what = {
+  return {
     'Fed by': `fed by ${other} via ${via}`,
     Feeds: `feeds ${other} via ${via}`,
     'Parent path': `sub-path of ${other}`,
     'Sub-paths': `has sub-path ${other}`,
     'Shares a schema': `shares schema ${via} with ${other}`,
   }[group];
-  return `Edge ${index + 1} of ${count}: ${what}. Enter follows it.`;
 }
+
+/** "Edge 2 of 4: feeds getMember via assigneeId -> memberId". */
+export const describeEdge = (e: Edge, id: string, index: number, count: number): string =>
+  `Edge ${index + 1} of ${count}: ${edgeText(e, id)}. Enter follows it.`;
+
+/** Every shortcut, by where it works: the help dialog renders this table and a test checks that
+ *  every key `keyAction`, the file tree and the tabs handle is in it. Keys are `KeyboardEvent.key`. */
+export const SHORTCUTS: { where: string; keys: string[]; what: string }[] = [
+  { where: 'Anywhere', keys: ['/'], what: 'Search operations' },
+  { where: 'Anywhere', keys: ['?'], what: 'Show these shortcuts' },
+  { where: 'Search box', keys: ['Escape'], what: 'Clear the search' },
+  { where: 'Map', keys: ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'], what: 'Move to the nearest operation that way (skips ones the search hides)' },
+  { where: 'Map', keys: ['PageUp', 'PageDown'], what: 'Previous or next cluster' },
+  { where: 'Map', keys: ['Home', 'End'], what: 'First or last operation in the cluster' },
+  { where: 'Map', keys: ['e', 'E'], what: 'Cycle the focused operation\'s edges' },
+  { where: 'Map', keys: ['Enter', ' '], what: 'Open details, or follow the highlighted edge (Enter)' },
+  { where: 'Map', keys: ['Escape'], what: 'Clear the edge highlight, then close details' },
+  { where: 'Map', keys: ['+', '=', '-', '_'], what: 'Zoom in or out' },
+  { where: 'Map', keys: ['0'], what: 'Fit the map to the screen' },
+  { where: 'Map', keys: ['Shift+ArrowLeft', 'Shift+ArrowUp', 'Shift+ArrowRight', 'Shift+ArrowDown'], what: 'Pan the map' },
+  { where: 'Skill files', keys: ['ArrowUp', 'ArrowDown'], what: 'Previous or next file' },
+  { where: 'Skill files', keys: ['ArrowRight', 'ArrowLeft'], what: 'Open or close a folder, or go to its parent' },
+  { where: 'Skill files', keys: ['Home', 'End'], what: 'First or last file' },
+  { where: 'Skill files', keys: ['Enter', ' '], what: 'Show the file, or open or close the folder' },
+  { where: 'Tabs', keys: ['ArrowLeft', 'ArrowRight', 'Home', 'End'], what: 'Switch between Skill, Map and List' },
+];
+
+const KEY_LABEL: Record<string, string> = {
+  ArrowLeft: '←', ArrowUp: '↑', ArrowRight: '→', ArrowDown: '↓', PageUp: 'Page Up', PageDown: 'Page Down', Escape: 'Esc', ' ': 'Space',
+};
+/** How a key is printed: `Shift+ArrowLeft` -> `Shift + ←`. */
+export const keyLabel = (key: string): string => key.split(/\+(?=.)/).map((k) => KEY_LABEL[k] ?? k).join(' + ');
 
 /** A2 node name: "GET /tasks/{taskId}, Get a task, cluster Tasks, 4 relationships" (full, never truncated). */
 export function nodeName(op: Operation, state: NodeState, cluster: string, relationships: number): string {
