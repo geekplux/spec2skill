@@ -42,13 +42,13 @@ function Checklist({ audit }: { audit: AuditResult }) {
   const passed = audit.checks.filter((c) => c.ok).length;
   return (
     <details className="audit" open data-ok={audit.ok}>
-      <summary>{mark(audit.ok)} {audit.ok ? 'Audit passed' : 'Audit failed'}: {passed} of {audit.checks.length} checks</summary>
+      <summary>{mark(audit.ok)} {audit.ok ? 'Audit passed' : 'Audit failed'}: <span className="tally">{passed} of {audit.checks.length} checks</span></summary>
       <ul>
         {audit.checks.map((c) => (
           <li key={c.id} data-ok={c.ok} title={c.label}>{mark(c.ok)} {SHORT[c.id] ?? c.label}: <span className="status">{c.ok ? 'passed' : `failed: ${c.reason}`}</span></li>
         ))}
       </ul>
-      <p className="help">Examples run in <code>node scripts/audit.mjs</code> or the CLI, not in the browser.</p>
+      <p className="help">Examples run in the CLI audit (<code>scripts/audit.mjs</code>), not in the browser.</p>
     </details>
   );
 }
@@ -106,11 +106,11 @@ export function SkillPane({ skill, error, ready, empty, options, onOptions, file
         ) : (
           <div className="skill-body" data-stale={!ready || undefined}>
             <FileTree paths={Object.keys(skill.tree)} selected={path} onSelect={onFile} />
+            <Checklist audit={skill.audit} />
             <p className="file-head"><code>{path}</code> · {lines} lines</p>
             {/* A Tab stop so keyboard users can scroll it; text only, never HTML. */}
             {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
             <pre id="skill-preview" className="preview" tabIndex={0} aria-label={`${path}, ${lines} lines`}>{text}</pre>
-            <Checklist audit={skill.audit} />
           </div>
         )}
       <div className="actions">

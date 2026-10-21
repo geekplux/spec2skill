@@ -190,9 +190,11 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .options .help { grid-column: 2; margin: 0 0 var(--space-1); color: var(--graphite); font-size: 0.9em; }
 .field { font: 13px var(--font-mono); padding: var(--space-1) var(--space-2); border: 1px solid var(--graphite); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); }
 .field[aria-invalid='true'] { border: 2px dashed var(--brick); }
-.skill-body { flex: 1; min-height: 0; display: grid; grid-template-rows: minmax(84px, 2fr) auto minmax(120px, 3fr) auto; }
+/* Files index and audit side by side like a chart's legend boxes, the open file below them. */
+.skill-body { flex: 1; min-height: 0; display: grid; grid-template: auto auto minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 1.3fr); gap: 0 var(--space-3); }
+.file-head, .preview { grid-column: 1 / -1; }
 .skill-body[data-stale], .writing { opacity: 0.6; }
-.tree { overflow: auto; padding: var(--space-1) 0; font: 12.5px/1.5 var(--font-mono); }
+.tree { max-height: 15rem; overflow: auto; padding: var(--space-1) 0; font: 12.5px/1.5 var(--font-mono); }
 [role='treeitem'] { padding: 2px var(--space-2) 2px calc(var(--space-2) + (var(--level) - 1) * 18px); border-radius: var(--radius-sm); cursor: pointer; outline-offset: -2px; }
 [role='treeitem']:hover { background: var(--paper); }
 [role='treeitem'][aria-selected='true'] { background: var(--paper); box-shadow: inset 3px 0 0 var(--ink); font-weight: 700; }
@@ -205,10 +207,11 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
   margin: 0; padding: 0 var(--space-3); overflow: auto; white-space: pre; font: 12px/18px var(--font-mono); color: var(--ink); outline-offset: -2px;
   background: var(--paper) repeating-linear-gradient(transparent 0 17px, color-mix(in srgb, var(--rule) 70%, transparent) 17px 18px) local;
 }
-.audit { margin-top: var(--space-1); border-top: 1px solid var(--rule); padding-top: var(--space-1); font-size: 0.85em; line-height: 1.45; }
+.audit { align-self: start; padding: var(--space-1) 0 var(--space-2) var(--space-3); border-left: 1px solid var(--rule); font-size: 0.85em; line-height: 1.4; }
 .audit summary { cursor: pointer; font: 650 1rem var(--font-display); }
-.audit ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr)); gap: 0 var(--space-3); margin: var(--space-1) 0; padding: 0; list-style: none; }
-.audit li[data-ok='false'] { grid-column: 1 / -1; font-weight: 650; }
+.tally { display: block; padding-left: 2.85em; color: var(--graphite); font: 0.85rem var(--font-body); }
+.audit ul { margin: var(--space-1) 0; padding: 0; list-style: none; }
+.audit li[data-ok='false'] { font-weight: 650; }
 .mark { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; margin-right: var(--space-1); border: 1.5px solid; border-radius: 50%; font: 700 0.75em var(--font-mono); color: var(--fir); }
 [data-ok='false'] > .mark, [data-ok='false'] > summary .mark { border-radius: 0; color: var(--brick); }
 .audit .help { margin: 0; color: var(--graphite); font-size: 0.9em; }
@@ -216,8 +219,6 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .actions { display: flex; flex-wrap: wrap; gap: var(--space-2); padding-top: var(--space-2); border-top: 3px double var(--ink); background: var(--vellum); }
 .actions .primary { min-width: 10rem; transition: none; }
 .install { margin: 0; color: var(--graphite); font-size: 0.85em; overflow-wrap: anywhere; }
-.audit li { white-space: nowrap; }
-.audit li[data-ok='false'] { white-space: normal; }
 .install code { color: var(--ink); }
 .in-skill { padding: var(--space-1) var(--space-2); border-left: 3px solid var(--meridian); background: var(--paper); }
 @media (max-width: 1023px) {
@@ -225,6 +226,7 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
   .tabs [role='tab'] { flex: 1; }
   .skill-pane { position: static; height: auto; }
   .skill-body { display: block; }
+  .audit { margin-top: var(--space-2); padding: var(--space-2) 0 0; border-left: 0; border-top: 1px solid var(--rule); }
   .tree { max-height: 40vh; }
   .preview { max-height: 60vh; }
   .actions { position: sticky; bottom: 0; padding-bottom: var(--space-2); }

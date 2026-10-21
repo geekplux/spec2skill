@@ -23,7 +23,7 @@ describe('SkillPane', () => {
   });
   it('states every audit check in text, with a glyph that is not the only signal', () => {
     const html = render();
-    expect(html).toContain('<span class="mark" aria-hidden="true">✗</span> Audit failed: 1 of 2 checks</summary>');
+    expect(html).toContain('<span class="mark" aria-hidden="true">✗</span> Audit failed: <span class="tally">1 of 2 checks</span></summary>');
     expect(html).toContain('<span class="mark" aria-hidden="true">✓</span> Frontmatter: <span class="status">passed</span>');
     expect(html).toContain('<span class="status">failed: only 4 evals (need at least 5)</span>');
   });
