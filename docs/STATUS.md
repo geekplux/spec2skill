@@ -2,7 +2,7 @@ STATE: IN-PROGRESS
 
 # Status
 
-- Current phase: 9 (phase-9-skillgen-core), starting
+- Current phase: 10 (phase-10-skillgen-audit), starting
 - Plan: docs/PLAN.md (17 phases)
 - Blockers: none
 
@@ -16,10 +16,11 @@ STATE: IN-PROGRESS
 | 6 | phase-6-layout-map | [#7](https://github.com/geekplux/spec2skill/pull/7) | PR open (verified PASS, a11y PASS) | 2 |
 | 7 | phase-7-keyboard-detail | [#8](https://github.com/geekplux/spec2skill/pull/8) | PR open (verified PASS, a11y PASS) | 2 |
 | 8 | phase-8-rename-spec2skill | [#9](https://github.com/geekplux/spec2skill/pull/9) | PR open (verified PASS, a11y PASS) | 1 |
-| 9 | phase-9-skillgen-core | - | in progress | 0 |
+| 9 | phase-9-skillgen-core | [#10](https://github.com/geekplux/spec2skill/pull/10) | PR open (verified PASS) | 1 |
+| 10 | phase-10-skillgen-audit | - | in progress | 0 |
 
 ## Follow-ups
 - Move ci/github-workflow.yml to .github/workflows/ (needs workflow scope).
 - Carried into phases 12-13: graph edge-noise trims, `?` help dialog, pinch-zoom, greedy cluster ordering, theme toggle following OS changes, mobile chip-row scroll hint, longer browser-check waits.
 
-Last updated: 2026-10-21 05:04 UTC (phase 8 PR opened)
+Last updated: 2026-10-21 07:18 UTC (phase 9 PR opened)
