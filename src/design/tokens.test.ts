@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import css from './tokens.css?raw';
-import { CALM, FONT, MOTION, PALETTE, RADIUS, SPACE } from './tokens';
+import { FONT, MOTION, PALETTE, RADIUS, SPACE } from './tokens';
 
 /** `--name: value;` declarations in the :root block (the first one). */
 function rootVars(source: string): Map<string, string> {
@@ -9,8 +9,8 @@ function rootVars(source: string): Map<string, string> {
 }
 
 describe('tokens.css mirrors tokens.ts', () => {
-  it('has the calm spacing scale 4/8/16/24/40/64', () => {
-    expect(Object.values(CALM)).toEqual(['4px', '8px', '16px', '24px', '40px', '64px']);
+  it('has the one spacing scale 4/8/16/24/40/64 (docs/DESIGN.md 3)', () => {
+    expect(Object.values(SPACE)).toEqual(['4px', '8px', '16px', '24px', '40px', '64px']);
   });
 
   const vars = rootVars(css);
@@ -25,7 +25,6 @@ describe('tokens.css mirrors tokens.ts', () => {
     const expected = new Map<string, string>([
       ...Object.entries(PALETTE).map(([k, v]) => [k, `light-dark(${v.light}, ${v.dark})`] as [string, string]),
       ...Object.entries(SPACE).map(([k, v]) => [`space-${k}`, v] as [string, string]),
-      ...Object.entries(CALM).map(([k, v]) => [`calm-${k}`, v] as [string, string]),
       ...Object.entries(RADIUS).map(([k, v]) => [`radius-${k}`, v] as [string, string]),
       ...Object.entries(FONT).map(([k, v]) => [`font-${k}`, v] as [string, string]),
       ...Object.entries(MOTION).map(([k, v]) => [`motion-${k}`, v] as [string, string]),

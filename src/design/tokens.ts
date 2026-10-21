@@ -25,9 +25,8 @@ export const WASH = ['meridian', 'fir', 'ochre', 'plum', 'brick'] as const;
 /** Edge hues; each edge kind also has its own line style, marker and label. */
 export const EDGE_HUE = { feeds: 'meridian', 'sub-path': 'graphite', 'shared-schema': 'plum' } as const;
 
-export const SPACE = { 1: '4px', 2: '8px', 3: '12px', 4: '16px', 5: '24px', 6: '32px', 7: '48px' } as const;
-/** The calm-layout spacing scale (docs/DESIGN.md 3): new layout CSS uses only these. */
-export const CALM = { 1: '4px', 2: '8px', 3: '16px', 4: '24px', 5: '40px', 6: '64px' } as const;
+/** The one spacing scale (docs/DESIGN.md 3): layout CSS uses only these (scripts/check-spacing.mjs). */
+export const SPACE = { 1: '4px', 2: '8px', 3: '16px', 4: '24px', 5: '40px', 6: '64px' } as const;
 export const RADIUS = { sm: '4px', md: '8px', pill: '999px' } as const;
 export const FONT = {
   display: "'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif",
