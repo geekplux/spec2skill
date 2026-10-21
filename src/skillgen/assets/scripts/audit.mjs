@@ -115,6 +115,12 @@ export async function readTree(dir) {
   return Object.fromEntries(paths.filter((p) => !/(^|\/)(\.git|node_modules)(\/|$)/.test(p) && statSync(join(dir, p)).isFile()).toSorted().map((p) => [p, readFileSync(join(dir, p), 'utf8')]));
 }
 
+/** The line of a failed run that says what went wrong: the first `...Error` line, else the first that is not a stack frame. */
+export function crashReason(error) {
+  const lines = (String(error.stderr ?? '').trim() || String(error.message ?? '')).split('\n').map((l) => l.trim()).filter(Boolean);
+  return lines.find((l) => /^\w*Error\b/.test(l)) ?? lines.find((l) => !l.startsWith('at ') && !l.startsWith('Node.js v')) ?? 'no output';
+}
+
 /** auditTree plus running each example as a dry run and validating the plan.json it writes. */
 export async function auditDir(dir) {
   const [{ execFileSync }, { readFileSync }, { join }] = await Promise.all([node('child_process'), node('fs'), node('path')]);
@@ -129,7 +135,7 @@ export async function auditDir(dir) {
       const bad = !Array.isArray(plan?.steps) || !plan.steps.length || plan.mode !== 'dry-run' ? 'no dry-run steps' : plan.steps.find((s) => !ids.includes(s.op))?.op;
       if (bad) failed.push(`${example}: ${bad === 'no dry-run steps' ? bad : `unknown operation ${bad}`} in plan.json`);
     } catch (error) {
-      failed.push(`${example}run.mjs failed: ${String(error.stderr || error.message).trim().split('\n').at(-1)}`);
+      failed.push(`${example}run.mjs failed: ${crashReason(error)}`);
     }
   }
   result.checks.push({ id: 'examples-run', label: 'every example runs as a dry run and writes a valid plan.json', ok: !failed.length, ...(failed.length && { reason: failed.join('; ') }) });
@@ -144,4 +150,16 @@ async function main(dir = '.') {
   process.exitCode = ok ? 0 : 1;
 }
 
-if (globalThis.process?.argv?.[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) main(process.argv[2]);
+/** Run as a script (also through a symlink or from a path with `#` or spaces), not imported. */
+async function isMain() {
+  const [{ realpathSync }, { fileURLToPath }] = await Promise.all([node('fs'), node('url')]);
+  try {
+    return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1]);
+  } catch {
+    return false;
+  }
+}
+
+if (globalThis.process?.argv?.[1] && import.meta.url.startsWith('file:')) {
+  isMain().then((yes) => yes && main(process.argv[2]));
+}

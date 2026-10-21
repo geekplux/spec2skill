@@ -3,8 +3,8 @@
   "evals": [
     {
       "id": "main-chain",
-      "prompt": "With the Swagger Petstore: finds pets by status, then find pet by ID for the first result.",
-      "expected_output": "Calls findPetsByStatus, then getPetById in that order (as in examples/find-pets-by-status-to-get-pet-by-id/), passing id -> petId from findPetsByStatus's output into getPetById; never invents an id or path; validates arguments with validateArgs before each call.",
+      "prompt": "With the Swagger Petstore: finds pets by status with status [\"available\"], then find pet by ID for the first result.",
+      "expected_output": "Calls findPetsByStatus, then getPetById in that order (as in examples/find-pets-by-status-to-get-pet-by-id/), passing id -> petId from findPetsByStatus's output into getPetById; uses status [\"available\"] as given; never invents an id or path; validates arguments with validateArgs before each call.",
       "files": []
     },
     {

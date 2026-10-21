@@ -3,8 +3,8 @@
   "evals": [
     {
       "id": "main-chain",
-      "prompt": "With the Tasks API: list projects, then get a task for the first result.",
-      "expected_output": "Calls listProjects, then listTasks, then getTask in that order (as in examples/list-projects-to-get-task/), passing id -> projectId, ownerId -> assigneeId from listProjects's output into listTasks; never invents an id or path; validates arguments with validateArgs before each call.",
+      "prompt": "With the Tasks API: list projects, then list tasks in a project for the first result, then get a task for the first result.",
+      "expected_output": "Calls listProjects, then listTasks, then getTask in that order (as in examples/list-projects-to-get-task/), passing id -> projectId from listProjects's output into listTasks, then id -> taskId from listTasks's output into getTask; never invents an id or path; validates arguments with validateArgs before each call.",
       "files": []
     },
     {

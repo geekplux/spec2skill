@@ -5,3 +5,4 @@ export function auditTree(files: Record<string, string>): AuditResult;
 export function operationIds(files: Record<string, string>): string[];
 export function readTree(dir: string): Promise<Record<string, string>>;
 export function auditDir(dir: string): Promise<AuditResult>;
+export function crashReason(error: { stderr?: unknown; message?: string }): string;

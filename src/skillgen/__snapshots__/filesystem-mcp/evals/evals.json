@@ -3,8 +3,8 @@
   "evals": [
     {
       "id": "main-chain",
-      "prompt": "With the secure-filesystem-server: list allowed directories, then read text file for the first result.",
-      "expected_output": "Calls list_allowed_directories, then search_files, then read_text_file in that order (as in examples/list-allowed-directories-to-read-text-file/), passing a listed entry -> path from list_allowed_directories's output into search_files; never invents an id or path; validates arguments with validateArgs before each call.",
+      "prompt": "With the secure-filesystem-server: list allowed directories, then search files with pattern \"example-pattern\" for the first result, then read text file for the first result.",
+      "expected_output": "Calls list_allowed_directories, then search_files, then read_text_file in that order (as in examples/list-allowed-directories-to-read-text-file/), passing a listed entry -> path from list_allowed_directories's output into search_files, then a listed entry -> path from search_files's output into read_text_file; uses pattern \"example-pattern\" as given; says the list_allowed_directories -> search_files and search_files -> read_text_file links are inferred (matched by name, not declared in the spec) and checks each passed value before relying on it; never invents an id or path; validates arguments with validateArgs before each call.",
       "files": []
     },
     {

@@ -8,7 +8,8 @@ import { api, exampleArgs, operation } from '../../kit/args.mjs';
 const CHAIN = /* @chain */ { ops: [], via: [] };
 const argv = process.argv.slice(2);
 const live = argv.includes('--live') && !argv.includes('--dry-run');
-const set = Object.fromEntries(argv.flatMap((a, i) => (argv[i - 1] === '--set' ? [a.split(/=(.*)/s, 2)] : [])));
+// Preset values (CHAIN.set), then `--set name=value` from the command line.
+const set = { ...CHAIN.set, ...Object.fromEntries(argv.flatMap((a, i) => (argv[i - 1] === '--set' ? [a.split(/=(.*)/s, 2)] : []))) };
 const kit = await import(api.kind === 'mcp' ? '../../kit/mcp.mjs' : '../../kit/client.mjs');
 const endpoint = process.env[`${api.envPrefix}_URL`];
 // Dry runs show where credentials go, never their values.

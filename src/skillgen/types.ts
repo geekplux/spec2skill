@@ -22,10 +22,13 @@ export interface SkillOptions { slug?: string; license?: string; prose?: SkillPr
 /** Calls where each output feeds the next input: `via[i]` maps `ops[i]` into `ops[i + 1]`; `inferred[i]` when that match is a guess. */
 export interface Chain { ops: string[]; via: string[]; inferred: boolean[] }
 
+/** A worked example: a chain, its `examples/<name>/` dir and, for a repeated single call, the argument values it presets. */
+export interface Example { chain: Chain; dir: string; set?: Record<string, unknown> }
+
 /** What the file builders share. `env` prefixes credential variables (TASKS_API); `refFiles` maps cluster id -> file name. */
 export interface SkillContext {
   model: ApiModel; graph: AtlasGraph; slug: string; license: string; prose: SkillProse; generator: string;
   env: string; chains: Chain[]; refFiles: Map<string, string>;
   /** The worked examples: a chain and its `examples/<name>/` directory. */
-  examples: { chain: Chain; dir: string }[];
+  examples: Example[];
 }
