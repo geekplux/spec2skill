@@ -7,12 +7,12 @@ import type { Operation, SourceKind } from './model/types';
 import { DEFAULT_SAMPLE_ID, SAMPLES, type Sample, getSample, sampleModel } from './samples';
 import type { View } from './shell/Header';
 import { Layout } from './shell/Layout';
+import { revealInRow } from './shell/reveal';
 
 const KIND_LABEL: Record<SourceKind, string> = { openapi3: 'OpenAPI', swagger2: 'Swagger', mcp: 'MCP' };
 
-/** Keep a chip fully visible inside the horizontally scrolling mobile chip row. */
-const NEAREST: ScrollIntoViewOptions = { block: 'nearest', inline: 'nearest' };
-const revealChip = (e: FocusEvent<HTMLButtonElement>) => e.currentTarget.scrollIntoView?.(NEAREST);
+/** Keep a chip fully visible inside the horizontally scrolling mobile chip row (scrolls the row, not focus). */
+const revealChip = (e: FocusEvent<HTMLButtonElement>) => revealInRow(e.currentTarget.parentElement, e.currentTarget);
 
 function initialSample(): Sample {
   const id = new URLSearchParams(window.location.search).get('sample');
@@ -103,7 +103,8 @@ export function App() {
   const [view, setView] = useState<View>('map');
   const chipRow = useRef<HTMLFieldSetElement>(null);
   useEffect(() => {
-    chipRow.current?.querySelector<HTMLElement>(`[data-sample="${sample.id}"]`)?.scrollIntoView?.(NEAREST);
+    const row = chipRow.current;
+    revealInRow(row, row?.querySelector<HTMLElement>(`[data-sample="${sample.id}"]`));
   }, [sample.id]);
   const select = (next: Sample) => {
     const url = new URL(window.location.href);

@@ -42,6 +42,17 @@ export default {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
     await page.setViewportSize(viewports.desktop);
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
+
+    // The first Tab after a fresh load lands on the skip link, whatever sample is preselected
+    // (revealing the selected chip must not move the sequential-focus starting point).
+    for (const id of ['tasks', 'petstore', 'filesystem']) {
+      await page.goto(`${origin}/?sample=${id}`);
+      await ready(page);
+      await page.keyboard.press('Tab');
+      const first = await active(page);
+      expect(first === 'Skip to content', `?sample=${id}: first Tab focused "${first}", expected the skip link`);
+    }
+
     await page.goto(`${origin}/?sample=tasks`);
     await ready(page);
     await page.evaluate(() => document.fonts.ready);
@@ -205,6 +216,16 @@ export default {
     expect((await panel.count()) === 0, 'Close did not close the bottom sheet');
     const [scroll, inner] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     expect(scroll <= inner, `390 px: horizontal scroll (${scroll} > ${inner})`);
+
+    // 390 px: the preselected chip is scrolled into view inside the chip row, and Tab still starts at the skip link.
+    for (const id of ['filesystem', 'tasks']) {
+      await page.goto(`${origin}/?sample=${id}`);
+      await ready(page);
+      const [row, chip] = [await page.locator('.chips').boundingBox(), await page.locator(`[data-sample="${id}"]`).boundingBox()];
+      expect(chip.x >= row.x - 1 && chip.x + chip.width <= row.x + row.width + 1, `390 px: ?sample=${id} chip ${JSON.stringify(chip)} outside the row ${JSON.stringify(row)}`);
+      await page.keyboard.press('Tab');
+      expect((await active(page)) === 'Skip to content', `390 px ?sample=${id}: first Tab focused "${await active(page)}"`);
+    }
 
     // Focus not obscured (2.4.11): with the panel open, every PageDown keeps the focused node clear of it.
     for (const [size, label] of [[viewports.mobile, '390 px'], [{ width: 820, height: 1180 }, '820 px']]) {

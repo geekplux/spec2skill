@@ -106,7 +106,10 @@ export function DetailPanel({ model, graph, op, onGo, onClose, announce }: Detai
       })}
 
       <h3>Example</h3>
-      <pre className="example" data-testid="example"><code>{code}</code></pre>
+      {/* One line per command line, scrolled sideways: wrapping would strand the trailing \.
+          The scroller is a Tab stop so keyboard users can scroll it (axe scrollable-region-focusable). */}
+      {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+      <pre className="example" data-testid="example" aria-label="Example request" tabIndex={0}><code>{code}</code></pre>
       <button type="button" className="btn" onClick={copy}>Copy example</button>
       {copied && <span className="copied" aria-hidden="true">Copied</span>}
     </section>

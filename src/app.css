@@ -167,7 +167,7 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .related li { padding-block: 2px; }
 .link { padding: 0; border: 0; background: none; color: var(--meridian); font: inherit; text-decoration: underline; cursor: pointer; }
 .copied { margin-left: var(--space-2); font-weight: 600; }
-.example { margin: var(--space-2) 0; padding: var(--space-2); background: var(--paper); border: 1px solid var(--rule); font: 12px/1.4 var(--font-mono); white-space: pre-wrap; }
+.example { margin: var(--space-2) 0; padding: var(--space-2); background: var(--paper); border: 1px solid var(--rule); font: 12px/1.4 var(--font-mono); white-space: pre; overflow-x: auto; }
 kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-bottom-width: 2px; border-radius: var(--radius-sm); font: 0.85em var(--font-mono); white-space: nowrap; }
 @media (max-width: 1023px) {
   .atlas-wrap[data-panel] { display: block; }
