@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readUrl, writeUrl } from './url';
+import { canonicalUrl, readUrl, writeUrl } from './url';
 
 const BASE = 'https://example.test/';
 
@@ -22,5 +22,18 @@ describe('writeUrl', () => {
   it('round-trips', () => {
     const state = { sample: 'filesystem', view: 'map' as const, q: 'read file', op: 'read_text_file' };
     expect(readUrl(writeUrl(BASE, state))).toEqual(state);
+  });
+});
+
+const known = (id: string) => ['tasks', 'petstore'].includes(id);
+describe('canonicalUrl', () => {
+  it('names the sample shown and drops unknown views', () => {
+    expect(canonicalUrl(`${BASE}?sample=nope&view=bogus&q=x#op=a`, known, 'tasks')).toBe(`${BASE}?sample=tasks&q=x#op=a`);
+    expect(canonicalUrl(`${BASE}?sample=&view=`, known, 'tasks')).toBe(`${BASE}?sample=tasks`);
+  });
+  it('leaves valid and absent parameters alone', () => {
+    const href = `${BASE}?sample=petstore&view=list#op=getPetById`;
+    expect(canonicalUrl(href, known, 'tasks')).toBe(href);
+    expect(canonicalUrl(BASE, known, 'tasks')).toBe(BASE);
   });
 });

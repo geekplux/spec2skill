@@ -15,7 +15,7 @@ import { SkillPane } from './skillpane/SkillPane';
 import { opFile } from './skillpane/tree';
 import { type Skill, useSkill } from './skillpane/useSkill';
 import { type Hidden, SHOW_ALL, edgeShown, facets, matches, searchIndex } from './state/filter';
-import { type UrlState, type View, readUrl, writeUrl } from './state/url';
+import { type UrlState, type View, canonicalUrl, readUrl, writeUrl } from './state/url';
 
 const KIND_LABEL: Record<SourceKind, string> = { openapi3: 'OpenAPI', swagger2: 'Swagger', mcp: 'MCP' };
 
@@ -159,6 +159,12 @@ export function App() {
     const row = chipRow.current;
     revealInRow(row, row?.querySelector<HTMLElement>(`[data-sample="${sample.id}"]`));
   }, [sample.id]);
+  // A link with an unknown sample or view falls back; the address then says what is shown
+  // (checked after every render, as back/forward can also land on such a link).
+  useEffect(() => {
+    const href = canonicalUrl(window.location.href, (id) => !!getSample(id), DEFAULT_SAMPLE_ID);
+    if (href !== window.location.href) window.history.replaceState(null, '', href);
+  });
   useEffect(() => {
     const onPop = () => {
       const next = here();
