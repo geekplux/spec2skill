@@ -40,10 +40,21 @@ describe('camera', () => {
 
 describe('follow', () => {
   const c = { x: 0, y: 0, k: 1 };
+  const all = { x: 0, y: 0, w: 800, h: 600 };
   it('leaves the camera alone when the rect is comfortably on screen', () => {
-    expect(follow(c, { x: 100, y: 100, w: 50, h: 20 }, 800, 600)).toBe(c);
+    expect(follow(c, { x: 100, y: 100, w: 50, h: 20 }, all)).toBe(c);
   });
   it('centres an off-screen rect at the same zoom', () => {
-    expect(follow({ ...c, k: 2 }, { x: 1000, y: 10, w: 100, h: 40 }, 800, 600)).toEqual({ k: 2, x: 400 - 1050 * 2, y: 300 - 30 * 2 });
+    expect(follow({ ...c, k: 2 }, { x: 1000, y: 10, w: 100, h: 40 }, all)).toEqual({ k: 2, x: 400 - 1050 * 2, y: 300 - 30 * 2 });
+  });
+  it('treats a rect under a side panel as hidden and centres it in the part left of the panel', () => {
+    const r = { x: 600, y: 100, w: 100, h: 40 };
+    expect(follow(c, r, all)).toBe(c); // visible without the panel
+    expect(follow(c, r, { ...all, w: 440 })).toEqual({ k: 1, x: 220 - 650, y: 300 - 120 });
+  });
+  it('treats a rect under a bottom sheet as hidden and centres it in the part above the sheet', () => {
+    const r = { x: 100, y: 400, w: 100, h: 40 };
+    expect(follow(c, r, all)).toBe(c);
+    expect(follow(c, r, { ...all, h: 300 })).toEqual({ k: 1, x: 400 - 150, y: 150 - 420 });
   });
 });

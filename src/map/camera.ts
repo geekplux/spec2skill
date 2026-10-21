@@ -26,9 +26,10 @@ export function fit(b: Rect, w: number, h: number, pad = 16, top = 0): Camera {
 
 export const toCss = (c: Camera): string => `translate(${c.x}px, ${c.y}px) scale(${c.k})`;
 
-/** Keep `r` on screen with `pad` px to spare: unchanged if it already is, else centred on it (same zoom). */
-export function follow(c: Camera, r: Rect, w: number, h: number, pad = 48): Camera {
+/** Keep `r` inside the visible part `v` of the viewport (the map minus any panel over it) with `pad`
+ *  px to spare: unchanged if it already is, else centred in `v` (same zoom). */
+export function follow(c: Camera, r: Rect, v: Rect, pad = 48): Camera {
   const [x0, y0] = [c.x + r.x * c.k, c.y + r.y * c.k];
-  if (x0 >= pad && y0 >= pad && x0 + r.w * c.k <= w - pad && y0 + r.h * c.k <= h - pad) return c;
-  return { k: c.k, x: w / 2 - (r.x + r.w / 2) * c.k, y: h / 2 - (r.y + r.h / 2) * c.k };
+  if (x0 >= v.x + pad && y0 >= v.y + pad && x0 + r.w * c.k <= v.x + v.w - pad && y0 + r.h * c.k <= v.y + v.h - pad) return c;
+  return { k: c.k, x: v.x + v.w / 2 - (r.x + r.w / 2) * c.k, y: v.y + v.h / 2 - (r.y + r.h / 2) * c.k };
 }

@@ -106,6 +106,8 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .hit { fill: transparent; stroke: none; outline: none; }
 .hit:focus { stroke: var(--marker); stroke-width: 5; box-shadow: none; }
 .node:has(.hit:focus) .shape { stroke-width: 2; }
+.ring { fill: none; stroke: none; }
+.node:has(.hit:focus) .ring { stroke: var(--ink); stroke-width: 2; }
 .node[data-target] .hit { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 5 3; }
 .bar { fill: var(--ink); }
 .bar.hatched { fill: url(#hatch); stroke: var(--brick); stroke-width: 0.75; }
@@ -162,7 +164,9 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .detail table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
 .detail th, .detail td { padding: 2px var(--space-1); border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
 .fields, .related { margin: 0; padding-left: var(--space-4); }
+.related li { padding-block: 2px; }
 .link { padding: 0; border: 0; background: none; color: var(--meridian); font: inherit; text-decoration: underline; cursor: pointer; }
+.copied { margin-left: var(--space-2); font-weight: 600; }
 .example { margin: var(--space-2) 0; padding: var(--space-2); background: var(--paper); border: 1px solid var(--rule); font: 12px/1.4 var(--font-mono); white-space: pre-wrap; }
 kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-bottom-width: 2px; border-radius: var(--radius-sm); font: 0.85em var(--font-mono); white-space: nowrap; }
 @media (max-width: 1023px) {
@@ -172,6 +176,7 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 
 @media (max-width: 639px) {
   .detail { position: fixed; top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 50dvh; border-radius: var(--radius-md) var(--radius-md) 0 0; box-shadow: 0 -4px 0 var(--paper); }
+  body:has(.detail) { padding-bottom: 50dvh; } /* room to scroll the map above the bottom sheet */
   html { scroll-padding-bottom: 72px; } /* keep focused controls clear of the sticky Generate button */
   body { font-size: 15px; padding-bottom: 72px; }
   .header, .samples { padding-inline: var(--space-3); }

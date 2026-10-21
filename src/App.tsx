@@ -1,4 +1,5 @@
 import { type CSSProperties, type FocusEvent, Suspense, startTransition, use, useEffect, useMemo, useRef, useState } from 'react';
+import { useAnnounce } from './a11y/Announcer';
 import { WASH } from './design/tokens';
 import { type AtlasGraph, type EdgeKind, buildGraph } from './graph';
 import { AtlasMap } from './map/Map';
@@ -57,6 +58,15 @@ function OperationList({ sample, view }: { sample: Sample; view: View }) {
   const graph = useMemo(() => buildGraph(model), [model]);
   const title = `${model.source.title} (sample)`;
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
+  const summary = `${model.operations.length} ${noun} in ${graph.clusters.length} clusters, ${graph.edges.length} relationships`;
+  // Announce the newly loaded sample (A2); not on first load, where the page itself is the news.
+  const announce = useAnnounce();
+  const shown = useRef(model.hash);
+  useEffect(() => {
+    if (shown.current === model.hash) return;
+    shown.current = model.hash;
+    announce(`${model.source.title}: ${summary}.`);
+  }, [announce, model.hash, model.source.title, summary]);
   return (
     <>
       <p className="kicker">
@@ -64,7 +74,7 @@ function OperationList({ sample, view }: { sample: Sample; view: View }) {
       </p>
       <h1>{title}</h1>
       <p className="lede">
-        {model.operations.length} {noun} in {graph.clusters.length} clusters, {graph.edges.length} relationships.{' '}
+        {summary}.{' '}
         <span className="banner">You are looking at a sample. Paste an OpenAPI or MCP URL above, or try another sample.</span>
       </p>
       {view === 'map' && <AtlasMap key={model.hash} model={model} graph={graph} />}

@@ -18,7 +18,7 @@ describe('DetailPanel', () => {
     expect(html).toContain('Output <code>Task</code>');
     expect(html).toContain('<code>assigneeId</code>');
     expect(html).toContain('<code>bearerAuth</code>: http bearer JWT');
-    expect(html).toMatch(/<h4>Fed by<\/h4><ul class="related"><li><button[^>]*>GET \/projects\/\{projectId\}\/tasks<\/button> via <code>id -&gt; taskId<\/code>/);
+    expect(html).toMatch(/<div role="group" aria-labelledby="([^"]+)"><h4 id="\1">Fed by<\/h4><ul class="related"><li><button[^>]*>GET \/projects\/\{projectId\}\/tasks<\/button> via <code>id -&gt; taskId<\/code>/);
     expect(html).toContain('curl &#x27;https://tasks.example.com/v1/tasks/&lt;taskId&gt;&#x27;');
   });
 

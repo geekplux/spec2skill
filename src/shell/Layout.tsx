@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Announcer } from '../a11y/Announcer';
 import { Header, type View } from './Header';
 
 interface LayoutProps {
@@ -14,6 +15,7 @@ interface LayoutProps {
 export function Layout({ samples, children, panel, view, onView }: LayoutProps) {
   return (
     <div className="shell">
+      <Announcer>
       <a className="skip" href="#main">
         Skip to content
       </a>
@@ -31,6 +33,7 @@ export function Layout({ samples, children, panel, view, onView }: LayoutProps) 
           </aside>
         )}
       </div>
+      </Announcer>
     </div>
   );
 }

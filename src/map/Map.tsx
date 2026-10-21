@@ -2,10 +2,12 @@
 // The SVG is a named group (aria-roledescription "atlas"); nodes are buttons with a roving tabindex,
 // so the map is one Tab stop. Keys and clicks are handled here (pure logic in keyboard.ts), so the
 // static-element a11y lint rules are disabled on the SVG's opening tag only.
-import { type CSSProperties, type KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useAnnounce } from '../a11y/Announcer';
 import { DetailPanel } from '../detail/DetailPanel';
 import { WASH } from '../design/tokens';
 import type { AtlasGraph } from '../graph';
+import type { Rect } from '../layout/geometry';
 import { layout } from '../layout/layout';
 import type { ApiModel } from '../model/types';
 import { type Camera, LABEL_ZOOM, fit, follow, pan, toCss, zoomAt } from './camera';
@@ -36,7 +38,8 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
   const [open, setOpen] = useState(() => cursor !== undefined);
   const [focusIn, setFocusIn] = useState(false);
   const [edge, setEdge] = useState<number | null>(null);
-  const [say, setSay] = useState('');
+  const setSay = useAnnounce();
+  const helpId = useId();
 
   const stop = cursor ?? atlas.nodes[0]?.id;
   const node = atlas.nodes.find((n) => n.id === stop);
@@ -57,15 +60,49 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
   };
   const zoomBy = (f: number) => move((c) => zoomAt(c, f, frame.current!.clientWidth / 2, frame.current!.clientHeight / 2), true);
 
-  /** Move focus to a node: DOM focus, camera follows (250 ms, 0 under reduced motion), position announced. */
+  /** The part of the map not covered by the detail panel (WCAG 2.4.11): an overlay on tablets covers
+   *  the right, a bottom sheet on phones covers the bottom (the page first scrolls the map to the top). */
+  const visibleBox = (): Rect => {
+    const el = frame.current!;
+    const box = { x: 0, y: 0, w: el.clientWidth, h: el.clientHeight };
+    const panel = el.parentElement!.querySelector<HTMLElement>('.detail');
+    const position = panel && getComputedStyle(panel).position;
+    if (position === 'absolute') {
+      return { ...box, w: Math.min(box.w, Math.max(0, panel!.getBoundingClientRect().left - el.getBoundingClientRect().left)) };
+    }
+    if (position === 'fixed') {
+      const top = el.getBoundingClientRect().top - 8;
+      if (Math.abs(top) > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'instant' });
+      return { ...box, h: Math.min(box.h, Math.max(0, panel!.getBoundingClientRect().top - el.getBoundingClientRect().top)) };
+    }
+    return box;
+  };
+  /** Camera follows a node (250 ms, 0 under reduced motion) so it is clear of the toolbar edge and the panel. */
+  const reveal = (id: string) => {
+    const n = atlas.nodes.find((x) => x.id === id);
+    if (!n) return;
+    const v = visibleBox();
+    setAnimate(true);
+    setCam((c) => {
+      const next = c && follow(c, n, v);
+      if (next !== c) touched.current = true;
+      return next;
+    });
+  };
+  /** Open the panel, then (once it is laid out) keep the node clear of it. */
+  const openPanel = (id: string) => {
+    setOpen(true);
+    requestAnimationFrame(() => reveal(id));
+  };
+
+  /** Move focus to a node: DOM focus, camera follows, position announced; keyboard focus outranks hover. */
   const focusNode = (id: string) => {
     const n = atlas.nodes.find((x) => x.id === id)!;
     setCursor(id);
     setEdge(null);
+    setHover(null);
     svg.current!.querySelector<SVGRectElement>(`.hit[data-op="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
-    const el = frame.current!;
-    const next = cam && follow(cam, n, el.clientWidth, el.clientHeight);
-    if (next && next !== cam) move(() => next, true);
+    reveal(id);
     const peers = atlas.nodes.filter((p) => p.cluster === n.cluster);
     setSay(`${names.get(n.cluster)} cluster, ${peers.indexOf(n) + 1} of ${peers.length}.`);
   };
@@ -139,7 +176,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
       setEdge(a.index);
       setSay(a.index === null ? 'Edge highlight cleared.' : describeEdge(edges[a.index]!, stop!, a.index, edges.length));
     } else if (a.type === 'open') {
-      setOpen(true);
+      openPanel(stop!);
       setSay('Details open after the map; Tab to read them.');
     } else if (a.type === 'close') setOpen(false);
     else if (a.type === 'zoom') zoomBy(a.factor);
@@ -166,7 +203,8 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
         tabIndex={-1}
         role="group"
         aria-roledescription="atlas"
-        aria-label={`${model.source.title} atlas: ${model.operations.length} ${noun} in ${graph.clusters.length} clusters, ${graph.edges.length} relationships. Arrow keys move between ${noun}, Page Up and Page Down change cluster, E cycles edges, Enter opens details. A text list follows the map.`}
+        aria-label={`${model.source.title}: ${model.operations.length} ${noun} in ${graph.clusters.length} clusters, ${graph.edges.length} relationships`}
+        aria-describedby={helpId}
         onKeyDown={onKeyDown}
         onFocus={(e) => {
           const id = (e.target as Element).getAttribute('data-op');
@@ -181,8 +219,8 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
           const id = dragged.current ? null : (e.target as Element).closest('.node')?.getAttribute('data-op');
           dragged.current = false;
           if (!id) return;
-          setOpen(true);
           focusNode(id);
+          openPanel(id);
         }}
         onPointerDown={(e) => {
           drag.current = { x: e.clientX, y: e.clientY };
@@ -227,7 +265,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
           </g>
         )}
       </svg>
-      <p className="visually-hidden" aria-live="polite" data-testid="announcer">{say}</p>
+      <p className="visually-hidden" id={helpId}>Arrow keys move between {noun}, Page Up and Page Down change cluster, E cycles edges, Enter opens details. A text list follows the map.</p>
     </div>
     {op && <DetailPanel model={model} graph={graph} op={op} onGo={focusNode} onClose={close} announce={setSay} />}
     </div>
