@@ -17,7 +17,10 @@ const mark = (ok: boolean) => <span className="mark" aria-hidden="true">{ok ? '�
 
 export interface SkillOptionsDraft { slug: string; license: string }
 
-function Options({ value, onChange }: { value: SkillOptionsDraft; onChange: (v: SkillOptionsDraft) => void }) {
+/** "Use deterministic text": offered once AI names and prose exist; applies to the map's names and the skill's prose. */
+export interface PlainText { on: boolean; onChange: (on: boolean) => void }
+
+function Options({ value, onChange, plainText }: { value: SkillOptionsDraft; onChange: (v: SkillOptionsDraft) => void; plainText?: PlainText }) {
   const [draft, setDraft] = useState(value);
   const bad = { slug: !SLUG.test(draft.slug) || draft.slug.length > 64, license: !draft.license.trim() || draft.license.length > 60 };
   const edit = (key: keyof SkillOptionsDraft, text: string) => {
@@ -34,6 +37,11 @@ function Options({ value, onChange }: { value: SkillOptionsDraft; onChange: (v: 
       <label htmlFor="opt-license">Licence</label>
       <input id="opt-license" className="field" value={draft.license} aria-invalid={bad.license} aria-describedby="opt-license-help" onChange={(e) => edit('license', e.target.value)} />
       <p id="opt-license-help" className="help">{bad.license && <strong>Not used: </strong>}an SPDX id such as MIT, up to 60 characters.</p>
+      {plainText && (
+        <label className="check">
+          <input type="checkbox" checked={plainText.on} onChange={(e) => plainText.onChange(e.target.checked)} /> Use deterministic text (cluster names and prose)
+        </label>
+      )}
     </details>
   );
 }
@@ -66,9 +74,10 @@ interface SkillPaneProps {
   /** "Generate skill" presses: each one brings the pane's heading into view and focus. */
   run: number;
   tabpanel?: { hidden: boolean };
+  plainText?: PlainText;
 }
 
-export function SkillPane({ skill, error, ready, empty, options, onOptions, file, onFile, run, tabpanel }: SkillPaneProps) {
+export function SkillPane({ skill, error, ready, empty, options, onOptions, file, onFile, run, tabpanel, plainText }: SkillPaneProps) {
   const heading = useRef<HTMLHeadingElement>(null);
   const announce = useAnnounce();
   // What the last action did, in words beside the buttons (and announced); only for this skill.
@@ -99,9 +108,9 @@ export function SkillPane({ skill, error, ready, empty, options, onOptions, file
     <section className="skill-pane" id="panel-skill" role={tabpanel ? 'tabpanel' : undefined} aria-labelledby={tabpanel ? 'tab-skill' : 'skill-title'}
       hidden={tabpanel?.hidden} data-ready={ready} aria-busy={!ready && !empty}>
       <div className="pane-head">
-        <p className="kicker">Agent skill · Prose: deterministic</p>
+        <p className="kicker">Agent skill · Prose: {skill?.prose === 'ai' ? 'AI-drafted' : 'deterministic'}</p>
         <h2 id="skill-title" tabIndex={-1} ref={heading}><code>{slug}</code> skill</h2>
-        <Options key={options.key} value={options} onChange={onOptions} />
+        <Options key={options.key} value={options} onChange={onOptions} plainText={plainText} />
       </div>
       {empty ? <p className="writing" id="skill-empty">No operations, so no skill to write.</p>
         : !skill ? (

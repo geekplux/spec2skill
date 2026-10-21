@@ -20,10 +20,17 @@ import { Toolbar } from './Toolbar';
 
 /** Height kept clear for the floating toolbar when fitting. */
 const TOOLBAR_H = 40;
+/** A cluster name cut to its card (13 px uppercase, ~11 px a letter) so a longer AI name never moves the layout. */
+const fitName = (name: string, width: number) => {
+  const max = Math.max(4, Math.floor((width - 32) / 11));
+  return name.length > max ? `${name.slice(0, max - 1).trimEnd()}…` : name;
+};
 
 interface AtlasMapProps {
   model: ApiModel;
   graph: AtlasGraph;
+  /** The deterministic graph the layout is computed from, when `graph` carries AI cluster names. */
+  base?: AtlasGraph;
   /** The skill file documenting an operation, once the skill is written ("In the skill"). */
   skillFile?: (id: string) => string | undefined;
   onSkillFile: (path: string) => void;
@@ -35,14 +42,14 @@ interface AtlasMapProps {
   edges: Edge[];
 }
 
-export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSelect, match, edges: shownEdges }: AtlasMapProps) {
+export function AtlasMap({ model, graph, base = graph, skillFile, onSkillFile, selected, onSelect, match, edges: shownEdges }: AtlasMapProps) {
   // Large specs start with clusters collapsed to summary cards (P4); Enter or a click expands one.
   const [collapsed, setCollapsed] = useState(() => startCollapsed(graph, selected));
-  const atlas = useMemo(() => layout(model, graph, collapsed), [model, graph, collapsed]);
+  const atlas = useMemo(() => layout(model, base, collapsed), [model, base, collapsed]);
   const many = aggregated(graph);
   const ops = useMemo(() => new Map(model.operations.map((op) => [op.id, op])), [model]);
   const degree = useMemo(() => new Map(model.operations.map((op) => [op.id, edgesOf(shownEdges, op.id).length])), [model, shownEdges]);
-  const names = useMemo(() => new Map(atlas.clusters.map((c) => [c.id, c.name])), [atlas]);
+  const names = useMemo(() => new Map(graph.clusters.map((c) => [c.id, c.name])), [graph]);
   const frame = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
   const drag = useRef<{ x: number; y: number } | null>(null);
@@ -331,7 +338,7 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
               <g key={c.id} className="cluster" aria-hidden="true" transform={`translate(${c.x} ${c.y})`} style={{ '--wash': `var(--${WASH[graph.clusters.findIndex((g) => g.id === c.id) % WASH.length]})` } as CSSProperties}>
                 <rect className="card" width={c.w} height={c.h} rx={8} />
                 <path className="card-rule" d={`M0 36H${c.w}`} />
-                <text className="territory-label" x={16} y={23}>{c.name}</text>
+                <text className="territory-label" x={16} y={23}>{fitName(names.get(c.id) ?? c.name, c.w)}</text>
                 {/* Hub schemas (used by > 8 operations) are badges, not edges. */}
                 <text className="hub" x={c.w - 12} y={23} textAnchor="end">{c.hubs.map((h) => `${h.name} on ${h.count} ops`).join(', ')}</text>
               </g>
@@ -356,6 +363,8 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
         )}
       </svg>
       <p className="visually-hidden" id={helpId}>Arrow keys move between {noun}, Page Up and Page Down change cluster, E cycles edges, Enter opens details, question mark lists every shortcut. The List view shows the same map as text.</p>
+      {/* Where the cluster names come from (PLAN 5.8), quiet as a map's credit line: text, not colour. */}
+      <p className="map-credit" data-testid="names-provenance">Names: {graph.clusters.some((c) => c.nameSource === 'ai') ? 'AI-drafted' : 'deterministic'}</p>
     </div>
     {op && <DetailPanel model={model} graph={graph} op={op} onGo={(id) => focusNode(id, true)} onClose={close} announce={setSay} inSkill={skillFile?.(op.id)} onInSkill={onSkillFile} />}
     </div>

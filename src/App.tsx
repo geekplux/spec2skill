@@ -1,5 +1,7 @@
 import { type FocusEvent, Suspense, startTransition, use, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAnnounce } from './a11y/Announcer';
+import { aiProse, applyAi } from './ai/client';
+import { useAi } from './ai/useAi';
 import { buildGraph } from './graph';
 import { ListView } from './list/ListView';
 import { AtlasMap } from './map/Map';
@@ -46,17 +48,25 @@ interface WorkspaceProps {
 function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, onHidden }: WorkspaceProps) {
   const isSample = source instanceof Promise;
   const model = isSample ? use(source) : source;
-  const graph = useMemo(() => buildGraph(model), [model]);
+  const base = useMemo(() => buildGraph(model), [model]);
+  // Lean AI (D23): user-loaded specs only, whose skill was written before they were shown, so the ask
+  // (an effect, after paint) follows the deterministic skill and map; the answer swaps in cluster names
+  // and skill prose unless "Use deterministic text" is on.
+  const ai = useAi(model, base, !isSample);
+  const [plainText, setPlainText] = useState(false);
+  const aiText = !plainText ? ai : undefined;
+  const graph = useMemo(() => (aiText ? applyAi(base, aiText.ai, aiText.summary) : base), [base, aiText]);
+  const prose = useMemo(() => (aiText ? aiProse(graph, aiText.ai) : undefined), [graph, aiText]);
   const index = useMemo(() => searchIndex(model, graph), [model, graph]);
   const match = useMemo(() => matches(index, q, hidden), [index, q, hidden]);
-  const shown = useMemo(() => graph.edges.filter((e) => edgeShown(e, match, hidden)), [graph, match, hidden]);
+  const edges = useMemo(() => graph.edges.filter((e) => edgeShown(e, match, hidden)), [graph, match, hidden]);
   const choices = useMemo(() => facets(model, graph), [model, graph]);
   const selected = model.operations.some((o) => o.id === op) ? op : undefined;
   const search = useRef<HTMLInputElement>(null);
   const [help, setHelp] = useState(false);
   const [opts, setOpts] = useState({ hash: '', slug: '', license: 'MIT' });
   const slug = (opts.hash === model.hash && opts.slug) || skillSlug(model);
-  const { skill, error } = useSkill(model, graph, slug, opts.license, run);
+  const { skill, error } = useSkill(model, graph, slug, opts.license, run, prose);
   const [file, setFile] = useState('SKILL.md');
   const panes = useRef<HTMLDivElement>(null);
   const title = isSample ? `${model.source.title} (sample)` : model.source.title;
@@ -74,7 +84,8 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
     const news = said.current.hash !== model.hash ? `${model.source.title}: ${summary}. ` : '';
     said.current = { hash: model.hash, skill };
     const passed = skill.audit.checks.filter((c) => c.ok).length;
-    if (!first || news) announce(`${news}Skill written: ${skill.audit.ok ? 'audit passed' : 'audit failed'}, ${passed} of ${skill.audit.checks.length} checks.`);
+    const what = skill.prose === 'ai' ? 'Skill updated with AI-drafted names and prose' : 'Skill written';
+    if (!first || news) announce(`${news}${what}: ${skill.audit.ok ? 'audit passed' : 'audit failed'}, ${passed} of ${skill.audit.checks.length} checks.`);
   }, [announce, skill, model.hash, model.source.title, summary]);
   // A spec without operations has no skill to announce: say the load finished, once per spec.
   const emptySaid = useRef('');
@@ -139,17 +150,18 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
       <div className="panes" ref={panes}>
         <SkillPane skill={skill} error={error} ready={skill?.hash === model.hash} empty={model.operations.length === 0}
           options={{ key: model.hash, slug, license: opts.license }} onOptions={(o) => setOpts({ hash: model.hash, ...o })}
-          file={file} onFile={setFile} run={run} tabpanel={wide ? undefined : { hidden: tab !== 'skill' }} />
+          file={file} onFile={setFile} run={run} tabpanel={wide ? undefined : { hidden: tab !== 'skill' }}
+          plainText={ai && { on: plainText, onChange: setPlainText }} />
         <div className="map-pane">
           {wide && tabs}
           <div className="sheet" id="panel-map" role="tabpanel" aria-labelledby={`tab-${view}`} hidden={!wide && tab === 'skill'} data-view={view}>
             {model.operations.length === 0 ? <EmptyChart /> : <>
             <Search q={q} onQ={onQ} hidden={hidden} onHidden={onHidden} facets={choices} count={match && match.size}
-              total={model.operations.length} noun={noun} edges={{ shown: shown.length, total: graph.edges.length }} onHelp={() => setHelp(true)} input={search} />
+              total={model.operations.length} noun={noun} edges={{ shown: edges.length, total: graph.edges.length }} onHelp={() => setHelp(true)} input={search} />
             {view === 'map' ? (
-              <AtlasMap key={model.hash} model={model} graph={graph} skillFile={skillFile} onSkillFile={openFile} selected={selected} onSelect={onOp} match={match} edges={shown} />
+              <AtlasMap key={model.hash} model={model} graph={graph} base={base} skillFile={skillFile} onSkillFile={openFile} selected={selected} onSelect={onOp} match={match} edges={edges} />
             ) : (
-              <ListView model={model} graph={graph} match={match} edges={shown} selected={selected} onSelect={(id) => onOp(id, true)} skillFile={skillFile} onSkillFile={openFile} announce={announce} />
+              <ListView model={model} graph={graph} match={match} edges={edges} selected={selected} onSelect={(id) => onOp(id, true)} skillFile={skillFile} onSkillFile={openFile} announce={announce} />
             )}
             </>}
           </div>

@@ -5,7 +5,7 @@ import { SkillPane } from './SkillPane';
 import type { Skill } from './useSkill';
 
 const skill: Skill = {
-  hash: 'h', slug: 'tasks-api', run: 0, zip: () => new Uint8Array(),
+  hash: 'h', slug: 'tasks-api', run: 0, prose: 'deterministic', zip: () => new Uint8Array(),
   tree: { 'SKILL.md': '---\nname: tasks-api\n---\n<script>alert(1)</script>\n<img src=x onerror=alert(2)>\n', 'references/tasks.md': '# Tasks\n' },
   audit: { ok: false, checks: [{ id: 'frontmatter', label: 'f', ok: true }, { id: 'evals', label: 'e', ok: false, reason: 'only 4 evals (need at least 5)' }] },
 };
