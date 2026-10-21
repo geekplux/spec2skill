@@ -22,12 +22,12 @@ export interface LoadDeps {
   write: (model: ApiModel, graph: AtlasGraph) => Promise<unknown>;
 }
 
-interface Got { text: string; type?: string; url?: string }
-type Doc = { doc: unknown; options: McpOptions };
+export interface Got { text: string; type?: string; url?: string }
+export type Doc = { doc: unknown; options: McpOptions };
 
 /** URL or spec text? Several lines, or a start like `{`, `[`, `openapi:` or `swagger:`, means text. */
 export const isUrlInput = (value: string): boolean => !/\n/.test(value.trim()) && !/^\s*([{[]|(openapi|swagger)\s*:)/.test(value);
-const MCP_PATH = /\/(mcp|sse)\/?$/;
+export const MCP_PATH = /\/(mcp|sse)\/?$/;
 
 export function toUrl(value: string): URL {
   const url = URL.canParse(value.trim()) ? new URL(value.trim()) : undefined;
@@ -36,7 +36,7 @@ export function toUrl(value: string): URL {
 }
 
 /** Errors that mean "not a spec": in Auto mode the URL is then tried as an MCP server. */
-const notSpec = (e: unknown) => e instanceof SourceError && (e.code === 'not-a-spec' || e.code === 'unsupported' || (e.code === 'http-error' && /\b40[56]\b/.test(e.message)));
+export const notSpec = (e: unknown) => e instanceof SourceError && (e.code === 'not-a-spec' || e.code === 'unsupported' || (e.code === 'http-error' && /\b40[56]\b/.test(e.message)));
 
 /** Reads a direct or proxied answer: 405/406 or an event stream means an MCP endpoint. */
 async function read(res: Response, type = res.headers.get('content-type') ?? ''): Promise<Got | 'mcp'> {
@@ -62,7 +62,7 @@ async function mcp(url: URL, deps: LoadDeps): Promise<Doc> {
   return { doc: { tools: r.tools }, options: { url: url.href, serverInfo: r.serverInfo, protocolVersion: r.protocolVersion } };
 }
 
-function parse(got: Got): Doc {
+export function parse(got: Got): Doc {
   if (got.type?.includes('text/html') || /^\s*<(!doctype|html)/i.test(got.text)) throw new SourceError('html-page');
   const { value } = parseText(got.text);
   const found = detect(value);
