@@ -13,7 +13,6 @@ import { EdgeLabel, EdgeLine, MapDefs } from './Edge';
 import { describeEdge, edgesOf, keyAction, nodeName, opFromHash, otherEnd } from './keyboard';
 import { Legend } from './Legend';
 import { Node } from './Node';
-import { ShortcutHelp } from './ShortcutHelp';
 import { Toolbar } from './Toolbar';
 
 /** Height kept clear for the floating toolbar when fitting. */
@@ -37,7 +36,6 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
   const [open, setOpen] = useState(() => cursor !== undefined);
   const [focusIn, setFocusIn] = useState(false);
   const [edge, setEdge] = useState<number | null>(null);
-  const [help, setHelp] = useState(false);
   const [say, setSay] = useState('');
 
   const stop = cursor ?? atlas.nodes[0]?.id;
@@ -134,7 +132,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey || e.altKey || (e.target as Element).closest('input, textarea, select, [contenteditable]')) return;
     const a = keyAction(atlas, { focus: node, edges, edge }, e.key, e.shiftKey);
-    if (!a) return;
+    if (!a || a.type === 'help') return; // the `?` shortcut dialog is deferred to phase 8
     e.preventDefault();
     if (a.type === 'focus') focusNode(a.id);
     else if (a.type === 'edge') {
@@ -146,7 +144,6 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
     } else if (a.type === 'close') setOpen(false);
     else if (a.type === 'zoom') zoomBy(a.factor);
     else if (a.type === 'fit') fitAll(true);
-    else if (a.type === 'help') setHelp(true);
     else move((c) => pan(c, a.dx, a.dy), true);
   };
 
@@ -157,7 +154,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
     <>
     <div className="atlas-wrap" data-panel={op ? 'open' : undefined}>
     <div className="map" ref={frame}>
-      <Toolbar onZoom={zoomBy} onFit={() => fitAll(true)} onHelp={() => setHelp(true)} />
+      <Toolbar onZoom={zoomBy} onFit={() => fitAll(true)} />
       {/* oxlint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role -- composite atlas widget */}
       <svg
         ref={svg}
@@ -169,7 +166,7 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
         tabIndex={-1}
         role="group"
         aria-roledescription="atlas"
-        aria-label={`${model.source.title} atlas: ${model.operations.length} ${noun} in ${graph.clusters.length} clusters, ${graph.edges.length} relationships. Arrow keys move between ${noun}, Enter opens details, question mark lists every key. A text list follows the map.`}
+        aria-label={`${model.source.title} atlas: ${model.operations.length} ${noun} in ${graph.clusters.length} clusters, ${graph.edges.length} relationships. Arrow keys move between ${noun}, Page Up and Page Down change cluster, E cycles edges, Enter opens details. A text list follows the map.`}
         onKeyDown={onKeyDown}
         onFocus={(e) => {
           const id = (e.target as Element).getAttribute('data-op');
@@ -234,7 +231,6 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
     </div>
     {op && <DetailPanel model={model} graph={graph} op={op} onGo={focusNode} onClose={close} announce={setSay} />}
     </div>
-    <ShortcutHelp open={help} onClose={() => setHelp(false)} />
     <Legend />
     </>
   );

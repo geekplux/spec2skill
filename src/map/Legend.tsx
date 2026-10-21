@@ -25,7 +25,7 @@ export function Legend() {
           </li>
         ))}
       </ul>
-      <p>Labels hide when zoomed out, crowded or repeated; point at or focus a node to show all of its edges and labels; press <kbd>?</kbd> on the map for every key. <b>Ctrl + scroll to zoom</b> (or pinch, or + and -); plain scrolling moves the page.</p>
+      <p>Labels hide when zoomed out, crowded or repeated; point at or focus a node to show all of its edges and labels; on the map, arrow keys move, Page Up/Down change cluster, Home/End jump, <kbd>E</kbd> cycles edges and Enter opens details. <b>Ctrl + scroll to zoom</b> (or pinch, or + and -); plain scrolling moves the page.</p>
     </details>
   );
 }

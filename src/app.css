@@ -164,11 +164,6 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .fields, .related { margin: 0; padding-left: var(--space-4); }
 .link { padding: 0; border: 0; background: none; color: var(--meridian); font: inherit; text-decoration: underline; cursor: pointer; }
 .example { margin: var(--space-2) 0; padding: var(--space-2); background: var(--paper); border: 1px solid var(--rule); font: 12px/1.4 var(--font-mono); white-space: pre-wrap; }
-.help { max-width: min(32rem, calc(100vw - 2 * var(--space-4))); padding: var(--space-5); background: var(--vellum); color: var(--ink); border: 1px solid var(--ink); border-radius: var(--radius-md); }
-.help::backdrop { background: color-mix(in srgb, var(--ink) 40%, transparent); }
-.help h2 { margin-top: 0; }
-.help dl { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-3); margin: 0 0 var(--space-4); }
-.help dd { margin: 0; }
 kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-bottom-width: 2px; border-radius: var(--radius-sm); font: 0.85em var(--font-mono); white-space: nowrap; }
 @media (max-width: 1023px) {
   .atlas-wrap[data-panel] { display: block; }
