@@ -4,7 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { CRUD_LETTER, CRUD_ORDER, type AtlasGraph, type Edge } from '../graph';
 import { DetailPanel } from '../detail/DetailPanel';
-import { edgeText, edgesOf } from '../map/keyboard';
+import { RELATIONS, edgeText, edgesOf, relation } from '../map/keyboard';
 import type { ApiModel, Operation } from '../model/types';
 
 /** A path or file name that may wrap after each `/`, never inside a segment. */
@@ -17,6 +17,16 @@ function flags(op: Operation): string[] {
   if (op.kind === 'tool' && op.hints.readOnly) out.push('read-only');
   if (op.kind === 'tool' && op.hints.destructive) out.push('destructive');
   return out;
+}
+
+/** A row's edges in words; more than two sit behind a disclosure whose summary counts them by relation. */
+function Relationships({ edges, id }: { edges: Edge[]; id: string }) {
+  if (edges.length === 0) return <>none</>;
+  const items = <ul>{edges.map((e) => <li key={e.id} data-edge={e.id}>{edgeText(e, id)}</li>)}</ul>;
+  if (edges.length <= 2) return items;
+  const groups = edges.map((e) => relation(e, id).group);
+  const counts = RELATIONS.filter((g) => groups.includes(g)).map((g) => `${groups.filter((x) => x === g).length} ${g.toLowerCase()}`);
+  return <details className="rels"><summary>{edges.length} relationships: {counts.join(', ')}</summary>{items}</details>;
 }
 
 interface ListViewProps {
@@ -101,7 +111,7 @@ export function ListView({ model, graph, match, edges, selected, onSelect, skill
                     <td><span className="method" data-method={o.method ?? 'tool'}>{o.method?.toUpperCase() ?? 'TOOL'}</span></td>
                     <td><code>{breakable(o.path ?? o.id)}</code></td>
                     <td>{o.title !== o.id && o.title}{flags(o).map((f) => <span className="flag" key={f}>{f}</span>)}</td>
-                    <td>{rel.length === 0 ? 'none' : <ul>{rel.map((e) => <li key={e.id} data-edge={e.id}>{edgeText(e, id)}</li>)}</ul>}</td>
+                    <td><Relationships edges={rel} id={id} /></td>
                     <td>{file && <button type="button" className="link" onClick={() => onSkillFile(file)}><code>{breakable(file)}</code></button>}</td>
                   </tr>
                 );

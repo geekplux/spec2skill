@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEGACY_THEME_KEY, THEME_KEY, applyTheme, initialTheme, migrateTheme, storedTheme } from './theme';
+import { LEGACY_THEME_KEY, THEME_KEY, applyTheme, followSystem, initialTheme, migrateTheme, storedTheme } from './theme';
 
 const memory = (value: string | null, legacy?: string) => {
   const data = new Map<string, string>(value === null ? [] : [[THEME_KEY, value]]);
@@ -57,5 +57,14 @@ describe('theme', () => {
     expect(junk.data.size).toBe(0);
     expect(() => migrateTheme(throwing)).not.toThrow();
     expect(() => migrateTheme(undefined)).not.toThrow();
+  });
+
+  it('follows OS scheme changes only while no choice is stored (A10)', () => {
+    expect(followSystem(memory(null), true)).toBe('dark');
+    expect(followSystem(memory(null), false)).toBe('light');
+    expect(followSystem(undefined, true)).toBe('dark');
+    expect(followSystem(memory('light'), true)).toBeNull();
+    expect(followSystem(memory('dark'), false)).toBeNull();
+    expect(followSystem(throwing, true)).toBe('dark'); // blocked storage: nothing stored
   });
 });

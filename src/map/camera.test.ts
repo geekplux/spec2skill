@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_ZOOM, MIN_ZOOM, fit, follow, pan, toCss, zoomAt } from './camera';
+import { MAX_ZOOM, MIN_ZOOM, fit, follow, pan, pinch, toCss, zoomAt } from './camera';
 
 describe('camera', () => {
   const c = { x: 10, y: 20, k: 1 };
@@ -56,5 +56,25 @@ describe('follow', () => {
     const r = { x: 100, y: 400, w: 100, h: 40 };
     expect(follow(c, r, all)).toBe(c);
     expect(follow(c, r, { ...all, h: 300 })).toEqual({ k: 1, x: 400 - 150, y: 150 - 420 });
+  });
+});
+
+const at = (x: number, y: number) => ({ x, y });
+
+describe('pinch', () => {
+  const c = { x: 10, y: 20, k: 1 };
+
+  it('spreading two pointers zooms about their midpoint, keeping that point fixed', () => {
+    const next = pinch(c, [at(100, 100), at(200, 100)], [at(50, 100), at(250, 100)]);
+    expect(next.k).toBe(2);
+    // The content point under the midpoint (150, 100) stays there: (150 - x) / k is unchanged.
+    expect((150 - next.x) / next.k).toBeCloseTo((150 - c.x) / c.k);
+    expect((100 - next.y) / next.k).toBeCloseTo((100 - c.y) / c.k);
+  });
+
+  it('moving both pointers together pans; pinching in is clamped to the zoom range', () => {
+    expect(pinch(c, [at(0, 0), at(10, 0)], [at(5, 7), at(15, 7)])).toEqual({ x: 15, y: 27, k: 1 });
+    expect(pinch(c, [at(0, 0), at(1000, 0)], [at(0, 0), at(1, 0)]).k).toBe(MIN_ZOOM);
+    expect(pinch(c, [at(5, 5), at(5, 5)], [at(5, 5), at(5, 5)])).toEqual(c); // no distance: no zoom
   });
 });

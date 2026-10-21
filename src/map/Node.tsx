@@ -1,4 +1,4 @@
-import { CRUD_LETTER } from '../graph';
+import { CRUD_LETTER, CRUD_ORDER, type Cluster } from '../graph';
 import { type LayoutNode, NODE_H as H, NODE_W as W } from '../layout/layout';
 import type { Crud, Operation } from '../model/types';
 
@@ -49,6 +49,27 @@ export function Node({ node, op, crud, label, tabbable, hot, dim, target, onHove
       <rect className="ring" aria-hidden="true" x={-8} y={-8} width={W + 16} height={H + 16} rx={12} />
       {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG cannot contain a <button> */}
       <rect className="hit" role="button" tabIndex={tabbable ? 0 : -1} aria-label={dim ? `${label}, filtered out` : label} data-op={op.id} x={-5} y={-5} width={W + 10} height={H + 10} rx={10} />
+    </g>
+  );
+}
+
+interface SummaryProps { node: LayoutNode; cluster: Cluster; crud: Record<string, Crud>; noun: string; tabbable: boolean }
+
+/** A collapsed cluster on a large spec: its count and CRUD letters; Enter or a click expands it. */
+export function Summary({ node, cluster, crud, noun, tabbable }: SummaryProps) {
+  const roles = CRUD_ORDER.filter((k) => cluster.operationIds.some((id) => crud[id] === k));
+  const count = `${cluster.operationIds.length} ${noun}`;
+  return (
+    <g className="node" data-op={node.id} data-summary transform={`translate(${node.x} ${node.y})`}>
+      <g aria-hidden="true">
+        <rect className="shape" width={W} height={H} rx={6} />
+        <text className="name" x={12} y={17}>{count} · {roles.map((k) => CRUD_LETTER[k]).join(' ')}</text>
+        <text className="sub" x={12} y={32}>Collapsed: Enter or click to expand</text>
+      </g>
+      <rect className="ring" aria-hidden="true" x={-8} y={-8} width={W + 16} height={H + 16} rx={12} />
+      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG cannot contain a <button> */}
+      <rect className="hit" role="button" tabIndex={tabbable ? 0 : -1} aria-expanded={false} data-op={node.id} x={-5} y={-5} width={W + 10} height={H + 10} rx={10}
+        aria-label={`${cluster.name} cluster, collapsed: ${count}, ${roles.join(', ')}. Enter expands it.`} />
     </g>
   );
 }

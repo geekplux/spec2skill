@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 
 const ITEMS: { swatch: ReactNode; text: ReactNode }[] = [
   { swatch: <path className="line" data-kind="feeds" d="M2 9H40" markerEnd="url(#mk-feeds)" />, text: <><b>feeds</b>: an output field fills an input (<code>id -&gt; taskId</code>)</> },
+  { swatch: <g className="link" data-link="bundle" data-kind="feeds"><path className="line" data-kind="feeds" d="M2 9H40" markerEnd="url(#mk-feeds)" /></g>, text: <><b>bold feeds to a cluster</b>: one output fills the same input of many of its operations (<code>projectId -&gt; 4 ops</code>)</> },
+  { swatch: <g className="link" data-link="clusters"><path className="line" d="M4 9H40" /></g>, text: <><b>thick band</b>, large specs only: <code>N links</code> between two clusters</> },
   { swatch: <path className="line" data-kind="sub-path" d="M2 9H40" markerEnd="url(#mk-sub-path)" />, text: <><b>sub-path</b>: a path nested under another</> },
   { swatch: <><path className="line" data-kind="shared-schema" d="M2 9H42" /><path className="diamond" d="M22 4.5l4.5 4.5l-4.5 4.5l-4.5-4.5z" /></>, text: <><b>shared schema</b>: same request or response schema (label: its name)</> },
   { swatch: <><rect className="legend-node" x={1} y={2} width={42} height={14} rx={3} /><text className="legend-glyph" x={6} y={12.5}>GET</text></>, text: <>endpoint, with its HTTP method</> },

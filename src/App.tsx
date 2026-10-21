@@ -159,6 +159,19 @@ export function App() {
     const row = chipRow.current;
     revealInRow(row, row?.querySelector<HTMLElement>(`[data-sample="${sample.id}"]`));
   }, [sample.id]);
+  // "More samples" while the chip row overflows to the right (phones); gone once scrolled to its end.
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    const row = chipRow.current!;
+    const check = () => setMore(row.scrollWidth - row.scrollLeft - row.clientWidth > 2);
+    check();
+    row.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', check);
+    return () => {
+      row.removeEventListener('scroll', check);
+      window.removeEventListener('resize', check);
+    };
+  }, []);
   // A link with an unknown sample or view falls back; the address then says what is shown
   // (checked after every render, as back/forward can also land on such a link).
   useEffect(() => {
@@ -200,6 +213,7 @@ export function App() {
   };
 
   const chips = (
+    <>
     <fieldset className="chips" ref={chipRow}>
       <legend>Built-in samples</legend>
       {SAMPLES.map((s) => (
@@ -216,6 +230,9 @@ export function App() {
         </button>
       ))}
     </fieldset>
+    {/* Every chip is in the row (and the tab order); the hint only says it scrolls. */}
+    {more && <span className="chips-more" aria-hidden="true" data-testid="chips-more">More samples ›</span>}
+    </>
   );
   return (
     <Layout samples={chips} onGenerate={generate}>

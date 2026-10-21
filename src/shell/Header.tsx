@@ -1,6 +1,6 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Logo } from '../design/Logo';
-import { applyTheme, initialTheme, safeStorage } from '../design/theme';
+import { applyTheme, followSystem, initialTheme, safeStorage } from '../design/theme';
 
 const prefersDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -12,6 +12,18 @@ interface HeaderProps {
 
 export function Header({ source, onGenerate }: HeaderProps) {
   const [theme, setTheme] = useState(() => initialTheme(safeStorage(), prefersDark()));
+  // Until the user picks a theme, an OS change applies live (A10), without storing anything.
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const change = (e: MediaQueryListEvent) => {
+      const next = followSystem(safeStorage(), e.matches);
+      if (!next) return;
+      document.documentElement.dataset.theme = next;
+      setTheme(next);
+    };
+    media.addEventListener('change', change);
+    return () => media.removeEventListener('change', change);
+  }, []);
   const toggle = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     applyTheme(next, document.documentElement, safeStorage());

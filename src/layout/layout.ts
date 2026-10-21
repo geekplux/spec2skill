@@ -163,7 +163,7 @@ export function layout(model: ApiModel, graph: AtlasGraph, collapsed: ReadonlySe
     if (e.kind === 'shared-schema') spots = spots.map((s) => ({ x: s.x, y: s.y - 10 })); // clear the midpoint diamond
     const repeat = `${e.kind} ${text} ${a.cluster} ${b.cluster}`;
     const box = (s: Point): Rect => ({ x: s.x - lw / 2, y: s.y - LABEL_H / 2, w: lw, h: LABEL_H });
-    const fit = said.has(repeat) || many ? undefined : spots.find((s) => !blocked.some((r) => overlaps(r, box(s))));
+    const fit = said.has(repeat) || many || e.bundledInto ? undefined : spots.find((s) => !blocked.some((r) => overlaps(r, box(s))));
     if (fit) {
       blocked.push(box(fit));
       said.add(repeat);

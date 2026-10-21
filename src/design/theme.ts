@@ -39,6 +39,11 @@ export function initialTheme(storage: Pick<Storage, 'getItem'> | undefined, pref
   return storedTheme(storage) ?? (prefersDark ? 'dark' : 'light');
 }
 
+/** The theme to switch to when the OS scheme changes: null while an explicit choice is stored (A10). */
+export function followSystem(storage: Pick<Storage, 'getItem'> | undefined, prefersDark: boolean): Theme | null {
+  return storedTheme(storage) === null ? (prefersDark ? 'dark' : 'light') : null;
+}
+
 /** Pins the theme on <html> and remembers it. */
 export function applyTheme(theme: Theme, root: HTMLElement, storage?: Pick<Storage, 'setItem'>): void {
   root.dataset.theme = theme;

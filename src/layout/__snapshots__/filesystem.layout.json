@@ -190,7 +190,7 @@
         "x": 308,
         "y": 112,
         "text": "listed path",
-        "shown": true
+        "shown": false
       }
     },
     {
@@ -459,8 +459,8 @@
         "y": 112
       },
       "label": {
-        "x": 313.7,
-        "y": 95.1,
+        "x": 315.2,
+        "y": 112,
         "text": "listed path",
         "shown": true
       }
@@ -646,10 +646,10 @@
         "y": 112
       },
       "label": {
-        "x": 308,
-        "y": 112,
+        "x": 319,
+        "y": 128.9,
         "text": "listed path",
-        "shown": false
+        "shown": true
       }
     }
   ],

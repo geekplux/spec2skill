@@ -23,7 +23,7 @@ describe('keyAction on the Tasks layout', () => {
     expect(key('getTask', 'ArrowUp')).toEqual(focus('createTask'));
     expect(key('getTask', 'ArrowRight')).toEqual(focus('getProject'));
     expect(key('getProject', 'ArrowLeft')).toEqual(focus('getTask'));
-    expect(key('completeTask', 'ArrowDown')).toEqual(focus('listMembers')); // next card below
+    expect(key('completeTask', 'ArrowDown')).toEqual(focus('listLabels')); // next card below (greedy order, phase 13)
     expect(key('getTask', 'ArrowLeft')).toBeNull(); // nothing further left
     expect(key('listTasks', 'ArrowUp')).toBeNull();
   });
@@ -48,8 +48,9 @@ describe('keyAction on the Tasks layout', () => {
     expect(key('getTask', 'End')).toEqual(focus('completeTask'));
     expect(key('listTasks', 'Home')).toBeNull();
     expect(key('getTask', 'PageDown')).toEqual(focus('listProjects'));
-    expect(key('getTask', 'PageUp')).toEqual(focus('listLabels'));
-    expect(key('deleteLabel', 'PageDown')).toEqual(focus('listTasks'));
+    expect(key('getTask', 'PageUp')).toEqual(focus('listComments'));
+    expect(key('deleteLabel', 'PageDown')).toEqual(focus('listComments'));
+    expect(key('deleteComment', 'PageDown')).toEqual(focus('listTasks'));
   });
 
   it('E cycles the edges, Enter follows the highlighted one, Esc clears it then closes', () => {

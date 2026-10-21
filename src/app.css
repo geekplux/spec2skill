@@ -75,6 +75,7 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .flag { margin-left: var(--space-2); padding: 0 var(--space-1); border: 1px solid var(--graphite); border-radius: var(--radius-sm); font-size: 0.8em; }
 
 /* The atlas map (phase 6): survey-chart cards, ink nodes, three edge styles that never rely on colour alone. */
+.chips-more { display: none; }
 .banner { margin-left: var(--space-2); padding-left: var(--space-2); border-left: 2px solid var(--meridian); }
 /* Height from the map's measured page top (--map-top, set by Map.tsx), leaving a 16px margin below. */
 .map { position: relative; height: clamp(360px, calc(100dvh - var(--map-top, 300px) - var(--space-4)), 900px); background: var(--paper); border: 1px solid var(--ink); border-radius: var(--radius-sm); overflow: clip; }
@@ -87,6 +88,8 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .card { fill: color-mix(in srgb, var(--wash) 7%, var(--vellum)); stroke: var(--graphite); stroke-opacity: 0.8; }
 .card-rule { stroke: var(--rule); }
 .territory-label { font: 650 13px var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; fill: var(--ink); }
+/* Zoomed out, cluster names grow (up to 1.8x) to stay readable as territories; --inv is 1 / zoom. */
+.territory-label { font-size: calc(13px * clamp(1, var(--inv, 1), 1.8)); }
 .hub, .sub, .crud text { font: 11px var(--font-mono); fill: var(--graphite); }
 .node .shape, .legend-node { fill: var(--vellum); stroke: var(--ink); }
 .node { cursor: pointer; }
@@ -126,6 +129,16 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .edge-label { font: 600 10.5px var(--font-mono); fill: var(--hue); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round; }
 .edge-label[data-shown='false'], .atlas[data-far] .edge-label, .atlas[data-hot] .edge-label { visibility: hidden; }
 .atlas .edge-label[data-hot] { visibility: visible; }
+/* Bundled edges show only on highlight; their bundle (feeds style, bolder) and the large-spec cluster
+   links (a thick graphite band) always carry a text label, so neither relies on colour. */
+.edge[data-bundled]:not([data-hot]) { display: none; }
+.link { opacity: 0.85; transition: opacity var(--motion-fade) ease-out; }
+.link[data-link='bundle'] .line { stroke-width: 2.5; }
+.link[data-link='clusters'] { --hue: var(--graphite); }
+.link[data-link='clusters'] .line { stroke-width: 5; stroke-linecap: round; stroke-opacity: 0.45; }
+.atlas .link .edge-label { visibility: visible; font-size: calc(10.5px * clamp(1, var(--inv, 1), 1.6)); }
+.atlas[data-hot] .link:not([data-hot]) { opacity: 0.12; }
+.node[data-summary] .name { font-weight: 650; }
 .toolbar { position: absolute; z-index: 2; top: var(--space-3); left: var(--space-3); display: flex; gap: var(--space-1); margin: 0; padding: var(--space-1); border: 1px solid var(--ink); border-radius: var(--radius-md); background: var(--vellum); }
 .toolbar .btn { min-width: 36px; padding-inline: var(--space-2); }
 .legend { margin: var(--space-2) 0 var(--space-5); padding: var(--space-2) var(--space-3); border: 1px solid var(--rule); border-radius: var(--radius-sm); background: var(--vellum); font-size: 0.9em; }
@@ -138,11 +151,11 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 
 /* Detail panel (F10): 360 px right of the map on desktop, an overlay on tablets, a bottom sheet on phones (PLAN 3.3). */
 .atlas-wrap { position: relative; }
-.atlas-wrap[data-panel] { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--space-3); }
+/* The panel overlays the map from its right edge (PLAN 3.3), so opening it never shrinks the map. */
 .detail {
-  max-height: clamp(360px, calc(100dvh - var(--map-top, 300px) - var(--space-4)), 900px); overflow: auto;
+  position: absolute; z-index: 3; top: 0; right: 0; width: min(360px, 88%); max-height: 100%; overflow: auto;
   padding: var(--space-3) var(--space-4); background: var(--vellum); border: 1px solid var(--ink); border-radius: var(--radius-sm);
-  overflow-wrap: anywhere;
+  box-shadow: -4px 0 0 var(--paper); overflow-wrap: anywhere;
 }
 .detail-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .detail h2 { margin: var(--space-2) 0; font-size: 1rem; }
@@ -182,13 +195,15 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .field { font: 13px var(--font-mono); padding: var(--space-1) var(--space-2); border: 1px solid var(--graphite); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); }
 .field[aria-invalid='true'] { border: 2px dashed var(--brick); }
 /* Files index and audit side by side like a chart's legend boxes, the open file below them. */
-.skill-body { flex: 1; min-height: 0; display: grid; grid-template: auto auto minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 1.3fr); gap: 0 var(--space-3); }
+/* Files and audit take 40 % of the height, the open file 60 % (PLAN 3.3); each scrolls inside. */
+.skill-body { flex: 1; min-height: 0; display: grid; grid-template: minmax(0, 2fr) auto minmax(0, 3fr) / minmax(0, 1fr) minmax(0, 1.3fr); gap: 0 var(--space-3); }
 .file-head, .preview { grid-column: 1 / -1; }
 /* Stale or still writing: a dashed frame and words, never faded text (contrast stays AA). */
 .skill-body[data-stale] { outline: 2px dashed var(--graphite); outline-offset: 4px; }
 .writing .outline { opacity: 0.6; }
-.tree { max-height: 15rem; overflow: auto; padding: var(--space-1) 0; font: 12.5px/1.5 var(--font-mono); }
-[role='treeitem'] { padding: 2px var(--space-2) 2px calc(var(--space-2) + (var(--level) - 1) * 18px); border-radius: var(--radius-sm); cursor: pointer; outline-offset: -2px; }
+.tree { overflow: auto; padding: var(--space-1) 0; font: 12.5px/1.5 var(--font-mono); }
+/* A long name wraps under itself, not under its twisty (hanging indent). */
+[role='treeitem'] { padding: 2px var(--space-2) 2px calc(var(--space-2) + 1.2em + (var(--level) - 1) * 18px); text-indent: -1.2em; border-radius: var(--radius-sm); cursor: pointer; outline-offset: -2px; }
 [role='treeitem']:hover { background: var(--paper); }
 [role='treeitem'][aria-selected='true'] { background: var(--paper); box-shadow: inset 3px 0 0 var(--ink); font-weight: 700; }
 [role='treeitem']:focus-visible { box-shadow: inset 0 0 0 4px var(--marker); }
@@ -200,7 +215,7 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
   margin: 0; padding: 0 var(--space-3); overflow: auto; white-space: pre; font: 12px/18px var(--font-mono); color: var(--ink); outline-offset: -2px;
   background: var(--paper) repeating-linear-gradient(transparent 0 17px, color-mix(in srgb, var(--rule) 70%, transparent) 17px 18px) local;
 }
-.audit { align-self: start; padding: var(--space-1) 0 var(--space-2) var(--space-3); border-left: 1px solid var(--rule); font-size: 0.85em; line-height: 1.4; }
+.audit { overflow: auto; padding: var(--space-1) 0 var(--space-2) var(--space-3); border-left: 1px solid var(--rule); font-size: 0.85em; line-height: 1.4; }
 .audit summary { cursor: pointer; font: 650 1rem var(--font-display); }
 .tally { display: block; padding-left: 2.85em; color: var(--graphite); font: 0.85rem var(--font-body); }
 .audit ul { margin: var(--space-1) 0; padding: 0; list-style: none; }
@@ -225,8 +240,6 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
   .preview { max-height: 60vh; }
   .actions { position: sticky; bottom: 0; padding-bottom: var(--space-2); }
   body:has(.skill-pane:not([hidden])) .generate { display: none; }
-  .atlas-wrap[data-panel] { display: block; }
-  .detail { position: absolute; z-index: 3; top: 0; right: 0; width: min(360px, 88%); max-height: 100%; box-shadow: -4px 0 0 var(--paper); }
 }
 
 @media (max-width: 639px) {
@@ -237,12 +250,15 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
   .header, .samples { padding-inline: var(--space-3); }
   .header .brand { margin-right: auto; }
   .source { order: 1; flex-basis: 100%; }
-  .views { order: 2; }
-  .theme { order: 3; }
   .generate { position: fixed; z-index: 1; left: var(--space-3); right: var(--space-3); bottom: var(--space-3); min-height: 48px; }
   .chips { flex-wrap: nowrap; overflow-x: auto; padding-block: var(--space-2); scroll-padding-inline: var(--space-2); }
   .chips legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .chip { flex: none; }
+  .samples { position: relative; }
+  .chips-more {
+    position: absolute; top: 0; right: 0; bottom: 0; display: flex; align-items: center; padding: 0 var(--space-3) 0 var(--space-6);
+    background: linear-gradient(to right, transparent, var(--paper) var(--space-5)); color: var(--ink); font-weight: 650; pointer-events: none;
+  }
   .stage { padding: var(--space-3); }
   .sheet, .skill-pane { padding: var(--space-3); }
   h1 { font-size: 1.5rem; }
@@ -268,13 +284,14 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 /* List view (F12, A3): one table per cluster, edges in words. */
 .list { min-width: 0; overflow-x: auto; outline-offset: 2px; }
 .list-summary { margin: 0 0 var(--space-3); color: var(--graphite); }
-.list table { width: 100%; min-width: 40rem; margin: 0 0 var(--space-5); border-collapse: collapse; font-size: 0.9em; }
+.list table { width: 100%; margin: 0 0 var(--space-5); border-collapse: collapse; font-size: 0.9em; }
 .list caption { padding: var(--space-1) 0; border-bottom: 2px solid var(--ink); text-align: left; font: 650 0.95rem var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; }
 .crud-summary { font: 0.85rem var(--font-body); letter-spacing: 0; text-transform: none; color: var(--graphite); }
 .list th, .list td { padding: var(--space-1); border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; overflow-wrap: break-word; }
-.list td:nth-child(4) { min-width: 7rem; }
+.list td { overflow-wrap: anywhere; }
+.rels summary { cursor: pointer; color: var(--meridian); text-decoration: underline; }
+.rels ul, .list td > ul { margin: var(--space-1) 0 0; padding-left: var(--space-3); }
 .list thead th { font-size: 0.85em; color: var(--graphite); }
-.list td ul { margin: 0; padding-left: var(--space-3); }
 .list tr[data-open] > * { background: var(--paper); }
 .list tr[data-open] > th { box-shadow: inset 4px 0 0 var(--ink); font-weight: 700; }
 .list-empty { padding: var(--space-3); border: 1px dashed var(--graphite); }

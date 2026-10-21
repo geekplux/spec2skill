@@ -7,14 +7,15 @@ import { useAnnounce } from '../a11y/Announcer';
 import { DetailPanel } from '../detail/DetailPanel';
 import { WASH } from '../design/tokens';
 import type { AtlasGraph, Edge } from '../graph';
-import type { Rect } from '../layout/geometry';
+import { aggregated, startCollapsed } from '../layout/collapse';
+import type { Point, Rect } from '../layout/geometry';
 import { layout } from '../layout/layout';
 import type { ApiModel } from '../model/types';
-import { type Camera, LABEL_ZOOM, fit, follow, pan, toCss, zoomAt } from './camera';
-import { EdgeLabel, EdgeLine, MapDefs } from './Edge';
+import { type Camera, LABEL_ZOOM, fit, follow, pan, pinch, toCss, zoomAt } from './camera';
+import { EdgeLabel, EdgeLine, LinkLine, MapDefs } from './Edge';
 import { describeEdge, edgesOf, keyAction, mapName, nodeName, otherEnd } from './keyboard';
 import { Legend } from './Legend';
-import { Node } from './Node';
+import { Node, Summary } from './Node';
 import { Toolbar } from './Toolbar';
 
 /** Height kept clear for the floating toolbar when fitting. */
@@ -35,13 +36,17 @@ interface AtlasMapProps {
 }
 
 export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSelect, match, edges: shownEdges }: AtlasMapProps) {
-  const atlas = useMemo(() => layout(model, graph), [model, graph]);
+  // Large specs start with clusters collapsed to summary cards (P4); Enter or a click expands one.
+  const [collapsed, setCollapsed] = useState(() => startCollapsed(graph, selected));
+  const atlas = useMemo(() => layout(model, graph, collapsed), [model, graph, collapsed]);
+  const many = aggregated(graph);
   const ops = useMemo(() => new Map(model.operations.map((op) => [op.id, op])), [model]);
   const degree = useMemo(() => new Map(model.operations.map((op) => [op.id, edgesOf(shownEdges, op.id).length])), [model, shownEdges]);
   const names = useMemo(() => new Map(atlas.clusters.map((c) => [c.id, c.name])), [atlas]);
   const frame = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
   const drag = useRef<{ x: number; y: number } | null>(null);
+  const touches = useRef(new Map<number, Point>()); // pointers down, for two-finger pinch
   const dragged = useRef(false);
   const touched = useRef(false); // until the user moves the camera, resizes refit
   const [cam, setCam] = useState<Camera | null>(null);
@@ -62,7 +67,11 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
   const helpId = useId();
 
   // Keyboard navigation only visits matches; a focused node the search hides gives up the Tab stop.
-  const nav = useMemo(() => (match ? { ...atlas, nodes: atlas.nodes.filter((n) => match.has(n.id)), clusters: atlas.clusters.filter((c) => atlas.nodes.some((n) => n.cluster === c.id && match.has(n.id))) } : atlas), [atlas, match]);
+  const nav = useMemo(() => {
+    if (!match) return atlas;
+    const nodes = atlas.nodes.filter((n) => n.summary || match.has(n.id));
+    return { ...atlas, nodes, clusters: atlas.clusters.filter((c) => nodes.some((n) => n.cluster === c.id)) };
+  }, [atlas, match]);
   const shown = useMemo(() => new Set(shownEdges.map((e) => e.id)), [shownEdges]);
   const stop = cursor && (open || !match || match.has(cursor)) ? cursor : (nav.nodes[0]?.id ?? cursor ?? atlas.nodes[0]?.id);
   const node = atlas.nodes.find((n) => n.id === stop);
@@ -121,8 +130,8 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
   /** Move focus to a node: DOM focus, camera follows, position announced; keyboard focus outranks hover.
    *  Open details follow it (replacing the history entry, or adding one when `push`). */
   const focusNode = (id: string, push = false) => {
-    if (open || push) onSelect(id, push);
     const n = atlas.nodes.find((x) => x.id === id)!;
+    if ((open || push) && !n.summary) onSelect(id, push);
     setCursor(id);
     setEdge(null);
     setHover(null);
@@ -131,6 +140,33 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
     const peers = nav.nodes.filter((p) => p.cluster === n.cluster);
     setSay(`${names.get(n.cluster)} cluster, ${peers.indexOf(n) + 1} of ${peers.length}.`);
   };
+
+  /** Expand a summary card; focus moves to the cluster's first operation once it is laid out. */
+  const pending = useRef<string | null>(null);
+  const expand = (cluster: string) => {
+    pending.current = graph.clusters.find((c) => c.id === cluster)!.operationIds[0]!;
+    setCollapsed((shut) => new Set([...shut].filter((id) => id !== cluster)));
+  };
+  useEffect(() => {
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- runs once the expanded layout is drawn
+    if (pending.current) focusNode(pending.current);
+    pending.current = null;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- as above
+  }, [atlas]);
+
+  // Back/forward changed the selection from outside: if that dropped focus (the panel closed) or left
+  // it on another node, it follows the restored node, as in the list view.
+  const prev = useRef(selected);
+  useEffect(() => {
+    if (prev.current === selected) return;
+    const id = selected ?? prev.current;
+    prev.current = selected;
+    const active = document.activeElement;
+    const at = active?.getAttribute('data-op');
+    if (id && (!active || active === document.body || !active.isConnected || (at != null && at !== id))) {
+      svg.current?.querySelector<SVGElement>(`.hit[data-op="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
+    }
+  }, [selected]);
 
   // Size the map from its real page top (header, chips and heading above it vary), so the fitted
   // atlas fills the first view without scrolling; app.css reads --map-top (map and detail panel).
@@ -179,7 +215,8 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
     const a = keyAction(nav, { focus: node, edges, edge }, e.key, e.shiftKey);
     if (!a || a.type === 'help') return; // `?` bubbles to the app, which opens the shortcut help
     e.preventDefault();
-    if (a.type === 'focus') focusNode(a.id);
+    if (a.type === 'open' && node?.summary) expand(node.cluster);
+    else if (a.type === 'focus') focusNode(a.id);
     else if (a.type === 'edge') {
       setEdge(a.index);
       setSay(a.index === null ? 'Edge highlight cleared.' : describeEdge(edges[a.index]!, stop!, a.index, edges.length));
@@ -193,6 +230,9 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
   };
 
   const linked = (from: string, to: string) => hot !== null && (from === hot || to === hot);
+  const byId = new Map(graph.edges.map((e) => [e.id, e]));
+  const bundled = new Map(graph.bundles.map((b) => [b.id, b.edges]));
+  const drawn = atlas.edges.filter((e) => shown.has(e.id) && (!many || linked(e.from, e.to)));
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
   const op = open && stop ? ops.get(stop) : undefined;
   return (
@@ -208,6 +248,7 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
         data-ready={cam ? 'true' : 'false'}
         data-far={cam && cam.k < LABEL_ZOOM ? 'true' : undefined}
         data-hot={hot ?? undefined}
+        style={{ '--inv': cam ? 1 / cam.k : 1 } as CSSProperties}
         tabIndex={-1}
         role="group"
         aria-roledescription="atlas"
@@ -226,15 +267,29 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
         onClick={(e) => {
           const id = dragged.current ? null : (e.target as Element).closest('.node')?.getAttribute('data-op');
           dragged.current = false;
+          const summary = atlas.nodes.find((n) => n.id === id && n.summary);
+          if (summary) return expand(summary.cluster);
           if (!id) return;
           focusNode(id, true);
           requestAnimationFrame(() => reveal(id));
         }}
         onPointerDown={(e) => {
-          drag.current = { x: e.clientX, y: e.clientY };
+          touches.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          drag.current = touches.current.size === 1 ? { x: e.clientX, y: e.clientY } : null;
           dragged.current = false;
         }}
         onPointerMove={(e) => {
+          const t = touches.current;
+          if (t.size === 2 && t.has(e.pointerId)) {
+            // Two fingers: pinch-zoom about their midpoint (in map coordinates), never a click.
+            const r = e.currentTarget.getBoundingClientRect();
+            const local = (p: Point): Point => ({ x: p.x - r.left, y: p.y - r.top });
+            const before = [...t.values()].map(local) as [Point, Point];
+            t.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            const after = [...t.values()].map(local) as [Point, Point];
+            dragged.current = true;
+            return move((c) => pinch(c, before, after));
+          }
           const from = drag.current;
           if (!from || (!dragged.current && Math.hypot(e.clientX - from.x, e.clientY - from.y) < 4)) return;
           // Capture only once a drag starts, so a plain click still reaches the node under the pointer.
@@ -243,8 +298,14 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
           move((c) => pan(c, e.clientX - from.x, e.clientY - from.y));
           drag.current = { x: e.clientX, y: e.clientY };
         }}
-        onPointerUp={() => (drag.current = null)}
-        onPointerCancel={() => (drag.current = null)}
+        onPointerUp={(e) => {
+          touches.current.delete(e.pointerId);
+          drag.current = null;
+        }}
+        onPointerCancel={(e) => {
+          touches.current.delete(e.pointerId);
+          drag.current = null;
+        }}
       >
         {/* oxlint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role */}
         <MapDefs />
@@ -264,12 +325,19 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
                 <text className="hub" x={c.w - 12} y={23} textAnchor="end">{c.hubs.map((h) => `${h.name} on ${h.count} ops`).join(', ')}</text>
               </g>
             ))}
-            <g aria-hidden="true">{atlas.edges.filter((e) => shown.has(e.id)).map((e) => <EdgeLine key={e.id} edge={e} hot={linked(e.from, e.to)} cycled={e.id === cycled?.id} />)}</g>
-            {atlas.nodes.map((n) => (
+            {/* Bundles stand in for their edges (shown on highlight); above 300 edges only the highlighted
+                node's edges are drawn, plus counted links between clusters. */}
+            <g aria-hidden="true">
+              {atlas.links.filter((l) => l.kind === 'clusters' || (l.from !== hot && bundled.get(l.id)!.some((id) => shown.has(id)))).map((l) => <LinkLine key={l.id} link={l} hot={l.from === hot} />)}
+              {drawn.map((e) => <EdgeLine key={e.id} edge={e} bundled={!!byId.get(e.id)!.bundledInto} hot={linked(e.from, e.to)} cycled={e.id === cycled?.id} />)}
+            </g>
+            {atlas.nodes.map((n) => n.summary ? (
+              <Summary key={n.id} node={n} cluster={graph.clusters.find((c) => c.id === n.cluster)!} crud={graph.crud} noun={noun} tabbable={n.id === stop} />
+            ) : (
               <Node key={n.id} node={n} op={ops.get(n.id)!} crud={graph.crud[n.id]} label={nodeName(ops.get(n.id)!, n.state, names.get(n.cluster)!, degree.get(n.id)!)}
                 tabbable={n.id === stop} hot={n.id === hot} dim={!!match && !match.has(n.id)} target={!!cycled && n.id === otherEnd(cycled, stop!)} onHover={setHover} />
             ))}
-            <g className="labels" aria-hidden="true">{atlas.edges.filter((e) => shown.has(e.id)).map((e) => <EdgeLabel key={e.id} edge={e} hot={linked(e.from, e.to)} />)}</g>
+            <g className="labels" aria-hidden="true">{drawn.map((e) => <EdgeLabel key={e.id} edge={e} hot={linked(e.from, e.to)} />)}</g>
           </g>
         )}
       </svg>

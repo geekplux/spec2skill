@@ -840,7 +840,7 @@
         "x": 678,
         "y": 64,
         "text": "id -> projectId",
-        "shown": true
+        "shown": false
       }
     },
     {
