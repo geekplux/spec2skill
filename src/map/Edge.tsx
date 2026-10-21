@@ -34,7 +34,7 @@ export const EdgeLabel = ({ edge, hot }: { edge: LayoutEdge; hot: boolean }) => 
  *  links between two clusters (`12 links`, large specs); both always carry a text label, drawn
  *  with the other labels (`label`) above every line. */
 export const LinkLine = ({ link, hot, label }: { link: LayoutLink; hot: boolean; label?: boolean }) => (
-  <g className="link" data-link={link.kind} data-kind={link.kind === 'bundle' ? 'feeds' : undefined} data-hot={hot || undefined}>
+  <g className="map-link" data-link={link.kind} data-kind={link.kind === 'bundle' ? 'feeds' : undefined} data-hot={hot || undefined}>
     {label ? (
       <text className="edge-label" x={link.label.x} y={link.label.y} textAnchor="middle" dominantBaseline="central">{link.label.text}</text>
     ) : (

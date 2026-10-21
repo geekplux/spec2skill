@@ -49,7 +49,7 @@ export default {
     for (const id of ['feeds:getTask->createTask', 'feeds:getTask->updateProject', 'feeds:getProject->removeMember']) {
       expect((await page.locator(`.edge[data-edge="${id}"]`).count()) === 0, `trimmed edge ${id} still drawn`);
     }
-    const bundles = await atlas(page).locator('.labels .link[data-link="bundle"]').evaluateAll((els) => els.map((el) => el.textContent));
+    const bundles = await atlas(page).locator('.labels .map-link[data-link="bundle"]').evaluateAll((els) => els.map((el) => el.textContent));
     expect(bundles.length === 2 && bundles.every((t) => t === 'projectId -> 4 ops'), `bundles: ${bundles}`);
     const hidden = await page.locator('.edge[data-bundled]').evaluateAll((els) => els.filter((el) => getComputedStyle(el).display === 'none').length);
     expect(hidden === 8, `${hidden} of 8 bundled edges hidden until highlighted`);
@@ -64,7 +64,7 @@ export default {
     const hot = await page.locator('.edge[data-hot][data-bundled]').evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== 'none').length);
     expect(hot === 4, `hover listProjects: ${hot} bundled edges shown`);
     await page.mouse.move(5, 5);
-    await zoomOn(page, atlas(page).locator('.link[data-link="bundle"] .edge-label').first(), 3);
+    await zoomOn(page, atlas(page).locator('.map-link[data-link="bundle"] .edge-label').first(), 3);
     await page.mouse.move(5, 5);
     await screenshot('bundled-edge');
     await axe('tasks bundles');
@@ -92,7 +92,7 @@ export default {
     await mapReady(page);
     const fed = await page.locator('.edge[data-edge^="feeds:list_allowed_directories->"]').evaluateAll((els) => els.map((el) => el.dataset.edge.split('->')[1]));
     expect(fed.join() === 'list_directory,list_directory_with_sizes,directory_tree,search_files', `list_allowed_directories feeds ${fed}`);
-    const paths = await atlas(page).locator('.labels .link[data-link="bundle"]').evaluateAll((els) => els.map((el) => el.textContent));
+    const paths = await atlas(page).locator('.labels .map-link[data-link="bundle"]').evaluateAll((els) => els.map((el) => el.textContent));
     expect(paths.join() === 'path -> 6 ops,path -> 6 ops', `filesystem bundles: ${paths}`);
     await page.locator('.node[data-op="list_allowed_directories"]').hover();
     await screenshot('filesystem-trimmed');

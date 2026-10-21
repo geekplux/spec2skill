@@ -31,7 +31,8 @@ async function expectAtlas(page, id) {
       nodes: svg.querySelectorAll('.node').length,
       clusters: svg.querySelectorAll('.cluster').length,
       edges: edges.length,
-      labels: [...svg.querySelectorAll('.edge-label')].filter((t) => t.textContent.trim()).length,
+      // Edge labels only, not the bundle labels (phase 13).
+      labels: [...svg.querySelectorAll('.labels > .edge-label')].filter((t) => t.textContent.trim()).length,
       // Every edge: its dash pattern, plus an arrow/chevron marker or the shared-schema diamond.
       styles: edges.map((g) => {
         const line = g.querySelector('.line');

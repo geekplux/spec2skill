@@ -169,7 +169,7 @@ export default {
     await settle(page);
     expect((await transform(page)) === fitted, '0 did not fit');
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await press(page, 'ArrowDown', 'createComment');
+    await press(page, 'ArrowDown', 'addMember'); // from listMembers (greedy card order, phase 13)
     expect((await page.locator('.camera').evaluate((g) => getComputedStyle(g).transitionDuration)) === '0s', 'reduced motion: camera transition');
     await page.emulateMedia({ reducedMotion: 'no-preference' });
 
