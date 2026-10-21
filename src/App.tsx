@@ -134,11 +134,8 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
   return (
     <>
       <div className="title">
-        <p className="kicker">Surveyed from {KIND_LABEL[model.source.kind]} {model.source.specVersion}</p>
-        <h1>{title}</h1>
-        <p className="lede">
-          {summary}.{isSample && <span className="banner"> This is a sample. Paste an OpenAPI or MCP URL above, or try another sample.</span>}
-        </p>
+        <h1>{model.source.title}{isSample && <span className="h1-note"> (sample)</span>}</h1>
+        <p className="lede">{KIND_LABEL[model.source.kind]} {model.source.specVersion} · {summary}.</p>
         {model.warnings.length > 0 && (
           <details className="warnings">
             <summary>{model.warnings.length} {model.warnings.length === 1 ? 'warning' : 'warnings'}</summary>
@@ -167,7 +164,6 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
           </div>
         </div>
       </div>
-      <p className="filter-note">Search and filters apply to the map and list; the skill always covers every {noun === 'tools' ? 'tool' : 'operation'}.</p>
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}
     </>
   );

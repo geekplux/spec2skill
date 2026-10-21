@@ -29,15 +29,18 @@ describe('SkillPane', () => {
     expect(html).toContain('<span class="status">failed: only 4 evals (need at least 5)</span><span class="visually-hidden"> (e)</span>');
     expect(html).not.toContain('title=');
   });
-  it('names the zip and the install commands after the slug', () => {
+  it('names the install commands after the slug, behind a labelled disclosure (closed), with the audit rows', () => {
     const html = render();
-    expect(html).toContain('<code>unzip tasks-api-skill.zip -d .claude/skills/</code>');
+    expect(html).toContain('<details class="install"><summary>Install command</summary><pre><code>unzip tasks-api-skill.zip -d .claude/skills/ &amp;&amp;\n  node .claude/skills/tasks-api/scripts/audit.mjs .claude/skills/tasks-api</code></pre>');
+    expect(html).toContain('<details class="audit" data-ok="false"><summary>');
+    expect(html).not.toMatch(/<details[^>]* open/);
   });
   it('shows the static outline while writing, and disables Download with a reason when there are no operations', () => {
     expect(render({ skill: undefined, ready: false })).toContain('Writing skill…');
     const empty = render({ skill: undefined, ready: false, empty: true });
     expect(empty).toContain('No operations, so no skill to write.');
     expect(empty).toMatch(/<button type="button" class="btn primary" disabled="" aria-describedby="skill-empty">/);
+    expect(empty).not.toContain('Install command'); // nothing to install
   });
   it('marks a stale skill in words, not by fading the text', () => {
     const html = render({ ready: false });

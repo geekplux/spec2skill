@@ -1,5 +1,6 @@
 // The generated skill, first thing on screen (D21): file tree, plain-text preview (never rendered as
-// HTML: spec text is data, S3), the in-browser audit, Download .zip and the install command.
+// HTML: spec text is data, S3), the in-browser audit line (its checks one step away), Download .zip
+// (the view's one accent) and the install command behind its disclosure (docs/DESIGN.md).
 import { useEffect, useRef, useState } from 'react';
 import { useAnnounce } from '../a11y/Announcer';
 import type { AuditResult } from '../skillgen/audit-core';
@@ -49,7 +50,7 @@ function Options({ value, onChange, plainText }: { value: SkillOptionsDraft; onC
 function Checklist({ audit }: { audit: AuditResult }) {
   const passed = audit.checks.filter((c) => c.ok).length;
   return (
-    <details className="audit" open data-ok={audit.ok}>
+    <details className="audit" data-ok={audit.ok}>
       <summary>{mark(audit.ok)} {audit.ok ? 'Audit passed' : 'Audit failed'}: <span className="tally">{passed} of {audit.checks.length} checks</span></summary>
       <ul>
         {audit.checks.map((c) => (
@@ -102,7 +103,7 @@ export function SkillPane({ skill, error, ready, empty, options, onOptions, file
     tell('Downloaded', `Downloaded ${slug}-skill.zip.`);
   };
   const copy = () =>
-    navigator.clipboard.writeText(install.join(' && ')).then(() => tell('Copied', 'Install command copied.'), () => tell('Copy failed', 'Copy failed: select the command below and copy it.'));
+    navigator.clipboard.writeText(install.join(' && ')).then(() => tell('Copied', 'Install command copied.'), () => tell('Copy failed', 'Copy failed: select the install command and copy it.'));
 
   return (
     <section className="skill-pane" id="panel-skill" role={tabpanel ? 'tabpanel' : undefined} aria-labelledby={tabpanel ? 'tab-skill' : 'skill-title'}
@@ -112,7 +113,7 @@ export function SkillPane({ skill, error, ready, empty, options, onOptions, file
         <h2 id="skill-title" tabIndex={-1} ref={heading}><code>{slug}</code> skill</h2>
         <Options key={options.key} value={options} onChange={onOptions} plainText={plainText} />
       </div>
-      {empty ? <p className="writing" id="skill-empty">No operations, so no skill to write.</p>
+      {empty ? <p className="writing empty-note" id="skill-empty">No operations, so no skill to write.</p>
         : !skill ? (
           <div className="writing" aria-hidden={!error}>
             <ul className="outline">{OUTLINE.map((p) => <li key={p}>{p}</li>)}</ul>
@@ -132,10 +133,16 @@ export function SkillPane({ skill, error, ready, empty, options, onOptions, file
         <button type="button" className="btn primary" onClick={download} disabled={!ready} aria-describedby={empty ? 'skill-empty' : undefined}>
           Download .zip
         </button>
-        <button type="button" className="btn" onClick={copy} disabled={empty}>Copy install command</button>
         {note.slug === slug && <span className="copied">{note.text}</span>}
       </div>
-      <p className="install">Install: <code>{install[0]}</code></p>
+      {/* Nothing to install without operations. */}
+      {!empty && (
+        <details className="install">
+          <summary>Install command</summary>
+          <pre><code>{install.join(' &&\n  ')}</code></pre>
+          <button type="button" className="btn" onClick={copy}>Copy install command</button>
+        </details>
+      )}
     </section>
   );
 }

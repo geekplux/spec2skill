@@ -22,7 +22,7 @@ export function Layout({ samples, children, onGenerate, source, status, busy }: 
       <a className="skip" href="#main">
         Skip to content
       </a>
-      <Header onGenerate={onGenerate} source={source} quiet={!!status} disabled={busy} />
+      <Header onGenerate={onGenerate} source={source} disabled={busy} />
       <section className="samples" aria-label="Built-in samples">
         {samples}
       </section>

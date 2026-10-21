@@ -65,6 +65,7 @@ export function Search({ q, onQ, hidden, onHidden, facets, count, total, noun, e
       <p id="search-count" className="search-count">{status}</p>
       <details className="filters">
         <summary ref={summary}>Filters{off > 0 && ` (${off} off)`}</summary>
+        <p className="help">Search and filters apply to the map and list; the skill always covers every {noun === 'tools' ? 'tool' : 'operation'}.</p>
         {group('edges', 'Edges', EDGE_KINDS.map((k) => ({ id: k, name: k.replace('-', ' ') })))}
         {group('methods', 'Method or kind', facets.methods.map((m) => ({ id: m, name: m === 'tool' ? 'MCP tool' : m.toUpperCase() })))}
         {group('clusters', 'Cluster', facets.clusters)}

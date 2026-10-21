@@ -14,11 +14,10 @@ const ITEMS: { swatch: ReactNode; text: ReactNode }[] = [
   { swatch: <text className="hub" x={22} y={13} textAnchor="middle">on N</text>, text: <><b>Schema on N ops</b>: shared so widely it is a badge, not edges</> },
 ];
 
-/** The key to the map: every edge style and node shape, drawn and named. Starts closed on small screens. */
+/** The key to the map: every edge style and node shape, drawn and named; closed until asked for (docs/DESIGN.md 2). */
 export function Legend() {
-  const wide = typeof window === 'undefined' || window.matchMedia('(min-width: 640px)').matches;
   return (
-    <details className="legend" open={wide}>
+    <details className="legend">
       <summary>Legend</summary>
       <ul>
         {ITEMS.map(({ swatch, text }, i) => (
