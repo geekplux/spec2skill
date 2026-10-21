@@ -13,6 +13,10 @@ migrateTheme(safeStorage());
 const theme = storedTheme(safeStorage());
 if (theme) document.documentElement.dataset.theme = theme;
 
+// Every history entry is the same page; the app itself scrolls a selection into view (list rows,
+// map camera), so the browser must not restore an older scroll offset after back/forward.
+if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
+
 createRoot(root).render(
   <StrictMode>
     <App />

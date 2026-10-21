@@ -42,14 +42,17 @@ export function ListView({ model, graph, match, edges, selected, onSelect, skill
     onSelect(id);
     announce(`Details for ${id} open after the list.`);
   };
-  // Back/forward opens or closes details from outside; if that dropped focus (the panel unmounted),
-  // it goes to the row of the selection, or of the one just closed.
+  // Back/forward opens or closes details from outside; if that dropped focus (the panel unmounted)
+  // or left it on another row, it goes to the row of the selection, or of the one just closed.
   const previous = useRef(selected);
   useEffect(() => {
     const id = selected ?? previous.current;
     previous.current = selected;
-    const lost = !document.activeElement || document.activeElement === document.body || !document.activeElement.isConnected;
-    if (id && lost) document.querySelector<HTMLElement>(`tr[data-op="${CSS.escape(id)}"] th button`)?.focus();
+    if (!id) return;
+    const active = document.activeElement;
+    const row = active?.closest('tr[data-op]');
+    const lost = !active || active === document.body || !active.isConnected || (row && row.getAttribute('data-op') !== id);
+    if (lost) document.querySelector<HTMLElement>(`tr[data-op="${CSS.escape(id)}"] th button`)?.focus();
   }, [selected]);
   // The open row stays in view above the docked details (app.css pads the scroll for them); again
   // when the skill's file links arrive and once web fonts settle, as both reflow a list opened from a link.

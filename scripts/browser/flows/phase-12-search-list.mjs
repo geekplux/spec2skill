@@ -251,6 +251,21 @@ export default {
       await page.getByTestId('detail').getByRole('button', { name: 'Close details' }).click();
       await page.getByTestId('detail').waitFor({ state: 'detached' });
       await page.waitForFunction(() => document.activeElement?.closest('tr')?.getAttribute('data-op') === 'getMember');
+      // Back/forward between two rows far apart: the browser's scroll restoration must not win over
+      // the reveal, and focus leaves the other row for the selected one.
+      const onRow = (op) => page.waitForFunction((o) => document.activeElement === document.querySelector(`tr[data-op="${o}"] th button`), op, { timeout: 3000 });
+      await list(page).getByRole('button', { name: 'getTask, details' }).click();
+      await page.getByTestId('detail').getByRole('heading', { name: 'GET /tasks/{taskId}' }).waitFor();
+      await list(page).getByRole('button', { name: 'getMember, details' }).click();
+      await page.getByTestId('detail').getByRole('heading', { name: 'GET /projects/{projectId}/members/{memberId}' }).waitFor();
+      await page.goBack();
+      await page.getByTestId('detail').getByRole('heading', { name: 'GET /tasks/{taskId}' }).waitFor();
+      await onRow('getTask').catch(async () => expect(false, `${where} focus after back: ${await active(page)}`));
+      await listDetailInView(page, 'getTask', `${where} back`);
+      await page.goForward();
+      await page.getByTestId('detail').getByRole('heading', { name: 'GET /projects/{projectId}/members/{memberId}' }).waitFor();
+      await onRow('getMember').catch(async () => expect(false, `${where} focus after forward: ${await active(page)}`));
+      await listDetailInView(page, 'getMember', `${where} forward`);
       await page.goto(`${origin}/?sample=petstore&view=list#op=getPetById`);
       await list(page).waitFor();
       await listDetailInView(page, 'getPetById', `${where} link`);
