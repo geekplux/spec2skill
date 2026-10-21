@@ -24,4 +24,12 @@ describe('check-size', () => {
     expect(evaluateSizes({ 'assets/a.woff2': 1024 }, fonts).failures).toEqual([]);
     expect(evaluateSizes({ 'assets/a.woff2': 1100 }, fonts).failures).toEqual(['font assets/a.woff2 1.1 KB > 1 KB']);
   });
+
+  it('counts the skill chunk against its own budget, not the initial JS', () => {
+    const skill = { ...budget, skillChunkGzipKB: 2 };
+    const ok = evaluateSizes({ 'assets/index-a.js': 512, 'assets/skill-b.js': 1536 }, skill);
+    expect([ok.failures, ok.jsKB, ok.skillKB]).toEqual([[], 0.5, 1.5]);
+    expect(evaluateSizes({ 'assets/skill-b.js': 3072 }, skill).failures).toEqual(['skill chunk 3.0 KB gzip > 2 KB']);
+    expect(evaluateSizes({ 'assets/index-a.js': 512 }, skill).failures).toEqual(['skill chunk (assets/skill-*.js) is not preloaded by index.html']);
+  });
 });

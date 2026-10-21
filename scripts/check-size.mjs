@@ -1,4 +1,5 @@
-// Gzip size budgets for the initial page load (PLAN.md section 4, P1).
+// Gzip size budgets for the initial page load (PLAN.md section 4, P1). The skill generator chunk
+// (assets/skill-*.js, modulepreloaded, D22) has its own budget and is not counted as initial JS.
 // Usage: pnpm build && pnpm check:size
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -13,12 +14,18 @@ export function initialAssets(html) {
 }
 
 const kb = (bytes) => bytes / 1024;
+const SKILL_CHUNK = /^assets\/skill-[^/]+\.js$/;
 
 /** sizes: { [path]: bytes } (gzip; raw for woff2) for index.html, initial assets and fonts. */
 export function evaluateSizes(sizes, budget) {
   let js = 0;
   let total = 0;
+  let skill = 0;
   for (const [path, bytes] of Object.entries(sizes)) {
+    if (SKILL_CHUNK.test(path)) {
+      skill += bytes;
+      continue;
+    }
     total += bytes;
     if (path.endsWith('.js')) js += bytes;
   }
@@ -31,7 +38,10 @@ export function evaluateSizes(sizes, budget) {
     failures.push(`initial JS ${kb(js).toFixed(1)} KB gzip > ${budget.initialJsGzipKB} KB`);
   if (kb(total) > budget.initialTotalGzipKB)
     failures.push(`initial total ${kb(total).toFixed(1)} KB gzip > ${budget.initialTotalGzipKB} KB`);
-  return { jsKB: kb(js), totalKB: kb(total), failures };
+  if (budget.skillChunkGzipKB && !skill) failures.push('skill chunk (assets/skill-*.js) is not preloaded by index.html');
+  else if (budget.skillChunkGzipKB && kb(skill) > budget.skillChunkGzipKB)
+    failures.push(`skill chunk ${kb(skill).toFixed(1)} KB gzip > ${budget.skillChunkGzipKB} KB`);
+  return { jsKB: kb(js), totalKB: kb(total), skillKB: kb(skill), failures };
 }
 
 function main() {
@@ -56,7 +66,8 @@ function main() {
   const result = evaluateSizes(sizes, budget);
   console.log(
     `initial JS ${result.jsKB.toFixed(1)}/${budget.initialJsGzipKB} KB, ` +
-      `total ${result.totalKB.toFixed(1)}/${budget.initialTotalGzipKB} KB (gzip)`,
+      `total ${result.totalKB.toFixed(1)}/${budget.initialTotalGzipKB} KB, ` +
+      `skill chunk ${result.skillKB.toFixed(1)}/${budget.skillChunkGzipKB} KB (gzip)`,
   );
   if (result.failures.length > 0) {
     for (const failure of result.failures) console.error(`over budget: ${failure}`);
