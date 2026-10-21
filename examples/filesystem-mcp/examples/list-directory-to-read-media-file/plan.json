@@ -1,0 +1,88 @@
+{
+  "skill": "filesystem-mcp",
+  "mode": "dry-run",
+  "chain": [
+    "list_directory",
+    "search_files",
+    "read_media_file"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "op": "list_directory",
+      "destructive": false,
+      "args": {
+        "path": "<path>"
+      },
+      "endpoint": "$FILESYSTEM_MCP_URL",
+      "call": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+          "name": "list_directory",
+          "arguments": {
+            "path": "<path>"
+          }
+        }
+      },
+      "fedBy": []
+    },
+    {
+      "step": 2,
+      "op": "search_files",
+      "destructive": false,
+      "args": {
+        "path": "<path>",
+        "pattern": "<pattern>"
+      },
+      "endpoint": "$FILESYSTEM_MCP_URL",
+      "call": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "tools/call",
+        "params": {
+          "name": "search_files",
+          "arguments": {
+            "path": "<path>",
+            "pattern": "<pattern>"
+          }
+        }
+      },
+      "fedBy": [
+        {
+          "arg": "path",
+          "from": "list_directory",
+          "field": "a listed entry"
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "op": "read_media_file",
+      "destructive": false,
+      "args": {
+        "path": "<path>"
+      },
+      "endpoint": "$FILESYSTEM_MCP_URL",
+      "call": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "tools/call",
+        "params": {
+          "name": "read_media_file",
+          "arguments": {
+            "path": "<path>"
+          }
+        }
+      },
+      "fedBy": [
+        {
+          "arg": "path",
+          "from": "search_files",
+          "field": "a listed entry"
+        }
+      ]
+    }
+  ]
+}

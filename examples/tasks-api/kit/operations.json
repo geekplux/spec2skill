@@ -1,0 +1,1352 @@
+{
+  "generator": "spec2skill 0.0.0",
+  "skill": "tasks-api",
+  "kind": "http",
+  "sourceHash": "c2f4123e714575e93a1b2e057396b53aeb9166b56b1b3d82c62d09905501a69d",
+  "envPrefix": "TASKS_API",
+  "servers": [
+    "https://tasks.example.com/v1"
+  ],
+  "auth": [
+    {
+      "id": "bearerAuth",
+      "type": "http",
+      "scheme": "bearer",
+      "env": [
+        "TASKS_API_TOKEN"
+      ]
+    }
+  ],
+  "operations": [
+    {
+      "id": "updateComment",
+      "title": "Edit a comment",
+      "crud": "update",
+      "method": "patch",
+      "path": "/comments/{commentId}",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "commentId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "authorId",
+        "body",
+        "createdAt",
+        "editedAt",
+        "id",
+        "taskId"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "deleteComment",
+      "title": "Delete a comment",
+      "crud": "delete",
+      "method": "delete",
+      "path": "/comments/{commentId}",
+      "inputs": [
+        {
+          "name": "commentId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": true,
+      "next": []
+    },
+    {
+      "id": "deleteLabel",
+      "title": "Delete a label",
+      "crud": "delete",
+      "method": "delete",
+      "path": "/labels/{labelId}",
+      "inputs": [
+        {
+          "name": "labelId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": true,
+      "next": []
+    },
+    {
+      "id": "listProjects",
+      "title": "List projects",
+      "crud": "list",
+      "method": "get",
+      "path": "/projects",
+      "inputs": [
+        {
+          "name": "cursor",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "name": "archived",
+          "in": "query",
+          "required": false,
+          "type": "boolean"
+        }
+      ],
+      "output": [
+        "data",
+        "nextCursor"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "pagination": {
+        "style": "cursor",
+        "params": [
+          "cursor",
+          "limit"
+        ]
+      },
+      "next": [
+        {
+          "to": "getProject",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "updateProject",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "deleteProject",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listLabels",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "createLabel",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listMembers",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "addMember",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "getMember",
+          "via": "id -> projectId, ownerId -> memberId",
+          "confidence": "exact"
+        },
+        {
+          "to": "removeMember",
+          "via": "id -> projectId, ownerId -> memberId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listTasks",
+          "via": "id -> projectId, ownerId -> assigneeId",
+          "confidence": "exact"
+        },
+        {
+          "to": "createTask",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "createProject",
+      "title": "Create a project",
+      "crud": "create",
+      "method": "post",
+      "path": "/projects",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "description",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "name",
+          "in": "body",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "archived",
+        "createdAt",
+        "description",
+        "id",
+        "name",
+        "ownerId"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": [
+        {
+          "to": "getProject",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "updateProject",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "deleteProject",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listLabels",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "createLabel",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listMembers",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "addMember",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "getMember",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "removeMember",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listTasks",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "createTask",
+          "via": "id -> projectId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "getProject",
+      "title": "Get a project",
+      "crud": "read",
+      "method": "get",
+      "path": "/projects/{projectId}",
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "archived",
+        "createdAt",
+        "description",
+        "id",
+        "name",
+        "ownerId"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "next": [
+        {
+          "to": "getMember",
+          "via": "ownerId -> memberId",
+          "confidence": "inferred"
+        },
+        {
+          "to": "removeMember",
+          "via": "ownerId -> memberId",
+          "confidence": "inferred"
+        }
+      ]
+    },
+    {
+      "id": "updateProject",
+      "title": "Update a project",
+      "crud": "update",
+      "method": "patch",
+      "path": "/projects/{projectId}",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "in": "body",
+          "required": false,
+          "type": "boolean"
+        },
+        {
+          "name": "description",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "name",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "archived",
+        "createdAt",
+        "description",
+        "id",
+        "name",
+        "ownerId"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "deleteProject",
+      "title": "Delete a project",
+      "crud": "delete",
+      "method": "delete",
+      "path": "/projects/{projectId}",
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": true,
+      "next": []
+    },
+    {
+      "id": "listLabels",
+      "title": "List labels in a project",
+      "crud": "list",
+      "method": "get",
+      "path": "/projects/{projectId}/labels",
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "type": "integer"
+        }
+      ],
+      "output": [
+        "data",
+        "nextCursor"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "pagination": {
+        "style": "cursor",
+        "params": [
+          "cursor",
+          "limit"
+        ]
+      },
+      "next": [
+        {
+          "to": "deleteLabel",
+          "via": "id -> labelId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listTasks",
+          "via": "id -> labelId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "createLabel",
+      "title": "Create a label",
+      "crud": "create",
+      "method": "post",
+      "path": "/projects/{projectId}/labels",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "color",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "in": "body",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "color",
+        "id",
+        "name",
+        "projectId"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": [
+        {
+          "to": "deleteLabel",
+          "via": "id -> labelId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listTasks",
+          "via": "id -> labelId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "listMembers",
+      "title": "List project members",
+      "crud": "list",
+      "method": "get",
+      "path": "/projects/{projectId}/members",
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "type": "integer"
+        }
+      ],
+      "output": [
+        "data",
+        "nextCursor"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "pagination": {
+        "style": "cursor",
+        "params": [
+          "cursor",
+          "limit"
+        ]
+      },
+      "next": [
+        {
+          "to": "getMember",
+          "via": "id -> memberId",
+          "confidence": "exact"
+        },
+        {
+          "to": "removeMember",
+          "via": "id -> memberId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listTasks",
+          "via": "id -> assigneeId",
+          "confidence": "inferred"
+        }
+      ]
+    },
+    {
+      "id": "addMember",
+      "title": "Invite a member to a project",
+      "crud": "create",
+      "method": "post",
+      "path": "/projects/{projectId}/members",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "in": "body",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "role",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "enum": [
+            "owner",
+            "editor",
+            "viewer"
+          ]
+        }
+      ],
+      "output": [
+        "email",
+        "id",
+        "name",
+        "projectId",
+        "role"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": [
+        {
+          "to": "getMember",
+          "via": "id -> memberId",
+          "confidence": "exact"
+        },
+        {
+          "to": "removeMember",
+          "via": "id -> memberId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "getMember",
+      "title": "Get a member of a project",
+      "crud": "read",
+      "method": "get",
+      "path": "/projects/{projectId}/members/{memberId}",
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "memberId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "email",
+        "id",
+        "name",
+        "projectId",
+        "role"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "removeMember",
+      "title": "Remove a member from a project",
+      "crud": "delete",
+      "method": "delete",
+      "path": "/projects/{projectId}/members/{memberId}",
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "memberId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": true,
+      "next": []
+    },
+    {
+      "id": "listTasks",
+      "title": "List tasks in a project",
+      "crud": "list",
+      "method": "get",
+      "path": "/projects/{projectId}/tasks",
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "type": "string",
+          "enum": [
+            "todo",
+            "in_progress",
+            "done"
+          ]
+        },
+        {
+          "name": "assigneeId",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "labelId",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "data",
+        "nextCursor"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "pagination": {
+        "style": "cursor",
+        "params": [
+          "cursor",
+          "limit"
+        ]
+      },
+      "next": [
+        {
+          "to": "getTask",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        },
+        {
+          "to": "updateTask",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        },
+        {
+          "to": "deleteTask",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listComments",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        },
+        {
+          "to": "createComment",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        },
+        {
+          "to": "completeTask",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "createTask",
+      "title": "Create a task",
+      "crud": "create",
+      "method": "post",
+      "path": "/projects/{projectId}/tasks",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "assigneeId",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dueDate",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "labelIds",
+          "in": "body",
+          "required": false,
+          "type": "array"
+        },
+        {
+          "name": "title",
+          "in": "body",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "assigneeId",
+        "createdAt",
+        "description",
+        "dueDate",
+        "id",
+        "labelIds",
+        "projectId",
+        "status",
+        "title"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": [
+        {
+          "to": "getTask",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        },
+        {
+          "to": "updateTask",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        },
+        {
+          "to": "deleteTask",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listComments",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        },
+        {
+          "to": "createComment",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        },
+        {
+          "to": "completeTask",
+          "via": "id -> taskId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "getTask",
+      "title": "Get a task",
+      "crud": "read",
+      "method": "get",
+      "path": "/tasks/{taskId}",
+      "inputs": [
+        {
+          "name": "taskId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "assigneeId",
+        "createdAt",
+        "description",
+        "dueDate",
+        "id",
+        "labelIds",
+        "projectId",
+        "status",
+        "title"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "next": [
+        {
+          "to": "getProject",
+          "via": "projectId -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "updateProject",
+          "via": "projectId -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "deleteProject",
+          "via": "projectId -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listLabels",
+          "via": "projectId -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "createLabel",
+          "via": "projectId -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listMembers",
+          "via": "projectId -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "addMember",
+          "via": "projectId -> projectId",
+          "confidence": "exact"
+        },
+        {
+          "to": "getMember",
+          "via": "projectId -> projectId, assigneeId -> memberId",
+          "confidence": "exact"
+        },
+        {
+          "to": "removeMember",
+          "via": "projectId -> projectId, assigneeId -> memberId",
+          "confidence": "exact"
+        },
+        {
+          "to": "listTasks",
+          "via": "projectId -> projectId, assigneeId -> assigneeId",
+          "confidence": "exact"
+        },
+        {
+          "to": "createTask",
+          "via": "projectId -> projectId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "updateTask",
+      "title": "Update a task",
+      "crud": "update",
+      "method": "patch",
+      "path": "/tasks/{taskId}",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "taskId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "assigneeId",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dueDate",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "labelIds",
+          "in": "body",
+          "required": false,
+          "type": "array"
+        },
+        {
+          "name": "status",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "enum": [
+            "todo",
+            "in_progress",
+            "done"
+          ]
+        },
+        {
+          "name": "title",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "assigneeId",
+        "createdAt",
+        "description",
+        "dueDate",
+        "id",
+        "labelIds",
+        "projectId",
+        "status",
+        "title"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "deleteTask",
+      "title": "Delete a task",
+      "crud": "delete",
+      "method": "delete",
+      "path": "/tasks/{taskId}",
+      "inputs": [
+        {
+          "name": "taskId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": true,
+      "next": []
+    },
+    {
+      "id": "listComments",
+      "title": "List comments on a task",
+      "crud": "list",
+      "method": "get",
+      "path": "/tasks/{taskId}/comments",
+      "inputs": [
+        {
+          "name": "taskId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "type": "integer"
+        }
+      ],
+      "output": [
+        "data",
+        "nextCursor"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "pagination": {
+        "style": "cursor",
+        "params": [
+          "cursor",
+          "limit"
+        ]
+      },
+      "next": [
+        {
+          "to": "updateComment",
+          "via": "id -> commentId",
+          "confidence": "exact"
+        },
+        {
+          "to": "deleteComment",
+          "via": "id -> commentId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "createComment",
+      "title": "Comment on a task",
+      "crud": "create",
+      "method": "post",
+      "path": "/tasks/{taskId}/comments",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "taskId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "authorId",
+        "body",
+        "createdAt",
+        "editedAt",
+        "id",
+        "taskId"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": [
+        {
+          "to": "updateComment",
+          "via": "id -> commentId",
+          "confidence": "exact"
+        },
+        {
+          "to": "deleteComment",
+          "via": "id -> commentId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "completeTask",
+      "title": "Mark a task as done",
+      "crud": "action",
+      "method": "post",
+      "path": "/tasks/{taskId}/complete",
+      "inputs": [
+        {
+          "name": "taskId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "assigneeId",
+        "createdAt",
+        "description",
+        "dueDate",
+        "id",
+        "labelIds",
+        "projectId",
+        "status",
+        "title"
+      ],
+      "security": [
+        [
+          "bearerAuth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    }
+  ],
+  "chains": [
+    {
+      "ops": [
+        "listProjects",
+        "listTasks",
+        "getTask"
+      ],
+      "via": [
+        "id -> projectId, ownerId -> assigneeId",
+        "id -> taskId"
+      ],
+      "inferred": [
+        false,
+        false
+      ]
+    },
+    {
+      "ops": [
+        "listProjects",
+        "listMembers",
+        "getMember"
+      ],
+      "via": [
+        "id -> projectId",
+        "id -> memberId"
+      ],
+      "inferred": [
+        false,
+        false
+      ]
+    },
+    {
+      "ops": [
+        "listTasks",
+        "getTask",
+        "getProject"
+      ],
+      "via": [
+        "id -> taskId",
+        "projectId -> projectId"
+      ],
+      "inferred": [
+        false,
+        false
+      ]
+    },
+    {
+      "ops": [
+        "listProjects",
+        "listLabels",
+        "listTasks"
+      ],
+      "via": [
+        "id -> projectId",
+        "id -> labelId"
+      ],
+      "inferred": [
+        false,
+        false
+      ]
+    },
+    {
+      "ops": [
+        "listProjects",
+        "getProject",
+        "removeMember"
+      ],
+      "via": [
+        "id -> projectId",
+        "ownerId -> memberId"
+      ],
+      "inferred": [
+        false,
+        true
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+# CI for the filesystem-mcp skill: regression tests, every worked example (dry run) and the audit.
+# Move this file to .github/workflows/ to run it on GitHub.
+name: filesystem-mcp skill
+on: [push, pull_request]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node --test scripts/*.test.mjs
+      - run: node examples/list-allowed-directories-to-read-text-file/run.mjs
+      - run: node examples/list-directory-to-read-media-file/run.mjs
+      - run: node scripts/audit.mjs .

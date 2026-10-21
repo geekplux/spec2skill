@@ -1,0 +1,72 @@
+{
+  "skill": "tasks-api",
+  "mode": "dry-run",
+  "chain": [
+    "listProjects",
+    "listTasks",
+    "getTask"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "op": "listProjects",
+      "destructive": false,
+      "args": {},
+      "request": {
+        "method": "GET",
+        "url": "https://tasks.example.com/v1/projects",
+        "headers": {
+          "authorization": "Bearer REDACTED"
+        },
+        "missingAuth": []
+      },
+      "fedBy": []
+    },
+    {
+      "step": 2,
+      "op": "listTasks",
+      "destructive": false,
+      "args": {
+        "projectId": "<projectId>"
+      },
+      "request": {
+        "method": "GET",
+        "url": "https://tasks.example.com/v1/projects/%3CprojectId%3E/tasks",
+        "headers": {
+          "authorization": "Bearer REDACTED"
+        },
+        "missingAuth": []
+      },
+      "fedBy": [
+        {
+          "arg": "projectId",
+          "from": "listProjects",
+          "field": "id"
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "op": "getTask",
+      "destructive": false,
+      "args": {
+        "taskId": "<taskId>"
+      },
+      "request": {
+        "method": "GET",
+        "url": "https://tasks.example.com/v1/tasks/%3CtaskId%3E",
+        "headers": {
+          "authorization": "Bearer REDACTED"
+        },
+        "missingAuth": []
+      },
+      "fedBy": [
+        {
+          "arg": "taskId",
+          "from": "listTasks",
+          "field": "id"
+        }
+      ]
+    }
+  ]
+}
