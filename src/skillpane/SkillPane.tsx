@@ -71,6 +71,12 @@ interface SkillPaneProps {
 export function SkillPane({ skill, error, ready, empty, options, onOptions, file, onFile, run, tabpanel }: SkillPaneProps) {
   const heading = useRef<HTMLHeadingElement>(null);
   const announce = useAnnounce();
+  // What the last action did, in words beside the buttons (and announced); only for this skill.
+  const [note, setNote] = useState({ slug: '', text: '' });
+  const tell = (text: string, said: string) => {
+    setNote({ slug: options.slug, text });
+    announce(said);
+  };
   useEffect(() => {
     if (run) heading.current?.focus();
   }, [run]);
@@ -84,10 +90,10 @@ export function SkillPane({ skill, error, ready, empty, options, onOptions, file
     const a = Object.assign(document.createElement('a'), { href: url, download: `${slug}-skill.zip` });
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
-    announce(`Downloading ${slug}-skill.zip.`);
+    tell('Downloaded', `Downloaded ${slug}-skill.zip.`);
   };
   const copy = () =>
-    navigator.clipboard.writeText(install.join(' && ')).then(() => announce('Install command copied.'), () => announce('Copy failed: select the command and copy it.'));
+    navigator.clipboard.writeText(install.join(' && ')).then(() => tell('Copied', 'Install command copied.'), () => tell('Copy failed', 'Copy failed: select the command below and copy it.'));
 
   return (
     <section className="skill-pane" id="panel-skill" role={tabpanel ? 'tabpanel' : undefined} aria-labelledby={tabpanel ? 'tab-skill' : 'skill-title'}
@@ -118,6 +124,7 @@ export function SkillPane({ skill, error, ready, empty, options, onOptions, file
           Download .zip
         </button>
         <button type="button" className="btn" onClick={copy} disabled={empty}>Copy install command</button>
+        {note.slug === slug && <span className="copied">{note.text}</span>}
       </div>
       <p className="install">Install: <code>{install[0]}</code></p>
     </section>

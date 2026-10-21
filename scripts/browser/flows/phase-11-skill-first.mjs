@@ -29,6 +29,8 @@ async function downloadAndAudit(page, slug, dir) {
   const zip = join(dir, download.suggestedFilename());
   await download.saveAs(zip);
   const bytes = readFileSync(zip);
+  await pane(page).locator('.copied', { hasText: 'Downloaded' }).waitFor();
+  await page.getByTestId('announcer').filter({ hasText: `Downloaded ${slug}-skill.zip.` }).waitFor();
   const out = mkdtempSync(join(dir, 'unzipped-'));
   const files = unzipSync(bytes);
   for (const [name, data] of Object.entries(files)) {
@@ -93,6 +95,9 @@ export default {
         expect((await page.getByTestId('atlas').getAttribute('aria-label')).includes(id === 'filesystem' ? 'tools' : 'operations'), `${id}: map not updated`);
       }
 
+      await page.mouse.move(5, 5); // no chip hover in the screenshots below
+      await page.waitForTimeout(200);
+
       // 3. Tree keyboard model: arrows to references/, Right opens it, Down to tasks.md, Enter shows it.
       await page.locator('[role="treeitem"][data-path="SKILL.md"]').focus();
       for (let i = 0; i < 2; i++) await page.keyboard.press('ArrowDown');
@@ -102,10 +107,10 @@ export default {
       for (let i = 0; i < 12 && (await focused(page)) !== 'references/tasks.md'; i++) await page.keyboard.press('ArrowDown');
       await page.keyboard.press('Enter');
       expect((await previewOf(page)).startsWith('references/tasks.md,'), `Enter showed ${await previewOf(page)}`);
+      await screenshot('skill-references-file');
       await page.keyboard.press('Home');
       expect((await focused(page)) === 'SKILL.md', 'Home did not focus the first item');
       await page.keyboard.press('Enter');
-      await screenshot('skill-references-file');
 
       // 4. "In the skill" in the detail panel selects the operation's reference page.
       await page.locator('.hit[data-op="getTask"]').focus();
@@ -174,6 +179,11 @@ export default {
       await page.keyboard.press('Home');
       await paneReady(page);
       expect(await pane(page).isVisible(), 'Home did not return to the Skill tab');
+      await page.locator('#tab-map').click();
+      await page.getByRole('button', { name: 'Generate skill' }).click();
+      await paneReady(page);
+      expect((await page.locator('#tab-skill').getAttribute('aria-selected')) === 'true', 'Generate skill did not select the Skill tab');
+      expect((await focused(page)) === 'skill-title', `mobile Generate skill focused ${await focused(page)}`);
       const cdp = await page.context().newCDPSession(page);
       await cdp.send('Emulation.setDeviceMetricsOverride', { width: 640, height: 800, deviceScaleFactor: 2, mobile: false });
       await page.goto(origin);
