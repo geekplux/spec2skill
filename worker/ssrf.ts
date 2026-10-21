@@ -74,7 +74,11 @@ export function checkUrl(raw: string, base?: URL): URL {
   }
   if (url.username || url.password) throw new ProxyError('invalid-url', 'URLs with a user name or password are not fetched.');
   if (!PORTS.has(url.port)) throw new ProxyError('blocked-host', `Port ${url.port} is not allowed; use 80, 443, 8080 or 8443.`);
-  const host = url.hostname.toLowerCase().replace(/\.$/, '');
+  // Strip every trailing dot (`localhost..` must not dodge the suffix list), then refuse empty labels.
+  const host = url.hostname.toLowerCase().replace(/\.+$/, '');
+  if (!host.startsWith('[') && host.split('.').some((label) => label === '')) {
+    throw new ProxyError('blocked-host', `${host || url.hostname} has an empty label.`);
+  }
   if (isBlockedHost(host)) throw new ProxyError('blocked-host', `${host} is a private or local address.`);
   url.hash = '';
   return url;

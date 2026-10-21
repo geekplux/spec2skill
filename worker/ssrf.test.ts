@@ -56,6 +56,10 @@ const BLOCKED: [string, string][] = [
   // hostnames
   ['http://localhost/', 'localhost'],
   ['http://LOCALHOST./', 'localhost upper with dot'],
+  ['http://localhost../', 'localhost with two trailing dots'],
+  ['http://foo.local../', '*.local with two trailing dots'],
+  ['http://foo.internal../', '*.internal with two trailing dots'],
+  ['http://api..example.com/', 'empty inner label'],
   ['http://api.localhost/', '*.localhost'],
   ['http://printer.local/', '*.local'],
   ['https://foo.internal/', '*.internal'],
