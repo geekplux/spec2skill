@@ -2,7 +2,7 @@ STATE: IN-PROGRESS
 
 # Status
 
-- Current phase: 14 (phase-14-worker-proxy), starting; plan now 21 phases (calm-polish phase 18 added)
+- Current phase: 15 (phase-15-source-input), starting
 - Plan: docs/PLAN.md (21 phases)
 - Blockers: none
 
@@ -21,11 +21,12 @@ STATE: IN-PROGRESS
 | 11 | phase-11-skill-first-view | [#12](https://github.com/geekplux/spec2skill/pull/12) | PR open (verified PASS, a11y PASS) | 1 |
 | 12 | phase-12-search-list | [#13](https://github.com/geekplux/spec2skill/pull/13) | PR open (verified PASS, a11y PASS) | 3 |
 | 13 | phase-13-scale-polish | [#14](https://github.com/geekplux/spec2skill/pull/14) | PR open (verified PASS, a11y PASS) | 1 |
-| 14 | phase-14-worker-proxy | - | in progress | 0 |
+| 14 | phase-14-worker-proxy | [#15](https://github.com/geekplux/spec2skill/pull/15) | PR open (verified PASS) | 2 |
+| 15 | phase-15-source-input | - | in progress | 0 |
 
 ## Follow-ups
 - Move ci/github-workflow.yml to .github/workflows/ (needs workflow scope).
 - Phase 15: header DOM order must match visual order once the URL field is enabled.
 - Large specs: allow collapsing an expanded cluster again; name the source on stacked bundle labels.
 
-Last updated: 2026-10-21 19:20 UTC (plan updated for design direction)
+Last updated: 2026-10-21 20:21 UTC (phase 14 PR opened)
