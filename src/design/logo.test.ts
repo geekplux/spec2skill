@@ -1,4 +1,7 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { Logo } from './Logo';
 import favicon from '../../public/favicon.svg?raw';
 import logo from '../../public/logo.svg?raw';
 
@@ -16,7 +19,15 @@ describe('logo assets', () => {
 
   it('logo.svg is labelled and uses only ink and meridian', () => {
     const text = logo;
-    expect(text).toContain('<title>tool atlas</title>');
+    expect(text).toContain('<title>spec2skill</title>');
+    expect(favicon).toContain('<title>spec2skill</title>');
     expect(new Set(text.match(/#[0-9A-F]{6}/gi))).toEqual(new Set(['#1C2430', '#1F5FAD']));
+  });
+
+  it('the header logo is one labelled image drawn from paths, not font text', () => {
+    const svg = renderToStaticMarkup(createElement(Logo));
+    expect(svg).toMatch(/^<svg [^>]*role="img"[^>]*aria-label="spec2skill"/);
+    expect(svg).toContain('viewBox="0 -0.5 189 31"');
+    expect(svg).not.toMatch(/<(text|tspan|foreignObject|image)\b/);
   });
 });

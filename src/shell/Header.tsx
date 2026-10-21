@@ -30,7 +30,10 @@ export function Header({ source, view, onView }: HeaderProps) {
   };
   return (
     <header className="header">
-      <Logo />
+      <div className="brand">
+        <Logo />
+        <p className="pitch">Turn any OpenAPI spec or MCP server into an agent skill in one click.</p>
+      </div>
       <div className="source">
         {source ?? (
           <input
