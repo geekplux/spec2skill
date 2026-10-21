@@ -2,7 +2,7 @@ STATE: IN-PROGRESS
 
 # Status
 
-- Current phase: 15 (phase-15-source-input), starting
+- Current phase: 16 (phase-16-cli), starting
 - Plan: docs/PLAN.md (21 phases)
 - Blockers: none
 
@@ -22,11 +22,12 @@ STATE: IN-PROGRESS
 | 12 | phase-12-search-list | [#13](https://github.com/geekplux/spec2skill/pull/13) | PR open (verified PASS, a11y PASS) | 3 |
 | 13 | phase-13-scale-polish | [#14](https://github.com/geekplux/spec2skill/pull/14) | PR open (verified PASS, a11y PASS) | 1 |
 | 14 | phase-14-worker-proxy | [#15](https://github.com/geekplux/spec2skill/pull/15) | PR open (verified PASS) | 2 |
-| 15 | phase-15-source-input | - | in progress | 0 |
+| 15 | phase-15-source-input | [#16](https://github.com/geekplux/spec2skill/pull/16) | PR open (verified PASS, a11y PASS) | 1 |
+| 16 | phase-16-cli | - | in progress | 0 |
 
 ## Follow-ups
 - Move ci/github-workflow.yml to .github/workflows/ (needs workflow scope).
-- Phase 15: header DOM order must match visual order once the URL field is enabled.
+- Phase 18 calm polish: one accent per view (Generate skill vs Download .zip), raw backticks in the not-a-spec error, empty-spec view focal point and install hint, migrate older views to --calm-* tokens.
 - Large specs: allow collapsing an expanded cluster again; name the source on stacked bundle labels.
 
-Last updated: 2026-10-21 20:21 UTC (phase 14 PR opened)
+Last updated: 2026-10-21 21:02 UTC (phase 15 PR opened)
