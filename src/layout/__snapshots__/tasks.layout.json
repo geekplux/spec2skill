@@ -1,0 +1,1771 @@
+{
+  "nodes": [
+    {
+      "id": "listTasks",
+      "cluster": "cluster-tasks",
+      "depth": 0,
+      "column": 0,
+      "x": 16,
+      "y": 44,
+      "w": 232,
+      "h": 40,
+      "state": "read"
+    },
+    {
+      "id": "createTask",
+      "cluster": "cluster-tasks",
+      "depth": 0,
+      "column": 0,
+      "x": 16,
+      "y": 92,
+      "w": 232,
+      "h": 40,
+      "state": "mutating"
+    },
+    {
+      "id": "getTask",
+      "cluster": "cluster-tasks",
+      "depth": 0,
+      "column": 0,
+      "x": 16,
+      "y": 140,
+      "w": 232,
+      "h": 40,
+      "state": "read"
+    },
+    {
+      "id": "updateTask",
+      "cluster": "cluster-tasks",
+      "depth": 0,
+      "column": 0,
+      "x": 16,
+      "y": 188,
+      "w": 232,
+      "h": 40,
+      "state": "mutating"
+    },
+    {
+      "id": "deleteTask",
+      "cluster": "cluster-tasks",
+      "depth": 0,
+      "column": 0,
+      "x": 16,
+      "y": 236,
+      "w": 232,
+      "h": 40,
+      "state": "destructive"
+    },
+    {
+      "id": "completeTask",
+      "cluster": "cluster-tasks",
+      "depth": 1,
+      "column": 0,
+      "x": 28,
+      "y": 284,
+      "w": 232,
+      "h": 40,
+      "state": "mutating"
+    },
+    {
+      "id": "listProjects",
+      "cluster": "cluster-projects",
+      "depth": 0,
+      "column": 0,
+      "x": 380,
+      "y": 44,
+      "w": 232,
+      "h": 40,
+      "state": "read"
+    },
+    {
+      "id": "createProject",
+      "cluster": "cluster-projects",
+      "depth": 0,
+      "column": 0,
+      "x": 380,
+      "y": 92,
+      "w": 232,
+      "h": 40,
+      "state": "mutating"
+    },
+    {
+      "id": "getProject",
+      "cluster": "cluster-projects",
+      "depth": 1,
+      "column": 0,
+      "x": 392,
+      "y": 140,
+      "w": 232,
+      "h": 40,
+      "state": "read"
+    },
+    {
+      "id": "updateProject",
+      "cluster": "cluster-projects",
+      "depth": 1,
+      "column": 0,
+      "x": 392,
+      "y": 188,
+      "w": 232,
+      "h": 40,
+      "state": "mutating"
+    },
+    {
+      "id": "deleteProject",
+      "cluster": "cluster-projects",
+      "depth": 1,
+      "column": 0,
+      "x": 392,
+      "y": 236,
+      "w": 232,
+      "h": 40,
+      "state": "destructive"
+    },
+    {
+      "id": "listComments",
+      "cluster": "cluster-comments",
+      "depth": 0,
+      "column": 0,
+      "x": 744,
+      "y": 44,
+      "w": 232,
+      "h": 40,
+      "state": "read"
+    },
+    {
+      "id": "createComment",
+      "cluster": "cluster-comments",
+      "depth": 0,
+      "column": 0,
+      "x": 744,
+      "y": 92,
+      "w": 232,
+      "h": 40,
+      "state": "mutating"
+    },
+    {
+      "id": "updateComment",
+      "cluster": "cluster-comments",
+      "depth": 0,
+      "column": 0,
+      "x": 744,
+      "y": 140,
+      "w": 232,
+      "h": 40,
+      "state": "mutating"
+    },
+    {
+      "id": "deleteComment",
+      "cluster": "cluster-comments",
+      "depth": 0,
+      "column": 0,
+      "x": 744,
+      "y": 188,
+      "w": 232,
+      "h": 40,
+      "state": "destructive"
+    },
+    {
+      "id": "listMembers",
+      "cluster": "cluster-members",
+      "depth": 0,
+      "column": 0,
+      "x": 16,
+      "y": 472,
+      "w": 232,
+      "h": 40,
+      "state": "read"
+    },
+    {
+      "id": "addMember",
+      "cluster": "cluster-members",
+      "depth": 0,
+      "column": 0,
+      "x": 16,
+      "y": 520,
+      "w": 232,
+      "h": 40,
+      "state": "mutating"
+    },
+    {
+      "id": "getMember",
+      "cluster": "cluster-members",
+      "depth": 1,
+      "column": 0,
+      "x": 28,
+      "y": 568,
+      "w": 232,
+      "h": 40,
+      "state": "read"
+    },
+    {
+      "id": "removeMember",
+      "cluster": "cluster-members",
+      "depth": 1,
+      "column": 0,
+      "x": 28,
+      "y": 616,
+      "w": 232,
+      "h": 40,
+      "state": "destructive"
+    },
+    {
+      "id": "listLabels",
+      "cluster": "cluster-labels",
+      "depth": 0,
+      "column": 0,
+      "x": 380,
+      "y": 472,
+      "w": 232,
+      "h": 40,
+      "state": "read"
+    },
+    {
+      "id": "createLabel",
+      "cluster": "cluster-labels",
+      "depth": 0,
+      "column": 0,
+      "x": 380,
+      "y": 520,
+      "w": 232,
+      "h": 40,
+      "state": "mutating"
+    },
+    {
+      "id": "deleteLabel",
+      "cluster": "cluster-labels",
+      "depth": 0,
+      "column": 0,
+      "x": 380,
+      "y": 568,
+      "w": 232,
+      "h": 40,
+      "state": "destructive"
+    }
+  ],
+  "clusters": [
+    {
+      "id": "cluster-tasks",
+      "name": "Tasks",
+      "x": 0,
+      "y": 0,
+      "w": 276,
+      "h": 340,
+      "hubs": [
+        {
+          "name": "Error",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "id": "cluster-projects",
+      "name": "Projects",
+      "x": 364,
+      "y": 0,
+      "w": 276,
+      "h": 292,
+      "hubs": [
+        {
+          "name": "Error",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "id": "cluster-comments",
+      "name": "Comments",
+      "x": 728,
+      "y": 0,
+      "w": 264,
+      "h": 244,
+      "hubs": [
+        {
+          "name": "Error",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "id": "cluster-members",
+      "name": "Members",
+      "x": 0,
+      "y": 428,
+      "w": 276,
+      "h": 244,
+      "hubs": [
+        {
+          "name": "Error",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "id": "cluster-labels",
+      "name": "Labels",
+      "x": 364,
+      "y": 428,
+      "w": 264,
+      "h": 196,
+      "hubs": [
+        {
+          "name": "Error",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "sub-path:listProjects->getProject",
+      "kind": "sub-path",
+      "from": "listProjects",
+      "to": "getProject",
+      "d": "M380 61H372V157H392",
+      "mid": {
+        "x": 372,
+        "y": 109
+      },
+      "label": {
+        "x": 332.4,
+        "y": 109,
+        "text": "sub-path",
+        "shown": true
+      }
+    },
+    {
+      "id": "sub-path:listProjects->updateProject",
+      "kind": "sub-path",
+      "from": "listProjects",
+      "to": "updateProject",
+      "d": "M380 61H372V205H392",
+      "mid": {
+        "x": 372,
+        "y": 133
+      },
+      "label": {
+        "x": 332.4,
+        "y": 133,
+        "text": "sub-path",
+        "shown": false
+      }
+    },
+    {
+      "id": "sub-path:listProjects->deleteProject",
+      "kind": "sub-path",
+      "from": "listProjects",
+      "to": "deleteProject",
+      "d": "M380 61H372V253H392",
+      "mid": {
+        "x": 372,
+        "y": 157
+      },
+      "label": {
+        "x": 332.4,
+        "y": 157,
+        "text": "sub-path",
+        "shown": false
+      }
+    },
+    {
+      "id": "sub-path:getProject->listLabels",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "listLabels",
+      "d": "M624 160C677.3 160 681.3 492 612 492",
+      "mid": {
+        "x": 664,
+        "y": 326
+      },
+      "label": {
+        "x": 664,
+        "y": 326,
+        "text": "sub-path",
+        "shown": true
+      }
+    },
+    {
+      "id": "sub-path:getProject->createLabel",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "createLabel",
+      "d": "M624 160C677.3 160 681.3 540 612 540",
+      "mid": {
+        "x": 664,
+        "y": 350
+      },
+      "label": {
+        "x": 664,
+        "y": 350,
+        "text": "sub-path",
+        "shown": false
+      }
+    },
+    {
+      "id": "sub-path:getProject->listMembers",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "listMembers",
+      "d": "M392 160C320 160 320 492 248 492",
+      "mid": {
+        "x": 320,
+        "y": 326
+      },
+      "label": {
+        "x": 320,
+        "y": 326,
+        "text": "sub-path",
+        "shown": true
+      }
+    },
+    {
+      "id": "sub-path:getProject->addMember",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "addMember",
+      "d": "M392 160C320 160 320 540 248 540",
+      "mid": {
+        "x": 320,
+        "y": 350
+      },
+      "label": {
+        "x": 320,
+        "y": 350,
+        "text": "sub-path",
+        "shown": false
+      }
+    },
+    {
+      "id": "sub-path:getProject->listTasks",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "listTasks",
+      "d": "M392 160C320 160 320 64 248 64",
+      "mid": {
+        "x": 320,
+        "y": 112
+      },
+      "label": {
+        "x": 333.2,
+        "y": 128.9,
+        "text": "sub-path",
+        "shown": true
+      }
+    },
+    {
+      "id": "sub-path:getProject->createTask",
+      "kind": "sub-path",
+      "from": "getProject",
+      "to": "createTask",
+      "d": "M392 160C320 160 320 112 248 112",
+      "mid": {
+        "x": 320,
+        "y": 136
+      },
+      "label": {
+        "x": 320,
+        "y": 136,
+        "text": "sub-path",
+        "shown": false
+      }
+    },
+    {
+      "id": "sub-path:listMembers->getMember",
+      "kind": "sub-path",
+      "from": "listMembers",
+      "to": "getMember",
+      "d": "M16 489H8V585H28",
+      "mid": {
+        "x": 8,
+        "y": 537
+      },
+      "label": {
+        "x": -31.6,
+        "y": 537,
+        "text": "sub-path",
+        "shown": true
+      }
+    },
+    {
+      "id": "sub-path:listMembers->removeMember",
+      "kind": "sub-path",
+      "from": "listMembers",
+      "to": "removeMember",
+      "d": "M16 489H8V633H28",
+      "mid": {
+        "x": 8,
+        "y": 561
+      },
+      "label": {
+        "x": -31.6,
+        "y": 561,
+        "text": "sub-path",
+        "shown": false
+      }
+    },
+    {
+      "id": "sub-path:getTask->listComments",
+      "kind": "sub-path",
+      "from": "getTask",
+      "to": "listComments",
+      "d": "M248 160C496 160 496 64 744 64",
+      "mid": {
+        "x": 496,
+        "y": 112
+      },
+      "label": {
+        "x": 496,
+        "y": 112,
+        "text": "sub-path",
+        "shown": false
+      }
+    },
+    {
+      "id": "sub-path:getTask->createComment",
+      "kind": "sub-path",
+      "from": "getTask",
+      "to": "createComment",
+      "d": "M248 160C496 160 496 112 744 112",
+      "mid": {
+        "x": 496,
+        "y": 136
+      },
+      "label": {
+        "x": 496,
+        "y": 136,
+        "text": "sub-path",
+        "shown": false
+      }
+    },
+    {
+      "id": "sub-path:getTask->completeTask",
+      "kind": "sub-path",
+      "from": "getTask",
+      "to": "completeTask",
+      "d": "M16 157H8V301H28",
+      "mid": {
+        "x": 8,
+        "y": 229
+      },
+      "label": {
+        "x": -31.6,
+        "y": 229,
+        "text": "sub-path",
+        "shown": true
+      }
+    },
+    {
+      "id": "shared-schema:updateComment->createComment",
+      "kind": "shared-schema",
+      "from": "updateComment",
+      "to": "createComment",
+      "d": "M976 157C1010.7 157 1010.7 109 976 109",
+      "mid": {
+        "x": 1002,
+        "y": 133
+      },
+      "label": {
+        "x": 1075.2,
+        "y": 123,
+        "text": "Comment, CommentInput",
+        "shown": true
+      }
+    },
+    {
+      "id": "shared-schema:createProject->getProject",
+      "kind": "shared-schema",
+      "from": "createProject",
+      "to": "getProject",
+      "d": "M612 109C662.7 109 658.7 157 624 157",
+      "mid": {
+        "x": 650,
+        "y": 133
+      },
+      "label": {
+        "x": 678.4,
+        "y": 123,
+        "text": "Project",
+        "shown": true
+      }
+    },
+    {
+      "id": "shared-schema:createProject->updateProject",
+      "kind": "shared-schema",
+      "from": "createProject",
+      "to": "updateProject",
+      "d": "M612 109C670.7 109 666.7 205 624 205",
+      "mid": {
+        "x": 656,
+        "y": 157
+      },
+      "label": {
+        "x": 684.4,
+        "y": 147,
+        "text": "Project",
+        "shown": false
+      }
+    },
+    {
+      "id": "shared-schema:getProject->updateProject",
+      "kind": "shared-schema",
+      "from": "getProject",
+      "to": "updateProject",
+      "d": "M624 160C674.7 160 674.7 208 624 208",
+      "mid": {
+        "x": 662,
+        "y": 184
+      },
+      "label": {
+        "x": 690.4,
+        "y": 174,
+        "text": "Project",
+        "shown": false
+      }
+    },
+    {
+      "id": "shared-schema:addMember->getMember",
+      "kind": "shared-schema",
+      "from": "addMember",
+      "to": "getMember",
+      "d": "M248 537C298.7 537 294.7 585 260 585",
+      "mid": {
+        "x": 286,
+        "y": 561
+      },
+      "label": {
+        "x": 311.2,
+        "y": 551,
+        "text": "Member",
+        "shown": true
+      }
+    },
+    {
+      "id": "shared-schema:createTask->getTask",
+      "kind": "shared-schema",
+      "from": "createTask",
+      "to": "getTask",
+      "d": "M248 106C298.7 106 298.7 154 248 154",
+      "mid": {
+        "x": 286,
+        "y": 130
+      },
+      "label": {
+        "x": 304.8,
+        "y": 120,
+        "text": "Task",
+        "shown": false
+      }
+    },
+    {
+      "id": "shared-schema:createTask->updateTask",
+      "kind": "shared-schema",
+      "from": "createTask",
+      "to": "updateTask",
+      "d": "M248 109C306.7 109 306.7 205 248 205",
+      "mid": {
+        "x": 292,
+        "y": 157
+      },
+      "label": {
+        "x": 310.8,
+        "y": 147,
+        "text": "Task",
+        "shown": true
+      }
+    },
+    {
+      "id": "shared-schema:createTask->completeTask",
+      "kind": "shared-schema",
+      "from": "createTask",
+      "to": "completeTask",
+      "d": "M248 109C314.7 109 310.7 301 260 301",
+      "mid": {
+        "x": 298,
+        "y": 205
+      },
+      "label": {
+        "x": 316.8,
+        "y": 195,
+        "text": "Task",
+        "shown": false
+      }
+    },
+    {
+      "id": "shared-schema:getTask->updateTask",
+      "kind": "shared-schema",
+      "from": "getTask",
+      "to": "updateTask",
+      "d": "M248 160C322.7 160 322.7 208 248 208",
+      "mid": {
+        "x": 304,
+        "y": 184
+      },
+      "label": {
+        "x": 322.8,
+        "y": 174,
+        "text": "Task",
+        "shown": false
+      }
+    },
+    {
+      "id": "shared-schema:getTask->completeTask",
+      "kind": "shared-schema",
+      "from": "getTask",
+      "to": "completeTask",
+      "d": "M248 163C330.7 163 326.7 307 260 307",
+      "mid": {
+        "x": 310,
+        "y": 235
+      },
+      "label": {
+        "x": 328.8,
+        "y": 225,
+        "text": "Task",
+        "shown": false
+      }
+    },
+    {
+      "id": "shared-schema:updateTask->completeTask",
+      "kind": "shared-schema",
+      "from": "updateTask",
+      "to": "completeTask",
+      "d": "M248 208C298.7 208 294.7 304 260 304",
+      "mid": {
+        "x": 286,
+        "y": 256
+      },
+      "label": {
+        "x": 304.8,
+        "y": 246,
+        "text": "Task",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listProjects->getProject",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "getProject",
+      "d": "M612 67C686.7 67 682.7 163 624 163",
+      "mid": {
+        "x": 668,
+        "y": 115
+      },
+      "label": {
+        "x": 722,
+        "y": 115,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listProjects->updateProject",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "updateProject",
+      "d": "M612 67C694.7 67 690.7 211 624 211",
+      "mid": {
+        "x": 674,
+        "y": 139
+      },
+      "label": {
+        "x": 728,
+        "y": 139,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listProjects->deleteProject",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "deleteProject",
+      "d": "M612 67C662.7 67 658.7 259 624 259",
+      "mid": {
+        "x": 650,
+        "y": 163
+      },
+      "label": {
+        "x": 704,
+        "y": 163,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listProjects->listLabels",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "listLabels",
+      "d": "M612 64C681.3 64 681.3 492 612 492",
+      "mid": {
+        "x": 664,
+        "y": 278
+      },
+      "label": {
+        "x": 661,
+        "y": 353.6,
+        "text": "id -> projectId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:listProjects->createLabel",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "createLabel",
+      "d": "M612 64C681.3 64 681.3 540 612 540",
+      "mid": {
+        "x": 664,
+        "y": 302
+      },
+      "label": {
+        "x": 664,
+        "y": 302,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listProjects->listMembers",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "listMembers",
+      "d": "M380 64C314 64 314 492 248 492",
+      "mid": {
+        "x": 314,
+        "y": 278
+      },
+      "label": {
+        "x": 314,
+        "y": 278,
+        "text": "id -> projectId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:listProjects->addMember",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "addMember",
+      "d": "M380 64C314 64 314 540 248 540",
+      "mid": {
+        "x": 314,
+        "y": 302
+      },
+      "label": {
+        "x": 314,
+        "y": 302,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listProjects->getMember",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "getMember",
+      "d": "M380 64C320 64 320 588 260 588",
+      "mid": {
+        "x": 320,
+        "y": 326
+      },
+      "label": {
+        "x": 309,
+        "y": 418.5,
+        "text": "id -> projectId, ownerId -> memberId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:listProjects->removeMember",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "removeMember",
+      "d": "M380 64C320 64 320 636 260 636",
+      "mid": {
+        "x": 320,
+        "y": 350
+      },
+      "label": {
+        "x": 320,
+        "y": 350,
+        "text": "id -> projectId, ownerId -> memberId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listProjects->listTasks",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "listTasks",
+      "d": "M380 64C314 64 314 64 248 64",
+      "mid": {
+        "x": 314,
+        "y": 64
+      },
+      "label": {
+        "x": 314,
+        "y": 64,
+        "text": "id -> projectId, ownerId -> assigneeId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listProjects->createTask",
+      "kind": "feeds",
+      "from": "listProjects",
+      "to": "createTask",
+      "d": "M380 64C314 64 314 112 248 112",
+      "mid": {
+        "x": 314,
+        "y": 88
+      },
+      "label": {
+        "x": 314,
+        "y": 88,
+        "text": "id -> projectId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:createProject->getProject",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "getProject",
+      "d": "M612 115C670.7 115 666.7 163 624 163",
+      "mid": {
+        "x": 656,
+        "y": 139
+      },
+      "label": {
+        "x": 710,
+        "y": 139,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createProject->updateProject",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "updateProject",
+      "d": "M612 115C678.7 115 674.7 211 624 211",
+      "mid": {
+        "x": 662,
+        "y": 163
+      },
+      "label": {
+        "x": 716,
+        "y": 163,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createProject->deleteProject",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "deleteProject",
+      "d": "M612 112C686.7 112 682.7 256 624 256",
+      "mid": {
+        "x": 668,
+        "y": 184
+      },
+      "label": {
+        "x": 722,
+        "y": 184,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createProject->listLabels",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "listLabels",
+      "d": "M612 112C681.3 112 681.3 492 612 492",
+      "mid": {
+        "x": 664,
+        "y": 302
+      },
+      "label": {
+        "x": 664,
+        "y": 302,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createProject->createLabel",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "createLabel",
+      "d": "M612 112C681.3 112 681.3 540 612 540",
+      "mid": {
+        "x": 664,
+        "y": 326
+      },
+      "label": {
+        "x": 664,
+        "y": 326,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createProject->listMembers",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "listMembers",
+      "d": "M380 112C314 112 314 492 248 492",
+      "mid": {
+        "x": 314,
+        "y": 302
+      },
+      "label": {
+        "x": 314,
+        "y": 302,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createProject->addMember",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "addMember",
+      "d": "M380 112C314 112 314 540 248 540",
+      "mid": {
+        "x": 314,
+        "y": 326
+      },
+      "label": {
+        "x": 314,
+        "y": 326,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createProject->getMember",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "getMember",
+      "d": "M380 112C320 112 320 588 260 588",
+      "mid": {
+        "x": 320,
+        "y": 350
+      },
+      "label": {
+        "x": 320,
+        "y": 350,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createProject->removeMember",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "removeMember",
+      "d": "M380 112C320 112 320 636 260 636",
+      "mid": {
+        "x": 320,
+        "y": 374
+      },
+      "label": {
+        "x": 320,
+        "y": 374,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createProject->listTasks",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "listTasks",
+      "d": "M380 112C314 112 314 64 248 64",
+      "mid": {
+        "x": 314,
+        "y": 88
+      },
+      "label": {
+        "x": 314,
+        "y": 88,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createProject->createTask",
+      "kind": "feeds",
+      "from": "createProject",
+      "to": "createTask",
+      "d": "M380 112C314 112 314 112 248 112",
+      "mid": {
+        "x": 314,
+        "y": 112
+      },
+      "label": {
+        "x": 314,
+        "y": 112,
+        "text": "id -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getProject->getMember",
+      "kind": "feeds",
+      "from": "getProject",
+      "to": "getMember",
+      "d": "M392 160C326 160 326 588 260 588",
+      "mid": {
+        "x": 326,
+        "y": 374
+      },
+      "label": {
+        "x": 326,
+        "y": 374,
+        "text": "ownerId -> memberId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:getProject->removeMember",
+      "kind": "feeds",
+      "from": "getProject",
+      "to": "removeMember",
+      "d": "M392 160C326 160 326 636 260 636",
+      "mid": {
+        "x": 326,
+        "y": 398
+      },
+      "label": {
+        "x": 326,
+        "y": 398,
+        "text": "ownerId -> memberId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listLabels->deleteLabel",
+      "kind": "feeds",
+      "from": "listLabels",
+      "to": "deleteLabel",
+      "d": "M612 492C646.7 492 646.7 588 612 588",
+      "mid": {
+        "x": 638,
+        "y": 540
+      },
+      "label": {
+        "x": 685.6,
+        "y": 540,
+        "text": "id -> labelId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:listLabels->listTasks",
+      "kind": "feeds",
+      "from": "listLabels",
+      "to": "listTasks",
+      "d": "M380 492C314 492 314 64 248 64",
+      "mid": {
+        "x": 314,
+        "y": 278
+      },
+      "label": {
+        "x": 326.1,
+        "y": 353.6,
+        "text": "id -> labelId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:createLabel->deleteLabel",
+      "kind": "feeds",
+      "from": "createLabel",
+      "to": "deleteLabel",
+      "d": "M612 540C654.7 540 654.7 588 612 588",
+      "mid": {
+        "x": 644,
+        "y": 564
+      },
+      "label": {
+        "x": 691.6,
+        "y": 564,
+        "text": "id -> labelId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createLabel->listTasks",
+      "kind": "feeds",
+      "from": "createLabel",
+      "to": "listTasks",
+      "d": "M380 540C314 540 314 64 248 64",
+      "mid": {
+        "x": 314,
+        "y": 302
+      },
+      "label": {
+        "x": 314,
+        "y": 302,
+        "text": "id -> labelId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listMembers->getMember",
+      "kind": "feeds",
+      "from": "listMembers",
+      "to": "getMember",
+      "d": "M248 495C306.7 495 302.7 591 260 591",
+      "mid": {
+        "x": 292,
+        "y": 543
+      },
+      "label": {
+        "x": 342.8,
+        "y": 543,
+        "text": "id -> memberId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listMembers->removeMember",
+      "kind": "feeds",
+      "from": "listMembers",
+      "to": "removeMember",
+      "d": "M248 495C314.7 495 310.7 639 260 639",
+      "mid": {
+        "x": 298,
+        "y": 567
+      },
+      "label": {
+        "x": 348.8,
+        "y": 567,
+        "text": "id -> memberId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listMembers->listTasks",
+      "kind": "feeds",
+      "from": "listMembers",
+      "to": "listTasks",
+      "d": "M248 492C317.3 492 317.3 64 248 64",
+      "mid": {
+        "x": 300,
+        "y": 278
+      },
+      "label": {
+        "x": 300,
+        "y": 278,
+        "text": "id -> assigneeId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:addMember->getMember",
+      "kind": "feeds",
+      "from": "addMember",
+      "to": "getMember",
+      "d": "M248 543C322.7 543 318.7 591 260 591",
+      "mid": {
+        "x": 304,
+        "y": 567
+      },
+      "label": {
+        "x": 354.8,
+        "y": 567,
+        "text": "id -> memberId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:addMember->removeMember",
+      "kind": "feeds",
+      "from": "addMember",
+      "to": "removeMember",
+      "d": "M248 540C330.7 540 326.7 636 260 636",
+      "mid": {
+        "x": 310,
+        "y": 588
+      },
+      "label": {
+        "x": 351.5,
+        "y": 617.6,
+        "text": "id -> memberId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:listTasks->getTask",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "getTask",
+      "d": "M248 61C306.7 61 306.7 157 248 157",
+      "mid": {
+        "x": 292,
+        "y": 109
+      },
+      "label": {
+        "x": 336.4,
+        "y": 109,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listTasks->updateTask",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "updateTask",
+      "d": "M248 64C314.7 64 314.7 208 248 208",
+      "mid": {
+        "x": 298,
+        "y": 136
+      },
+      "label": {
+        "x": 339.5,
+        "y": 161.4,
+        "text": "id -> taskId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:listTasks->deleteTask",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "deleteTask",
+      "d": "M248 64C322.7 64 322.7 256 248 256",
+      "mid": {
+        "x": 304,
+        "y": 160
+      },
+      "label": {
+        "x": 348.4,
+        "y": 160,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listTasks->listComments",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "listComments",
+      "d": "M248 64C496 64 496 64 744 64",
+      "mid": {
+        "x": 496,
+        "y": 64
+      },
+      "label": {
+        "x": 496,
+        "y": 64,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listTasks->createComment",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "createComment",
+      "d": "M248 64C496 64 496 112 744 112",
+      "mid": {
+        "x": 496,
+        "y": 88
+      },
+      "label": {
+        "x": 496,
+        "y": 88,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listTasks->completeTask",
+      "kind": "feeds",
+      "from": "listTasks",
+      "to": "completeTask",
+      "d": "M248 64C330.7 64 326.7 304 260 304",
+      "mid": {
+        "x": 310,
+        "y": 184
+      },
+      "label": {
+        "x": 354.4,
+        "y": 184,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createTask->getTask",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "getTask",
+      "d": "M248 112C298.7 112 298.7 160 248 160",
+      "mid": {
+        "x": 286,
+        "y": 136
+      },
+      "label": {
+        "x": 330.4,
+        "y": 136,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createTask->updateTask",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "updateTask",
+      "d": "M248 115C306.7 115 306.7 211 248 211",
+      "mid": {
+        "x": 292,
+        "y": 163
+      },
+      "label": {
+        "x": 336.4,
+        "y": 163,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createTask->deleteTask",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "deleteTask",
+      "d": "M248 112C314.7 112 314.7 256 248 256",
+      "mid": {
+        "x": 298,
+        "y": 184
+      },
+      "label": {
+        "x": 342.4,
+        "y": 184,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createTask->listComments",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "listComments",
+      "d": "M248 112C496 112 496 64 744 64",
+      "mid": {
+        "x": 496,
+        "y": 88
+      },
+      "label": {
+        "x": 496,
+        "y": 88,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createTask->createComment",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "createComment",
+      "d": "M248 112C496 112 496 112 744 112",
+      "mid": {
+        "x": 496,
+        "y": 112
+      },
+      "label": {
+        "x": 496,
+        "y": 112,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createTask->completeTask",
+      "kind": "feeds",
+      "from": "createTask",
+      "to": "completeTask",
+      "d": "M248 115C322.7 115 318.7 307 260 307",
+      "mid": {
+        "x": 304,
+        "y": 211
+      },
+      "label": {
+        "x": 348.4,
+        "y": 211,
+        "text": "id -> taskId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getTask->getProject",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "getProject",
+      "d": "M248 160C320 160 320 160 392 160",
+      "mid": {
+        "x": 320,
+        "y": 160
+      },
+      "label": {
+        "x": 320,
+        "y": 160,
+        "text": "projectId -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getTask->updateProject",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "updateProject",
+      "d": "M248 160C320 160 320 208 392 208",
+      "mid": {
+        "x": 320,
+        "y": 184
+      },
+      "label": {
+        "x": 320,
+        "y": 184,
+        "text": "projectId -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getTask->deleteProject",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "deleteProject",
+      "d": "M248 160C320 160 320 256 392 256",
+      "mid": {
+        "x": 320,
+        "y": 208
+      },
+      "label": {
+        "x": 320,
+        "y": 208,
+        "text": "projectId -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getTask->listLabels",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "listLabels",
+      "d": "M248 160C314 160 314 492 380 492",
+      "mid": {
+        "x": 314,
+        "y": 326
+      },
+      "label": {
+        "x": 314,
+        "y": 326,
+        "text": "projectId -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getTask->createLabel",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "createLabel",
+      "d": "M248 160C314 160 314 540 380 540",
+      "mid": {
+        "x": 314,
+        "y": 350
+      },
+      "label": {
+        "x": 314,
+        "y": 350,
+        "text": "projectId -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getTask->listMembers",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "listMembers",
+      "d": "M248 160C317.3 160 317.3 492 248 492",
+      "mid": {
+        "x": 300,
+        "y": 326
+      },
+      "label": {
+        "x": 300,
+        "y": 326,
+        "text": "projectId -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getTask->addMember",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "addMember",
+      "d": "M248 160C317.3 160 317.3 540 248 540",
+      "mid": {
+        "x": 300,
+        "y": 350
+      },
+      "label": {
+        "x": 300,
+        "y": 350,
+        "text": "projectId -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getTask->getMember",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "getMember",
+      "d": "M248 160C317.3 160 313.3 588 260 588",
+      "mid": {
+        "x": 300,
+        "y": 374
+      },
+      "label": {
+        "x": 300,
+        "y": 374,
+        "text": "projectId -> projectId, assigneeId -> memberId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getTask->removeMember",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "removeMember",
+      "d": "M248 160C317.3 160 313.3 636 260 636",
+      "mid": {
+        "x": 300,
+        "y": 398
+      },
+      "label": {
+        "x": 300,
+        "y": 398,
+        "text": "projectId -> projectId, assigneeId -> memberId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:getTask->listTasks",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "listTasks",
+      "d": "M248 163C330.7 163 330.7 67 248 67",
+      "mid": {
+        "x": 310,
+        "y": 115
+      },
+      "label": {
+        "x": 469.6,
+        "y": 115,
+        "text": "projectId -> projectId, assigneeId -> assigneeId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:getTask->createTask",
+      "kind": "feeds",
+      "from": "getTask",
+      "to": "createTask",
+      "d": "M248 166C298.7 166 298.7 118 248 118",
+      "mid": {
+        "x": 286,
+        "y": 142
+      },
+      "label": {
+        "x": 362.4,
+        "y": 142,
+        "text": "projectId -> projectId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:listComments->updateComment",
+      "kind": "feeds",
+      "from": "listComments",
+      "to": "updateComment",
+      "d": "M976 64C1018.7 64 1018.7 160 976 160",
+      "mid": {
+        "x": 1008,
+        "y": 112
+      },
+      "label": {
+        "x": 1060.2,
+        "y": 95.1,
+        "text": "id -> commentId",
+        "shown": true
+      }
+    },
+    {
+      "id": "feeds:listComments->deleteComment",
+      "kind": "feeds",
+      "from": "listComments",
+      "to": "deleteComment",
+      "d": "M976 64C1026.7 64 1026.7 208 976 208",
+      "mid": {
+        "x": 1014,
+        "y": 136
+      },
+      "label": {
+        "x": 1068,
+        "y": 136,
+        "text": "id -> commentId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createComment->updateComment",
+      "kind": "feeds",
+      "from": "createComment",
+      "to": "updateComment",
+      "d": "M976 115C1034.7 115 1034.7 163 976 163",
+      "mid": {
+        "x": 1020,
+        "y": 139
+      },
+      "label": {
+        "x": 1074,
+        "y": 139,
+        "text": "id -> commentId",
+        "shown": false
+      }
+    },
+    {
+      "id": "feeds:createComment->deleteComment",
+      "kind": "feeds",
+      "from": "createComment",
+      "to": "deleteComment",
+      "d": "M976 112C1042.7 112 1042.7 208 976 208",
+      "mid": {
+        "x": 1026,
+        "y": 160
+      },
+      "label": {
+        "x": 1080,
+        "y": 160,
+        "text": "id -> commentId",
+        "shown": false
+      }
+    }
+  ],
+  "bounds": {
+    "x": -48,
+    "y": -48,
+    "w": 1088,
+    "h": 768
+  }
+}
