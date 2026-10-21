@@ -11,6 +11,7 @@ interface LayoutProps {
   source: ReactNode;
   /** The loading or error state, above the (greyscale while busy) skill and map. */
   status?: ReactNode;
+  /** A load is in progress (the content below the steps is busy; Generate skill waits). */
   busy: boolean;
 }
 
@@ -21,13 +22,16 @@ export function Layout({ samples, children, onGenerate, source, status, busy }: 
       <a className="skip" href="#main">
         Skip to content
       </a>
-      <Header onGenerate={onGenerate} source={source} />
+      <Header onGenerate={onGenerate} source={source} quiet={!!status} disabled={busy} />
       <section className="samples" aria-label="Built-in samples">
         {samples}
       </section>
-      <main id="main" className="stage" tabIndex={-1} aria-busy={busy} data-busy={busy || undefined}>
+      {/* While a status is shown, the previous skill and map below it are greyscale (app.css). */}
+      <main id="main" className="stage" tabIndex={-1} data-status={status ? (busy ? 'loading' : 'error') : undefined}>
         {status}
-        {children}
+        <div className="stage-content" aria-busy={busy}>
+          {children}
+        </div>
       </main>
       </Announcer>
     </div>

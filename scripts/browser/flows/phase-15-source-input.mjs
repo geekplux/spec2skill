@@ -55,6 +55,7 @@ const DIRECT = {
   '/notes.json': { body: JSON.stringify(NOTES_30), type: 'application/json' },
   '/missing.json': { status: 404, body: 'not here', type: 'text/plain' },
   '/docs': { body: '<!doctype html><title>API docs</title>', type: 'text/html' },
+  '/server': { body: '<!doctype html><title>An MCP server</title>', type: 'text/html' }, // an MCP endpoint that answers GET with a page
 };
 /** What the proxy answers for a URL: [status, body, headers]. */
 const err = (status, code, message) => [status, JSON.stringify({ error: { code, message } }), { 'content-type': 'application/json' }];
@@ -69,6 +70,7 @@ const MCP = {
   'https://tools.example.test/mcp': [200, JSON.stringify(TOOLS), { 'content-type': 'application/json' }],
   'https://locked.example.test/mcp': err(401, 'needs-auth', 'The MCP server answered 401: it needs credentials.'),
   'https://old.example.test/sse': err(502, 'legacy-transport', 'The server does not speak Streamable HTTP.'),
+  [`${HOST}/server`]: [200, JSON.stringify(TOOLS), { 'content-type': 'application/json' }],
 };
 
 export default {
@@ -177,6 +179,18 @@ export default {
     await axe('more options open');
     await more.click();
 
+    // The multi-line field explains Enter/Shift+Enter to assistive tech, and the shortcut help lists them.
+    expect((await field.getAttribute('aria-describedby')) === 'source-hint', 'field not described by #source-hint');
+    expect((await page.locator('#source-hint').textContent()) === 'Enter loads. Shift+Enter adds a new line.', 'source hint text');
+    await page.locator('main').focus();
+    await page.keyboard.press('?');
+    const help = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
+    await help.waitFor();
+    const sourceRows = await help.locator('table', { has: page.locator('caption', { hasText: 'Source field' }) }).textContent();
+    expect(sourceRows.includes('Enter') && sourceRows.includes('Shift + Enter') && /new line/.test(sourceRows), `help lacks the source field keys: ${sourceRows}`);
+    await page.keyboard.press('Escape');
+    await help.waitFor({ state: 'hidden' });
+
     // F3: OpenAPI 3.1 YAML (direct), 3.0 JSON (direct), Swagger 2 JSON (proxy), MCP (proxy only).
     await loadOk(`${HOST}/tasks.yaml`, 'Tasks API', 'tasks.yaml');
     expect(new URL(page.url()).searchParams.get('url') === `${HOST}/tasks.yaml`, `?url= written: ${page.url()}`);
@@ -210,7 +224,11 @@ export default {
     await submit(`${HOST}/hang.yaml`);
     await page.getByTestId('loading').waitFor();
     await page.getByTestId('announcer').filter({ hasText: 'Fetching spec (specs.example.test)' }).waitFor();
-    expect((await page.locator('main').getAttribute('aria-busy')) === 'true', 'main is busy while loading');
+    expect((await page.locator('main').getAttribute('aria-busy')) === null, 'aria-busy is on the content, not on main (the steps and Cancel stay live)');
+    expect((await page.locator('main > .stage-content').getAttribute('aria-busy')) === 'true', 'content is busy while loading');
+    expect((await page.locator('main').getAttribute('data-status')) === 'loading', 'main says loading');
+    const generate = page.locator('header .generate');
+    expect(await generate.isDisabled(), 'Generate skill is disabled while loading');
     await page.mouse.move(5, 5);
     await screenshot('paste-url-loading');
     await axe('loading state');
@@ -251,6 +269,15 @@ export default {
       }
     }
     await axe('error state');
+    // The error state: previous content greyscale, title at least the page title's size, Generate neutral.
+    expect((await page.locator('main').getAttribute('data-status')) === 'error', 'main says error');
+    expect(await page.locator('main > .stage-content').evaluate((el) => getComputedStyle(el).filter === 'grayscale(1)'), 'previous content not greyscale under the error');
+    const sizes = await page.evaluate(() => [document.querySelector('#status-title'), document.querySelector('.title h1')].map((el) => parseFloat(getComputedStyle(el).fontSize)));
+    expect(sizes[0] >= sizes[1], `error title ${sizes[0]}px is smaller than the page title ${sizes[1]}px`);
+    expect(await generate.isEnabled(), 'Generate skill enabled under an error');
+    const fill = await generate.evaluate((el) => getComputedStyle(el).backgroundColor);
+    const meridian = await page.evaluate(() => { const b = document.createElement('i'); b.style.color = 'var(--meridian)'; document.body.append(b); const c = getComputedStyle(b).color; b.remove(); return c; });
+    expect(fill !== meridian, `Generate skill keeps the meridian fill under an error (${fill})`);
     proxyDown = true;
     await submit(`${HOST}/petstore.json`);
     await page.locator('.source-status.error[data-code="proxy-unavailable"]').filter({ hasText: 'pnpm dev:worker' }).waitFor();
@@ -262,9 +289,18 @@ export default {
     await title.filter({ hasText: 'Tasks API (sample)' }).waitFor();
     await ready();
     expect((await page.locator('.source-status').count()) === 0, '"Try a sample" clears the error');
+    await page.waitForFunction(() => document.activeElement?.id === 'main', null, { timeout: 2000 }).catch(() => {});
+    expect(await page.evaluate(() => document.activeElement?.id === 'main'), `"Try a sample" left focus on ${await page.evaluate(() => document.activeElement?.tagName)}`);
     // The auto-detect failure offers the MCP selector directly.
     await submit(`${HOST}/docs`);
-    await page.getByRole('button', { name: 'Load it as an MCP server' }).waitFor(); // the docs-page error offers MCP
+    await page.getByRole('button', { name: 'Load it as an MCP server' }).click(); // the docs-page error offers MCP
+    await page.locator('.source-status.error[data-code="http-error"]').waitFor(); // not an MCP server either
+    expect(await page.evaluate(() => document.activeElement?.id === 'status-title'), 'failed MCP retry: focus not on the new error title');
+    await submit(`${HOST}/server`);
+    await page.getByRole('button', { name: 'Load it as an MCP server' }).click();
+    await title.filter({ hasText: /^secure-filesystem-server$/ }).waitFor();
+    await ready();
+    expect(await page.evaluate(() => document.activeElement?.id === 'source-field'), `MCP retry left focus on ${await page.evaluate(() => document.activeElement?.tagName)}`);
 
     // AC2: pasted text and opened files give the built-in sample's skill, with no /api request.
     const tmp = mkdtempSync(join(tmpdir(), 'spec2skill-p15-'));
@@ -277,9 +313,13 @@ export default {
         const [gotPaste, pasteTree] = [await zipHash(), await tree()];
         await openSample(id);
         await page.getByRole('button', { name: 'More options' }).click();
-        await page.locator('#source-more input[type="file"]').setInputFiles(join(ROOT, 'samples', file));
+        const picker = page.locator('#source-more input[type="file"]');
+        await picker.focus(); // as after choosing in the dialog from the keyboard
+        await picker.setInputFiles(join(ROOT, 'samples', file));
         await title.filter({ hasText: new RegExp(`^${heading}$`) }).waitFor();
         await ready();
+        const at = await page.evaluate(() => document.activeElement?.textContent ?? document.activeElement?.tagName);
+        expect(at === 'More options', `${id}: after picking a file focus is on ${at}, not More options`);
         const gotFile = await zipHash();
         expect(api.length === before, `${id}: text/file made /api requests`);
         // The MCP recording has no serverInfo (that comes from initialize), so its name and slug differ: same files.
@@ -290,6 +330,7 @@ export default {
       // The empty spec, a spec with warnings, and the 1000-operation paste (P4).
       await submit(EMPTY);
       await page.getByTestId('empty-chart').waitFor();
+      await page.getByTestId('announcer').filter({ hasText: 'Quiet API: no operations. This spec has no paths, so there is no skill to write.' }).waitFor();
       expect(await page.getByText('No operations, so no skill to write').isVisible(), 'empty skill pane');
       expect(await page.getByRole('button', { name: 'Download .zip' }).isDisabled(), 'Download enabled for an empty spec');
       await screenshot('empty-spec');
@@ -319,6 +360,16 @@ export default {
     await openSample();
     await loadOk(`${HOST}/tasks.yaml`, 'Tasks API', 'mobile');
     await screenshot('source-mobile');
+    // The error state at 390 px: the help command wraps (no scroll region) and axe is clean.
+    proxyDown = true;
+    await submit(`${HOST}/petstore.json`);
+    await page.locator('.source-status.error[data-code="proxy-unavailable"]').waitFor();
+    proxyDown = false;
+    const scrolls = await page.locator('.command').evaluate((el) => el.scrollWidth > el.clientWidth);
+    expect(!scrolls, 'the command scrolls sideways at 390 px');
+    await page.mouse.move(5, 5);
+    await screenshot('error-mobile');
+    await axe('error state 390');
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
     await submit('http://10.0.0.8/openapi.json');

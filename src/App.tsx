@@ -76,6 +76,13 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
     const passed = skill.audit.checks.filter((c) => c.ok).length;
     if (!first || news) announce(`${news}Skill written: ${skill.audit.ok ? 'audit passed' : 'audit failed'}, ${passed} of ${skill.audit.checks.length} checks.`);
   }, [announce, skill, model.hash, model.source.title, summary]);
+  // A spec without operations has no skill to announce: say the load finished, once per spec.
+  const emptySaid = useRef('');
+  useEffect(() => {
+    if (model.operations.length > 0 || emptySaid.current === model.hash) return;
+    emptySaid.current = model.hash;
+    announce(`${title}: no operations. This spec has no paths, so there is no skill to write.`);
+  }, [announce, model.operations.length, model.hash, title]);
   // Panes fill the first view from their measured page top (app.css reads --panes-top).
   useLayoutEffect(() => {
     const el = panes.current!;
@@ -297,7 +304,9 @@ export function App() {
     </>
   );
   const status = job ? <LoadingSteps progress={job.progress} onCancel={() => (stop(), field.current?.focus())} />
-    : failure && <ErrorPanel error={failure} onMcp={failure.retry} onSample={() => select(getSample(DEFAULT_SAMPLE_ID)!)}
+    // The panel unmounts under its own buttons: focus goes to the field or #main, never to <body>.
+    : failure && <ErrorPanel error={failure} onMcp={failure.retry && (() => (field.current?.focus(), failure.retry!()))}
+      onSample={() => (select(getSample(DEFAULT_SAMPLE_ID)!), requestAnimationFrame(() => document.getElementById('main')?.focus()))}
       onPaste={() => (stop(), field.current?.select(), field.current?.focus())} />;
   return (
     <Layout source={<SourceInput value={draft} onValue={setDraft} onLoad={(input, mode) => load(input, mode)} field={field} />} status={status} busy={!!job}

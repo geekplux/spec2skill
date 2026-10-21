@@ -333,9 +333,12 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
   .source-more { flex-basis: 100%; padding: 0; }
   .header .theme { margin-left: auto; }
 }
-.stage[data-busy] > :not(.source-status) { filter: grayscale(1); } /* dimmed without fading: text keeps its contrast */
+.stage[data-status] > :not(.source-status) { filter: grayscale(1); } /* dimmed without fading: text keeps its contrast */
+@media (min-width: 640px) { .btn.primary.generate[data-quiet]:enabled { background: var(--vellum); border-color: var(--ink); color: var(--ink); font-weight: 400; } }
 .source-status { max-width: 44rem; margin: 0 0 var(--calm-4); padding: var(--calm-3) 0 var(--calm-3) var(--calm-4); border-left: 3px solid var(--ink); }
 .source-status h2 { width: fit-content; margin: 0 0 var(--calm-2); font-size: 1.25rem; outline-offset: var(--calm-1); }
+.source-status.error h2 { font-size: 1.75rem; } /* the focal point: at least the page title's size */
+@media (max-width: 639px) { .source-status.error h2 { font-size: 1.5rem; } }
 .source-status p { margin: 0 0 var(--calm-3); }
 .steps { margin: 0 0 var(--calm-3); padding: 0; list-style: none; }
 .steps li { display: flex; gap: var(--calm-2); padding-block: var(--calm-1); color: var(--graphite); }
@@ -344,7 +347,7 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .tick { width: 1.25em; font-family: var(--font-mono); text-align: center; color: var(--tick, inherit); }
 .error { border-left-style: double; border-left-width: 4px; }
 .err-mark { display: inline-grid; place-items: center; width: 1.3em; height: 1.3em; margin-right: var(--calm-2); border: 2px solid var(--brick); color: var(--brick); font: 800 0.8em var(--font-mono); }
-.command { margin: 0 0 var(--calm-3); padding: var(--calm-2) var(--calm-3); overflow-x: auto; background: var(--vellum); font-size: 0.9em; }
+.command { margin: 0 0 var(--calm-3); padding: var(--calm-2) var(--calm-3); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--vellum); font-size: 0.9em; }
 .status-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--calm-2) var(--calm-3); }
 .warnings { flex-basis: 100%; font-size: 0.9em; }
 .warnings summary { width: fit-content; padding: 0 var(--calm-2); border: 1px solid var(--graphite); border-radius: var(--radius-pill); cursor: pointer; color: var(--graphite); }

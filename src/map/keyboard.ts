@@ -110,7 +110,7 @@ export const describeEdge = (e: Edge, id: string, index: number, count: number):
   `Edge ${index + 1} of ${count}: ${edgeText(e, id)}. Enter follows it.`;
 
 /** Every shortcut, by where it works: the help dialog renders this table and a test checks that
- *  every key `keyAction`, the file tree and the tabs handle is in it. Keys are `KeyboardEvent.key`. */
+ *  every key `keyAction`, the file tree, the tabs and the source field handle is in it. Keys are `KeyboardEvent.key`. */
 export const SHORTCUTS: { where: string; keys: string[]; what: string }[] = [
   { where: 'Anywhere outside a text field', keys: ['/'], what: 'Search operations' },
   { where: 'Anywhere outside a text field', keys: ['?'], what: 'Show these shortcuts' },
@@ -129,7 +129,12 @@ export const SHORTCUTS: { where: string; keys: string[]; what: string }[] = [
   { where: 'Skill files', keys: ['Home', 'End'], what: 'First or last file' },
   { where: 'Skill files', keys: ['Enter', ' '], what: 'Show the file, or open or close the folder' },
   { where: 'Tabs', keys: ['ArrowLeft', 'ArrowRight', 'Home', 'End'], what: 'Switch between Skill, Map and List' },
+  { where: 'Source field', keys: ['Enter'], what: 'Load the URL or spec text' },
+  { where: 'Source field', keys: ['Shift+Enter'], what: 'Add a new line' },
 ];
+
+/** The source field (a multi-line textarea): Enter loads, Shift+Enter adds a line (listed above). */
+export const sourceFieldLoads = (key: string, shift: boolean): boolean => key === 'Enter' && !shift;
 
 const KEY_LABEL: Record<string, string> = {
   ArrowLeft: '←', ArrowUp: '↑', ArrowRight: '→', ArrowDown: '↓', PageUp: 'Page Up', PageDown: 'Page Down', Escape: 'Esc', ' ': 'Space',

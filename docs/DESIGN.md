@@ -17,7 +17,7 @@ Each view has exactly one focal point. Everything else is visibly secondary: sma
 | List view | The operations table (cluster captions + rows) | Search, filters, the summary line above the table |
 | Detail panel | The operation's name, method + path, and its "In the skill" link | Inputs, outputs, auth, related operations, Copy example |
 | Loading | The ordered step list (Fetching, Parsing, Mapping, Writing skill) | Cancel (a neutral button); the previous skill and map, shown greyscale (not faded) behind it |
-| Error | The error title and its two recovery actions ("Paste spec text instead", "Try a sample") | The reason sentence, any help (a command to run), the previous skill and map below |
+| Error | The error title and its two recovery actions ("Paste spec text instead", "Try a sample") | The reason sentence, any help (a command to run), the previous skill and map below, shown greyscale as in Loading; the error title is at least the page title's size |
 | Empty spec (zero operations) | The empty chart and its sentence "This spec has no paths..." | The warnings disclosure; the skill pane's "No operations, so no skill to write" |
 
 ### 2. What sits behind disclosure on first load
@@ -42,6 +42,8 @@ Accessibility of disclosed content (all mandatory):
 - The toggle's name says what is inside ("3 warnings", "More options"), so a closed disclosure is never a dead end for a screen-reader user.
 - Opening moves nothing and steals no focus; Tab from the toggle reaches the first control inside.
 - Nothing is removed for keyboard or screen-reader users: everything a pointer user can reach is reachable by Tab and named.
+- When a disclosure closes or a status panel unmounts while it holds focus, focus moves to its toggle or to the field (never to `<body>`).
+- Non-obvious keys are explained to assistive tech (e.g. `aria-describedby`: Enter loads, Shift+Enter new line) and listed in Keyboard shortcuts.
 
 ### 3. Spacing scale
 
@@ -63,14 +65,15 @@ Rules:
 
 ### 4. One accent
 
-- `meridian` at accent weight (filled button, bold coloured text, thick stroke) marks **one** thing per view: first view = **Download .zip** (phase 18 makes "Generate skill" neutral when the pane is on screen); map = the focused node and its highlighted edges; loading = the active step's marker; error = none (the title is the focal point by size and position; the error glyph uses `brick` with a `!` shape and the word "Couldn't").
+- `meridian` at accent weight (filled button, bold coloured text, thick stroke) marks **one** thing per view: first view = **Download .zip** (phase 18 makes "Generate skill" neutral when the pane is on screen); map = the focused node and its highlighted edges; loading = the active step's marker; error = none (the title is the focal point by size and position; the error glyph uses `brick` with a `!` shape and a visually hidden "Could not load:" prefix on the title).
+- While a loading or error state is shown, the header's Generate skill is neutral (no meridian fill) and disabled while loading.
 - Method/kind hues (`fir`, `ochre`, `brick`, `plum`, `meridian` on GET) appear only as small badges with their text label, never as fills of large areas.
 - Everything else uses neutrals: `ink` for text and primary borders, `graphite` for secondary text and quiet borders, `rule` for dividers, `paper`/`vellum` for surfaces.
 - Chips and badges are quiet: neutral border (`graphite`), no fill except the selected chip (`ink` fill plus a check glyph), text at 0.8-1em.
 
 ### 5. Hierarchy
 
-Title, then the focal point, then supporting text, then controls. In the header: wordmark, the URL field (the one prominent control), the theme toggle, then Generate skill. The header's DOM order equals its visual order at every width: no CSS `order`, no absolute positioning that reorders focus. At 1024 px and wider the header is one row (wordmark, URL field, Load, More options, theme, Generate skill); below 640 px it is three rows: wordmark; the URL field; Load, More options and the theme toggle. The theme toggle sits after the field on phones too, because one DOM order cannot put it after the field on desktop and before it on phones without reordering.
+Title, then the focal point, then supporting text, then controls. In the header: wordmark, the URL field (the one prominent control), the theme toggle, then Generate skill. The header's DOM order equals its visual order at every width: no CSS `order`, no absolute positioning that reorders focus. At 1024 px and wider the header is one row (wordmark, URL field, Load, More options, theme, Generate skill); below 640 px it is three rows: wordmark; the URL field; Load, More options and the theme toggle; below 640 px Generate skill is the fixed bottom bar, last in DOM order. The theme toggle sits after the field on phones too, because one DOM order cannot put it after the field on desktop and before it on phones without reordering.
 
 ### Unchanged constraints
 

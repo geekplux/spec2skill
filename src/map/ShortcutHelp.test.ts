@@ -6,7 +6,7 @@ import { type AtlasLayout, layout } from '../layout/layout';
 import { getSample, sampleModel } from '../samples';
 import { nextTab } from '../shell/Tabs';
 import { treeKey, treeRows } from '../skillpane/tree';
-import { type NavState, SHORTCUTS, edgesOf, keyAction, keyLabel } from './keyboard';
+import { type NavState, SHORTCUTS, edgesOf, keyAction, keyLabel, sourceFieldLoads } from './keyboard';
 
 const NAMED = ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown', 'Enter', 'Escape', 'Tab', 'Backspace', 'Delete', 'F1', 'Insert'];
 const PRINTABLE = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i));
@@ -43,6 +43,14 @@ describe('shortcut help', () => {
     expect(tree.filter((k) => !listed('Skill files').has(k))).toEqual([]);
     expect(tabs.filter((k) => !listed('Tabs').has(k))).toEqual([]);
     expect(tree.length + tabs.length).toBeGreaterThan(8);
+  });
+
+  it('lists the source field\'s Enter (loads) and Shift+Enter (new line)', () => {
+    const loads = KEYS.filter((key) => sourceFieldLoads(key, false));
+    expect(loads).toEqual(['Enter']);
+    expect(KEYS.some((key) => sourceFieldLoads(key, true))).toBe(false);
+    expect(listed('Source field')).toEqual(new Set(['Enter', 'Shift+Enter']));
+    expect(keyLabel('Shift+Enter')).toBe('Shift + Enter');
   });
 
   it('documents search keys and prints keys readably', () => {

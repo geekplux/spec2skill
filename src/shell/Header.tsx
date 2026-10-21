@@ -9,9 +9,13 @@ interface HeaderProps {
   source: ReactNode;
   /** Write the skill again and bring the skill pane into view. */
   onGenerate: () => void;
+  /** A loading or error state is shown: Generate skill is neutral (>= 640 px), not the accent. */
+  quiet?: boolean;
+  /** A load is in progress: writing the skill again now would rewrite the previous one. */
+  disabled?: boolean;
 }
 
-export function Header({ source, onGenerate }: HeaderProps) {
+export function Header({ source, onGenerate, quiet, disabled }: HeaderProps) {
   const [theme, setTheme] = useState(() => initialTheme(safeStorage(), prefersDark()));
   // Until the user picks a theme, an OS change applies live (A10), without storing anything.
   useEffect(() => {
@@ -41,7 +45,7 @@ export function Header({ source, onGenerate }: HeaderProps) {
       <button type="button" className="btn theme" aria-pressed={theme === 'dark'} onClick={toggle}>
         <span aria-hidden="true">☾</span> Dark theme
       </button>
-      <button type="button" className="btn primary generate" onClick={onGenerate}>
+      <button type="button" className="btn primary generate" data-quiet={quiet || undefined} disabled={disabled} onClick={onGenerate}>
         Generate skill
       </button>
     </header>
