@@ -1,16 +1,21 @@
-// The Worker: static assets for everything except /api/* (run_worker_first), plus the three API
+// The Worker: static assets for everything except /api/* (run_worker_first), plus the API
 // routes. Handlers take (request, env, deps) so tests run in plain Vitest (D3). Request bodies are
 // never logged; parsing stays in the browser.
+import { type AiEnv, aiModel, describe } from './ai';
 import { ProxyError, errorResponse, json } from './errors';
 import { type SpecDeps, fetchSpec } from './fetchSpec';
 import { readCapped } from './limits';
 import { listMcpTools } from './mcpClient';
 import { checkUrl } from './ssrf';
 
-export interface WorkerEnv {
+type Limiter = { limit: (options: { key: string }) => Promise<{ success: boolean }> };
+
+export interface WorkerEnv extends AiEnv {
   ASSETS: { fetch: (request: Request) => Promise<Response> };
   /** Workers rate limiting binding (30 / 60 s per IP); absent in local tests = no limit. */
-  RATE_LIMITER?: { limit: (options: { key: string }) => Promise<{ success: boolean }> };
+  RATE_LIMITER?: Limiter;
+  /** The same for /api/ai/describe (10 / 60 s per IP). */
+  AI_RATE_LIMITER?: Limiter;
 }
 
 export type Deps = SpecDeps;
@@ -43,13 +48,14 @@ export async function handle(request: Request, env: WorkerEnv, deps: Deps): Prom
   const { pathname } = new URL(request.url);
   if (!pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
   try {
-    if (pathname === '/api/health') return json({ ok: true, ai: false });
+    if (pathname === '/api/health') return json(env.AI ? { ok: true, ai: true, model: aiModel(env) } : { ok: true, ai: false });
+    const ai = pathname === '/api/ai/describe';
     const route = Object.hasOwn(ROUTES, pathname) ? ROUTES[pathname] : undefined;
-    if (!route) throw new ProxyError('bad-request', 'Unknown API route.', 404);
+    if (!route && !ai) throw new ProxyError('bad-request', 'Unknown API route.', 404);
     if (request.method !== 'POST') throw new ProxyError('bad-request', 'Use POST.', 405);
-    const limit = await env.RATE_LIMITER?.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' });
+    const limit = await (ai ? env.AI_RATE_LIMITER : env.RATE_LIMITER)?.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' });
     if (limit && !limit.success) throw new ProxyError('rate-limited', 'Too many requests; try again in a minute.');
-    return await route(await targetUrl(request), request, deps);
+    return await (route ? route(await targetUrl(request), request, deps) : describe(request, env));
   } catch (error) {
     return errorResponse(error);
   }
