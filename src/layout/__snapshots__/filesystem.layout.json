@@ -585,74 +585,6 @@
       }
     },
     {
-      "id": "feeds:list_allowed_directories->read_file",
-      "kind": "feeds",
-      "from": "list_allowed_directories",
-      "to": "read_file",
-      "d": "M368 160C308 160 308 160 248 160",
-      "mid": {
-        "x": 308,
-        "y": 160
-      },
-      "label": {
-        "x": 308,
-        "y": 160,
-        "text": "listed path",
-        "shown": false
-      }
-    },
-    {
-      "id": "feeds:list_allowed_directories->read_text_file",
-      "kind": "feeds",
-      "from": "list_allowed_directories",
-      "to": "read_text_file",
-      "d": "M368 160C308 160 308 208 248 208",
-      "mid": {
-        "x": 308,
-        "y": 184
-      },
-      "label": {
-        "x": 308,
-        "y": 184,
-        "text": "listed path",
-        "shown": false
-      }
-    },
-    {
-      "id": "feeds:list_allowed_directories->read_media_file",
-      "kind": "feeds",
-      "from": "list_allowed_directories",
-      "to": "read_media_file",
-      "d": "M368 160C308 160 308 256 248 256",
-      "mid": {
-        "x": 308,
-        "y": 208
-      },
-      "label": {
-        "x": 308,
-        "y": 208,
-        "text": "listed path",
-        "shown": false
-      }
-    },
-    {
-      "id": "feeds:list_allowed_directories->edit_file",
-      "kind": "feeds",
-      "from": "list_allowed_directories",
-      "to": "edit_file",
-      "d": "M368 160C308 160 308 400 248 400",
-      "mid": {
-        "x": 308,
-        "y": 280
-      },
-      "label": {
-        "x": 308,
-        "y": 280,
-        "text": "listed path",
-        "shown": false
-      }
-    },
-    {
       "id": "feeds:list_allowed_directories->list_directory",
       "kind": "feeds",
       "from": "list_allowed_directories",
@@ -716,23 +648,6 @@
       "label": {
         "x": 308,
         "y": 112,
-        "text": "listed path",
-        "shown": false
-      }
-    },
-    {
-      "id": "feeds:list_allowed_directories->get_file_info",
-      "kind": "feeds",
-      "from": "list_allowed_directories",
-      "to": "get_file_info",
-      "d": "M368 160C308 160 308 352 248 352",
-      "mid": {
-        "x": 308,
-        "y": 256
-      },
-      "label": {
-        "x": 308,
-        "y": 256,
         "text": "listed path",
         "shown": false
       }

@@ -85,6 +85,26 @@ describe('buildGraph: Tasks sample', async () => {
     expect(g.edges.some((e) => e.kind === 'sub-path' && e.to === 'getTask')).toBe(false); // no /tasks path
   });
 
+  it('a bare foreign key never feeds a create, update or delete (rule 6)', () => {
+    const writes = new Set(['create', 'update', 'delete']);
+    const fkOnly = g.edges.filter((e) => e.kind === 'feeds' && writes.has(g.crud[e.to]!) && !e.label.split(', ').some((l) => l.startsWith('id ')));
+    expect(fkOnly).toEqual([]);
+    expect(find(g, 'feeds', 'getTask', 'createTask')).toBeUndefined(); // Task.projectId -> createTask
+    expect(find(g, 'feeds', 'getProject', 'removeMember')).toBeUndefined(); // Project.ownerId -> removeMember
+    expect(find(g, 'feeds', 'listProjects', 'createTask')).toMatchObject({ label: 'id -> projectId' }); // the project's own id stays
+    expect(g.edges.filter((e) => e.kind === 'feeds')).toHaveLength(53); // was 60 before the trims
+  });
+
+  it('bundles repeated projectId feeds into Members as one edge per source, keeping every edge', () => {
+    expect(g.bundles.map((b) => [b.id, b.label])).toEqual([
+      ['bundle:listProjects->cluster-members:projectId', 'projectId -> 4 ops in Members'],
+      ['bundle:createProject->cluster-members:projectId', 'projectId -> 4 ops in Members'],
+    ]);
+    const bundled = g.edges.filter((e) => e.bundledInto === g.bundles[0]!.id).map((e) => e.to);
+    expect(bundled).toEqual(['listMembers', 'addMember', 'getMember', 'removeMember']);
+    expect(g.bundles[0]!.edges).toEqual(bundled.map((to) => `feeds:listProjects->${to}`));
+  });
+
   it('Error (on 20 operations) is a hub badge, not an edge', () => {
     expect(g.hubSchemas).toEqual([{ name: 'Error', usedBy: 20 }]);
     expect(find(g, 'shared-schema', 'createTask', 'getTask')).toMatchObject({ label: 'Task' });
@@ -145,6 +165,13 @@ describe('buildGraph: Filesystem MCP sample', async () => {
     }
     expect(g.edges.some((e) => e.to === 'write_file' || e.to === 'create_directory')).toBe(false);
     expect(g.edges.every((e) => e.kind === 'feeds')).toBe(true);
+  });
+
+  it('list_allowed_directories feeds directory tools and search only (rule 6)', () => {
+    const fed = g.edges.filter((e) => e.from === 'list_allowed_directories').map((e) => e.to);
+    expect(fed).toEqual(['list_directory', 'list_directory_with_sizes', 'directory_tree', 'search_files']);
+    expect(find(g, 'feeds', 'list_directory', 'read_text_file')).toBeDefined(); // a listing of entries still feeds files
+    expect(g.bundles.map((b) => b.label)).toEqual(['path -> 6 ops in File', 'path -> 6 ops in File']);
   });
 });
 

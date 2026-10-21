@@ -16,7 +16,13 @@ export interface Edge {
   label: string;
   evidence: string;
   confidence: Confidence;
+  /** The bundle this feeds edge is drawn as on the map (it stays a full edge everywhere else). */
+  bundledInto?: string;
 }
+
+/** Repeated feeds from one source into one other cluster through the same input (rule 6), drawn
+ *  on the map as one edge to that cluster: `projectId -> 4 ops in Members`. */
+export interface Bundle { id: string; from: string; cluster: string; param: string; label: string; edges: string[] }
 
 export interface Cluster {
   id: string;
@@ -34,7 +40,10 @@ export interface AtlasGraph {
   crud: Record<string, Crud>;
   /** Schemas used by more than HUB_THRESHOLD operations: badges, not edges. */
   hubSchemas: { name: string; usedBy: number }[];
+  bundles: Bundle[];
 }
 
 export const HUB_THRESHOLD = 8;
 export const MAX_INCOMING_FEEDS = 6;
+/** A source feeding the same input into more than this many operations of one cluster is bundled. */
+export const BUNDLE_OVER = 3;

@@ -404,6 +404,7 @@
       "confidence": "exact"
     }
   ],
+  "bundles": [],
   "crud": {
     "addPet": "create",
     "updatePet": "update",

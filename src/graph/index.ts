@@ -2,10 +2,10 @@
 import type { ApiModel } from '../model/types';
 import { buildClusters, clusterKeys } from './cluster';
 import { classifyCrud } from './crud';
-import { feedsEdges, sharedSchemaEdges, subPathEdges } from './infer';
+import { bundleFeeds, feedsEdges, sharedSchemaEdges, subPathEdges } from './infer';
 import type { AtlasGraph, EdgeKind } from './types';
 
-export type { AtlasGraph, Cluster, Edge, EdgeKind } from './types';
+export type { AtlasGraph, Bundle, Cluster, Edge, EdgeKind } from './types';
 export { CRUD_LETTER, CRUD_ORDER } from './crud';
 
 const KIND_ORDER: EdgeKind[] = ['sub-path', 'shared-schema', 'feeds'];
@@ -21,5 +21,6 @@ export function buildGraph(model: ApiModel): AtlasGraph {
       index.get(a.from)! - index.get(b.from)! ||
       index.get(a.to)! - index.get(b.to)!,
   );
-  return { clusters: buildClusters(model, crud, keys), edges, crud, hubSchemas: shared.hubSchemas };
+  const clusters = buildClusters(model, crud, keys);
+  return { clusters, ...bundleFeeds(edges, clusters), crud, hubSchemas: shared.hubSchemas };
 }

@@ -53,7 +53,7 @@ MCP tool `read_file` · read · read-only · deprecated
 
 Returns `object` with `content`.
 
-Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`listed path`, inferred), `list_allowed_directories` (`listed path`, inferred).
+Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`listed path`, inferred).
 
 ## `read_text_file`
 
@@ -71,7 +71,7 @@ MCP tool `read_text_file` · read · read-only
 
 Returns `object` with `content`.
 
-Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`listed path`, inferred), `list_allowed_directories` (`listed path`, inferred).
+Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`listed path`, inferred).
 
 ## `read_media_file`
 
@@ -87,7 +87,7 @@ MCP tool `read_media_file` · read · read-only
 
 Returns `object` with `content`.
 
-Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`listed path`, inferred), `list_allowed_directories` (`listed path`, inferred).
+Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`listed path`, inferred).
 
 ## `read_multiple_files`
 
@@ -117,7 +117,7 @@ MCP tool `get_file_info` · read · read-only
 
 Returns `object` with `content`.
 
-Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`listed path`, inferred), `list_allowed_directories` (`listed path`, inferred).
+Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`listed path`, inferred).
 
 ## `edit_file`
 
@@ -135,7 +135,7 @@ MCP tool `edit_file` · update · destructive: confirm first
 
 Returns `object` with `content`.
 
-Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`listed path`, inferred), `list_allowed_directories` (`listed path`, inferred).
+Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`listed path`, inferred).
 
 ## `move_file`
 

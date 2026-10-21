@@ -51,7 +51,7 @@ Takes no arguments.
 
 Returns `object` with `content`.
 
-Feeds: `read_file` (`listed path`, inferred), `read_text_file` (`listed path`, inferred), `read_media_file` (`listed path`, inferred), `edit_file` (`listed path`, inferred), `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `directory_tree` (`listed path`, inferred), `search_files` (`listed path`, inferred) and 1 more.
+Feeds: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (`listed path`, inferred), `directory_tree` (`listed path`, inferred), `search_files` (`listed path`, inferred).
 
 ## `create_directory`
 

@@ -644,14 +644,14 @@
       "kind": "shared-schema",
       "from": "createTask",
       "to": "getTask",
-      "d": "M248 106C298.7 106 298.7 154 248 154",
+      "d": "M248 109C298.7 109 298.7 157 248 157",
       "mid": {
         "x": 286,
-        "y": 130
+        "y": 133
       },
       "label": {
         "x": 304.8,
-        "y": 120,
+        "y": 123,
         "text": "Task",
         "shown": false
       }
@@ -1133,23 +1133,6 @@
       }
     },
     {
-      "id": "feeds:getProject->removeMember",
-      "kind": "feeds",
-      "from": "getProject",
-      "to": "removeMember",
-      "d": "M392 160C326 160 326 636 260 636",
-      "mid": {
-        "x": 326,
-        "y": 398
-      },
-      "label": {
-        "x": 326,
-        "y": 398,
-        "text": "ownerId -> memberId",
-        "shown": false
-      }
-    },
-    {
       "id": "feeds:listLabels->deleteLabel",
       "kind": "feeds",
       "from": "listLabels",
@@ -1409,14 +1392,14 @@
       "kind": "feeds",
       "from": "createTask",
       "to": "getTask",
-      "d": "M248 112C298.7 112 298.7 160 248 160",
+      "d": "M248 115C298.7 115 298.7 163 248 163",
       "mid": {
         "x": 286,
-        "y": 136
+        "y": 139
       },
       "label": {
         "x": 330.4,
-        "y": 136,
+        "y": 139,
         "text": "id -> taskId",
         "shown": false
       }
@@ -1524,40 +1507,6 @@
       }
     },
     {
-      "id": "feeds:getTask->updateProject",
-      "kind": "feeds",
-      "from": "getTask",
-      "to": "updateProject",
-      "d": "M248 160C320 160 320 208 392 208",
-      "mid": {
-        "x": 320,
-        "y": 184
-      },
-      "label": {
-        "x": 320,
-        "y": 184,
-        "text": "projectId -> projectId",
-        "shown": false
-      }
-    },
-    {
-      "id": "feeds:getTask->deleteProject",
-      "kind": "feeds",
-      "from": "getTask",
-      "to": "deleteProject",
-      "d": "M248 160C320 160 320 256 392 256",
-      "mid": {
-        "x": 320,
-        "y": 208
-      },
-      "label": {
-        "x": 320,
-        "y": 208,
-        "text": "projectId -> projectId",
-        "shown": false
-      }
-    },
-    {
       "id": "feeds:getTask->listLabels",
       "kind": "feeds",
       "from": "getTask",
@@ -1570,23 +1519,6 @@
       "label": {
         "x": 314,
         "y": 326,
-        "text": "projectId -> projectId",
-        "shown": false
-      }
-    },
-    {
-      "id": "feeds:getTask->createLabel",
-      "kind": "feeds",
-      "from": "getTask",
-      "to": "createLabel",
-      "d": "M248 160C314 160 314 540 380 540",
-      "mid": {
-        "x": 314,
-        "y": 350
-      },
-      "label": {
-        "x": 314,
-        "y": 350,
         "text": "projectId -> projectId",
         "shown": false
       }
@@ -1609,23 +1541,6 @@
       }
     },
     {
-      "id": "feeds:getTask->addMember",
-      "kind": "feeds",
-      "from": "getTask",
-      "to": "addMember",
-      "d": "M248 160C317.3 160 317.3 540 248 540",
-      "mid": {
-        "x": 300,
-        "y": 350
-      },
-      "label": {
-        "x": 300,
-        "y": 350,
-        "text": "projectId -> projectId",
-        "shown": false
-      }
-    },
-    {
       "id": "feeds:getTask->getMember",
       "kind": "feeds",
       "from": "getTask",
@@ -1643,23 +1558,6 @@
       }
     },
     {
-      "id": "feeds:getTask->removeMember",
-      "kind": "feeds",
-      "from": "getTask",
-      "to": "removeMember",
-      "d": "M248 160C317.3 160 313.3 636 260 636",
-      "mid": {
-        "x": 300,
-        "y": 398
-      },
-      "label": {
-        "x": 300,
-        "y": 398,
-        "text": "projectId -> projectId, assigneeId -> memberId",
-        "shown": true
-      }
-    },
-    {
       "id": "feeds:getTask->listTasks",
       "kind": "feeds",
       "from": "getTask",
@@ -1673,23 +1571,6 @@
         "x": 469.6,
         "y": 115,
         "text": "projectId -> projectId, assigneeId -> assigneeId",
-        "shown": false
-      }
-    },
-    {
-      "id": "feeds:getTask->createTask",
-      "kind": "feeds",
-      "from": "getTask",
-      "to": "createTask",
-      "d": "M248 166C298.7 166 298.7 118 248 118",
-      "mid": {
-        "x": 286,
-        "y": 142
-      },
-      "label": {
-        "x": 362.4,
-        "y": 142,
-        "text": "projectId -> projectId",
         "shown": false
       }
     },

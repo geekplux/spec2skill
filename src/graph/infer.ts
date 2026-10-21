@@ -1,7 +1,7 @@
-// Deterministic edges (PLAN 5.4 rules 3-5). Pure: same model in, same edges out.
+// Deterministic edges (PLAN 5.4 rules 3-6). Pure: same model in, same edges out.
 import type { ApiModel, Crud, Operation, Param, SchemaRef } from '../model/types';
 import type { ClusterKey } from './cluster';
-import { type AtlasGraph, type Confidence, type Edge, type EdgeKind, HUB_THRESHOLD, MAX_INCOMING_FEEDS } from './types';
+import { type AtlasGraph, BUNDLE_OVER, type Bundle, type Cluster, type Confidence, type Edge, type EdgeKind, HUB_THRESHOLD, MAX_INCOMING_FEEDS } from './types';
 import { singular, words } from './words';
 
 const edge = (kind: EdgeKind, from: string, to: string, label: string, evidence: string, confidence: Confidence): Edge => ({
@@ -113,11 +113,18 @@ function outputs(op: Operation, model: ApiModel, nouns: Set<string>): Out[] {
   return out;
 }
 
-interface Candidate { src: number; confidence: Confidence; primary: boolean; labels: string[]; evidence: string[] }
+/** `primary`: the source's own id; `strong`: more than a foreign key (primary, or listed). */
+interface Candidate { src: number; confidence: Confidence; primary: boolean; strong: boolean; labels: string[]; evidence: string[] }
 const FEED_IN = new Set<Param['in']>(['path', 'query', 'argument']);
 const LISTED = new Set(['path', 'uri', 'url', 'id']);
+const WRITES = new Set<Crud | undefined>(['create', 'update', 'delete']);
+// A tool listing roots (`list_allowed_directories`) yields directories: it feeds directory tools only.
+const ROOTS = new Set(['directories', 'dirs', 'folders', 'roots']);
+const DIRECTORY = new Set(['directory', 'dir', 'folder', 'root', 'tree', 'search']);
+const listsRoots = (op: Operation) => ROOTS.has(words(op.id).at(-1)!);
 
-/** Rule 5: output fields that can fill another operation's input; <= 6 incoming per operation. */
+/** Rules 5-6: output fields that can fill another operation's input; <= 6 incoming per operation.
+ *  A bare foreign key (`Task.projectId`) only feeds lists, reads and actions, never writes. */
 export function feedsEdges(model: ApiModel, crud: Record<string, Crud>, keys: Map<string, ClusterKey>): Edge[] {
   const ops = model.operations;
   const nouns = new Set([...Object.keys(model.schemas).map(nounOf), ...[...keys.values()].map((k) => k.key)]);
@@ -140,11 +147,12 @@ export function feedsEdges(model: ApiModel, crud: Record<string, Crud>, keys: Ma
   const edges: Edge[] = [];
   ops.forEach((target, tgt) => {
     const found = new Map<number, Candidate>();
-    const offer = (src: number, confidence: Confidence, primary: boolean, label: string, evidence: string) => {
+    const offer = (src: number, confidence: Confidence, primary: boolean, label: string, evidence: string, strong = primary) => {
       if (src === tgt) return;
-      const c = found.get(src) ?? { src, confidence, primary, labels: [], evidence: [] };
+      const c = found.get(src) ?? { src, confidence, primary, strong, labels: [], evidence: [] };
       if (confidence === 'exact') c.confidence = 'exact';
       c.primary ||= primary;
+      c.strong ||= strong;
       if (!c.labels.includes(label)) {
         c.labels.push(label);
         c.evidence.push(evidence);
@@ -164,18 +172,43 @@ export function feedsEdges(model: ApiModel, crud: Record<string, Crud>, keys: Ma
       // MCP: list/search tools feed other tools' required string params (path, uri, id, the cluster noun);
       // not creates, which take a new name rather than a listed one.
       if (target.kind !== 'tool' || crud[target.id] === 'create' || !param.required || param.schema.type !== 'string') continue;
+      const directory = words(target.id).some((w) => DIRECTORY.has(w));
       for (const src of listers) {
         const key = keys.get(ops[src]!.id)!.key;
-        if (LISTED.has(name) || name === key) {
-          offer(src, 'inferred', false, `listed ${name}`, `${ops[src]!.id} lists ${key} entries; ${target.id} takes ${name}`);
+        if ((LISTED.has(name) || name === key) && (directory || !listsRoots(ops[src]!))) {
+          offer(src, 'inferred', false, `listed ${name}`, `${ops[src]!.id} lists ${key} entries; ${target.id} takes ${name}`, true);
         }
       }
     }
     const rank = (c: Candidate) => (c.confidence === 'exact' ? 0 : 2) + (c.primary ? 0 : 1);
-    const kept = [...found.values()].toSorted((a, b) => rank(a) - rank(b) || a.src - b.src).slice(0, MAX_INCOMING_FEEDS);
+    const kept = [...found.values()].filter((c) => c.strong || !WRITES.has(crud[target.id])).toSorted((a, b) => rank(a) - rank(b) || a.src - b.src).slice(0, MAX_INCOMING_FEEDS);
     for (const c of kept) {
       edges.push(edge('feeds', ops[c.src]!.id, target.id, c.labels.join(', '), c.evidence.join('; '), c.confidence));
     }
   });
   return edges;
+}
+
+/** Rule 6: a source feeding the same input into more than BUNDLE_OVER operations of another cluster
+ *  becomes one bundle (drawn as one edge to the cluster); its edges keep their place and gain `bundledInto`. */
+export function bundleFeeds(edges: Edge[], clusters: Cluster[]): { edges: Edge[]; bundles: Bundle[] } {
+  const home = new Map(clusters.flatMap((c) => c.operationIds.map((id) => [id, c] as const)));
+  const groups = new Map<string, Edge[]>();
+  for (const e of edges) {
+    if (e.kind !== 'feeds' || home.get(e.from) === home.get(e.to)) continue;
+    // The input the edge fills first: `id -> projectId, ownerId -> memberId` -> projectId.
+    const key = [e.from, home.get(e.to)!.id, e.label.split(', ')[0]!.split(' ').at(-1)!].join('\n');
+    groups.set(key, [...(groups.get(key) ?? []), e]);
+  }
+  const bundles: Bundle[] = [];
+  const into = new Map<string, string>();
+  for (const [key, list] of groups) {
+    if (list.length <= BUNDLE_OVER) continue;
+    const [from, cluster, param] = key.split('\n') as [string, string, string];
+    const id = `bundle:${from}->${cluster}:${param}`;
+    for (const e of list) into.set(e.id, id);
+    const label = `${param} -> ${list.length} ops in ${clusters.find((c) => c.id === cluster)!.name}`;
+    bundles.push({ id, from, cluster, param, label, edges: list.map((e) => e.id) });
+  }
+  return { edges: edges.map((e) => (into.has(e.id) ? { ...e, bundledInto: into.get(e.id)! } : e)), bundles };
 }

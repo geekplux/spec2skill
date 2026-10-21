@@ -39,7 +39,8 @@
       "to": "read_file",
       "label": "listed path",
       "evidence": "list_directory lists directory entries; read_file takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory->cluster-file:path"
     },
     {
       "id": "feeds:list_directory->read_text_file",
@@ -48,7 +49,8 @@
       "to": "read_text_file",
       "label": "listed path",
       "evidence": "list_directory lists directory entries; read_text_file takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory->cluster-file:path"
     },
     {
       "id": "feeds:list_directory->read_media_file",
@@ -57,7 +59,8 @@
       "to": "read_media_file",
       "label": "listed path",
       "evidence": "list_directory lists directory entries; read_media_file takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory->cluster-file:path"
     },
     {
       "id": "feeds:list_directory->edit_file",
@@ -66,7 +69,8 @@
       "to": "edit_file",
       "label": "listed path",
       "evidence": "list_directory lists directory entries; edit_file takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory->cluster-file:path"
     },
     {
       "id": "feeds:list_directory->list_directory_with_sizes",
@@ -93,7 +97,8 @@
       "to": "search_files",
       "label": "listed path",
       "evidence": "list_directory lists directory entries; search_files takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory->cluster-file:path"
     },
     {
       "id": "feeds:list_directory->get_file_info",
@@ -102,7 +107,8 @@
       "to": "get_file_info",
       "label": "listed path",
       "evidence": "list_directory lists directory entries; get_file_info takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory->cluster-file:path"
     },
     {
       "id": "feeds:list_directory_with_sizes->read_file",
@@ -111,7 +117,8 @@
       "to": "read_file",
       "label": "listed path",
       "evidence": "list_directory_with_sizes lists directory entries; read_file takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory_with_sizes->cluster-file:path"
     },
     {
       "id": "feeds:list_directory_with_sizes->read_text_file",
@@ -120,7 +127,8 @@
       "to": "read_text_file",
       "label": "listed path",
       "evidence": "list_directory_with_sizes lists directory entries; read_text_file takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory_with_sizes->cluster-file:path"
     },
     {
       "id": "feeds:list_directory_with_sizes->read_media_file",
@@ -129,7 +137,8 @@
       "to": "read_media_file",
       "label": "listed path",
       "evidence": "list_directory_with_sizes lists directory entries; read_media_file takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory_with_sizes->cluster-file:path"
     },
     {
       "id": "feeds:list_directory_with_sizes->edit_file",
@@ -138,7 +147,8 @@
       "to": "edit_file",
       "label": "listed path",
       "evidence": "list_directory_with_sizes lists directory entries; edit_file takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory_with_sizes->cluster-file:path"
     },
     {
       "id": "feeds:list_directory_with_sizes->list_directory",
@@ -165,7 +175,8 @@
       "to": "search_files",
       "label": "listed path",
       "evidence": "list_directory_with_sizes lists directory entries; search_files takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory_with_sizes->cluster-file:path"
     },
     {
       "id": "feeds:list_directory_with_sizes->get_file_info",
@@ -174,7 +185,8 @@
       "to": "get_file_info",
       "label": "listed path",
       "evidence": "list_directory_with_sizes lists directory entries; get_file_info takes path",
-      "confidence": "inferred"
+      "confidence": "inferred",
+      "bundledInto": "bundle:list_directory_with_sizes->cluster-file:path"
     },
     {
       "id": "feeds:search_files->read_file",
@@ -249,42 +261,6 @@
       "confidence": "inferred"
     },
     {
-      "id": "feeds:list_allowed_directories->read_file",
-      "kind": "feeds",
-      "from": "list_allowed_directories",
-      "to": "read_file",
-      "label": "listed path",
-      "evidence": "list_allowed_directories lists directory entries; read_file takes path",
-      "confidence": "inferred"
-    },
-    {
-      "id": "feeds:list_allowed_directories->read_text_file",
-      "kind": "feeds",
-      "from": "list_allowed_directories",
-      "to": "read_text_file",
-      "label": "listed path",
-      "evidence": "list_allowed_directories lists directory entries; read_text_file takes path",
-      "confidence": "inferred"
-    },
-    {
-      "id": "feeds:list_allowed_directories->read_media_file",
-      "kind": "feeds",
-      "from": "list_allowed_directories",
-      "to": "read_media_file",
-      "label": "listed path",
-      "evidence": "list_allowed_directories lists directory entries; read_media_file takes path",
-      "confidence": "inferred"
-    },
-    {
-      "id": "feeds:list_allowed_directories->edit_file",
-      "kind": "feeds",
-      "from": "list_allowed_directories",
-      "to": "edit_file",
-      "label": "listed path",
-      "evidence": "list_allowed_directories lists directory entries; edit_file takes path",
-      "confidence": "inferred"
-    },
-    {
       "id": "feeds:list_allowed_directories->list_directory",
       "kind": "feeds",
       "from": "list_allowed_directories",
@@ -319,15 +295,38 @@
       "label": "listed path",
       "evidence": "list_allowed_directories lists directory entries; search_files takes path",
       "confidence": "inferred"
+    }
+  ],
+  "bundles": [
+    {
+      "id": "bundle:list_directory->cluster-file:path",
+      "from": "list_directory",
+      "cluster": "cluster-file",
+      "param": "path",
+      "label": "path -> 6 ops in File",
+      "edges": [
+        "feeds:list_directory->read_file",
+        "feeds:list_directory->read_text_file",
+        "feeds:list_directory->read_media_file",
+        "feeds:list_directory->edit_file",
+        "feeds:list_directory->search_files",
+        "feeds:list_directory->get_file_info"
+      ]
     },
     {
-      "id": "feeds:list_allowed_directories->get_file_info",
-      "kind": "feeds",
-      "from": "list_allowed_directories",
-      "to": "get_file_info",
-      "label": "listed path",
-      "evidence": "list_allowed_directories lists directory entries; get_file_info takes path",
-      "confidence": "inferred"
+      "id": "bundle:list_directory_with_sizes->cluster-file:path",
+      "from": "list_directory_with_sizes",
+      "cluster": "cluster-file",
+      "param": "path",
+      "label": "path -> 6 ops in File",
+      "edges": [
+        "feeds:list_directory_with_sizes->read_file",
+        "feeds:list_directory_with_sizes->read_text_file",
+        "feeds:list_directory_with_sizes->read_media_file",
+        "feeds:list_directory_with_sizes->edit_file",
+        "feeds:list_directory_with_sizes->search_files",
+        "feeds:list_directory_with_sizes->get_file_info"
+      ]
     }
   ],
   "crud": {

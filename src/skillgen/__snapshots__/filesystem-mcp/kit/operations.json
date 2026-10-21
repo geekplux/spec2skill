@@ -480,26 +480,6 @@
       "destructive": false,
       "next": [
         {
-          "to": "read_file",
-          "via": "listed path",
-          "confidence": "inferred"
-        },
-        {
-          "to": "read_text_file",
-          "via": "listed path",
-          "confidence": "inferred"
-        },
-        {
-          "to": "read_media_file",
-          "via": "listed path",
-          "confidence": "inferred"
-        },
-        {
-          "to": "edit_file",
-          "via": "listed path",
-          "confidence": "inferred"
-        },
-        {
           "to": "list_directory",
           "via": "listed path",
           "confidence": "inferred"
@@ -516,11 +496,6 @@
         },
         {
           "to": "search_files",
-          "via": "listed path",
-          "confidence": "inferred"
-        },
-        {
-          "to": "get_file_info",
           "via": "listed path",
           "confidence": "inferred"
         }

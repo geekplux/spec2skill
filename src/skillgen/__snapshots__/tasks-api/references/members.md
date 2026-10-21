@@ -36,7 +36,7 @@ Returns `Member` with `email`, `id`, `name`, `projectId`, `role`.
 
 Feeds: `getMember` (`id -> memberId`), `removeMember` (`id -> memberId`).
 
-Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`), `getTask` (`projectId -> projectId`).
+Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`).
 
 ## `getMember`
 
@@ -68,4 +68,4 @@ Fed by: `listProjects` (`id -> projectId, ownerId -> memberId`), `createProject`
 
 Returns no documented body.
 
-Fed by: `listProjects` (`id -> projectId, ownerId -> memberId`), `createProject` (`id -> projectId`), `getProject` (`ownerId -> memberId`, inferred), `listMembers` (`id -> memberId`), `addMember` (`id -> memberId`), `getTask` (`projectId -> projectId, assigneeId -> memberId`).
+Fed by: `listProjects` (`id -> projectId, ownerId -> memberId`), `createProject` (`id -> projectId`), `listMembers` (`id -> memberId`), `addMember` (`id -> memberId`).
