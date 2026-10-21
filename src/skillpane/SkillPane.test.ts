@@ -17,7 +17,8 @@ const render = (props: Partial<Parameters<typeof SkillPane>[0]> = {}) =>
 describe('SkillPane', () => {
   it('previews the selected file as literal text, never markup (S3)', () => {
     const html = render();
-    expect(html).toContain('<pre id="skill-preview" class="preview" tabindex="0" aria-label="SKILL.md, 5 lines">');
+    expect(html).toContain('<p class="file-head" id="file-head"><code>SKILL.md</code> · 5 lines</p>');
+    expect(html).toContain('<pre id="skill-preview" class="preview" tabindex="0" role="region" aria-labelledby="file-head">');
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
     expect(html).not.toMatch(/<(script|img)\b/);
   });
@@ -25,7 +26,8 @@ describe('SkillPane', () => {
     const html = render();
     expect(html).toContain('<span class="mark" aria-hidden="true">✗</span> Audit failed: <span class="tally">1 of 2 checks</span></summary>');
     expect(html).toContain('<span class="mark" aria-hidden="true">✓</span> Frontmatter: <span class="status">passed</span>');
-    expect(html).toContain('<span class="status">failed: only 4 evals (need at least 5)</span>');
+    expect(html).toContain('<span class="status">failed: only 4 evals (need at least 5)</span><span class="visually-hidden"> (e)</span>');
+    expect(html).not.toContain('title=');
   });
   it('names the zip and the install commands after the slug', () => {
     const html = render();
@@ -37,8 +39,14 @@ describe('SkillPane', () => {
     expect(empty).toContain('No operations, so no skill to write.');
     expect(empty).toMatch(/<button type="button" class="btn primary" disabled="" aria-describedby="skill-empty">/);
   });
+  it('marks a stale skill in words, not by fading the text', () => {
+    const html = render({ ready: false });
+    expect(html).toContain('<div class="skill-body" data-stale="true">');
+    expect(html).toContain('5 lines · Updating…</p>');
+    expect(render()).not.toContain('Updating');
+  });
   it('falls back to SKILL.md when the selected file is not in this skill', () => {
-    expect(render({ file: 'references/nope.md' })).toContain('aria-label="SKILL.md, 5 lines"');
-    expect(render({ file: 'references/tasks.md' })).toContain('aria-label="references/tasks.md, 1 lines"');
+    expect(render({ file: 'references/nope.md' })).toContain('<code>SKILL.md</code> · 5 lines');
+    expect(render({ file: 'references/tasks.md' })).toContain('<code>references/tasks.md</code> · 1 lines');
   });
 });

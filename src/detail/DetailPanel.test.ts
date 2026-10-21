@@ -24,7 +24,7 @@ describe('DetailPanel', () => {
 
   it('links the skill file that documents the operation, once there is one', async () => {
     const model = await sampleModel(getSample('tasks')!);
-    expect(await render(model, 'getTask', 'references/tasks.md')).toMatch(/In the skill: <button type="button" class="link"><code>references\/tasks\.md<\/code><\/button>/);
+    expect(await render(model, 'getTask', 'references/tasks.md')).toMatch(/In the skill: <button type="button" class="link" aria-label="Show references\/tasks\.md in the skill"><code>references\/tasks\.md<\/code><\/button>/);
     expect(await render(model, 'getTask')).not.toContain('In the skill');
   });
 

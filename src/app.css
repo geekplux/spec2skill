@@ -193,7 +193,9 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 /* Files index and audit side by side like a chart's legend boxes, the open file below them. */
 .skill-body { flex: 1; min-height: 0; display: grid; grid-template: auto auto minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 1.3fr); gap: 0 var(--space-3); }
 .file-head, .preview { grid-column: 1 / -1; }
-.skill-body[data-stale], .writing { opacity: 0.6; }
+/* Stale or still writing: a dashed frame and words, never faded text (contrast stays AA). */
+.skill-body[data-stale] { outline: 2px dashed var(--graphite); outline-offset: 4px; }
+.writing .outline { opacity: 0.6; }
 .tree { max-height: 15rem; overflow: auto; padding: var(--space-1) 0; font: 12.5px/1.5 var(--font-mono); }
 [role='treeitem'] { padding: 2px var(--space-2) 2px calc(var(--space-2) + (var(--level) - 1) * 18px); border-radius: var(--radius-sm); cursor: pointer; outline-offset: -2px; }
 [role='treeitem']:hover { background: var(--paper); }
@@ -222,6 +224,7 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .install code { color: var(--ink); }
 .in-skill { padding: var(--space-1) var(--space-2); border-left: 3px solid var(--meridian); background: var(--paper); }
 @media (max-width: 1023px) {
+  html { scroll-padding-bottom: 7rem; } /* keep focused items clear of the sticky action bar (200 % zoom) */
   .panes { display: block; }
   .tabs [role='tab'] { flex: 1; }
   .skill-pane { position: static; height: auto; }
@@ -238,7 +241,7 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 @media (max-width: 639px) {
   .detail { position: fixed; top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 50dvh; border-radius: var(--radius-md) var(--radius-md) 0 0; box-shadow: 0 -4px 0 var(--paper); }
   body:has(.detail) { padding-bottom: 50dvh; } /* room to scroll the map above the bottom sheet */
-  html { scroll-padding-bottom: 72px; } /* keep focused controls clear of the sticky Generate button */
+  html { scroll-padding-bottom: 7rem; } /* clear of the fixed Generate button and the sticky action bar */
   body { font-size: 15px; padding-bottom: 72px; }
   .header, .samples { padding-inline: var(--space-3); }
   .header .brand { margin-right: auto; }

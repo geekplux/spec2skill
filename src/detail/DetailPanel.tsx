@@ -63,7 +63,7 @@ export function DetailPanel({ model, graph, op, onGo, onClose, announce, inSkill
       {op.description && op.description !== op.title && <p className="desc">{op.description}</p>}
       {inSkill && (
         <p className="in-skill">
-          In the skill: <button type="button" className="link" onClick={() => onInSkill(inSkill)}><code>{inSkill}</code></button>
+          In the skill: <button type="button" className="link" onClick={() => onInSkill(inSkill)} aria-label={`Show ${inSkill} in the skill`}><code>{inSkill}</code></button>
         </p>
       )}
 
