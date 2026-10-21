@@ -88,8 +88,8 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .card { fill: color-mix(in srgb, var(--wash) 7%, var(--vellum)); stroke: var(--graphite); stroke-opacity: 0.8; }
 .card-rule { stroke: var(--rule); }
 .territory-label { font: 650 13px var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; fill: var(--ink); }
-/* Zoomed out, cluster names grow (up to 1.8x) to stay readable as territories; --inv is 1 / zoom. */
-.territory-label { font-size: calc(13px * clamp(1, var(--inv, 1), 1.8)); }
+/* Zoomed out, cluster names grow (up to 1.6x, clear of the hub badge) to stay readable as territories; --inv is 1 / zoom. */
+.territory-label { font-size: calc(13px * clamp(1, var(--inv, 1), 1.6)); }
 .hub, .sub, .crud text { font: 11px var(--font-mono); fill: var(--graphite); }
 .node .shape, .legend-node { fill: var(--vellum); stroke: var(--ink); }
 .node { cursor: pointer; }
@@ -132,13 +132,13 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 /* Bundled edges show only on highlight; their bundle (feeds style, bolder) and the large-spec cluster
    links (a thick graphite band) carry a text label, so neither relies on colour. */
 .edge[data-bundled]:not([data-hot]) { display: none; }
-.link { opacity: 0.85; transition: opacity var(--motion-fade) ease-out; }
-.link[data-link='bundle'] .line { stroke-width: 2.5; }
-.link[data-link='clusters'] { --hue: var(--graphite); }
-.link[data-link='clusters'] .line { stroke-width: 5; stroke-linecap: round; stroke-opacity: 0.45; }
+.map-link { opacity: 0.85; transition: opacity var(--motion-fade) ease-out; }
+.map-link[data-link='bundle'] .line { stroke-width: 2.5; }
+.map-link[data-link='clusters'] { --hue: var(--graphite); }
+.map-link[data-link='clusters'] .line { stroke-width: 5; stroke-linecap: round; stroke-opacity: 0.45; }
 /* Bundle labels follow the edge labels; cluster links (large specs, read zoomed out) always show, enlarged. */
-.atlas .link[data-link='clusters'] .edge-label { visibility: visible; font-size: calc(10.5px * clamp(1, var(--inv, 1), 1.6)); }
-.atlas[data-hot] .link:not([data-hot]) { opacity: 0.12; }
+.atlas .map-link[data-link='clusters'] .edge-label { visibility: visible; font-size: calc(10.5px * clamp(1, var(--inv, 1), 1.6)); }
+.atlas[data-hot] .map-link:not([data-hot]) { opacity: 0.12; }
 .node[data-summary] .name { font-weight: 650; }
 .toolbar { position: absolute; z-index: 2; top: var(--space-3); left: var(--space-3); display: flex; gap: var(--space-1); margin: 0; padding: var(--space-1); border: 1px solid var(--ink); border-radius: var(--radius-md); background: var(--vellum); }
 .toolbar .btn { min-width: 36px; padding-inline: var(--space-2); }
