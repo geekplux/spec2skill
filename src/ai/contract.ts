@@ -61,24 +61,53 @@ export function checkSummary(raw: unknown): AiSummary | undefined {
 
 // Plain text only: no control or format characters, markup, Markdown punctuation or links.
 const UNSAFE = /[\p{Cc}\p{Cf}<>`[\]{}|*#\\]|https?:|www\.|:\/\//iu;
-const plain = (v: unknown, max: number): string => {
+/**
+ * Text an agent could read as an order rather than a description: instruction overrides, role
+ * changes, talk of secrets, and dangerous commands. Small on purpose; a hit only means the
+ * deterministic text stays, so false positives cost little.
+ */
+export const INJECTION: readonly RegExp[] = [
+  /\b(ignore|disregard|forget|override)\b.{0,40}\b(previous|prior|above|earlier|all|any|your)\b.{0,20}\b(instructions?|prompts?|rules)\b/i,
+  /\bsystem prompt\b/i,
+  /\byou are now\b|\bact as\b|\bpretend (to be|you are)\b/i,
+  /\b(secrets?|passwords?|api[ _-]?keys?|tokens?|credentials?)\b/i,
+  /\brm\s+-[a-z]*[rf]/i,
+  /\b(curl|wget)\b.*\b(sh|bash|zsh)\b/i,
+  /\b(eval|exec|sudo)\b/i,
+];
+/** At least this many consecutive words copied from the summary's titles is spec text, not the model's. */
+export const COPY_RUN = 6;
+const words = (v: string) => v.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+const runs = (v: string) => {
+  const w = words(v);
+  return Array.from({ length: Math.max(0, w.length - COPY_RUN + 1) }, (_, i) => w.slice(i, i + COPY_RUN).join(' '));
+};
+/** Every run of COPY_RUN words in the summary's title and operation titles. */
+const copied = (summary: AiSummary) => new Set([summary.title, ...summary.ops.map((o) => o.title ?? '')].flatMap(runs));
+
+const plain = (v: unknown, max: number, spec: Set<string>): string => {
   const text = typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : '';
-  return text && text.length <= max && !UNSAFE.test(text) ? text : fail();
+  const ok = text && text.length <= max && !UNSAFE.test(text) && !INJECTION.some((re) => re.test(text)) && !runs(text).some((r) => spec.has(r));
+  return ok ? text : fail();
 };
 
-/** The model's answer (a JSON string or object) if it describes only clusters of `summary`, each at most once, in capped plain text. */
+/**
+ * The model's answer (a JSON string or object) if it describes only clusters of `summary`, each at
+ * most once, in capped plain text that gives no orders and copies no run of 6 words from the spec's titles.
+ */
 export function checkOutput(raw: unknown, summary: AiSummary): AiDescription | undefined {
   try {
     const r = obj(typeof raw === 'string' ? JSON.parse(raw) : raw);
     const known = new Set(summary.clusters.map((c) => c.id));
+    const spec = copied(summary);
     const clusters = arr(r.clusters, known.size, (v) => {
       const c = obj(v);
       const id = known.has(c.id as string) ? (c.id as string) : fail();
-      return { id, name: plain(c.name, CAP.name), description: plain(c.description, CAP.description) };
+      return { id, name: plain(c.name, CAP.name, spec), description: plain(c.description, CAP.description, spec) };
     });
     unique(clusters.map((c) => c.id));
     const prose = obj(r.prose);
-    return { clusters, prose: { summary: plain(prose.summary, CAP.summary).replace(/\.$/, '') || fail(), idea: plain(prose.idea, CAP.idea) } };
+    return { clusters, prose: { summary: plain(prose.summary, CAP.summary, spec).replace(/\.$/, '') || fail(), idea: plain(prose.idea, CAP.idea, spec) } };
   } catch {
     return undefined;
   }

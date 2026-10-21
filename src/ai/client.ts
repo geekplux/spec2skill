@@ -33,7 +33,10 @@ export function buildSummary(model: ApiModel, graph: AtlasGraph): AiSummary | un
   return clusters.length ? checkSummary({ title: model.source.title.slice(0, CAP.title), kind, ops, clusters, edges }) : undefined;
 }
 
-/** The graph with AI names (tag-named clusters keep theirs) and descriptions. */
+/**
+ * The graph with AI names (tag-named clusters keep theirs) and descriptions. `nameSource` is 'ai'
+ * only where the name actually changed, so "Names: AI-drafted" never labels a name the spec gave.
+ */
 export function applyAi(graph: AtlasGraph, ai: AiDescription, summary: AiSummary): AtlasGraph {
   const keep = new Set(summary.clusters.filter((c) => c.keep).map((c) => c.id));
   const by = new Map(ai.clusters.map((c) => [c.id, c]));
@@ -41,7 +44,9 @@ export function applyAi(graph: AtlasGraph, ai: AiDescription, summary: AiSummary
     ...graph,
     clusters: graph.clusters.map((c) => {
       const a = by.get(c.id);
-      return a ? { ...c, name: keep.has(c.id) ? c.name : a.name, description: a.description, nameSource: 'ai' } : c;
+      if (!a) return c;
+      const renamed = !keep.has(c.id) && a.name !== c.name;
+      return { ...c, name: renamed ? a.name : c.name, description: a.description, nameSource: renamed ? 'ai' : c.nameSource };
     }),
   };
 }
