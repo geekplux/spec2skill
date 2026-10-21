@@ -84,7 +84,9 @@ export default {
     await expectAtlas(page, 'tasks');
     await expectFitted(page, 'desktop', { inView: true });
     const label = await atlas(page).getAttribute('aria-label');
-    expect(label.startsWith('Tasks API atlas: 22 operations in 5 clusters, 85 relationships'), `map name: ${label}`);
+    expect(label === 'Tasks API: 22 operations in 5 clusters, 85 relationships', `map name: ${label}`);
+    const help = await atlas(page).evaluate((el) => document.getElementById(el.getAttribute('aria-describedby'))?.textContent ?? '');
+    expect(help.startsWith('Arrow keys move between operations'), `map description: ${help}`);
     await page.evaluate(() => document.fonts.ready);
 
     // Non-colour channels on nodes: MCP tools are notched with `fn`; destructive nodes have a hatched bar and `!`.

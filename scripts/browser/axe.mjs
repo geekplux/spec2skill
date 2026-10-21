@@ -1,5 +1,5 @@
 // axe-core accessibility scan for the browser check: injected from node_modules (no CDN),
-// WCAG 2.x A/AA rules; serious and critical violations fail the run.
+// WCAG 2.0-2.2 A/AA rules; serious and critical violations fail the run.
 import { createRequire } from 'node:module';
 
 const AXE_PATH = createRequire(import.meta.url).resolve('axe-core/axe.min.js');
@@ -9,7 +9,7 @@ const FAILING = new Set(['serious', 'critical']);
 export async function runAxe(page, label) {
   if (!(await page.evaluate(() => 'axe' in window))) await page.addScriptTag({ path: AXE_PATH });
   const violations = await page.evaluate(async () => {
-    const result = await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] });
+    const result = await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] });
     return result.violations.map((v) => ({ id: v.id, impact: v.impact, help: v.help, targets: v.nodes.map((n) => n.target.join(' ')) }));
   });
   for (const v of violations) console.log(`  axe [${label}] ${v.impact}: ${v.id} (${v.targets.length} nodes)`);

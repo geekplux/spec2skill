@@ -8,7 +8,9 @@ const expect = (ok, message) => {
 };
 const ready = (page) => page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
 const active = (page) => page.evaluate(() => document.activeElement?.getAttribute('data-op') ?? document.activeElement?.textContent?.trim() ?? null);
-const said = (page) => page.getByTestId('announcer').textContent();
+// The announcer clears, then sets the message on the next frame: read it two frames later.
+const frames = (page) => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
+const said = async (page) => (await frames(page), page.getByTestId('announcer').textContent());
 const transform = (page) => page.locator('.camera').evaluate((g) => getComputedStyle(g).transform);
 const settle = (page) => page.waitForTimeout(300);
 
@@ -20,7 +22,17 @@ async function press(page, key, op) {
 async function clipboard(page) {
   await page.getByRole('button', { name: 'Copy example' }).click();
   await page.getByTestId('announcer').filter({ hasText: 'Example copied' }).waitFor();
+  await page.locator('.copied', { hasText: 'Copied' }).waitFor();
   return page.evaluate(() => navigator.clipboard.readText());
+}
+
+/** The focused node's box lies fully outside the detail panel's box (WCAG 2.4.11). */
+async function clearOfPanel(page, label) {
+  await page.waitForTimeout(400); // camera transition
+  const [n, p] = [await page.locator('.node:has(.hit:focus) .shape').boundingBox(), await page.getByTestId('detail').boundingBox()];
+  const overlap = n.x < p.x + p.width && p.x < n.x + n.width && n.y < p.y + p.height && p.y < n.y + n.height;
+  const inView = n.y >= 0 && n.y + n.height <= page.viewportSize().height;
+  expect(!overlap && inView, `${label}: focused node ${JSON.stringify(n)} hidden by the panel ${JSON.stringify(p)}`);
 }
 
 export default {
@@ -45,6 +57,10 @@ export default {
     expect(stops.at(-2) === 'Fit to screen', `the toolbar should precede the map, got ${stops.at(-2)}`);
     const halo = await page.locator('.hit[data-op="listTasks"]').evaluate((r) => getComputedStyle(r).stroke);
     expect(halo === 'rgb(242, 194, 48)', `focused node has no marker halo (${halo})`);
+    const ring = await page.locator('.node[data-op="listTasks"] .ring').evaluate((r) => [getComputedStyle(r).stroke, getComputedStyle(r).strokeWidth]);
+    expect(ring[0] === 'rgb(28, 36, 48)' && ring[1] === '2px', `focused node has no ink ring (${ring})`);
+    const unfocused = await page.locator('.node[data-op="createTask"] .ring').evaluate((r) => getComputedStyle(r).stroke);
+    expect(unfocused === 'none', `unfocused node draws a ring (${unfocused})`);
     await page.keyboard.press('Tab');
     expect(!(await page.evaluate(() => document.activeElement?.matches('.hit'))), 'Tab moved to a second node: the map must be one Tab stop');
     await page.keyboard.press('Shift+Tab');
@@ -91,7 +107,8 @@ export default {
     for (const text of ['taskId', 'Output Task', 'assigneeId', 'bearerAuth', 'Fed by', 'Copy example']) {
       expect((await panel.textContent()).includes(text), `detail panel lacks "${text}"`);
     }
-    const fedBy = panel.getByRole('region', { name: 'Fed by' });
+    const fedBy = panel.getByRole('group', { name: 'Fed by' });
+    expect((await panel.getByRole('region').count()) === 0, 'related groups must not be landmarks');
     expect((await fedBy.getByRole('button', { name: 'GET /projects/{projectId}/tasks' }).count()) === 1, 'Fed by lacks listTasks');
     await page.keyboard.press('Tab');
     expect((await active(page)) === 'Close details', `Tab from the node should enter the panel, got ${await active(page)}`);
@@ -149,6 +166,7 @@ export default {
     await ready(page);
     await panel.waitFor();
     expect((await clipboard(page)) === CURL, 'Tasks curl on the clipboard');
+    expect((await clipboard(page)) === CURL, 'a second copy is announced again');
     await page.goto(`${origin}/?sample=filesystem#op=read_text_file`);
     await ready(page);
     const call = JSON.parse(await clipboard(page));
@@ -187,6 +205,28 @@ export default {
     expect((await panel.count()) === 0, 'Close did not close the bottom sheet');
     const [scroll, inner] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     expect(scroll <= inner, `390 px: horizontal scroll (${scroll} > ${inner})`);
+
+    // Focus not obscured (2.4.11): with the panel open, every PageDown keeps the focused node clear of it.
+    for (const [size, label] of [[viewports.mobile, '390 px'], [{ width: 820, height: 1180 }, '820 px']]) {
+      await page.setViewportSize(size);
+      await page.goto(`${origin}/?sample=tasks`);
+      await ready(page);
+      await page.locator('.hit[data-op="listTasks"]').focus();
+      await press(page, 'Enter');
+      await panel.waitFor();
+      await clearOfPanel(page, `${label} after Enter`);
+      for (let i = 0; i < 4; i++) {
+        await press(page, 'PageDown');
+        await clearOfPanel(page, `${label} PageDown ${i + 1}`);
+      }
+      if (label === '390 px') await screenshot('detail-sheet-focus-mobile');
+    }
     await page.setViewportSize(viewports.desktop);
+
+    // A sample switch is announced by the persistent live region.
+    await page.goto(`${origin}/?sample=tasks`);
+    await ready(page);
+    await page.locator('[data-sample="filesystem"]').click();
+    await page.getByTestId('announcer').filter({ hasText: /: \d+ tools in \d+ clusters, \d+ relationships\.$/ }).waitFor();
   },
 };
