@@ -7,20 +7,24 @@ describe('readUrl', () => {
   it('reads sample, view, q and #op=', () => {
     expect(readUrl(`${BASE}?sample=petstore&view=list&q=pet%20id#op=getPetById`)).toEqual({ sample: 'petstore', view: 'list', q: 'pet id', op: 'getPetById' });
   });
+  it('reads ?url= (a loaded spec URL)', () => {
+    expect(readUrl(`${BASE}?url=https%3A%2F%2Fspecs.example.test%2Ftasks.yaml`).url).toBe('https://specs.example.test/tasks.yaml');
+  });
   it('ignores unknown views, empty values and malformed hashes', () => {
-    expect(readUrl(`${BASE}?view=grid&sample=#op=%E0%A4%A`)).toEqual({ sample: undefined, view: undefined, q: '', op: undefined });
-    expect(readUrl(BASE)).toEqual({ sample: undefined, view: undefined, q: '', op: undefined });
+    expect(readUrl(`${BASE}?view=grid&sample=#op=%E0%A4%A`)).toEqual({ sample: undefined, url: undefined, view: undefined, q: '', op: undefined });
+    expect(readUrl(BASE)).toEqual({ sample: undefined, url: undefined, view: undefined, q: '', op: undefined });
   });
 });
 
 describe('writeUrl', () => {
   it('sets and removes parameters, keeps others, encodes the hash', () => {
-    const href = writeUrl(`${BASE}?url=x&view=map#op=a`, { sample: 'tasks', view: 'list', q: 'a b', op: 'get task' });
-    expect(href).toBe(`${BASE}?url=x&view=list&sample=tasks&q=a+b#op=get%20task`);
-    expect(writeUrl(href, { q: '' })).toBe(`${BASE}?url=x`);
+    const href = writeUrl(`${BASE}?keep=x&view=map#op=a`, { sample: 'tasks', view: 'list', q: 'a b', op: 'get task' });
+    expect(href).toBe(`${BASE}?keep=x&view=list&sample=tasks&q=a+b#op=get%20task`);
+    expect(writeUrl(href, { q: '' })).toBe(`${BASE}?keep=x`);
+    expect(writeUrl(href, { q: '', url: 'https://a.test/x.json' })).toBe(`${BASE}?keep=x&url=https%3A%2F%2Fa.test%2Fx.json`);
   });
   it('round-trips', () => {
-    const state = { sample: 'filesystem', view: 'map' as const, q: 'read file', op: 'read_text_file' };
+    const state = { sample: 'filesystem', url: 'https://a.test/openapi.yaml', view: 'map' as const, q: 'read file', op: 'read_text_file' };
     expect(readUrl(writeUrl(BASE, state))).toEqual(state);
   });
 });

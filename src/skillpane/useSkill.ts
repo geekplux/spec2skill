@@ -1,5 +1,6 @@
 // Writes the skill for the model on screen with the skill generator chunk (D22), and again when the
 // options change or "Generate skill" is pressed (`run`). The previous skill stays until the next is ready.
+// The source loader writes a user's skill ahead (`writeSkill`), so the pane and the map change together.
 import { useEffect, useState } from 'react';
 import type { AtlasGraph } from '../graph';
 import type { ApiModel } from '../model/types';
@@ -11,22 +12,32 @@ const load = () => (chunk ??= import('../skillgen/skill'));
 
 export interface Skill { hash: string; slug: string; tree: FileTree; audit: AuditResult; run: number; zip: () => Uint8Array }
 
+/** The last few skills written, by model hash, slug, licence and run. */
+const made = new Map<string, Skill>();
+const keyOf = (model: ApiModel, slug: string, license: string, run: number) => JSON.stringify([model.hash, slug, license, run]);
+
+export async function writeSkill(model: ApiModel, graph: AtlasGraph, slug: string, license: string, run: number): Promise<Skill> {
+  const gen = await load();
+  const tree = gen.generateSkill(model, graph, { slug, license });
+  const skill = { hash: model.hash, slug, tree, audit: gen.auditTree(tree), run, zip: () => gen.zipSkill(slug, tree) };
+  made.set(keyOf(model, slug, license, run), skill);
+  if (made.size > 6) made.delete(made.keys().next().value!);
+  return skill;
+}
+
 export function useSkill(model: ApiModel, graph: AtlasGraph, slug: string, license: string, run: number) {
+  const ahead = made.get(keyOf(model, slug, license, run));
   const [state, setState] = useState<{ skill?: Skill; error?: string }>({});
   useEffect(() => {
-    if (model.operations.length === 0) return;
+    if (model.operations.length === 0 || ahead) return;
     let live = true;
-    load().then(
-      (gen) => {
-        if (!live) return;
-        const tree = gen.generateSkill(model, graph, { slug, license });
-        setState({ skill: { hash: model.hash, slug, tree, audit: gen.auditTree(tree), run, zip: () => gen.zipSkill(slug, tree) } });
-      },
+    writeSkill(model, graph, slug, license, run).then(
+      (skill) => live && setState({ skill }),
       () => live && setState({ error: 'The skill generator did not load. Reload the page to try again.' }),
     );
     return () => {
       live = false;
     };
-  }, [model, graph, slug, license, run]);
-  return state;
+  }, [model, graph, slug, license, run, ahead]);
+  return ahead ? { skill: ahead } : state;
 }

@@ -24,3 +24,11 @@ export function buildGraph(model: ApiModel): AtlasGraph {
   const clusters = buildClusters(model, crud, keys);
   return { clusters, ...bundleFeeds(edges, clusters), crud, hubSchemas: shared.hubSchemas };
 }
+
+const graphs = new WeakMap<ApiModel, AtlasGraph>();
+/** `buildGraph`, once per model object (the loader and the views share it). */
+export function graphOf(model: ApiModel): AtlasGraph {
+  let graph = graphs.get(model);
+  if (!graph) graphs.set(model, (graph = buildGraph(model)));
+  return graph;
+}
