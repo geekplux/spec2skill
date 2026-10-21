@@ -3,11 +3,6 @@
 // Run by `pnpm check:browser -- --phase 18 --audit --viewports 1440x900,390x844 --label <name>`.
 // It only drives the UI with stable names (roles, ids, test ids), so it runs on the UI before and
 // after the polish. Offline: the fake spec host and /api/* are fulfilled here from fixtures.
-import { readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const HOST = 'https://specs.example.test';
 const expect = (ok, message) => {
   if (!ok) throw new Error(message);
@@ -183,6 +178,7 @@ export default {
     await ready();
     await submit(EMPTY);
     await page.getByTestId('empty-chart').waitFor({ state: 'attached' });
+    await page.evaluate(() => window.scrollTo(0, 0));
     await shot('empty-spec');
     await submit(WARNED);
     await page.locator('.title h1', { hasText: 'Shelf API' }).waitFor();

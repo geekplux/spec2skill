@@ -136,7 +136,12 @@ export default {
     expect((await plain) === false, 'plain wheel was preventDefault-ed (scroll trap)');
     await page.waitForTimeout(50);
     expect((await transform(page)) === keyed, 'plain wheel zoomed the map');
+    // The legend is closed on first load since phase 18 (docs/DESIGN.md 2): open it, then read it.
+    const legend = page.locator('.legend > summary');
+    expect((await legend.textContent()) === 'Legend' && !(await page.locator('.legend').evaluate((d) => d.open)), 'legend not a closed "Legend" disclosure');
+    await legend.click();
     expect(await page.getByText('Ctrl + scroll to zoom').isVisible(), 'legend does not explain Ctrl + scroll');
+    await legend.click();
     await page.evaluate(() => window.scrollTo(0, 0));
     box = await atlas(page).boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
