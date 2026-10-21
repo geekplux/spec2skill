@@ -130,13 +130,14 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .edge-label[data-shown='false'], .atlas[data-far] .edge-label, .atlas[data-hot] .edge-label { visibility: hidden; }
 .atlas .edge-label[data-hot] { visibility: visible; }
 /* Bundled edges show only on highlight; their bundle (feeds style, bolder) and the large-spec cluster
-   links (a thick graphite band) always carry a text label, so neither relies on colour. */
+   links (a thick graphite band) carry a text label, so neither relies on colour. */
 .edge[data-bundled]:not([data-hot]) { display: none; }
 .link { opacity: 0.85; transition: opacity var(--motion-fade) ease-out; }
 .link[data-link='bundle'] .line { stroke-width: 2.5; }
 .link[data-link='clusters'] { --hue: var(--graphite); }
 .link[data-link='clusters'] .line { stroke-width: 5; stroke-linecap: round; stroke-opacity: 0.45; }
-.atlas .link .edge-label { visibility: visible; font-size: calc(10.5px * clamp(1, var(--inv, 1), 1.6)); }
+/* Bundle labels follow the edge labels; cluster links (large specs, read zoomed out) always show, enlarged. */
+.atlas .link[data-link='clusters'] .edge-label { visibility: visible; font-size: calc(10.5px * clamp(1, var(--inv, 1), 1.6)); }
 .atlas[data-hot] .link:not([data-hot]) { opacity: 0.12; }
 .node[data-summary] .name { font-weight: 650; }
 .toolbar { position: absolute; z-index: 2; top: var(--space-3); left: var(--space-3); display: flex; gap: var(--space-1); margin: 0; padding: var(--space-1); border: 1px solid var(--ink); border-radius: var(--radius-md); background: var(--vellum); }
@@ -288,7 +289,6 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .list caption { padding: var(--space-1) 0; border-bottom: 2px solid var(--ink); text-align: left; font: 650 0.95rem var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; }
 .crud-summary { font: 0.85rem var(--font-body); letter-spacing: 0; text-transform: none; color: var(--graphite); }
 .list th, .list td { padding: var(--space-1); border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; overflow-wrap: break-word; }
-.list td { overflow-wrap: anywhere; }
 .rels summary { cursor: pointer; color: var(--meridian); text-decoration: underline; }
 .rels ul, .list td > ul { margin: var(--space-1) 0 0; padding-left: var(--space-3); }
 .list thead th { font-size: 0.85em; color: var(--graphite); }

@@ -2,9 +2,9 @@
 // style + marker + label; camera (buttons, keys, Ctrl + wheel, no plain-wheel trap, drag, fit); data-ready timing (P3);
 // reduced motion; 390 px and 200 % zoom; offline sample switching; CVD screenshots.
 const SAMPLES = {
-  tasks: { chip: 'Tasks API', nodes: 22, edges: 85, clusters: 5 },
+  tasks: { chip: 'Tasks API', nodes: 22, edges: 78, clusters: 5 }, // 85 before the phase-13 trims
   petstore: { chip: 'Petstore', nodes: 16, edges: 41, clusters: 2 },
-  filesystem: { chip: 'Filesystem MCP', nodes: 14, edges: 33, clusters: 2 },
+  filesystem: { chip: 'Filesystem MCP', nodes: 14, edges: 28, clusters: 2 }, // 33 before the phase-13 trims
 };
 const DASH = { feeds: '6px, 4px', 'sub-path': 'none', 'shared-schema': '1px, 4px' };
 
@@ -90,7 +90,7 @@ export default {
     await expectAtlas(page, 'tasks');
     await expectFitted(page, 'desktop', { inView: true });
     const label = await atlas(page).getAttribute('aria-label');
-    expect(label === 'Tasks API: 22 operations in 5 clusters, 85 relationships', `map name: ${label}`);
+    expect(label === 'Tasks API: 22 operations in 5 clusters, 78 relationships', `map name: ${label}`);
     const help = await atlas(page).evaluate((el) => document.getElementById(el.getAttribute('aria-describedby'))?.textContent ?? '');
     expect(help.startsWith('Arrow keys move between operations'), `map description: ${help}`);
     await page.evaluate(() => document.fonts.ready);

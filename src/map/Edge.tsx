@@ -31,10 +31,14 @@ export const EdgeLabel = ({ edge, hot }: { edge: LayoutEdge; hot: boolean }) => 
 );
 
 /** A bundle (feeds style, arrow at the fed cluster, `projectId -> 4 ops`) or a thick band of counted
- *  links between two clusters (`12 links`, large specs); both always carry their text label. */
-export const LinkLine = ({ link, hot }: { link: LayoutLink; hot: boolean }) => (
+ *  links between two clusters (`12 links`, large specs); both always carry a text label, drawn
+ *  with the other labels (`label`) above every line. */
+export const LinkLine = ({ link, hot, label }: { link: LayoutLink; hot: boolean; label?: boolean }) => (
   <g className="link" data-link={link.kind} data-kind={link.kind === 'bundle' ? 'feeds' : undefined} data-hot={hot || undefined}>
-    <path className="line" data-kind={link.kind === 'bundle' ? 'feeds' : undefined} d={link.d} markerEnd={link.kind === 'bundle' ? 'url(#mk-feeds)' : undefined} />
-    <text className="edge-label" x={link.label.x} y={link.label.y} textAnchor="middle" dominantBaseline="central">{link.label.text}</text>
+    {label ? (
+      <text className="edge-label" x={link.label.x} y={link.label.y} textAnchor="middle" dominantBaseline="central">{link.label.text}</text>
+    ) : (
+      <path className="line" data-kind={link.kind === 'bundle' ? 'feeds' : undefined} d={link.d} markerEnd={link.kind === 'bundle' ? 'url(#mk-feeds)' : undefined} />
+    )}
   </g>
 );

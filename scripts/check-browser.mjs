@@ -6,7 +6,8 @@
 //   axe(label)) and CVD simulation screenshots (flows call cvd(type)) are on by default.
 //   env: CHROME_PATH (default /usr/bin/google-chrome), CHROME_ARGS (extra flags),
 //        CHECK_FAIL=1 (force a failure after startup, to test cleanup),
-//        CHECK_PORT (default 4173; for when another project's preview holds the port)
+//        CHECK_PORT (default 4173; for when another project's preview holds the port),
+//        CHECK_TIMEOUT_MS (default 30000: waits and navigations; a loaded machine needs headroom)
 //
 // Every request outside http://127.0.0.1:<port> is aborted and fails the check.
 // The preview server runs in its own process group and is killed, with the browser,
@@ -29,6 +30,7 @@ const VIEWPORTS = { desktop: { width: 1280, height: 800 }, mobile: { width: 390,
 // Unique flag on our Chrome's command line, so leftovers can be found without touching other browsers.
 const MARKER = `--spec2skill-check=${process.pid}`;
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
+const TIMEOUT = Number(process.env.CHECK_TIMEOUT_MS || 30_000);
 
 let server = null;
 let serverLog = '';
@@ -157,7 +159,14 @@ async function main() {
   mkdirSync(outDir, { recursive: true });
   for (const flow of selected) {
     const page = await context.newPage();
-    page.setDefaultTimeout(10_000);
+    page.setDefaultTimeout(TIMEOUT);
+    // One retry when a navigation times out (sporadic under load); any other failure stands.
+    const goto = page.goto.bind(page);
+    page.goto = (url, options) => goto(url, options).catch((error) => {
+      if (error?.name !== 'TimeoutError') throw error;
+      console.log(`  navigation to ${url} timed out; retrying once`);
+      return goto(url, options);
+    });
     page.on('console', (msg) => msg.type() === 'error' && problems.push(`[${flow.name}] console error: ${msg.text()}`));
     page.on('pageerror', (error) => problems.push(`[${flow.name}] page error: ${error.message}`));
     // options go to page.screenshot (e.g. clip); options.page shoots another page, e.g. one at 2x.

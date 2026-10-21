@@ -180,7 +180,12 @@ export function layout(model: ApiModel, graph: AtlasGraph, collapsed: ReadonlySe
   const link = (id: string, kind: LayoutLink['kind'], from: string, to: string, pa: Rect, ay: number, ca: Rect, text: string): LayoutLink => {
     const b = card.get(to)!;
     const c = across(pa, ay, ca, b, b.y + HEAD / 2, b);
-    const at = pointAt(c, 0.5);
+    // Always labelled: the first spot just above the curve clear of nodes, headers and other labels.
+    const lw = text.length * CHAR_W + 6;
+    const box = (p: Point): Rect => ({ x: p.x - lw / 2, y: p.y - LABEL_H / 2, w: lw, h: LABEL_H });
+    const spots = LABEL_T.map((t) => ({ x: pointAt(c, t).x, y: pointAt(c, t).y - LABEL_H / 2 - 2 })); // above the line
+    const at = spots.find((p) => !blocked.some((r) => overlaps(r, box(p)))) ?? spots[0]!;
+    blocked.push(box(at));
     return { id, kind, from, to, d: curvePath(c), label: { x: round(at.x), y: round(at.y), text } };
   };
   const links = graph.bundles.filter((b) => nodes.has(b.from)).map((b) => {

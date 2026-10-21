@@ -233,6 +233,7 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
   const byId = new Map(graph.edges.map((e) => [e.id, e]));
   const bundled = new Map(graph.bundles.map((b) => [b.id, b.edges]));
   const drawn = atlas.edges.filter((e) => shown.has(e.id) && (!many || linked(e.from, e.to)));
+  const links = atlas.links.filter((l) => l.kind === 'clusters' || (l.from !== hot && bundled.get(l.id)!.some((id) => shown.has(id))));
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
   const op = open && stop ? ops.get(stop) : undefined;
   return (
@@ -328,7 +329,7 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
             {/* Bundles stand in for their edges (shown on highlight); above 300 edges only the highlighted
                 node's edges are drawn, plus counted links between clusters. */}
             <g aria-hidden="true">
-              {atlas.links.filter((l) => l.kind === 'clusters' || (l.from !== hot && bundled.get(l.id)!.some((id) => shown.has(id)))).map((l) => <LinkLine key={l.id} link={l} hot={l.from === hot} />)}
+              {links.map((l) => <LinkLine key={l.id} link={l} hot={l.from === hot} />)}
               {drawn.map((e) => <EdgeLine key={e.id} edge={e} bundled={!!byId.get(e.id)!.bundledInto} hot={linked(e.from, e.to)} cycled={e.id === cycled?.id} />)}
             </g>
             {atlas.nodes.map((n) => n.summary ? (
@@ -337,7 +338,10 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
               <Node key={n.id} node={n} op={ops.get(n.id)!} crud={graph.crud[n.id]} label={nodeName(ops.get(n.id)!, n.state, names.get(n.cluster)!, degree.get(n.id)!)}
                 tabbable={n.id === stop} hot={n.id === hot} dim={!!match && !match.has(n.id)} target={!!cycled && n.id === otherEnd(cycled, stop!)} onHover={setHover} />
             ))}
-            <g className="labels" aria-hidden="true">{drawn.map((e) => <EdgeLabel key={e.id} edge={e} hot={linked(e.from, e.to)} />)}</g>
+            <g className="labels" aria-hidden="true">
+              {drawn.map((e) => <EdgeLabel key={e.id} edge={e} hot={linked(e.from, e.to)} />)}
+              {links.map((l) => <LinkLine key={l.id} link={l} hot={l.from === hot} label />)}
+            </g>
           </g>
         )}
       </svg>

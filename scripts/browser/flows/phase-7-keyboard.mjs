@@ -1,6 +1,6 @@
 // Phase 7: keyboard-only atlas (A1), screen-reader names and live announcements (A2), the detail
 // panel (F10) with Copy example, #op=<id> on load, bottom sheet at 390 px (the shortcut help dialog is checked in phase 12).
-const GET_TASK = 'GET /tasks/{taskId}, Get a task, cluster Tasks, 19 relationships';
+const GET_TASK = 'GET /tasks/{taskId}, Get a task, cluster Tasks, 13 relationships';
 const CURL = `curl 'https://tasks.example.com/v1/tasks/<taskId>' \\\n  -H "Authorization: Bearer $TASKS_API_TOKEN"`;
 
 const expect = (ok, message) => {
@@ -89,17 +89,17 @@ export default {
     expect((await said(page)) === 'Tasks cluster, 3 of 6.', `announcer after a move: ${await said(page)}`);
     const hot = await page.locator('.edge[data-hot]').count();
     const shown = await page.locator('.edge-label[data-hot]').evaluateAll((ts) => ts.filter((t) => getComputedStyle(t).visibility === 'visible').length);
-    expect(hot === 19 && shown === 19, `focus highlight: ${hot} edges, ${shown} labels`);
+    expect(hot === 13 && shown === 13, `focus highlight: ${hot} edges, ${shown} labels`);
     await press(page, 'ArrowRight', 'getProject');
     await press(page, 'ArrowLeft', 'getTask');
     await screenshot('focus-node-desktop');
 
     // E cycles edges (announced), Enter follows, Esc clears.
     await press(page, 'e', 'getTask');
-    expect((await said(page)) === 'Edge 1 of 19: has sub-path listComments. Enter follows it.', `announcer after E: ${await said(page)}`);
+    expect((await said(page)) === 'Edge 1 of 13: has sub-path listComments. Enter follows it.', `announcer after E: ${await said(page)}`);
     expect((await page.locator('.edge[data-cycled]').count()) === 1 && (await page.locator('.node[data-target]').getAttribute('data-op')) === 'listComments', 'cycled edge / target');
     await press(page, 'e');
-    expect((await said(page)).startsWith('Edge 2 of 19: '), 'second E');
+    expect((await said(page)).startsWith('Edge 2 of 13: '), 'second E');
     await screenshot('edge-cycle-desktop');
     await press(page, 'Escape');
     expect((await page.locator('.edge[data-cycled]').count()) === 0, 'Esc did not clear the edge highlight');
@@ -109,10 +109,10 @@ export default {
     // Clusters and ends.
     await press(page, 'End', 'deleteComment');
     await press(page, 'Home', 'listComments');
-    await press(page, 'PageUp', 'listProjects');
+    // Card order (greedy, phase 13): Tasks, Projects, Members, Labels, Comments.
+    await press(page, 'PageUp', 'listLabels');
     await press(page, 'PageDown', 'listComments');
-    await press(page, 'PageUp', 'listProjects');
-    await press(page, 'PageUp', 'listTasks');
+    await press(page, 'PageDown', 'listTasks');
     await press(page, 'ArrowDown', 'createTask');
     await press(page, 'ArrowDown', 'getTask');
 
@@ -160,9 +160,9 @@ export default {
     await settle(page);
     expect((await transform(page)) !== zoomed, 'Shift+ArrowRight did not pan');
     await press(page, 'PageDown', 'listProjects');
-    await press(page, 'PageDown', 'listComments');
+    await press(page, 'PageDown', 'listMembers');
     await settle(page);
-    const [node, map] = [await page.locator('.node[data-op="listComments"]').boundingBox(), await page.getByTestId('atlas').boundingBox()];
+    const [node, map] = [await page.locator('.node[data-op="listMembers"]').boundingBox(), await page.getByTestId('atlas').boundingBox()];
     expect(node.x >= map.x && node.y >= map.y && node.x + node.width <= map.x + map.width && node.y + node.height <= map.y + map.height, 'camera did not follow focus');
     await press(page, '-');
     await press(page, '0');
