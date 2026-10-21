@@ -653,6 +653,32 @@
       }
     }
   ],
+  "links": [
+    {
+      "id": "bundle:list_directory->cluster-file:path",
+      "kind": "bundle",
+      "from": "list_directory",
+      "to": "cluster-file",
+      "d": "M368 64C316 64 316 18 264 18",
+      "label": {
+        "x": 316,
+        "y": 41,
+        "text": "path -> 6 ops"
+      }
+    },
+    {
+      "id": "bundle:list_directory_with_sizes->cluster-file:path",
+      "kind": "bundle",
+      "from": "list_directory_with_sizes",
+      "to": "cluster-file",
+      "d": "M368 112C316 112 316 18 264 18",
+      "label": {
+        "x": 316,
+        "y": 65,
+        "text": "path -> 6 ops"
+      }
+    }
+  ],
   "bounds": {
     "x": -48,
     "y": -48,

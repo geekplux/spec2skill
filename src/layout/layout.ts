@@ -3,6 +3,7 @@
 // Pure and dependency-free; the output is plain JSON, snapshot-tested.
 import type { AtlasGraph, Cluster, EdgeKind } from '../graph';
 import type { ApiModel, Crud, Operation } from '../model/types';
+import { aggregated, clusterLinks, summaryId } from './collapse';
 import { type Point, type Rect, bezier, curvePath, elbow, overlaps, pointAt, round, sides } from './geometry';
 
 export const NODE_W = 232;
@@ -11,7 +12,11 @@ const GAP = 8, PAD = 16, HEAD = 36, INDENT = 12, MAX_DEPTH = 3, COL_GAP = 16, CA
 const LABEL_H = 14, CHAR_W = 6.4, LABEL_T = [0.5, 0.38, 0.62, 0.28, 0.72];
 
 export type NodeState = 'read' | 'mutating' | 'destructive';
-export interface LayoutNode extends Rect { id: string; cluster: string; depth: number; column: number; state: NodeState }
+export interface LayoutNode extends Rect {
+  id: string; cluster: string; depth: number; column: number; state: NodeState;
+  /** A collapsed cluster's summary card (its id is `summaryId(cluster)`), not an operation. */
+  summary?: true;
+}
 export interface LayoutCluster extends Rect { id: string; name: string; hubs: { name: string; count: number }[] }
 export interface LayoutEdge {
   id: string; kind: EdgeKind; from: string; to: string; d: string;
@@ -20,7 +25,9 @@ export interface LayoutEdge {
   /** Label centre; `shown: false` when it would collide or repeat a nearby label (it appears on highlight). */
   label: Point & { text: string; shown: boolean };
 }
-export interface AtlasLayout { nodes: LayoutNode[]; clusters: LayoutCluster[]; edges: LayoutEdge[]; bounds: Rect }
+/** Drawn instead of many edges: a bundle (node -> cluster card) or counted cluster-to-cluster links. */
+export interface LayoutLink { id: string; kind: 'bundle' | 'clusters'; from: string; to: string; d: string; label: Point & { text: string } }
+export interface AtlasLayout { nodes: LayoutNode[]; clusters: LayoutCluster[]; edges: LayoutEdge[]; links: LayoutLink[]; bounds: Rect }
 
 /** Read-only, mutating, or destructive (DELETE / destructiveHint): drawn as no bar, a solid bar, a hatched bar + `!`. */
 export function nodeState(op: Operation, crud: Crud | undefined): NodeState {
@@ -48,16 +55,50 @@ function treeOrder(ops: Operation[]): { op: Operation; depth: number }[] {
 
 const pairKey = (from: string, to: string) => (from < to ? `${from} ${to}` : `${to} ${from}`);
 
-const bySize = (a: Cluster, b: Cluster) => b.operationIds.length - a.operationIds.length || (a.name < b.name ? -1 : 1);
+const byName = (a: Cluster, b: Cluster) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+const bySize = (a: Cluster, b: Cluster) => b.operationIds.length - a.operationIds.length || byName(a, b);
 
-export function layout(model: ApiModel, graph: AtlasGraph): AtlasLayout {
+/** Largest cluster first, then greedily the one with the most edges to those already placed (ties by name). */
+export function cardOrder(graph: AtlasGraph): Cluster[] {
+  const near = new Map<string, Map<string, number>>();
+  for (const { from, to, count } of clusterLinks(graph)) {
+    near.set(from, (near.get(from) ?? new Map()).set(to, count));
+    near.set(to, (near.get(to) ?? new Map()).set(from, count));
+  }
+  const left = graph.clusters.toSorted(bySize);
+  const pull = new Map<string, number>();
+  const out: Cluster[] = [];
+  while (left.length > 0) {
+    let best = 0;
+    for (let i = 1; out.length > 0 && i < left.length; i++) {
+      const d = (pull.get(left[i]!.id) ?? 0) - (pull.get(left[best]!.id) ?? 0);
+      if (d > 0 || (d === 0 && byName(left[i]!, left[best]!) < 0)) best = i;
+    }
+    const [next] = left.splice(best, 1) as [Cluster];
+    out.push(next);
+    for (const [id, n] of near.get(next.id) ?? []) pull.set(id, (pull.get(id) ?? 0) + n);
+  }
+  return out;
+}
+
+/** A Bézier from anchor `pa` (box `ca`) to anchor `pb` (box `cb`) through facing sides, round the right when stacked. */
+function across(pa: Rect, ay: number, ca: Rect, pb: Rect, by: number, cb: Rect): Point[] {
+  const [da, db] = sides(ca, cb);
+  const [p, q] = [{ x: da > 0 ? pa.x + pa.w : pa.x, y: ay }, { x: db > 0 ? pb.x + pb.w : pb.x, y: by }];
+  const loop = da === db ? Math.max(ca.x + ca.w, cb.x + cb.w) + 24 : 0;
+  const bend = (from: number) => (loop ? (loop - from) / 0.75 : Math.max(48, Math.abs(q.x - p.x) / 2));
+  return bezier(p, da * bend(p.x), q, db * bend(q.x));
+}
+
+/** `collapsed` clusters are drawn as one summary card each; their edges are left out. */
+export function layout(model: ApiModel, graph: AtlasGraph, collapsed: ReadonlySet<string> = new Set()): AtlasLayout {
   const ops = new Map(model.operations.map((op) => [op.id, op]));
   const nodes = new Map<string, LayoutNode>();
   const clusters: LayoutCluster[] = [];
 
-  // Cards, largest first (ties by name), packed left to right on shelves of width sqrt(area * 1.6), gaps included.
-  const cards = graph.clusters.toSorted(bySize).map((c) => {
-    const items = treeOrder(c.operationIds.map((id) => ops.get(id)!));
+  // Cards in greedy order, packed left to right on shelves of width sqrt(area * 1.6), gaps included.
+  const cards = cardOrder(graph).map((c) => {
+    const items = collapsed.has(c.id) ? [{ op: undefined, depth: 0 }] : treeOrder(c.operationIds.map((id) => ops.get(id)!));
     const cols = items.length <= 10 ? 1 : items.length <= 30 ? 2 : 3;
     const perCol = Math.ceil(items.length / cols);
     const colW = NODE_W + INDENT * Math.max(0, ...items.map((i) => i.depth));
@@ -79,7 +120,9 @@ export function layout(model: ApiModel, graph: AtlasGraph): AtlasLayout {
       const column = Math.floor(i / perCol);
       const nx = x + PAD + column * (colW + COL_GAP) + depth * INDENT;
       const ny = y + HEAD + PAD / 2 + (i % perCol) * (NODE_H + GAP);
-      nodes.set(op.id, { id: op.id, cluster: c.id, depth, column, x: nx, y: ny, w: NODE_W, h: NODE_H, state: nodeState(op, graph.crud[op.id]) });
+      const at = { cluster: c.id, depth, column, x: nx, y: ny, w: NODE_W, h: NODE_H };
+      if (op) nodes.set(op.id, { id: op.id, ...at, state: nodeState(op, graph.crud[op.id]) });
+      else nodes.set(summaryId(c.id), { id: summaryId(c.id), ...at, state: 'read', summary: true });
     });
     [x, rowH] = [x + w + CARD_GAP, Math.max(rowH, h)];
   }
@@ -91,7 +134,8 @@ export function layout(model: ApiModel, graph: AtlasGraph): AtlasLayout {
   for (const e of graph.edges) pairs.set(pairKey(e.from, e.to), [...(pairs.get(pairKey(e.from, e.to)) ?? []), e.id]);
   const arcs = new Map<string, number>();
   const said = new Set<string>(); // one visible copy of a label per kind and cluster pair
-  const edges = graph.edges.map((e): LayoutEdge => {
+  const many = aggregated(graph); // labels only on highlight, links between clusters instead
+  const edges = graph.edges.filter((e) => nodes.has(e.from) && nodes.has(e.to)).map((e): LayoutEdge => {
     const [a, b] = [nodes.get(e.from)!, nodes.get(e.to)!];
     const pair = pairs.get(pairKey(e.from, e.to))!;
     const dy = (pair.indexOf(e.id) - (pair.length - 1) / 2) * 6;
@@ -112,18 +156,14 @@ export function layout(model: ApiModel, graph: AtlasGraph): AtlasLayout {
       spots = LABEL_T.map((t) => ({ x: pointAt(c, t).x + lw / 2 + 3, y: pointAt(c, t).y }));
     } else {
       const box = (n: LayoutNode) => (n.cluster === a.cluster && n.cluster === b.cluster ? n : card.get(n.cluster)!);
-      const [da, db] = sides(box(a), box(b));
-      const [p, q] = [{ x: da > 0 ? a.x + NODE_W : a.x, y: ay }, { x: db > 0 ? b.x + NODE_W : b.x, y: by }];
-      const loop = da === db ? Math.max(box(a).x + box(a).w, box(b).x + box(b).w) + 24 : 0;
-      const bend = (from: number) => (loop ? (loop - from) / 0.75 : Math.max(48, Math.abs(q.x - p.x) / 2));
-      const c = bezier(p, da * bend(p.x), q, db * bend(q.x));
+      const c = across(a, ay, box(a), b, by, box(b));
       [d, mid] = [curvePath(c), pointAt(c, 0.5)];
       spots = LABEL_T.map((t) => pointAt(c, t));
     }
     if (e.kind === 'shared-schema') spots = spots.map((s) => ({ x: s.x, y: s.y - 10 })); // clear the midpoint diamond
     const repeat = `${e.kind} ${text} ${a.cluster} ${b.cluster}`;
     const box = (s: Point): Rect => ({ x: s.x - lw / 2, y: s.y - LABEL_H / 2, w: lw, h: LABEL_H });
-    const fit = said.has(repeat) ? undefined : spots.find((s) => !blocked.some((r) => overlaps(r, box(s))));
+    const fit = said.has(repeat) || many ? undefined : spots.find((s) => !blocked.some((r) => overlaps(r, box(s))));
     if (fit) {
       blocked.push(box(fit));
       said.add(repeat);
@@ -136,6 +176,24 @@ export function layout(model: ApiModel, graph: AtlasGraph): AtlasLayout {
     };
   });
 
+  // Bundles run from their source node to the fed cluster's header; aggregated links join card headers.
+  const link = (id: string, kind: LayoutLink['kind'], from: string, to: string, pa: Rect, ay: number, ca: Rect, text: string): LayoutLink => {
+    const b = card.get(to)!;
+    const c = across(pa, ay, ca, b, b.y + HEAD / 2, b);
+    const at = pointAt(c, 0.5);
+    return { id, kind, from, to, d: curvePath(c), label: { x: round(at.x), y: round(at.y), text } };
+  };
+  const links = graph.bundles.filter((b) => nodes.has(b.from)).map((b) => {
+    const n = nodes.get(b.from)!;
+    return link(b.id, 'bundle', b.from, b.cluster, n, n.y + NODE_H / 2, card.get(n.cluster)!, `${b.param} -> ${b.edges.length} ops`);
+  });
+  if (many) {
+    for (const l of clusterLinks(graph)) {
+      const a = card.get(l.from)!;
+      links.push(link(`clusters:${l.from}->${l.to}`, 'clusters', l.from, l.to, a, a.y + HEAD / 2, a, `${l.count} links`));
+    }
+  }
+
   const [right, bottom] = [Math.max(0, ...clusters.map((c) => c.x + c.w)), Math.max(0, ...clusters.map((c) => c.y + c.h))];
-  return { nodes: [...nodes.values()], clusters, edges, bounds: { x: -MARGIN, y: -MARGIN, w: right + 2 * MARGIN, h: bottom + 2 * MARGIN } };
+  return { nodes: [...nodes.values()], clusters, edges, links, bounds: { x: -MARGIN, y: -MARGIN, w: right + 2 * MARGIN, h: bottom + 2 * MARGIN } };
 }

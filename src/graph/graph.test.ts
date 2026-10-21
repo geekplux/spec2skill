@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { normalise } from '../model/normalise';
 import type { ApiModel } from '../model/types';
+import { syntheticSpec } from '../__fixtures__/synthetic';
 import { SAMPLES, getSample, sampleModel } from '../samples';
 import { buildGraph, CRUD_LETTER, type AtlasGraph, type Edge } from './index';
 import { MAX_INCOMING_FEEDS } from './types';
@@ -175,50 +176,15 @@ describe('buildGraph: Filesystem MCP sample', async () => {
   });
 });
 
-const ok = (ref: string) => ({ '200': { description: 'ok', content: { 'application/json': { schema: { $ref: `#/components/schemas/${ref}` } } } } });
-const param = (name: string, where = 'path') => ({ name, in: where, required: where === 'path', schema: { type: 'string' } });
-
-/** OpenAPI 3.1 with `resources * 10` operations; each resource points at the previous one and at r0 (a hub). */
-function syntheticSpec(resources: number) {
-  const paths: Record<string, unknown> = {};
-  const schemas: Record<string, unknown> = {};
-  for (let i = 0; i < resources; i++) {
-    const [r, id, prev] = [`R${i}`, `r${i}Id`, `r${(i + resources - 1) % resources}Id`];
-    schemas[r] = { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, [prev]: { type: 'string' }, r0Id: { type: 'string' } } };
-    schemas[`${r}Page`] = { type: 'object', properties: { data: { type: 'array', items: { $ref: `#/components/schemas/${r}` } } } };
-    const body = { content: { 'application/json': { schema: { $ref: `#/components/schemas/${r}` } } } };
-    const tags = [`r${i}s`];
-    paths[`/r${i}s`] = {
-      get: { operationId: `list${r}`, tags, parameters: [param(prev, 'query')], responses: ok(`${r}Page`) },
-      post: { operationId: `create${r}`, tags, requestBody: body, responses: ok(r) },
-    };
-    paths[`/r${i}s/{${id}}`] = {
-      parameters: [param(id)],
-      get: { operationId: `get${r}`, tags, responses: ok(r) },
-      put: { operationId: `replace${r}`, tags, requestBody: body, responses: ok(r) },
-      patch: { operationId: `update${r}`, tags, requestBody: body, responses: ok(r) },
-      delete: { operationId: `delete${r}`, tags, responses: { '204': { description: 'gone' } } },
-    };
-    paths[`/r${i}s/{${id}}/children`] = {
-      parameters: [param(id)],
-      get: { operationId: `children${r}`, tags, responses: ok(`${r}Page`) },
-      post: { operationId: `addChild${r}`, tags, requestBody: body, responses: ok(r) },
-    };
-    paths[`/r${i}s/{${id}}/archive`] = { parameters: [param(id)], post: { operationId: `archive${r}`, tags, responses: ok(r) } };
-    paths[`/r${i}s/{${id}}/restore`] = { parameters: [param(id)], post: { operationId: `restore${r}`, tags, responses: ok(r) } };
-  }
-  return { openapi: '3.1.0', info: { title: 'Synthetic', version: '1' }, paths, components: { schemas } };
-}
-
 describe('buildGraph: scale', () => {
   it('builds a 1000-operation graph in under 1000 ms', async () => {
-    const model: ApiModel = await normalise(syntheticSpec(100));
+    const model: ApiModel = await normalise(syntheticSpec(40));
     expect(model.operations).toHaveLength(1000);
     const start = performance.now();
     const g = buildGraph(model);
     const ms = performance.now() - start;
     expect(ms).toBeLessThan(1000);
-    expect(g.clusters).toHaveLength(100);
+    expect(g.clusters).toHaveLength(40);
     const incoming = new Map<string, number>();
     for (const e of g.edges) if (e.kind === 'feeds') incoming.set(e.to, (incoming.get(e.to) ?? 0) + 1);
     expect(Math.max(...incoming.values())).toBe(MAX_INCOMING_FEEDS);
