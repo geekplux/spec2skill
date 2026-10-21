@@ -1,0 +1,597 @@
+{
+  "generator": "spec2skill 0.0.0",
+  "skill": "secure-filesystem-mcp",
+  "kind": "mcp",
+  "sourceHash": "ff41ecd2d7af5ad15bd649c926e1c7dcbe28354082e692d16af409a293892400",
+  "envPrefix": "SECURE_FILESYSTEM_SERVER",
+  "servers": [],
+  "auth": [],
+  "operations": [
+    {
+      "id": "read_file",
+      "title": "Read File (Deprecated)",
+      "crud": "read",
+      "inputs": [
+        {
+          "name": "head",
+          "in": "argument",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "tail",
+          "in": "argument",
+          "required": false,
+          "type": "number"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "deprecated": true,
+      "next": []
+    },
+    {
+      "id": "read_text_file",
+      "title": "Read Text File",
+      "crud": "read",
+      "inputs": [
+        {
+          "name": "head",
+          "in": "argument",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "tail",
+          "in": "argument",
+          "required": false,
+          "type": "number"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "read_media_file",
+      "title": "Read Media File",
+      "crud": "read",
+      "inputs": [
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "read_multiple_files",
+      "title": "Read Multiple Files",
+      "crud": "read",
+      "inputs": [
+        {
+          "name": "paths",
+          "in": "argument",
+          "required": true,
+          "type": "array"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "write_file",
+      "title": "Write File",
+      "crud": "create",
+      "inputs": [
+        {
+          "name": "content",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": false,
+      "destructive": true,
+      "next": []
+    },
+    {
+      "id": "edit_file",
+      "title": "Edit File",
+      "crud": "update",
+      "inputs": [
+        {
+          "name": "dryRun",
+          "in": "argument",
+          "required": false,
+          "type": "boolean"
+        },
+        {
+          "name": "edits",
+          "in": "argument",
+          "required": true,
+          "type": "array"
+        },
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": false,
+      "destructive": true,
+      "next": []
+    },
+    {
+      "id": "create_directory",
+      "title": "Create Directory",
+      "crud": "create",
+      "inputs": [
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "list_directory",
+      "title": "List Directory",
+      "crud": "list",
+      "inputs": [
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": [
+        {
+          "to": "read_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "read_text_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "read_media_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "edit_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "list_directory_with_sizes",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "directory_tree",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "search_files",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "get_file_info",
+          "via": "listed path",
+          "confidence": "inferred"
+        }
+      ]
+    },
+    {
+      "id": "list_directory_with_sizes",
+      "title": "List Directory with Sizes",
+      "crud": "list",
+      "inputs": [
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "sortBy",
+          "in": "argument",
+          "required": false,
+          "type": "string",
+          "enum": [
+            "name",
+            "size"
+          ]
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": [
+        {
+          "to": "read_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "read_text_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "read_media_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "edit_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "list_directory",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "directory_tree",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "search_files",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "get_file_info",
+          "via": "listed path",
+          "confidence": "inferred"
+        }
+      ]
+    },
+    {
+      "id": "directory_tree",
+      "title": "Directory Tree",
+      "crud": "read",
+      "inputs": [
+        {
+          "name": "excludePatterns",
+          "in": "argument",
+          "required": false,
+          "type": "array"
+        },
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "move_file",
+      "title": "Move File",
+      "crud": "update",
+      "inputs": [
+        {
+          "name": "destination",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "source",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": false,
+      "destructive": true,
+      "next": []
+    },
+    {
+      "id": "search_files",
+      "title": "Search Files",
+      "crud": "list",
+      "inputs": [
+        {
+          "name": "excludePatterns",
+          "in": "argument",
+          "required": false,
+          "type": "array"
+        },
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "pattern",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": [
+        {
+          "to": "read_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "read_text_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "read_media_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "edit_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "list_directory",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "list_directory_with_sizes",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "directory_tree",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "get_file_info",
+          "via": "listed path",
+          "confidence": "inferred"
+        }
+      ]
+    },
+    {
+      "id": "get_file_info",
+      "title": "Get File Info",
+      "crud": "read",
+      "inputs": [
+        {
+          "name": "path",
+          "in": "argument",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "list_allowed_directories",
+      "title": "List Allowed Directories",
+      "crud": "list",
+      "inputs": [],
+      "output": [
+        "content"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": [
+        {
+          "to": "read_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "read_text_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "read_media_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "edit_file",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "list_directory",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "list_directory_with_sizes",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "directory_tree",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "search_files",
+          "via": "listed path",
+          "confidence": "inferred"
+        },
+        {
+          "to": "get_file_info",
+          "via": "listed path",
+          "confidence": "inferred"
+        }
+      ]
+    }
+  ],
+  "chains": [
+    {
+      "ops": [
+        "list_allowed_directories",
+        "list_directory",
+        "search_files",
+        "read_text_file"
+      ],
+      "via": [
+        "listed path",
+        "listed path",
+        "listed path"
+      ]
+    },
+    {
+      "ops": [
+        "list_allowed_directories",
+        "list_directory_with_sizes",
+        "search_files",
+        "read_media_file"
+      ],
+      "via": [
+        "listed path",
+        "listed path",
+        "listed path"
+      ]
+    },
+    {
+      "ops": [
+        "list_allowed_directories",
+        "search_files",
+        "list_directory",
+        "directory_tree"
+      ],
+      "via": [
+        "listed path",
+        "listed path",
+        "listed path"
+      ]
+    },
+    {
+      "ops": [
+        "list_directory",
+        "list_directory_with_sizes",
+        "search_files",
+        "get_file_info"
+      ],
+      "via": [
+        "listed path",
+        "listed path",
+        "listed path"
+      ]
+    },
+    {
+      "ops": [
+        "list_directory_with_sizes",
+        "list_directory",
+        "search_files",
+        "edit_file"
+      ],
+      "via": [
+        "listed path",
+        "listed path",
+        "listed path"
+      ]
+    }
+  ]
+}

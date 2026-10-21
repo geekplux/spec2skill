@@ -26,7 +26,8 @@ function placeholder(p: Param): unknown {
 
 /** The required ones, or all of them when none is required. */
 const pick = (ps: Param[]) => (ps.some((p) => p.required) ? ps.filter((p) => p.required) : ps);
-const args = (ps: Param[]) => Object.fromEntries(pick(ps).map((p) => [p.name, placeholder(p)]));
+/** Placeholder arguments: the required ones, or all of them when none is required. */
+export const exampleArgs = (ps: Param[]) => Object.fromEntries(pick(ps).map((p) => [p.name, placeholder(p)]));
 /** POSIX single quotes: spec text can never break out of them. */
 const sq = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;
 /** curl -F reads a file for `name=@path`. */
@@ -62,11 +63,11 @@ export function curlExample(model: ApiModel, op: Operation): string {
   const type = op.requestBody?.contentType ?? '';
   if (type.includes('multipart')) lines.push(...pick(body).map((p) => `-F ${sq(`${p.name}=${file(p)}<${p.name}>`)}`));
   else if (type.includes('urlencoded')) lines.push(...pick(body).map((p) => `--data-urlencode ${sq(`${p.name}=<${p.name}>`)}`));
-  else if (op.requestBody) lines.push(`-H ${sq(`Content-Type: ${type}`)}`, `-d ${sq(JSON.stringify(args(body), null, 2))}`);
+  else if (op.requestBody) lines.push(`-H ${sq(`Content-Type: ${type}`)}`, `-d ${sq(JSON.stringify(exampleArgs(body), null, 2))}`);
   return lines.join(' \\\n  ');
 }
 
 export const toolCallExample = (op: Operation): string =>
-  JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: op.id, arguments: args(op.inputs) } }, null, 2);
+  JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: op.id, arguments: exampleArgs(op.inputs) } }, null, 2);
 
 export const example = (model: ApiModel, op: Operation): string => (op.kind === 'tool' ? toolCallExample(op) : curlExample(model, op));

@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts', 'scripts/**/*.test.mjs'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.mjs', 'scripts/**/*.test.mjs'],
     pool: 'forks',
     maxWorkers: 1,
     fileParallelism: false,
