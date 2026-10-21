@@ -135,15 +135,15 @@ export default {
     expect((await theme()) === 'dark', `stored choice overridden by the OS: ${await theme()}`);
     await page.evaluate(() => localStorage.clear());
 
-    // 6. Mobile: theme toggle on the wordmark row; "More samples" while the chips overflow.
+    // 6. Mobile: the header reads in DOM order (phase 15, AC9: the theme toggle sits on the row under
+    // the URL field, after it, instead of on the wordmark row); "More samples" while the chips overflow.
     await page.setViewportSize(viewports.mobile);
     await page.goto(`${origin}/?sample=tasks`);
     await paneReady(page);
-    const [logo, themeBtn, input] = await Promise.all(['.brand', '.theme', '.source'].map((s) => page.locator(s).boundingBox()));
-    expect(Math.abs(logo.y + logo.height / 2 - (themeBtn.y + themeBtn.height / 2)) < 12 && input.y > themeBtn.y + themeBtn.height - 1, `header rows: ${JSON.stringify({ logo, themeBtn, input })}`);
-    // Tab order follows the visual order: the theme button (wordmark row) comes before the URL field.
+    const [logo, themeBtn, input] = await Promise.all(['.brand', '.theme', '#source-field'].map((s) => page.locator(s).boundingBox()));
+    expect(input.y >= logo.y + logo.height - 1 && themeBtn.y >= input.y + input.height - 1, `header rows: ${JSON.stringify({ logo, themeBtn, input })}`);
     const order = await page.evaluate(() => [...document.querySelectorAll('.header > *')].map((el) => el.className));
-    expect(order.indexOf('btn theme') < order.indexOf('source'), `header DOM order: ${order}`);
+    expect(order.indexOf('source') < order.indexOf('btn theme'), `header DOM order: ${order}`);
     const hint = page.getByTestId('chips-more');
     await hint.waitFor();
     expect((await hint.textContent()).startsWith('More samples'), 'chip hint text');

@@ -3,6 +3,8 @@
 import { type FormEvent, type KeyboardEvent, type RefObject, useState } from 'react';
 import { type Input, type Mode, isUrlInput } from './fetchSource';
 
+const MODES = [['auto', 'Auto-detect'], ['openapi', 'OpenAPI / Swagger'], ['mcp', 'MCP server']] as const;
+
 interface SourceInputProps {
   /** The field's text; the app clears it once pasted text is loaded and shows a loaded URL. */
   value: string;
@@ -32,9 +34,7 @@ export function SourceInput({ value, onValue, onLoad, field }: SourceInputProps)
       <div id="source-more" className="source-more" hidden={!more}>
         <label>Source{' '}
           <select className="field" value={mode} onChange={(e) => setMode(e.target.value as Mode)}>
-            <option value="auto">Auto-detect</option>
-            <option value="openapi">OpenAPI / Swagger</option>
-            <option value="mcp">MCP server</option>
+            {MODES.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
           </select>
         </label>
         <label className="btn file">

@@ -1,8 +1,6 @@
-// Turns what the user gave (a URL, pasted text or a file) into a model, its graph and its skill,
-// reporting each step. Pure orchestration: `fetch` and the skill writer are injected (tests fake them).
-// OpenAPI URLs are fetched directly first, then through the Worker proxy on a CORS or network
-// failure (D10); MCP servers always go through the proxy, which only ever calls tools/list.
-import { type AtlasGraph, graphOf } from '../graph';
+// A URL, pasted text or a file -> model, graph and skill, step by step; `fetch` and the writer are injected.
+// OpenAPI URLs: direct fetch, then the Worker proxy on a CORS/network failure (D10); MCP: always the proxy.
+import { type AtlasGraph, buildGraph } from '../graph';
 import type { McpOptions } from '../model/mcp';
 import { normalise } from '../model/normalise';
 import type { ApiModel } from '../model/types';
@@ -50,11 +48,9 @@ async function read(res: Response, type = res.headers.get('content-type') ?? '')
 }
 
 /** POST {url} to a proxy route; anything but its JSON error shape means the proxy is not there. */
-async function api(path: string, url: URL, deps: LoadDeps): Promise<Response> {
-  const init = { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url: url.href }), signal: deps.signal };
-  const res = await deps.fetch(path, init).catch((e: unknown) => {
-    throw deps.signal.aborted ? e : new SourceError('proxy-unavailable');
-  });
+async function api(path: string, url: URL, { fetch, signal }: LoadDeps): Promise<Response> {
+  const init = { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url: url.href }), signal };
+  const res = await fetch(path, init).catch((e: unknown) => Promise.reject(signal.aborted ? e : new SourceError('proxy-unavailable')));
   if (res.ok && !(res.headers.get('content-type') ?? '').includes('text/html')) return res;
   const error = ((await res.json().catch(() => null)) as { error?: { code?: unknown; message?: unknown } } | null)?.error;
   if (!isSourceErrorCode(error?.code)) throw new SourceError('proxy-unavailable');
@@ -97,13 +93,11 @@ async function fromUrl(raw: string, mode: Mode, deps: LoadDeps): Promise<Doc> {
     return parse({ url: url.href, ...got });
   } catch (e) {
     if (mode !== 'auto' || !notSpec(e)) throw e;
-    return mcp(url, deps).catch((second: unknown) => {
-      throw deps.signal.aborted ? second : e; // the spec error says more than the failed MCP retry
-    });
+    return mcp(url, deps).catch((second: unknown) => Promise.reject(deps.signal.aborted ? second : e)); // the spec error says more
   }
 }
 
-async function fromText(input: { text: string } | { file: Blob & { name: string } }, deps: LoadDeps): Promise<Doc> {
+async function fromText(input: Exclude<Input, { url: string }>, deps: LoadDeps): Promise<Doc> {
   if ('text' in input) return deps.step('fetch', 'Reading pasted text'), parse({ text: input.text });
   deps.step('fetch', `Reading ${input.file.name}`);
   if (input.file.size > MAX_SPEC_BYTES) throw new SourceError('too-large');
@@ -120,7 +114,7 @@ export async function loadSource(input: Input, mode: Mode, deps: LoadDeps): Prom
   const model = await normalise(doc, options);
   deps.signal.throwIfAborted();
   deps.step('map', `Mapping ${model.operations.length} ${model.source.kind === 'mcp' ? 'tools' : 'operations'}`);
-  const graph = graphOf(model);
+  const graph = buildGraph(model);
   deps.step('write', 'Writing skill');
   if (model.operations.length > 0) await deps.write(model, graph);
   deps.signal.throwIfAborted();

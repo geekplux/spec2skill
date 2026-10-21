@@ -1,10 +1,11 @@
 import { type FocusEvent, Suspense, startTransition, use, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAnnounce } from './a11y/Announcer';
-import { graphOf } from './graph';
+import { buildGraph } from './graph';
 import { ListView } from './list/ListView';
 import { AtlasMap } from './map/Map';
 import { Search } from './map/Search';
 import { ShortcutHelp } from './map/ShortcutHelp';
+import type { AtlasGraph } from './graph';
 import type { ApiModel, SourceKind } from './model/types';
 import { DEFAULT_SAMPLE_ID, SAMPLES, type Sample, getSample, sampleModel } from './samples';
 import { Layout } from './shell/Layout';
@@ -45,7 +46,7 @@ interface WorkspaceProps {
 function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, onHidden }: WorkspaceProps) {
   const isSample = source instanceof Promise;
   const model = isSample ? use(source) : source;
-  const graph = graphOf(model);
+  const graph = useMemo(() => buildGraph(model), [model]);
   const index = useMemo(() => searchIndex(model, graph), [model, graph]);
   const match = useMemo(() => matches(index, q, hidden), [index, q, hidden]);
   const shown = useMemo(() => graph.edges.filter((e) => edgeShown(e, match, hidden)), [graph, match, hidden]);
@@ -224,7 +225,7 @@ export function App() {
     // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `go` reads the URL itself; only the query matters
   }, [find.q]);
   /** A loaded source's skill is written before it is shown (the "Writing skill" step). */
-  const write = (model: ApiModel) => writeSkill(model, graphOf(model), skillSlug(model), 'MIT', run);
+  const write = (model: ApiModel, graph: AtlasGraph) => writeSkill(model, graph, skillSlug(model), 'MIT', run);
   /** Load a URL, text or file: steps while it loads, then its skill and map together (or an error). */
   const load = (input: Input, mode: Mode, opened = false) => {
     job?.ctl.abort();

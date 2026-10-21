@@ -59,7 +59,7 @@ One scale, as tokens in `src/design/tokens.css` (mirrored in `tokens.ts`, checke
 Rules:
 - New layout CSS (margin, padding, gap, inset, top/right/bottom/left) uses only `--calm-*` tokens. Raw `px`/`rem` values are allowed only for hairlines (1-3 px borders), focus outlines, control min-heights/widths and SVG geometry.
 - The tokens are named `--calm-*` because the older `--space-*` family (4/8/12/16/24/32/48) is still used by the views built in phases 5-14. Phase 18 moves those views to the calm scale, then renames `--calm-*` to `--space-*` and deletes the old values.
-- Borders and frames are allowed only for: form fields, buttons and chips, the map frame, the detail panel edge, the skill preview's ruled sheet, tables' row rules, and the error state's left rule. Everything else is grouped by space and alignment, not boxes or cards.
+- Borders and frames are allowed only for: form fields, buttons and chips, the map frame, the detail panel edge, the skill preview's ruled sheet, tables' row rules, and the single left rule of the loading and error states. Everything else is grouped by space and alignment, not boxes or cards.
 
 ### 4. One accent
 
@@ -70,7 +70,7 @@ Rules:
 
 ### 5. Hierarchy
 
-Title, then the focal point, then supporting text, then controls. In the header: wordmark, the URL field (the one prominent control), the theme toggle, then Generate skill. The header's DOM order equals its visual order at every width: no CSS `order`, no absolute positioning that reorders focus.
+Title, then the focal point, then supporting text, then controls. In the header: wordmark, the URL field (the one prominent control), the theme toggle, then Generate skill. The header's DOM order equals its visual order at every width: no CSS `order`, no absolute positioning that reorders focus. At 1024 px and wider the header is one row (wordmark, URL field, Load, More options, theme, Generate skill); below 640 px it is three rows: wordmark; the URL field; Load, More options and the theme toggle. The theme toggle sits after the field on phones too, because one DOM order cannot put it after the field on desktop and before it on phones without reordering.
 
 ### Unchanged constraints
 

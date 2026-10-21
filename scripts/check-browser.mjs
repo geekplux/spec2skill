@@ -167,7 +167,9 @@ async function main() {
       console.log(`  navigation to ${url} timed out; retrying once`);
       return goto(url, options);
     });
-    page.on('console', (msg) => msg.type() === 'error' && problems.push(`[${flow.name}] console error: ${msg.text()}`));
+    // A flow may list console errors it causes on purpose (e.g. phase 15's failing fetches): `allowConsole: [RegExp]`.
+    const allowed = (text) => (flow.allowConsole ?? []).some((re) => re.test(text));
+    page.on('console', (msg) => msg.type() === 'error' && !allowed(msg.text()) && problems.push(`[${flow.name}] console error: ${msg.text()}`));
     page.on('pageerror', (error) => problems.push(`[${flow.name}] page error: ${error.message}`));
     // options go to page.screenshot (e.g. clip); options.page shoots another page, e.g. one at 2x.
     const screenshot = async (name, { page: target = page, ...options } = {}) => {

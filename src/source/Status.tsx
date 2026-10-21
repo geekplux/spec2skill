@@ -22,12 +22,7 @@ export function LoadingSteps({ progress, onCancel }: { progress: Progress; onCan
       <ol className="steps">
         {STEPS.map((id, i) => {
           const [glyph, word] = STATE[i < at ? 0 : i === at ? 1 : 2];
-          return (
-            <li key={id} data-state={word}>
-              <span className="tick" aria-hidden="true">{glyph}</span>{progress.labels[id] ?? DEFAULT[id]}
-              <span className="visually-hidden">: {word}</span>
-            </li>
-          );
+          return <li key={id} data-state={word}><span className="tick" aria-hidden="true">{glyph}</span>{progress.labels[id] ?? DEFAULT[id]}<span className="visually-hidden">: {word}</span></li>;
         })}
       </ol>
       <button type="button" className="btn" onClick={() => (announce('Cancelled.'), onCancel())}>Cancel</button>
@@ -66,10 +61,8 @@ export function ErrorPanel({ error, onPaste, onSample, onMcp }: ErrorPanelProps)
 export function EmptyChart() {
   return (
     <div className="empty-chart" data-testid="empty-chart">
-      <svg viewBox="0 0 160 96" width="160" height="96" aria-hidden="true">
-        <rect x="1" y="1" width="158" height="94" rx="4" className="empty-frame" />
-        <circle cx="80" cy="48" r="26" className="empty-ring" />
-        <path d="M80 14v10M54 48h-8M106 48h8" className="empty-ring" />
+      <svg viewBox="0 0 160 96" width="160" height="96" aria-hidden="true" className="empty-ring">
+        <rect x="1" y="1" width="158" height="94" rx="4" strokeDasharray="4 4" /><path d="M80 14v10M54 48h-8M106 48h8" /><circle cx="80" cy="48" r="26" />
       </svg>
       <p>This spec has no paths. Webhooks and callbacks are not mapped yet.</p>
     </div>
