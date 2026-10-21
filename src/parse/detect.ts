@@ -26,7 +26,7 @@ function isToolLike(value: unknown): boolean {
 export function detect(doc: unknown): Detection {
   if (Array.isArray(doc)) {
     if (doc.length > 0 && doc.every(isToolLike)) return { kind: 'mcp', shape: 'tools-array' };
-    return unsupported(doc.length === 0 ? 'an empty JSON array' : 'a JSON array', ' that is not a list of MCP tools (each needs `name` and `inputSchema`)');
+    return unsupported(doc.length === 0 ? 'an empty JSON array' : 'a JSON array', ' that is not a list of MCP tools (each needs "name" and "inputSchema")');
   }
   if (!isRecord(doc)) return unsupported('a value that is not a JSON object');
   if ('openapi' in doc) {
@@ -47,7 +47,7 @@ export function detect(doc: unknown): Detection {
   }
   if (Array.isArray(doc.tools)) return { kind: 'mcp', shape: 'result' };
   if ('tools' in doc) {
-    return unsupported('an object whose `tools` is not an array', ' (an MCP tools/list result needs `tools: [...]`)');
+    return unsupported('an object whose "tools" is not an array', ' (an MCP tools/list result needs "tools": [...])');
   }
   if ('__schema' in doc || (isRecord(doc.data) && '__schema' in doc.data)) {
     return unsupported('a GraphQL introspection result', '; GraphQL is not supported');
@@ -58,5 +58,5 @@ export function detect(doc: unknown): Detection {
   const keys = Object.keys(doc);
   if (keys.length === 0) return unsupported('an empty JSON object');
   const shown = keys.slice(0, 5).map((k) => `"${cleanName(k, 40) ?? '?'}"`).join(', ');
-  return unsupported(`JSON with the top-level keys ${shown}${keys.length > 5 ? ', ...' : ''}`, ' but no `openapi`, `swagger` or `tools` key');
+  return unsupported(`JSON with the top-level keys ${shown}${keys.length > 5 ? ', ...' : ''}`, ' but no "openapi", "swagger" or "tools" key');
 }
