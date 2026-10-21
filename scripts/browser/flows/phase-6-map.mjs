@@ -182,7 +182,7 @@ export default {
     // Map | List: List hides the map and keeps the text atlas; Map brings it back.
     const views = page.getByRole('tablist', { name: 'View' });
     await views.getByRole('tab', { name: 'List' }).click();
-    expect((await atlas(page).count()) === 0 && (await page.getByTestId('sample-list').count()) === 1, 'List view');
+    expect((await atlas(page).count()) === 0 && (await page.getByTestId('list-view').count()) === 1, 'List view');
     await views.getByRole('tab', { name: 'Map' }).click();
     await expectAtlas(page, 'tasks');
 

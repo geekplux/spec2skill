@@ -1,5 +1,5 @@
 // Phase 7: keyboard-only atlas (A1), screen-reader names and live announcements (A2), the detail
-// panel (F10) with Copy example, #op=<id> on load, bottom sheet at 390 px, shortcut help dialog (deferred to phase 8).
+// panel (F10) with Copy example, #op=<id> on load, bottom sheet at 390 px (the shortcut help dialog is checked in phase 12).
 const GET_TASK = 'GET /tasks/{taskId}, Get a task, cluster Tasks, 19 relationships';
 const CURL = `curl 'https://tasks.example.com/v1/tasks/<taskId>' \\\n  -H "Authorization: Bearer $TASKS_API_TOKEN"`;
 

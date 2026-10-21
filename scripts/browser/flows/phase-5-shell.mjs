@@ -11,7 +11,7 @@ const expect = (ok, message) => {
 
 async function load(page, origin) {
   await page.goto(`${origin}/?sample=tasks`, { waitUntil: 'load' });
-  await page.getByTestId('sample-list').waitFor({ state: 'attached' });
+  await page.locator('.skill-pane').waitFor({ state: 'attached' });
   await page.evaluate(() => document.fonts.ready);
 }
 

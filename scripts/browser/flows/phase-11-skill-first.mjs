@@ -179,7 +179,7 @@ export default {
       await axe('mobile map tab');
       await screenshot('first-view-mobile-map');
       await page.keyboard.press('ArrowRight');
-      await page.getByTestId('sample-list').waitFor();
+      await page.getByTestId('list-view').waitFor();
       expect((await page.getByTestId('atlas').count()) === 0, 'List tab still shows the map');
       await axe('mobile list tab');
       await page.keyboard.press('Home');
