@@ -2,7 +2,7 @@ STATE: IN-PROGRESS
 
 # Status
 
-- Current phase: 12 (phase-12-search-list), starting
+- Current phase: 13 (phase-13-scale-polish), starting
 - Plan: docs/PLAN.md (20 phases)
 - Blockers: none
 
@@ -19,11 +19,13 @@ STATE: IN-PROGRESS
 | 9 | phase-9-skillgen-core | [#10](https://github.com/geekplux/spec2skill/pull/10) | PR open (verified PASS) | 1 |
 | 10 | phase-10-skillgen-audit | [#11](https://github.com/geekplux/spec2skill/pull/11) | PR open (verified PASS) | 2 |
 | 11 | phase-11-skill-first-view | [#12](https://github.com/geekplux/spec2skill/pull/12) | PR open (verified PASS, a11y PASS) | 1 |
-| 12 | phase-12-search-list | - | in progress | 0 |
+| 12 | phase-12-search-list | [#13](https://github.com/geekplux/spec2skill/pull/13) | PR open (verified PASS, a11y PASS) | 3 |
+| 13 | phase-13-scale-polish | - | in progress | 0 |
 
 ## Follow-ups
 - Move ci/github-workflow.yml to .github/workflows/ (needs workflow scope).
 - Carried into phases 12-13: graph edge-noise trims, `?` help dialog, pinch-zoom, greedy cluster ordering, theme toggle following OS changes, mobile chip-row scroll hint, longer browser-check waits.
 - Phase 13 polish: SKILL.md preview height (40/60 split), hanging indent for wrapped file names, map label size at fit / with panel open, mobile header row.
+- Phase 13 polish: tall list rows / sideways-scrolling tables; map-view focus after Back/Forward follows the restored node.
 
-Last updated: 2026-10-21 14:18 UTC (phase 11 PR opened)
+Last updated: 2026-10-21 18:06 UTC (phase 12 PR opened)
