@@ -154,6 +154,9 @@ async function main() {
     problems.push(`blocked off-origin request: ${url}`);
     return route.abort('blockedbyclient');
   });
+  // The preview server has no Worker: /api/health answers as a Worker without the AI binding would
+  // (phase 17), so user-loaded specs stay deterministic. Flows may route /api/* themselves first.
+  await context.route(`${ORIGIN}/api/health`, (route) => route.fulfill({ json: { ok: true, ai: false } }));
 
   const outDir = join(ROOT, 'docs', 'screenshots', `phase-${args.phase}`);
   mkdirSync(outDir, { recursive: true });

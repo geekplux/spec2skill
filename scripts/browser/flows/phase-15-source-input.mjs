@@ -92,6 +92,7 @@ export default {
     await page.route('http://10.0.0.8/**', (route) => route.abort('accessdenied'));
     await page.route(`${origin}/api/**`, (route) => {
       const { pathname } = new URL(route.request().url());
+      if (pathname === '/api/health') return route.fallback(); // phase 17: the check's default answer, ai: false
       const target = JSON.parse(route.request().postData() ?? '{}').url;
       api.push(`${pathname} ${target}`);
       if (proxyDown) return route.fulfill({ status: 404, body: '<!doctype html><p>Not found</p>', headers: { 'content-type': 'text/html' } });
