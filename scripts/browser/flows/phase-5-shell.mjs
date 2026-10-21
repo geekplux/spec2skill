@@ -41,7 +41,7 @@ export default {
     const generate = page.getByRole('button', { name: /Generate skill/ });
     expect((await generate.getAttribute('aria-disabled')) === 'true', 'Generate skill should be aria-disabled');
     await page.getByRole('group', { name: 'View' }).getByRole('button', { name: 'List' }).waitFor();
-    await page.getByRole('img', { name: 'tool atlas' }).first().waitFor();
+    await page.getByRole('img', { name: 'spec2skill' }).first().waitFor();
 
     // Display font from our own origin, used by the headings.
     const h1Font = await page.evaluate(() => getComputedStyle(document.querySelector('h1')).fontFamily);
@@ -116,7 +116,7 @@ export default {
     // The mark alone, rendered at 96 px on chart paper.
     await page.setViewportSize({ width: 160, height: 160 });
     await page.setContent(
-      `<html lang="en"><title>tool atlas logo</title><body style="margin:0;display:grid;place-items:center;height:100vh;background:#F7F3EA"><img src="${origin}/logo.svg" width="96" height="96" alt="tool atlas"></body>`,
+      `<html lang="en"><title>spec2skill logo</title><body style="margin:0;display:grid;place-items:center;height:100vh;background:#F7F3EA"><img src="${origin}/logo.svg" width="96" height="96" alt="spec2skill"></body>`,
     );
     await page.locator('img').evaluate((img) => img.decode());
     await screenshot('logo');

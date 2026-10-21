@@ -11,7 +11,7 @@
 // Every request outside http://127.0.0.1:<port> is aborted and fails the check.
 // The preview server runs in its own process group and is killed, with the browser,
 // on success, failure and SIGINT/SIGTERM/SIGHUP. Manual cleanup if this process is
-// SIGKILLed: pkill -f "tool-atlas/node_modules/vite/bin/vite.js preview"
+// SIGKILLed, from the repo root: pkill -f "$PWD/node_modules/vite/bin/vite.js preview"
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { connect } from 'node:net';
@@ -27,7 +27,7 @@ const PORT = Number(process.env.CHECK_PORT || 4173);
 const ORIGIN = `http://${HOST}:${PORT}`;
 const VIEWPORTS = { desktop: { width: 1280, height: 800 }, mobile: { width: 390, height: 844 } };
 // Unique flag on our Chrome's command line, so leftovers can be found without touching other browsers.
-const MARKER = `--tool-atlas-check=${process.pid}`;
+const MARKER = `--spec2skill-check=${process.pid}`;
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
 let server = null;
@@ -160,9 +160,10 @@ async function main() {
     page.setDefaultTimeout(10_000);
     page.on('console', (msg) => msg.type() === 'error' && problems.push(`[${flow.name}] console error: ${msg.text()}`));
     page.on('pageerror', (error) => problems.push(`[${flow.name}] page error: ${error.message}`));
-    const screenshot = async (name) => {
+    // options go to page.screenshot (e.g. clip); options.page shoots another page, e.g. one at 2x.
+    const screenshot = async (name, { page: target = page, ...options } = {}) => {
       const path = join(outDir, `${name}.png`);
-      await page.screenshot({ path });
+      await target.screenshot({ ...options, path });
       console.log(`  screenshot ${path.slice(ROOT.length + 1)}`);
     };
     const axe = async (label) => args.axe && problems.push(...(await runAxe(page, `${flow.name}: ${label}`)));
