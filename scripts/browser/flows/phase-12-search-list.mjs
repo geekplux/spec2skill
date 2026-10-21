@@ -18,6 +18,38 @@ async function counts(page) {
 }
 const views = (page) => page.getByRole('tablist', { name: 'View' });
 const list = (page) => page.getByTestId('list-view');
+/**
+ * With details open in the list: the panel, its heading and Close, and the open row are on screen
+ * (the row not under the panel), and the list keeps at least its tables' minimum width.
+ */
+async function listDetailInView(page, op, where) {
+  await page.getByTestId('detail').waitFor();
+  await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
+  const r = await page.evaluate((id) => {
+    const [vw, vh] = [innerWidth, innerHeight];
+    const meets = (b) => b.bottom > 0 && b.top < vh && b.right > 0 && b.left < vw;
+    const within = (b) => b.top >= 0 && b.bottom <= vh && b.left >= 0 && b.right <= vw;
+    const panel = document.querySelector('[data-testid="detail"]');
+    const row = document.querySelector(`tr[data-op="${id}"]`);
+    const button = row.querySelector('th button');
+    const b = button.getBoundingClientRect();
+    const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+    const close = [...panel.querySelectorAll('button')].find((el) => el.textContent.startsWith('Close'));
+    const scroller = document.querySelector('[data-testid="list-view"]');
+    const table = scroller.querySelector('table');
+    return {
+      panel: meets(panel.getBoundingClientRect()), row: meets(row.getBoundingClientRect()), rowShown: hit === button || button.contains(hit),
+      heading: within(panel.querySelector('h2').getBoundingClientRect()), close: within(close.getBoundingClientRect()),
+      list: scroller.clientWidth, min: parseFloat(getComputedStyle(table).minWidth),
+      rowHeight: Math.round(row.getBoundingClientRect().height), panelTop: Math.round(panel.getBoundingClientRect().top),
+    };
+  }, op);
+  const say = `${where} ${op}: ${JSON.stringify(r)}`;
+  expect(r.panel && r.heading && r.close, `details not on screen: ${say}`);
+  expect(r.row && r.rowShown, `open row off screen or under the details: ${say}`);
+  expect(r.list >= r.min, `list narrower than its tables: ${say}`);
+  console.log(`  ${where}: ${op} row ${r.rowHeight} px tall, details from y=${r.panelTop}, list ${r.list} px`);
+}
 
 export default {
   name: 'phase-12-search-list',
@@ -130,7 +162,9 @@ export default {
     await page.getByTestId('detail').getByRole('heading', { name: 'GET /pet/{petId}' }).waitFor();
     expect((await page.locator('tr[data-open]').getAttribute('data-op')) === 'getPetById', 'open row not marked');
     await page.evaluate(() => document.fonts.ready);
+    await listDetailInView(page, 'getPetById', 'desktop link');
     await axe('list with details');
+    await page.mouse.move(5, 5);
     await screenshot('list-detail');
     await list(page).getByRole('button', { name: 'findPetsByStatus, details' }).click();
     await page.getByTestId('detail').getByRole('heading', { name: 'GET /pet/findByStatus' }).waitFor();
@@ -204,6 +238,36 @@ export default {
     await dialog.waitFor();
     await page.keyboard.press('Escape');
     expect((await page.evaluate(() => document.activeElement?.textContent)) === 'Keyboard shortcuts', 'focus did not return to the button');
+
+    // 5b. Details opened from the list show at once beside a full-width list, desktop and tablet;
+    // Close returns focus to the row. Unknown sample/view parameters are rewritten.
+    for (const [where, size] of [['desktop', viewports.desktop], ['900 px', { width: 900, height: 800 }]]) {
+      await page.setViewportSize(size);
+      await page.goto(`${origin}/?sample=tasks&view=list`);
+      await list(page).waitFor();
+      await list(page).getByRole('button', { name: 'getMember, details' }).click();
+      await page.getByTestId('detail').getByRole('heading', { name: 'GET /projects/{projectId}/members/{memberId}' }).waitFor();
+      await listDetailInView(page, 'getMember', `${where} click`);
+      await page.getByTestId('detail').getByRole('button', { name: 'Close details' }).click();
+      await page.getByTestId('detail').waitFor({ state: 'detached' });
+      await page.waitForFunction(() => document.activeElement?.closest('tr')?.getAttribute('data-op') === 'getMember');
+      await page.goto(`${origin}/?sample=petstore&view=list#op=getPetById`);
+      await list(page).waitFor();
+      await listDetailInView(page, 'getPetById', `${where} link`);
+      await page.getByTestId('detail').getByRole('button', { name: 'Close details' }).focus();
+      await page.keyboard.press('Escape');
+      await page.getByTestId('detail').waitFor({ state: 'detached' });
+      await page.waitForFunction(() => document.activeElement?.closest('tr')?.getAttribute('data-op') === 'getPetById');
+    }
+    await page.goto(`${origin}/?sample=tasks&view=list#op=getMember`);
+    await listDetailInView(page, 'getMember', '900 px link');
+    await page.mouse.move(5, 5);
+    await screenshot('list-detail-tablet');
+    await page.setViewportSize(viewports.desktop);
+    await page.goto(`${origin}/?sample=nope&view=bogus&q=task`);
+    await paneReady(page);
+    await page.waitForFunction(() => new URL(location.href).search === '?sample=tasks&q=task');
+    expect((await page.locator('.chip[aria-pressed="true"]').getAttribute('data-sample')) === 'tasks', 'unknown sample did not fall back to tasks');
 
     // 6. Mobile: `/` from the Skill tab opens the Map tab with search focused; list view at 390 px.
     await page.setViewportSize(viewports.mobile);

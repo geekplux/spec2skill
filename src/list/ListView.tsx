@@ -51,12 +51,26 @@ export function ListView({ model, graph, match, edges, selected, onSelect, skill
     const lost = !document.activeElement || document.activeElement === document.body || !document.activeElement.isConnected;
     if (id && lost) document.querySelector<HTMLElement>(`tr[data-op="${CSS.escape(id)}"] th button`)?.focus();
   }, [selected]);
+  // The open row stays in view above the docked details (app.css pads the scroll for them); again
+  // when the skill's file links arrive and once web fonts settle, as both reflow a list opened from a link.
+  const linked = skillFile !== undefined;
+  useEffect(() => {
+    if (!selected) return;
+    const reveal = () => document.querySelector(`tr[data-op="${CSS.escape(selected)}"]`)?.scrollIntoView?.({ block: 'nearest' });
+    reveal();
+    let live = true;
+    void document.fonts?.ready.then(() => live && reveal());
+    return () => {
+      live = false;
+    };
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `linked` reflows the rows
+  }, [selected, linked]);
   const close = () => {
     onSelect(undefined);
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`tr[data-op="${CSS.escape(selected!)}"] th button`)?.focus());
   };
   return (
-    <div className="atlas-wrap" data-panel={op ? 'open' : undefined}>
+    <div className="atlas-wrap list-wrap" data-panel={op ? 'open' : undefined}>
       {/* One Tab stop scrolls the tables sideways on narrow screens (axe scrollable-region-focusable). */}
       {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role -- a labelled scroller */}
       <div className="list" data-testid="list-view" role="region" aria-label={`${model.source.title} as text`} tabIndex={0}>

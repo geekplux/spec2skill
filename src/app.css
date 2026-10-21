@@ -278,6 +278,18 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .list tr[data-open] > * { background: var(--paper); }
 .list tr[data-open] > th { box-shadow: inset 4px 0 0 var(--ink); font-weight: 700; }
 .list-empty { padding: var(--space-3); border: 1px dashed var(--graphite); }
+/* List details: docked to the bottom of the viewport under the list (as on phones), so the tables
+   keep their full width and the panel shows wherever the row is; the scroll padding keeps the
+   focused row clear of it (Focus Not Obscured). */
+@media (min-width: 640px) {
+  .list-wrap[data-panel] { display: block; }
+  .list-wrap .detail {
+    position: sticky; z-index: 3; top: auto; right: auto; bottom: 0; width: auto; max-height: var(--list-detail-h);
+    margin-top: var(--space-3); box-shadow: 0 -4px 0 var(--paper);
+  }
+  :root { --list-detail-h: min(45dvh, 480px); }
+  html:has(.list-wrap[data-panel]) { scroll-padding-bottom: calc(var(--list-detail-h) + var(--space-4)); }
+}
 
 /* Shortcut help: a native modal dialog. */
 .help-dialog { max-width: min(40rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: var(--space-4); color: var(--ink); background: var(--vellum); border: 1px solid var(--ink); border-radius: var(--radius-sm); }
