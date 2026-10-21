@@ -2,8 +2,8 @@ STATE: IN-PROGRESS
 
 # Status
 
-- Current phase: 11 (phase-11-skill-first-view), starting
-- Plan: docs/PLAN.md (17 phases)
+- Current phase: 12 (phase-12-search-list), starting
+- Plan: docs/PLAN.md (20 phases)
 - Blockers: none
 
 | Phase | Branch | PR | State | Verify rounds |
@@ -18,10 +18,12 @@ STATE: IN-PROGRESS
 | 8 | phase-8-rename-spec2skill | [#9](https://github.com/geekplux/spec2skill/pull/9) | PR open (verified PASS, a11y PASS) | 1 |
 | 9 | phase-9-skillgen-core | [#10](https://github.com/geekplux/spec2skill/pull/10) | PR open (verified PASS) | 1 |
 | 10 | phase-10-skillgen-audit | [#11](https://github.com/geekplux/spec2skill/pull/11) | PR open (verified PASS) | 2 |
-| 11 | phase-11-skill-first-view | - | in progress | 0 |
+| 11 | phase-11-skill-first-view | [#12](https://github.com/geekplux/spec2skill/pull/12) | PR open (verified PASS, a11y PASS) | 1 |
+| 12 | phase-12-search-list | - | in progress | 0 |
 
 ## Follow-ups
 - Move ci/github-workflow.yml to .github/workflows/ (needs workflow scope).
 - Carried into phases 12-13: graph edge-noise trims, `?` help dialog, pinch-zoom, greedy cluster ordering, theme toggle following OS changes, mobile chip-row scroll hint, longer browser-check waits.
+- Phase 13 polish: SKILL.md preview height (40/60 split), hanging indent for wrapped file names, map label size at fit / with panel open, mobile header row.
 
-Last updated: 2026-10-21 10:55 UTC (phase 10 PR opened)
+Last updated: 2026-10-21 14:18 UTC (phase 11 PR opened)
