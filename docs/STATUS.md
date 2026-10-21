@@ -2,8 +2,8 @@ STATE: IN-PROGRESS
 
 # Status
 
-- Current phase: 14 (phase-14-worker-proxy), starting; applying Sean's 2026-10-21 design direction (calm layout + dedicated polish phase)
-- Plan: docs/PLAN.md (20 phases)
+- Current phase: 14 (phase-14-worker-proxy), starting; plan now 21 phases (calm-polish phase 18 added)
+- Plan: docs/PLAN.md (21 phases)
 - Blockers: none
 
 | Phase | Branch | PR | State | Verify rounds |
@@ -28,4 +28,4 @@ STATE: IN-PROGRESS
 - Phase 15: header DOM order must match visual order once the URL field is enabled.
 - Large specs: allow collapsing an expanded cluster again; name the source on stacked bundle labels.
 
-Last updated: 2026-10-21 19:17 UTC (phase 13 PR opened)
+Last updated: 2026-10-21 19:20 UTC (plan updated for design direction)

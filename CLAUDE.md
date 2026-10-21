@@ -105,3 +105,6 @@ This project will be released as open source and is not meant to be commercializ
 
 ## Rename 2026-10-20 (Sean)
 The product is now **spec2skill** (repo geekplux/spec2skill), and the headline is "any OpenAPI spec or MCP server into an agent skill in one click", with the map as the way to understand and check it. Full details: /workspace/gx-projects/logs/tool-atlas.rename.md
+
+## Design direction 2026-10-21 (Sean)
+Calmer, less cramped layout plus a dedicated polish phase, starting with your next phase (do not redo the current one). Full details: /workspace/gx-projects/logs/tool-atlas.design-direction.md
