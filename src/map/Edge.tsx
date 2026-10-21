@@ -12,10 +12,10 @@ export const MapDefs = () => (
 );
 
 /** Feeds: dashed + filled arrow; sub-path: solid + open chevron; shared schema: dotted + midpoint diamond. */
-export function EdgeLine({ edge, hot }: { edge: LayoutEdge; hot: boolean }) {
+export function EdgeLine({ edge, hot, cycled }: { edge: LayoutEdge; hot: boolean; cycled: boolean }) {
   const { x, y } = edge.mid;
   return (
-    <g className="edge" data-edge={edge.id} data-kind={edge.kind} data-hot={hot || undefined}>
+    <g className="edge" data-edge={edge.id} data-kind={edge.kind} data-hot={hot || undefined} data-cycled={cycled || undefined}>
       <path className="line" data-kind={edge.kind} d={edge.d} markerEnd={edge.kind === 'shared-schema' ? undefined : `url(#mk-${edge.kind})`} />
       {edge.kind === 'shared-schema' && <path className="diamond" d={`M${x} ${y - 4.5}l4.5 4.5l-4.5 4.5l-4.5-4.5z`} />}
     </g>

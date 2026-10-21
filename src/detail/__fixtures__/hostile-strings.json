@@ -1,0 +1,17 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Hostile <b>strings</b>", "version": "1" },
+  "servers": [{ "url": "https://api.example.com/'$(touch x)'" }],
+  "paths": {
+    "/things/{id}": {
+      "get": {
+        "operationId": "getThing",
+        "summary": "<script>alert('summary')</script>",
+        "description": "<img src=x onerror=alert('description')>\nSecond line",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "q'\"<i>", "in": "query", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "ok", "content": { "application/json": { "schema": { "type": "object", "properties": { "<svg onload=alert(1)>": { "type": "string" } } } } } } }
+      }
+    }
+  }
+}
