@@ -45,15 +45,18 @@ async function expectAtlas(page, id) {
 }
 
 /** Every cluster card lies inside the visible map. */
-async function expectFitted(page, label) {
-  const outside = await page.evaluate(() => {
+// `inView`: on first load (no scrolling) every card must also end above the window's bottom edge.
+async function expectFitted(page, label, { inView = false } = {}) {
+  const [outside, below] = await page.evaluate(() => {
     const box = document.querySelector('[data-testid="atlas"]').getBoundingClientRect();
-    return [...document.querySelectorAll('.cluster .card')].filter((card) => {
-      const r = card.getBoundingClientRect();
-      return r.left < box.left - 1 || r.top < box.top - 1 || r.right > box.right + 1 || r.bottom > box.bottom + 1;
-    }).length;
+    const cards = [...document.querySelectorAll('.cluster .card')].map((card) => card.getBoundingClientRect());
+    return [
+      cards.filter((r) => r.left < box.left - 1 || r.top < box.top - 1 || r.right > box.right + 1 || r.bottom > box.bottom + 1).length,
+      cards.filter((r) => r.bottom > window.innerHeight).map((r) => Math.round(r.bottom)),
+    ];
   });
   expect(outside === 0, `${label}: ${outside} cluster cards outside the map after fit`);
+  if (inView) expect(below.length === 0, `${label}: cluster cards end below the window (${below.join(', ')} > ${await page.evaluate(() => window.innerHeight)})`);
 }
 
 async function expectNoHorizontalScroll(page, label) {
@@ -79,7 +82,7 @@ export default {
     console.log(`  data-ready after ${Math.round(ms)} ms`);
     expect(ms <= 1500, `data-ready after ${Math.round(ms)} ms (budget 1500 ms)`);
     await expectAtlas(page, 'tasks');
-    await expectFitted(page, 'desktop');
+    await expectFitted(page, 'desktop', { inView: true });
     const label = await atlas(page).getAttribute('aria-label');
     expect(label.startsWith('Tasks API atlas: 22 operations in 5 clusters, 85 relationships'), `map name: ${label}`);
     await page.evaluate(() => document.fonts.ready);
@@ -205,6 +208,18 @@ export default {
     }
     await context.setOffline(false);
     await page.unroute('**/favicon.svg');
+
+    // First view: after the automatic fit, every sample's cards sit inside the window with no scrolling.
+    for (const size of [{ width: 1280, height: 800 }, { width: 1440, height: 900 }]) {
+      await page.setViewportSize(size);
+      for (const id of ['tasks', 'petstore', 'filesystem']) {
+        await page.goto(`${origin}/?sample=${id}`);
+        await expectAtlas(page, id);
+        await page.evaluate(() => document.fonts.ready);
+        expect((await page.evaluate(() => window.scrollY)) === 0, `${id} at ${size.width}x${size.height}: page scrolled on load`);
+        await expectFitted(page, `${id} first load at ${size.width}x${size.height}`, { inView: true });
+      }
+    }
 
     // A9 and fit on small screens: 390 px, then 200 % zoom (640 px at device scale factor 2).
     await page.setViewportSize(viewports.mobile);

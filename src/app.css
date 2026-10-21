@@ -86,7 +86,9 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .sheet[data-view='map'] { max-width: 100rem; padding: var(--space-5); }
 .sheet[data-view='map'] .lede { margin-bottom: var(--space-4); }
 .banner { display: block; margin-top: var(--space-1); padding-left: var(--space-2); border-left: 2px solid var(--meridian); }
-.map { position: relative; height: clamp(360px, calc(100vh - 240px), 900px); background: var(--paper); border: 1px solid var(--ink); border-radius: var(--radius-sm); overflow: hidden; }
+/* Height from the map's measured page top (--map-top, set by Map.tsx), leaving a 16px margin below. */
+.stage:has(> .sheet[data-view='map']) { padding-block: var(--space-4); }
+.map { position: relative; height: clamp(360px, calc(100dvh - var(--map-top, 300px) - var(--space-4)), 900px); background: var(--paper); border: 1px solid var(--ink); border-radius: var(--radius-sm); overflow: hidden; }
 .map:has(> .atlas:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--marker); }
 .atlas { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; cursor: grab; }
 .atlas:focus-visible { outline: none; box-shadow: none; }

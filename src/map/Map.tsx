@@ -1,7 +1,7 @@
 // The atlas map (PLAN 5.5): pure SVG, one camera transform, survey grid, cards, edges, nodes, labels.
 // The SVG is one composite, focusable widget (zoom keys now, node navigation in phase 7, which
 // settles its role per A1/A2), so the static-element a11y lint rules are disabled on its opening tag only.
-import { type CSSProperties, type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, type KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { WASH } from '../design/tokens';
 import type { AtlasGraph } from '../graph';
 import { layout } from '../layout/layout';
@@ -37,6 +37,16 @@ export function AtlasMap({ model, graph }: { model: ApiModel; graph: AtlasGraph 
     setCam(fit(atlas.bounds, el.clientWidth, el.clientHeight));
   };
   const zoomBy = (f: number) => move((c) => zoomAt(c, f, frame.current!.clientWidth / 2, frame.current!.clientHeight / 2), true);
+
+  // Size the map from its real page top (header, chips and heading above it vary), so the fitted
+  // atlas fills the first view without scrolling; app.css reads --map-top.
+  useLayoutEffect(() => {
+    const el = frame.current!;
+    const measure = () => el.style.setProperty('--map-top', `${Math.round(el.getBoundingClientRect().top + window.scrollY)}px`);
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []); // the map remounts per sample (keyed by model hash)
 
   // Fit on first measure (the observer reports the initial size) and on resizes until the user moves.
   useEffect(() => {
