@@ -14,4 +14,8 @@ describe('revealScrollLeft', () => {
     expect(revealScrollLeft(view, 100, { left: -50, right: 60 }, 8)).toBe(42);
     expect(revealScrollLeft(view, 10, { left: -50, right: 60 }, 8)).toBe(0);
   });
+  it('keeps an item clear of a wider end padding (the "More samples" hint)', () => {
+    expect(revealScrollLeft(view, 0, { left: 185, right: 325 }, 8, 160)).toBe(95);
+    expect(revealScrollLeft(view, 0, { left: 40, right: 200 }, 8, 160)).toBe(0);
+  });
 });

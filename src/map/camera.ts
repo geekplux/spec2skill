@@ -41,3 +41,14 @@ export function follow(c: Camera, r: Rect, v: Rect, pad = 48): Camera {
   if (x0 >= v.x + pad && y0 >= v.y + pad && x0 + r.w * c.k <= v.x + v.w - pad && y0 + r.h * c.k <= v.y + v.h - pad) return c;
   return { k: c.k, x: v.x + v.w / 2 - (r.x + r.w / 2) * c.k, y: v.y + v.h / 2 - (r.y + r.h / 2) * c.k };
 }
+
+/** Frame `r` in the visible part `v` below a `top` strip: as large as fits (never above 1.25x) but
+ *  never below `minK`, so labels stay legible. Centred on an axis where it fits, else its top/left
+ *  edge is kept `pad` px inside the view. */
+export function frameRect(r: Rect, v: Rect, minK: number, pad = 16, top = 0): Camera {
+  const [w, h] = [v.w - 2 * pad, v.h - top - 2 * pad];
+  const k = clampZoom(Math.max(minK, Math.min(w / r.w, h / r.h, 1.25)));
+  const x = r.w * k <= w ? v.x + v.w / 2 - (r.x + r.w / 2) * k : v.x + pad - r.x * k;
+  const y = r.h * k <= h ? v.y + top + (v.h - top) / 2 - (r.y + r.h / 2) * k : v.y + top + pad - r.y * k;
+  return { k, x, y };
+}

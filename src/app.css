@@ -18,6 +18,8 @@ code { font-family: var(--font-mono); font-size: 0.93em; }
 @media (max-width: 1279px) { .pitch { display: none; } }
 .logo-accent { color: var(--meridian); }
 .source { flex: 1 1 16rem; min-width: 0; }
+/* The theme button precedes the source in the DOM (the phone tab order); wider screens show it after. */
+@media (min-width: 640px) { .header .theme { order: 1; } .header .generate { order: 2; } }
 .input {
   width: 100%; font: inherit; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
   border: 1px dashed var(--graphite); background: var(--paper); color: var(--graphite);
@@ -133,12 +135,15 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
    links (a thick graphite band) carry a text label, so neither relies on colour. */
 .edge[data-bundled]:not([data-hot]) { display: none; }
 .map-link { opacity: 0.85; transition: opacity var(--motion-fade) ease-out; }
+.labels .map-link { opacity: 1; } /* link labels keep full text contrast (4.5:1) */
 .map-link[data-link='bundle'] .line { stroke-width: 2.5; }
 .map-link[data-link='clusters'] { --hue: var(--graphite); }
-.map-link[data-link='clusters'] .line { stroke-width: 5; stroke-linecap: round; stroke-opacity: 0.45; }
+.map-link[data-link='clusters'] .line { stroke-width: 5; stroke-linecap: round; stroke-opacity: 0.9; }
 /* Bundle labels follow the edge labels; cluster links (large specs, read zoomed out) always show, enlarged. */
 .atlas .map-link[data-link='clusters'] .edge-label { visibility: visible; font-size: calc(10.5px * clamp(1, var(--inv, 1), 1.6)); }
 .atlas[data-hot] .map-link:not([data-hot]) { opacity: 0.12; }
+/* While a node is hot, other links' labels hide (like edge labels) rather than fade below legible contrast. */
+.atlas[data-hot] .labels .map-link:not([data-hot]) .edge-label { visibility: hidden; }
 .node[data-summary] .name { font-weight: 650; }
 .toolbar { position: absolute; z-index: 2; top: var(--space-3); left: var(--space-3); display: flex; gap: var(--space-1); margin: 0; padding: var(--space-1); border: 1px solid var(--ink); border-radius: var(--radius-md); background: var(--vellum); }
 .toolbar .btn { min-width: 36px; padding-inline: var(--space-2); }
@@ -252,7 +257,7 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
   .header .brand { margin-right: auto; }
   .source { order: 1; flex-basis: 100%; }
   .generate { position: fixed; z-index: 1; left: var(--space-3); right: var(--space-3); bottom: var(--space-3); min-height: 48px; }
-  .chips { flex-wrap: nowrap; overflow-x: auto; padding-block: var(--space-2); scroll-padding-inline: var(--space-2); }
+  .chips { flex-wrap: nowrap; overflow-x: auto; padding-block: var(--space-2); scroll-padding-inline: var(--space-2) 10rem; } /* a focused chip scrolls clear of the hint (reveal.ts) */
   .chips legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .chip { flex: none; }
   .samples { position: relative; }

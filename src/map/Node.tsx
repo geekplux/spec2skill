@@ -69,7 +69,7 @@ export function Summary({ node, cluster, crud, noun, tabbable }: SummaryProps) {
       <rect className="ring" aria-hidden="true" x={-8} y={-8} width={W + 16} height={H + 16} rx={12} />
       {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG cannot contain a <button> */}
       <rect className="hit" role="button" tabIndex={tabbable ? 0 : -1} aria-expanded={false} data-op={node.id} x={-5} y={-5} width={W + 10} height={H + 10} rx={10}
-        aria-label={`${cluster.name} cluster, collapsed: ${count}, ${roles.join(', ')}. Enter expands it.`} />
+        aria-label={`${cluster.name} cluster: ${count}, ${roles.join(', ')}. Enter expands it.`} />
     </g>
   );
 }

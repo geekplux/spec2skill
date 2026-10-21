@@ -11,7 +11,7 @@ import { aggregated, startCollapsed } from '../layout/collapse';
 import type { Point, Rect } from '../layout/geometry';
 import { layout } from '../layout/layout';
 import type { ApiModel } from '../model/types';
-import { type Camera, LABEL_ZOOM, fit, follow, pan, pinch, toCss, zoomAt } from './camera';
+import { type Camera, LABEL_ZOOM, fit, follow, frameRect, pan, pinch, toCss, zoomAt } from './camera';
 import { EdgeLabel, EdgeLine, LinkLine, MapDefs } from './Edge';
 import { describeEdge, edgesOf, keyAction, mapName, nodeName, otherEnd } from './keyboard';
 import { Legend } from './Legend';
@@ -149,7 +149,17 @@ export function AtlasMap({ model, graph, skillFile, onSkillFile, selected, onSel
   };
   useEffect(() => {
     // oxlint-disable-next-line react/exhaustive-effect-dependencies -- runs once the expanded layout is drawn
-    if (pending.current) focusNode(pending.current);
+    if (pending.current) {
+      // Frame the expanded cluster at a legible zoom (at least LABEL_ZOOM; 0 ms under reduced motion).
+      const id = pending.current;
+      const box = atlas.clusters.find((c) => c.id === atlas.nodes.find((n) => n.id === id)?.cluster);
+      if (box) {
+        touched.current = true;
+        setAnimate(true);
+        setCam(frameRect(box, visibleBox(), LABEL_ZOOM, 16, TOOLBAR_H));
+      }
+      focusNode(id);
+    }
     pending.current = null;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- as above
   }, [atlas]);

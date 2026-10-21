@@ -56,6 +56,16 @@ export default {
     const territory = await page.locator('.territory-label').first().evaluate((t) => t.getBoundingClientRect().height);
     console.log(`  fit: cluster names ${territory.toFixed(1)} px tall on screen`);
     expect(territory >= 9, `cluster names ${territory} px tall at fit`);
+    // Link labels keep full opacity (4.5:1 text); the large-spec cluster band is drawn at >= 0.9 (3:1).
+    const fades = await atlas(page).locator('.labels .map-link').evaluateAll((els) => els.map((el) => getComputedStyle(el).opacity));
+    expect(fades.length > 0 && fades.every((o) => o === '1'), `link label opacity: ${fades}`);
+    const band = await page.evaluate(() => {
+      for (const sheet of document.styleSheets) {
+        for (const rule of sheet.cssRules) if (rule.selectorText?.replace(/["']/g, '') === '.map-link[data-link=clusters] .line') return Number(rule.style.strokeOpacity);
+      }
+      return null;
+    });
+    expect(band !== null && band >= 0.9, `cluster band stroke-opacity: ${band}`);
     await page.mouse.move(5, 5);
     await screenshot('trimmed-tasks-map');
 
@@ -63,6 +73,8 @@ export default {
     await page.locator('.node[data-op="listProjects"]').hover();
     const hot = await page.locator('.edge[data-hot][data-bundled]').evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== 'none').length);
     expect(hot === 4, `hover listProjects: ${hot} bundled edges shown`);
+    const faded = await atlas(page).locator('.labels .map-link:not([data-hot]) .edge-label').evaluateAll((els) => els.filter((el) => getComputedStyle(el).visibility !== 'hidden').length);
+    expect(faded === 0, `${faded} labels of links not highlighted still shown while a node is hot`);
     await page.mouse.move(5, 5);
     await zoomOn(page, atlas(page).locator('.map-link[data-link="bundle"] .edge-label').first(), 3);
     await page.mouse.move(5, 5);
@@ -129,9 +141,24 @@ export default {
     await paneReady(page);
     const [logo, themeBtn, input] = await Promise.all(['.brand', '.theme', '.source'].map((s) => page.locator(s).boundingBox()));
     expect(Math.abs(logo.y + logo.height / 2 - (themeBtn.y + themeBtn.height / 2)) < 12 && input.y > themeBtn.y + themeBtn.height - 1, `header rows: ${JSON.stringify({ logo, themeBtn, input })}`);
+    // Tab order follows the visual order: the theme button (wordmark row) comes before the URL field.
+    const order = await page.evaluate(() => [...document.querySelectorAll('.header > *')].map((el) => el.className));
+    expect(order.indexOf('btn theme') < order.indexOf('source'), `header DOM order: ${order}`);
     const hint = page.getByTestId('chips-more');
     await hint.waitFor();
     expect((await hint.textContent()).startsWith('More samples'), 'chip hint text');
+    // A focused chip scrolls clear of the hint (scroll-padding), so the hint never covers it.
+    const hintBox = await hint.boundingBox();
+    const chips = page.locator('.chips .chip');
+    for (let i = 0; i < (await chips.count()); i++) {
+      await chips.nth(i).focus();
+      await page.waitForTimeout(50);
+      if (!(await hint.isVisible())) break;
+      const b = await chips.nth(i).boundingBox();
+      expect(b.x + b.width <= hintBox.x + 1, `focused chip ${i} under the hint: ${JSON.stringify([b, hintBox])}`);
+    }
+    await page.locator('.chips').evaluate((row) => row.scrollTo({ left: 0 }));
+    await page.evaluate(() => document.activeElement.blur());
     await axe('mobile chip hint');
     await screenshot('mobile-chip-hint');
     await page.locator('.chips').evaluate((row) => row.scrollTo({ left: row.scrollWidth }));
