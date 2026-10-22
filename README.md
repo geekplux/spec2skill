@@ -63,10 +63,12 @@ pnpm build && pnpm dev:worker
 **CLI.** Write the skill straight to disk and audit it, offline, with no key:
 
 ```sh
-pnpm cli --sample tasks --out .claude/skills
-pnpm cli ./openapi.yaml --out .claude/skills
-pnpm cli https://example.com/openapi.json --out .claude/skills
+pnpm cli --sample tasks --out .claude/skills                       # a built-in sample
+pnpm cli path/to/openapi.yaml --out .claude/skills                 # your spec file (JSON or YAML)
+pnpm cli https://example.com/openapi.json --out .claude/skills     # a spec URL or an MCP server URL
 ```
+
+Each writes `.claude/skills/<slug>/` and ends with the audit (`--force` overwrites an existing skill of the same name).
 
 Once the CLI is published to npm this becomes `npx spec2skill <url|file> --out .claude/skills` (not published yet). `pnpm cli --help` lists every option.
 
