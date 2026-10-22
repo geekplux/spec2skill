@@ -22,7 +22,7 @@ describe('build-gallery', () => {
     expect(driftBetween(fresh, fresh)).toEqual([]);
     expect(driftBetween(fresh, join(root, 'missing'))).toHaveLength(3);
   });
-  it('indexes each skill with its source and audit command', () => {
-    expect(readme([['tasks-api', 'Tasks']])).toContain('| [tasks-api](tasks-api/SKILL.md) | Tasks | `node examples/tasks-api/scripts/audit.mjs examples/tasks-api` |');
+  it('indexes each skill with its source, what it shows and its audit command', () => {
+    expect(readme([['tasks-api', 'Tasks', 'chains']])).toContain('| [tasks-api](tasks-api/SKILL.md) | Tasks | chains | `node examples/tasks-api/scripts/audit.mjs examples/tasks-api` |');
   });
 });
