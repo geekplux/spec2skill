@@ -1,8 +1,10 @@
-STATE: IN-PROGRESS
+STATE: DONE
+
+**Awaiting Sean's approval to deploy.** All 21 phases have open stacked PRs (#1-#22); nothing is merged or deployed.
 
 # Status
 
-- Current phase: 21 (phase-21-deploy-prep), starting (final phase; stops for Sean's approval)
+- Current phase: all 21 phases complete; awaiting Sean's approval to deploy (see PR #22 and docs/DEPLOY.md)
 - Plan: docs/PLAN.md (21 phases)
 - Blockers: none
 
@@ -28,7 +30,7 @@ STATE: IN-PROGRESS
 | 18 | phase-18-calm-polish | [#19](https://github.com/geekplux/spec2skill/pull/19) | PR open (verified PASS, a11y PASS + calm sign-off) | 1 |
 | 19 | phase-19-oss-packaging | [#20](https://github.com/geekplux/spec2skill/pull/20) | PR open (review PASS) | 2 |
 | 20 | phase-20-launch-kit | [#21](https://github.com/geekplux/spec2skill/pull/21) | PR open (review PASS) | 2 |
-| 21 | phase-21-deploy-prep | - | in progress | 0 |
+| 21 | phase-21-deploy-prep | [#22](https://github.com/geekplux/spec2skill/pull/22) | PR open (review PASS); awaiting Sean's approval to deploy | 1 |
 
 ## Follow-ups
 - Move ci/github-workflow.yml to .github/workflows/ (needs workflow scope).
@@ -38,5 +40,7 @@ STATE: IN-PROGRESS
 - AI hardening: NFKC-normalise before injection checks; widen override patterns; `rm --recursive --force`.
 - Maintainer: add a contact method in CODE_OF_CONDUCT.md; phase-12 mobile focus-after-/ timing race.
 - Edge labels near Projects can overlap when a node is focused.
+- Deploy (needs Sean's approval): create SPEC_CACHE KV and paste its id, then `pnpm build && pnpm exec wrangler deploy` (see docs/DEPLOY.md, PR #22). Then set the README live-demo link and the repo social preview.
+- Note: a CLOUDFLARE_API_TOKEN env var exists in this machine's shell; only .claude/settings.json deny rules stop a deploy.
 
-Last updated: 2026-10-22 02:38 UTC (phase 20 PR opened)
+Last updated: 2026-10-22 03:32 UTC (all phases done; awaiting Sean's approval to deploy)
