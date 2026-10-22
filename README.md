@@ -11,7 +11,10 @@ Paste a spec URL, an MCP server URL or the spec text, or pick a built-in sample.
 
 **Live demo:** [coming soon](#quick-start) (until then, run it locally with one command). No account, no API key; the built-in samples work offline.
 
-![The spec2skill app with the Tasks API sample: on the left the generated tasks-api skill, its file tree (SKILL.md, kit, references, examples, scripts, evals, ci), a SKILL.md preview, "Audit passed: 9 of 9 checks" and the Download .zip button; on the right the map of 22 operations in clusters such as Tasks, Projects, Labels and Comments, with GET /tasks/{taskId} focused and its detail panel open, listing its inputs, its Task output and a link to references/tasks.md in the skill.](docs/media/hero.png)
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/media/hero.png">
+  <img src="docs/media/demo.gif" width="960" alt="A short recording of spec2skill on its built-in samples. The Filesystem MCP sample opens with its generated filesystem-mcp skill (file tree, SKILL.md preview, Audit passed: 9 of 9 checks) beside a map of 14 tools; the audit rows open; Download .zip; a terminal runs the downloaded skill's own audit, ten ok lines and audit passed. Then the Tasks API skill's references/workflows.md, getTask focused on the map with its details and edges highlighted, and the Petstore list view, a GET filter, the deprecated findPetsByTags and the skill's evals.json. A still image is shown instead when reduced motion is preferred.">
+</picture>
 
 ## What you get
 

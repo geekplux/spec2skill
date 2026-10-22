@@ -31,6 +31,7 @@ The built-in samples work offline and need no key. To try URL fetching and live 
 | `pnpm check:browser -- --phase <n>` | the headless-browser flows up to phase n on the system Chrome, with axe and CVD screenshots (needs `pnpm build`) |
 | `pnpm gallery` / `pnpm gallery --check` | regenerate `examples/` from the samples, or fail on any drift |
 | `pnpm capture:readme` | recapture `docs/media/hero.png` from the real app and re-render `docs/social-preview.png` (needs `pnpm build`) |
+| `pnpm capture:demo` | drive the three demo scenarios of `docs/LAUNCH.md` and rebuild `docs/media/demo.gif` (needs `pnpm build`; its frames, under docs/media/demo, are not committed) |
 
 Before you open a pull request, run `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm gallery --check`. If you changed the UI, also run the browser check and, when the first view changed, `pnpm capture:readme` so the README hero stays true.
 
@@ -39,7 +40,7 @@ Before you open a pull request, run `pnpm lint && pnpm typecheck && pnpm test &&
 The checks are tuned for small machines:
 
 - Vitest runs one file at a time in one worker (`vitest.config.ts`); run a single file with `pnpm test src/graph/graph.test.ts`.
-- Do not leave `pnpm dev`, `vite preview` or `wrangler dev` running in the background. The browser check, `capture:readme` and the social preview start their own preview server and Chrome and always stop both, even on failure or Ctrl-C.
+- Do not leave `pnpm dev`, `vite preview` or `wrangler dev` running in the background. The browser check, `capture:readme`, `capture:demo` and the social preview start their own preview server and Chrome and always stop both, even on failure or Ctrl-C.
 - Run one headless browser at a time. If port 4173 is taken, set `CHECK_PORT=4174`; on a slow machine raise `CHECK_TIMEOUT_MS`.
 - Set `CHROME_PATH` if your Chrome is not at `/usr/bin/google-chrome`. The scripts never download a browser, and they block every request that is not to the local preview server.
 
