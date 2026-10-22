@@ -96,6 +96,8 @@ describe('words for screen readers', () => {
     expect(mapName('Tasks API', 'operations', 22, 5, 85, null, 85)).toBe('Tasks API: 22 operations in 5 clusters, 85 relationships');
     expect(mapName('Echo', 'tools', 2, 1, 0, null, 0)).toBe('Echo: 2 tools in 1 cluster, 0 relationships');
     expect(mapName('Tasks API', 'operations', 22, 5, 85, 4, 18)).toBe('Tasks API: 4 of 22 operations match, 18 of 85 relationships shown');
+    expect(mapName('Echo', 'tools', 2, 1, 1, null, 1)).toBe('Echo: 2 tools in 1 cluster, 1 relationship');
+    expect(mapName('Echo', 'tools', 2, 1, 1, 1, 0)).toBe('Echo: 1 of 2 tools match, 0 of 1 relationship shown');
     expect(mapName('Tasks API', 'operations', 22, 5, 85, null, 30)).toBe('Tasks API: 22 operations in 5 clusters, 30 of 85 relationships shown');
   });
 

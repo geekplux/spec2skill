@@ -25,3 +25,6 @@ const VERB_TABLE = { list: 'list search find', create: 'create add write', read:
 export const VERBS = new Map(
   Object.entries(VERB_TABLE).flatMap(([crud, verbs]) => verbs.split(' ').map((verb) => [verb, crud as keyof typeof VERB_TABLE] as const)),
 );
+
+/** A count with its noun in agreement: `counted(1, 'relationship')` -> `1 relationship`, `counted(3, 'cluster')` -> `3 clusters`. */
+export const counted = (n: number, one: string, many = `${one}s`): string => `${n} ${n === 1 ? one : many}`;

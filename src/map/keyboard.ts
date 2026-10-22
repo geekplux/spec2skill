@@ -1,6 +1,7 @@
 // Keyboard navigation for the atlas (PLAN phase 7, A1/A2). Pure: given the layout, the focused
 // node and a key, what should happen; plus the words screen readers hear for nodes and edges.
 import type { Edge } from '../graph';
+import { counted } from '../graph/words';
 import type { AtlasLayout, LayoutNode, NodeState } from '../layout/layout';
 import type { Operation } from '../model/types';
 
@@ -147,9 +148,9 @@ export const keyLabel = (key: string): string => key.split(/\+(?=.)/).map((k) =>
  *  "Tasks API: 4 of 22 operations match, 18 of 85 relationships shown". */
 export function mapName(title: string, noun: string, operations: number, clusters: number, edges: number, match: number | null, shownEdges: number): string {
   const all = `${operations} ${noun}`;
-  const groups = `${clusters} ${clusters === 1 ? 'cluster' : 'clusters'}`;
-  if (match === null && shownEdges === edges) return `${title}: ${all} in ${groups}, ${edges} relationships`;
-  return `${title}: ${match === null ? `${all} in ${groups}` : `${match} of ${all} match`}, ${shownEdges} of ${edges} relationships shown`;
+  const groups = counted(clusters, 'cluster');
+  if (match === null && shownEdges === edges) return `${title}: ${all} in ${groups}, ${counted(edges, 'relationship')}`;
+  return `${title}: ${match === null ? `${all} in ${groups}` : `${match} of ${all} match`}, ${shownEdges} of ${counted(edges, 'relationship')} shown`;
 }
 
 export function nodeName(op: Operation, state: NodeState, cluster: string, relationships: number): string {
@@ -157,7 +158,7 @@ export function nodeName(op: Operation, state: NodeState, cluster: string, relat
   if (op.title !== op.id && op.title !== op.path) parts.push(op.title);
   if (state !== 'read') parts.push(state === 'destructive' ? 'destructive' : 'changes data');
   if (op.deprecated) parts.push('deprecated');
-  parts.push(`cluster ${cluster}`, `${relationships} relationship${relationships === 1 ? '' : 's'}`);
+  parts.push(`cluster ${cluster}`, counted(relationships, 'relationship'));
   return parts.join(', ');
 }
 

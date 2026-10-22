@@ -3,6 +3,7 @@ import { useAnnounce } from './a11y/Announcer';
 import { aiProse, applyAi } from './ai/client';
 import { useAi } from './ai/useAi';
 import { buildGraph } from './graph';
+import { counted } from './graph/words';
 import { ListView } from './list/ListView';
 import { AtlasMap } from './map/Map';
 import { Search } from './map/Search';
@@ -71,7 +72,7 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
   const panes = useRef<HTMLDivElement>(null);
   const title = isSample ? `${model.source.title} (sample)` : model.source.title;
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
-  const summary = `${model.operations.length} ${noun} in ${graph.clusters.length} ${graph.clusters.length === 1 ? 'cluster' : 'clusters'}, ${graph.edges.length} relationships`;
+  const summary = `${model.operations.length} ${noun} in ${counted(graph.clusters.length, 'cluster')}, ${counted(graph.edges.length, 'relationship')}`;
   const view = tab === 'list' ? 'list' : 'map';
   const announce = useAnnounce();
 

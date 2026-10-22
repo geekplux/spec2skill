@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ApiModel, Operation } from '../model/types';
 import { buildGraph } from './index';
-import { singular, words } from './words';
+import { counted, singular, words } from './words';
 
 const tool = (id: string, extra: Partial<Operation> = {}): Operation => ({
   id, kind: 'tool', title: id, tags: [], inputs: [], responses: [], security: [], hints: {}, ...extra,
@@ -11,6 +11,13 @@ const mcpModel = (operations: Operation[]): ApiModel => ({
 });
 
 describe('words and singular', () => {
+  it('counts with the noun in agreement', () => {
+    expect(counted(1, 'relationship')).toBe('1 relationship');
+    expect(counted(0, 'relationship')).toBe('0 relationships');
+    expect(counted(85, 'relationship')).toBe('85 relationships');
+    expect(counted(1, 'directory', 'directories')).toBe('1 directory');
+    expect(counted(2, 'directory', 'directories')).toBe('2 directories');
+  });
   it('splits snake, kebab and camel case', () => {
     expect(words('list_directory_with_sizes')).toEqual(['list', 'directory', 'with', 'sizes']);
     expect(words('getPetById')).toEqual(['get', 'pet', 'by', 'id']);
