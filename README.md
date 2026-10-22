@@ -39,6 +39,7 @@ ok    kit code and regression tests are present
 ok    at least 2 worked examples (examples/*/run.mjs)
 ok    evals/evals.json: at least 5 well-formed evals naming known operations
 ok    ci/github-workflow.yml runs the tests, every example and the audit
+ok    every example runs as a dry run and writes a valid plan.json
 audit passed
 ```
 
@@ -89,9 +90,9 @@ Other projects turn MCP servers into agent skills too. spec2skill aims to write 
 4. **Write the skill and audit it.** `SKILL.md`, `kit/`, `references/`, `examples/`, `scripts/`, `evals/` and `ci/` are generated from the model, then audited; the audit result is shown before you download.
 5. **Map beside it.** The same graph, laid out deterministically in SVG, with search, filters, a list view and keyboard navigation.
 
-**Where AI is used, and where it is not.** Parsing, relationships, layout, the skill's code, references, examples, evals and the audit are all deterministic. When the app is deployed with Workers AI, it may suggest cluster names and a few sentences of skill prose for specs you load yourself; the model sees only ids and titles, its answer is checked against the spec and capped, results are cached by spec hash, and the pane labels the prose "AI-drafted". Without AI (the built-in samples, local dev, the CLI) everything works the same.
+**Where AI is used, and where it is not.** Parsing, relationships, layout, the skill's code, references, examples, evals and the audit are all deterministic. When the app is deployed with Workers AI, it may suggest cluster names and a few sentences of skill prose for a spec you load yourself (by URL, pasted text or an opened file). The model sees only a small summary: the API title, operation ids, HTTP methods and paths, operation titles shortened to 120 characters, cluster names and their member operations, and up to 20 relationship labels; never descriptions or schemas. Its answer is checked against the spec and capped, results are cached by a hash of that summary, and the pane labels the prose "AI-drafted". Without AI (the built-in samples, local dev without the AI binding, the CLI) everything works the same.
 
-**Privacy.** Pasted spec text and opened files never leave your browser. OpenAPI URLs are fetched directly by your browser and go through the Worker proxy only when CORS blocks that; MCP servers are always reached through the proxy, which only asks for `tools/list` and never calls a tool. The CLI talks only to the URL you give it.
+**Privacy.** Full spec text and opened files are parsed in your browser and never uploaded. URLs you paste are fetched directly by your browser, and through the Worker proxy only when that fails (CORS, network or timeout); MCP URLs always go through the proxy, which only asks for `tools/list` and never calls a tool. On a deployment with Workers AI, the small summary listed above (API title, operation ids, HTTP methods and paths, titles of at most 120 characters, cluster names and members, up to 20 relationship labels) of a spec you load yourself is sent to the Worker to suggest cluster names and skill prose, cached by hash. The built-in samples, local dev without the AI binding, and the CLI send nothing to any AI; the CLI talks only to the URL you give it.
 
 ## Accessibility
 
