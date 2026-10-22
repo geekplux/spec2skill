@@ -2,7 +2,7 @@ STATE: IN-PROGRESS
 
 # Status
 
-- Current phase: 19 (phase-19-oss-packaging), starting
+- Current phase: 20 (phase-20-launch-kit), starting; Speed mode active
 - Plan: docs/PLAN.md (21 phases)
 - Blockers: none
 
@@ -26,7 +26,8 @@ STATE: IN-PROGRESS
 | 16 | phase-16-cli | [#17](https://github.com/geekplux/spec2skill/pull/17) | PR open (verified PASS) | 1 |
 | 17 | phase-17-lean-ai | [#18](https://github.com/geekplux/spec2skill/pull/18) | PR open (verified PASS) | 2 |
 | 18 | phase-18-calm-polish | [#19](https://github.com/geekplux/spec2skill/pull/19) | PR open (verified PASS, a11y PASS + calm sign-off) | 1 |
-| 19 | phase-19-oss-packaging | - | in progress | 0 |
+| 19 | phase-19-oss-packaging | [#20](https://github.com/geekplux/spec2skill/pull/20) | PR open (review PASS) | 2 |
+| 20 | phase-20-launch-kit | - | in progress | 0 |
 
 ## Follow-ups
 - Move ci/github-workflow.yml to .github/workflows/ (needs workflow scope).
@@ -35,5 +36,6 @@ STATE: IN-PROGRESS
 - Before any npm publish: give the CLI package its own engines range (CLI targets Node 20; repo toolchain needs 22).
 - AI hardening: NFKC-normalise before injection checks; widen override patterns; `rm --recursive --force`.
 - Phase 20 polish: DESIGN.md token name, "1 relationships", Options label gap, 390 audit wrap, fade non-focused map edges, flaky audit.test.mjs under load.
+- Maintainer: add a contact method in CODE_OF_CONDUCT.md; phase-12 mobile focus-after-/ timing race.
 
-Last updated: 2026-10-22 00:46 UTC (phase 18 PR opened)
+Last updated: 2026-10-22 01:36 UTC (phase 19 PR opened)
