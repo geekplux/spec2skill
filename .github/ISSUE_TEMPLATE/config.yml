@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/geekplux/spec2skill/blob/main/CONTRIBUTING.md
+    about: How to set up, run the checks and open a pull request.
+  - name: Good first issues
+    url: https://github.com/geekplux/spec2skill/blob/main/docs/GOOD_FIRST_ISSUES.md
+    about: Small, scoped tasks with file pointers.
