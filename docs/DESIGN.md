@@ -69,6 +69,7 @@ Rules:
 - `meridian` at accent weight (filled button, bold coloured text, thick stroke) marks **one** thing per view: first view = **Download .zip**; map = the focused node and its highlighted edges; loading = the active step's marker; error = none (the title is the focal point by size and position; the error glyph uses `brick` with a `!` shape and a visually hidden "Could not load:" prefix on the title).
 - The header's **Generate skill** is neutral (ink border, bold text) at every width and in every state, and disabled while loading; on phones it is the fixed bottom bar of the Map and List tabs.
 - Kickers (small uppercase labels such as "Agent skill · Prose: deterministic") and the skill's slug are `graphite`/`ink`, not `meridian`. Links stay `meridian` underlined text at normal weight (not accent weight).
+- Map edges are quiet at rest (phase 20), so the map reads as the secondary pane beside the skill: edges are drawn at 0.45 opacity and feed bundles at 0.55; the large-spec cluster bands keep 0.85 (they are the overview when zoomed out). Fading never removes meaning: each edge keeps its line style (dashed feeds, solid sub-path, dotted shared schema), its end marker or midpoint diamond, and its text label at full text contrast. The focused or hovered node's edges come up to full opacity and 2.5 px (every edge hue is >= 3:1 on both surfaces, `contrast.test.ts`) while all other edges drop to 0.12.
 - Method/kind hues (`fir`, `ochre`, `brick`, `plum`, `meridian` on GET) appear only as small badges with their text label, never as fills of large areas.
 - Everything else uses neutrals: `ink` for text and primary borders, `graphite` for secondary text and quiet borders, `rule` for dividers, `paper`/`vellum` for surfaces.
 - Chips and badges are quiet: neutral border (`graphite` for chips, `rule` for method badges), no fill except the selected chip (`ink` fill plus a check glyph), text at 0.75-0.93em; method badges keep their hue on the text label only.
@@ -87,7 +88,7 @@ A view is **crowded** (a design FAIL; the report names the view, the competing e
 
 1. More than one element at accent weight (`meridian` fill, bold `meridian` text, or thick `meridian` stroke) is visible, other than the ones section 4 names for that view.
 2. Content that section 2 lists as behind disclosure is visible on first load (except where section 2 names a width or a later phase).
-3. New layout CSS uses spacing outside the `--calm-*` scale (grep the phase's CSS diff for raw `px`/`rem` in margin/padding/gap/inset/top/right/bottom/left).
+3. New layout CSS uses spacing outside the `--space-*` scale (grep the phase's CSS diff for raw `px`/`rem` in margin/padding/gap/inset/top/right/bottom/left).
 4. A new frame, card or box border appears that section 3 does not allow.
 5. The focal point named in section 1 is not the largest or highest-contrast element of its region, or is pushed below the fold at 1440x900 by secondary content.
 6. A disclosure toggle has no visible text label, no `aria-expanded`/native state, or hides content that keyboard users cannot reach.

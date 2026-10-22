@@ -32,17 +32,20 @@ function Options({ value, onChange, plainText }: { value: SkillOptionsDraft; onC
   return (
     <details className="options">
       <summary>Options</summary>
-      <label htmlFor="opt-slug">Skill name</label>
-      <input id="opt-slug" className="field" value={draft.slug} spellCheck={false} aria-invalid={bad.slug} aria-describedby="opt-slug-help" onChange={(e) => edit('slug', e.target.value)} />
-      <p id="opt-slug-help" className="help">{bad.slug && <strong>Not used: </strong>}lowercase letters, digits and single dashes, up to 64.</p>
-      <label htmlFor="opt-license">Licence</label>
-      <input id="opt-license" className="field" value={draft.license} aria-invalid={bad.license} aria-describedby="opt-license-help" onChange={(e) => edit('license', e.target.value)} />
-      <p id="opt-license-help" className="help">{bad.license && <strong>Not used: </strong>}an SPDX id such as MIT, up to 60 characters.</p>
-      {plainText && (
-        <label className="check">
-          <input type="checkbox" checked={plainText.on} onChange={(e) => plainText.onChange(e.target.checked)} /> Use deterministic text (cluster names and prose)
-        </label>
-      )}
+      {/* The grid sits on a wrapper: a <details> element does not lay out its content as a grid. */}
+      <div className="options-body">
+        <label htmlFor="opt-slug">Skill name</label>
+        <input id="opt-slug" className="field" value={draft.slug} spellCheck={false} aria-invalid={bad.slug} aria-describedby="opt-slug-help" onChange={(e) => edit('slug', e.target.value)} />
+        <p id="opt-slug-help" className="help">{bad.slug && <strong>Not used: </strong>}lowercase letters, digits and single dashes, up to 64.</p>
+        <label htmlFor="opt-license">Licence</label>
+        <input id="opt-license" className="field" value={draft.license} aria-invalid={bad.license} aria-describedby="opt-license-help" onChange={(e) => edit('license', e.target.value)} />
+        <p id="opt-license-help" className="help">{bad.license && <strong>Not used: </strong>}an SPDX id such as MIT, up to 60 characters.</p>
+        {plainText && (
+          <label className="check">
+            <input type="checkbox" checked={plainText.on} onChange={(e) => plainText.onChange(e.target.checked)} /> Use deterministic text (cluster names and prose)
+          </label>
+        )}
+      </div>
     </details>
   );
 }
@@ -51,7 +54,7 @@ function Checklist({ audit }: { audit: AuditResult }) {
   const passed = audit.checks.filter((c) => c.ok).length;
   return (
     <details className="audit" data-ok={audit.ok}>
-      <summary>{mark(audit.ok)} {audit.ok ? 'Audit passed' : 'Audit failed'}: <span className="tally">{passed} of {audit.checks.length} checks</span></summary>
+      <summary>{mark(audit.ok)} <span className="verdict">{audit.ok ? 'Audit passed' : 'Audit failed'}:</span> <span className="tally">{passed} of {audit.checks.length} checks</span></summary>
       <ul>
         {audit.checks.map((c) => (
           <li key={c.id} data-ok={c.ok}>{mark(c.ok)} {SHORT[c.id] ?? c.label}: <span className="status">{c.ok ? 'passed' : `failed: ${c.reason}`}</span>{SHORT[c.id] && <span className="visually-hidden"> ({c.label})</span>}</li>

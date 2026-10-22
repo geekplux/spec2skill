@@ -107,7 +107,9 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
 .line[data-kind='shared-schema'] { stroke-dasharray: 1 4; stroke-linecap: round; }
 .mk-feeds { fill: var(--meridian); }
 .mk-sub-path { fill: none; stroke: var(--graphite); stroke-width: 1.5; }
-.edge { opacity: 0.8; transition: opacity var(--motion-fade) ease-out; }
+/* Calm map: at rest every edge is drawn quietly (style, marker and label unchanged, so never colour alone);
+   the focused or hovered node's edges come up to full strength (>= 3:1) and the rest fade further. */
+.edge { opacity: 0.45; transition: opacity var(--motion-fade) ease-out; }
 .edge[data-hot] { opacity: 1; }
 .edge[data-hot] .line { stroke-width: 2.5; }
 .edge[data-cycled] .line { stroke-width: 4.5; }
@@ -119,6 +121,8 @@ h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
    links (a thick graphite band) carry a text label, so neither relies on colour. */
 .edge[data-bundled]:not([data-hot]) { display: none; }
 .map-link { opacity: 0.85; transition: opacity var(--motion-fade) ease-out; }
+.map-link[data-link='bundle'] { opacity: 0.55; } /* bundles rest quietly like edges; the large-spec cluster bands stay the overview */
+.map-link[data-link='bundle'][data-hot] { opacity: 1; }
 .labels .map-link { opacity: 1; } /* link labels keep full text contrast (4.5:1) */
 .map-link[data-link='bundle'] .line { stroke-width: 2.5; }
 .map-link[data-link='clusters'] { --hue: var(--graphite); }
@@ -181,8 +185,10 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .options { justify-self: end; font-size: 0.9em; }
 /* Disclosure toggles are quiet: graphite underlined text with the native marker, never the accent. */
 :is(.samples-fold, .options, .filters, .rels, .legend, .install, .audit) > summary { width: fit-content; cursor: pointer; color: var(--graphite); text-decoration: underline; text-underline-offset: 3px; }
-.options[open] { grid-column: 1 / -1; justify-self: stretch; display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); align-items: center; padding-top: var(--space-2); }
-.options[open] summary { grid-column: 1 / -1; }
+.options[open] { grid-column: 1 / -1; justify-self: stretch; }
+/* Label | field rows; the help line sits under its field. */
+.options-body { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-1) var(--space-3); align-items: center; padding-top: var(--space-2); }
+.options-body .field { max-width: 24rem; }
 .options .help { grid-column: 2; margin: 0 0 var(--space-1); color: var(--graphite); font-size: 0.9em; }
 .options .check { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--space-2); min-height: 28px; }
 .field { font: 13px var(--font-mono); padding: var(--space-1) var(--space-2); border: 1px solid var(--graphite); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); }
@@ -212,6 +218,7 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .audit { padding: var(--space-2); font-size: 0.85em; line-height: 1.4; } /* room for the summary's focus ring inside the scroll box */
 .audit > summary { padding-block: var(--space-1); color: var(--ink); text-decoration: none; font: 650 1.05rem var(--font-display); }
 .audit > summary .tally { text-decoration: underline; text-underline-offset: 3px; }
+.verdict { white-space: nowrap; } /* "Audit passed:" never breaks inside; the tally has its own line */
 .tally { display: block; padding-left: 2.85em; color: var(--graphite); font: 0.85rem var(--font-body); }
 .audit ul { margin: var(--space-1) 0; padding: 0; list-style: none; }
 .audit li[data-ok='false'] { font-weight: 650; }
@@ -238,6 +245,9 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 }
 
 @media (max-width: 639px) {
+  /* Phones: tree and audit share the row equally, and the verdict steps down so "Audit passed:" fits on one line. */
+  .skill-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .audit > summary { font-size: 0.95rem; }
   .detail { position: fixed; top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 50dvh; border-radius: var(--radius-md) var(--radius-md) 0 0; box-shadow: 0 -4px 0 var(--paper); }
   body:has(.detail) { padding-bottom: 50dvh; } /* room to scroll the map above the bottom sheet */
   html { scroll-padding-bottom: 7rem; } /* clear of the fixed Generate button and the sticky action bar */
@@ -334,6 +344,8 @@ kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-botto
 .source-status h2 { width: fit-content; margin: 0 0 var(--space-2); font-size: 1.25rem; outline-offset: var(--space-1); }
 .source-status.error h2 { font-size: 1.75rem; } /* the focal point: at least the page title's size */
 @media (max-width: 639px) { .source-status.error h2 { font-size: 1.5rem; } }
+/* Below 380 px the audit line takes its own row under the files rather than squeezing beside them. */
+@media (max-width: 379px) { .skill-body { grid-template: fit-content(40%) auto auto minmax(0, 1fr) / minmax(0, 1fr); } }
 .source-status p { margin: 0 0 var(--space-3); }
 .steps { margin: 0 0 var(--space-3); padding: 0; list-style: none; }
 .steps li { display: flex; gap: var(--space-2); padding-block: var(--space-1); color: var(--graphite); }
