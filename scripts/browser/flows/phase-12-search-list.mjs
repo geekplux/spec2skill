@@ -289,7 +289,9 @@ export default {
     await page.goto(`${origin}/?sample=tasks`);
     await paneReady(page);
     await page.locator('body').press('/');
-    expect((await active(page)) === 'search-q', `mobile / focused ${await active(page)}`);
+    // The Map tab mounts first and focuses search a frame later: wait for it rather than read it at once.
+    await page.waitForFunction(() => document.activeElement?.id === 'search-q', null, { timeout: 5000 })
+      .catch(async () => expect(false, `mobile / focused ${await active(page)}`));
     expect((await page.locator('#tab-map').getAttribute('aria-selected')) === 'true', '/ did not open the Map tab');
     await page.locator('#tab-list').click();
     await list(page).waitFor();
