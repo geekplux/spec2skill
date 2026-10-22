@@ -1,5 +1,5 @@
-// One headless-browser session for the repo's scripts (check-browser, capture-readme, social-preview):
-// an optional `vite preview` of dist/ in its own process group, the system Chrome via playwright-core,
+// One headless-browser session for the repo's scripts (check-browser, capture-readme, social-preview,
+// smoke-worker): an optional server (`vite preview` of dist/, or `wrangler dev`) in its own process group, the system Chrome via playwright-core,
 // and cleanup of both on success, failure and SIGINT/SIGTERM/SIGHUP.
 //   env: CHROME_PATH (default /usr/bin/google-chrome), CHROME_ARGS (extra flags),
 //        CHECK_PORT (default 4173; for when another project's preview holds the port)
@@ -21,12 +21,13 @@ export const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
 let server = null;
 let serverLog = '';
+let serverLabel = 'server';
 let browser = null;
 let cleaning = null;
 
-const portInUse = () =>
+const portInUse = (port = PORT) =>
   new Promise((done) => {
-    const socket = connect(PORT, HOST);
+    const socket = connect(port, HOST);
     socket.once('connect', () => (socket.destroy(), done(true)));
     socket.once('error', () => done(false));
   });
@@ -50,25 +51,34 @@ function killGroup(pid, signal) {
 
 /** Serves dist/ at ORIGIN; refuses (starting nothing) when the port is taken. */
 export async function startPreview() {
-  if (await portInUse()) throw new Error(`port ${PORT} is already in use; nothing was started (set CHECK_PORT)`);
   const viteBin = join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
-  const args = [viteBin, 'preview', '--host', HOST, '--port', String(PORT), '--strictPort'];
-  server = spawn(process.execPath, args, { cwd: ROOT, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  await startServer('preview server', process.execPath, [viteBin, 'preview', '--host', HOST, '--port', String(PORT), '--strictPort'], ORIGIN);
+}
+
+/**
+ * Starts `command args` in its own process group (stopped by the session's cleanup) and waits until
+ * `origin` answers; refuses (starting nothing) when the origin's port is taken. One server per session.
+ */
+export async function startServer(label, command, args, origin, { readyPath = '/', timeoutMs = 20_000 } = {}) {
+  const port = Number(new URL(origin).port);
+  if (await portInUse(port)) throw new Error(`port ${port} is already in use; nothing was started`);
+  server = spawn(command, args, { cwd: ROOT, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  serverLabel = label;
   const append = (chunk) => (serverLog = (serverLog + chunk).slice(-4000));
   server.stdout.on('data', append);
   server.stderr.on('data', append);
-  console.log(`preview server started (pid ${server.pid}, process group ${server.pid})`);
-  const deadline = Date.now() + 20_000;
+  console.log(`${label} started (pid ${server.pid}, process group ${server.pid})`);
+  const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    if (server.exitCode !== null || server.signalCode !== null) throw new Error(`preview server exited early:\n${serverLog}`);
+    if (server.exitCode !== null || server.signalCode !== null) throw new Error(`${label} exited early:\n${serverLog}`);
     try {
-      if ((await fetch(`${ORIGIN}/`)).ok) return;
+      if ((await fetch(new URL(readyPath, origin))).ok) return;
     } catch {
       // not listening yet
     }
     await sleep(200);
   }
-  throw new Error(`preview server not reachable at ${ORIGIN} after 20 s:\n${serverLog}`);
+  throw new Error(`${label} not reachable at ${origin} after ${timeoutMs / 1000} s:\n${serverLog}`);
 }
 
 export async function launchChrome() {
@@ -99,7 +109,7 @@ function cleanup() {
       for (let i = 0; i < 25 && groupAlive(pid); i++) await sleep(200);
       if (groupAlive(pid)) killGroup(pid, 'SIGKILL');
       server = null;
-      console.log(`preview server stopped (process group ${pid})`);
+      console.log(`${serverLabel} stopped (process group ${pid})`);
     }
   })();
   return cleaning;
