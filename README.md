@@ -9,7 +9,7 @@
 
 Paste a spec URL, an MCP server URL or the spec text, or pick a built-in sample. spec2skill writes a complete skill directory that teaches a coding agent to call that API well, proves it with its own audit, and puts a map of every operation right beside it so you can check what it teaches.
 
-**Live demo:** [coming soon](#quick-start) (until then, run it locally with one command). No account, no API key; the built-in samples work offline.
+**Live demo:** coming soon (until then, [run it locally](#quick-start) with one command, or [deploy your own](docs/DEPLOY.md)). No account, no API key; the built-in samples work offline.
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="docs/media/hero.png">
@@ -75,6 +75,8 @@ pnpm cli https://example.com/openapi.json --out .claude/skills     # a spec URL 
 Each writes `.claude/skills/<slug>/` and ends with the audit (`--force` overwrites an existing skill of the same name).
 
 Once the CLI is published to npm this becomes `npx spec2skill <url|file> --out .claude/skills` (not published yet). `pnpm cli --help` lists every option.
+
+**Deploy your own.** The app is one Cloudflare Worker with static assets and needs no secrets; Workers AI is optional. [docs/DEPLOY.md](docs/DEPLOY.md) covers the one-time setup, a dry run (`pnpm run check:deploy`), the deploy command, a post-deploy smoke and rollback.
 
 ## Why spec2skill
 
