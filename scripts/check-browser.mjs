@@ -1,7 +1,7 @@
 // Headless-browser check: serves dist/ with `vite preview`, drives the system Chrome
 // through playwright-core, runs the flows for phases <= --phase, saves screenshots.
 //
-//   pnpm build && pnpm check:browser -- --phase 1 [--flow <name>] [--no-axe] [--no-cvd] [--label <name>]
+//   pnpm build && pnpm check:browser -- --phase 1 [--flow <name>[,<name>...]] [--no-axe] [--no-cvd] [--label <name>]
 //   pnpm check:browser -- --phase 18 --audit [--viewports 1440x900,390x844] --label before
 //   --audit visits every view (scripts/browser/audit.mjs) once per viewport instead of running the flows;
 //   --label puts the screenshots in docs/screenshots/phase-<n>/<label>/.
@@ -68,11 +68,14 @@ async function loadFlows(maxPhase, only) {
     }
     flows.push(flow);
   }
+  // --flow takes one name or a comma-separated list (speed mode: run only the flows a phase touched).
+  const names = only ? only.split(',').map((n) => n.trim()).filter(Boolean) : null;
   const selected = flows
-    .filter((flow) => flow.phase <= maxPhase && (!only || flow.name === only))
+    .filter((flow) => flow.phase <= maxPhase && (!names || names.includes(flow.name)))
     .toSorted((a, b) => a.phase - b.phase || a.name.localeCompare(b.name));
-  if (only && selected.length === 0) {
-    throw new Error(`unknown flow "${only}" for phase <= ${maxPhase}; known: ${flows.map((f) => f.name).join(', ')}`);
+  const missing = names?.filter((n) => !selected.some((f) => f.name === n)) ?? [];
+  if (missing.length > 0) {
+    throw new Error(`unknown flow "${missing.join(', ')}" for phase <= ${maxPhase}; known: ${flows.map((f) => f.name).join(', ')}`);
   }
   if (selected.length === 0) throw new Error(`no flows registered for phase <= ${maxPhase}`);
   return selected;
