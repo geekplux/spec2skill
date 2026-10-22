@@ -23,3 +23,4 @@ The first release. Development started under the working name tool-atlas; the pr
 - **Lean AI** (phase 17): optional Workers AI names clusters and drafts skill prose for user-loaded specs, validated, capped, cached by spec hash and labelled; everything works without it.
 - **Calm polish** (phase 18): one focal point and one accent per view, quiet disclosures, a single spacing scale and a before/after audit of every view at 1440 and 390 px.
 - **Open-source packaging** (phase 19): this README, licence, contributing guide, code of conduct, issue and pull request templates, extension guide, good first issues, social preview, a docs link check and the CI workflow.
+- **Launch kit** (phase 20): `docs/LAUNCH.md` (drafts, three offline demo scenarios, a comparison by tool category, a launch checklist) and a demo GIF captured from the real app by `pnpm capture:demo`; quieter map edges at rest, and singular counts ("1 relationship").

@@ -39,7 +39,10 @@ describe('repo packaging', () => {
   it('README leads with the pitch, hero, demo placeholder, the skill tree with audit passed, and quick start', () => {
     const readme = read('README.md');
     const top = readme.slice(0, readme.indexOf('## Why spec2skill'));
-    for (const text of ['Turn any OpenAPI spec or MCP server into an agent skill in one click.', '](docs/media/hero.png)', 'Live demo:', 'SKILL.md', 'evals/evals.json', 'audit passed', 'pnpm install && pnpm dev', 'pnpm cli --sample tasks']) {
+    // The hero: the demo GIF (pnpm capture:demo, <= 4 MB), with the still PNG for reduced motion.
+    expect(top).toMatch(/<source media="\(prefers-reduced-motion: reduce\)" srcset="docs\/media\/hero\.png">\s*<img src="docs\/media\/demo\.gif" width="960" alt="[^"]{80,}">/);
+    expect(statSync(join(root, 'docs', 'media', 'demo.gif')).size).toBeLessThanOrEqual(4 * 1024 * 1024);
+    for (const text of ['Turn any OpenAPI spec or MCP server into an agent skill in one click.', 'Live demo:', 'SKILL.md', 'evals/evals.json', 'audit passed', 'pnpm install && pnpm dev', 'pnpm cli --sample tasks']) {
       expect(top).toContain(text);
     }
     expect(readme).not.toMatch(/tool-atlas|mcp2skill/i);
@@ -65,6 +68,24 @@ describe('repo packaging', () => {
     for (const cmd of ['pnpm lint', 'pnpm typecheck', 'pnpm test', 'pnpm build', 'pnpm check:size', 'pnpm check:browser', 'pnpm build:cli', 'pnpm gallery --check', 'node --test', 'scripts/audit.mjs']) {
       expect(runs).toContain(cmd);
     }
+  });
+  it('has a launch kit that leads with the skill, names no other project and posts nothing', () => {
+    const launch = read('docs/LAUNCH.md');
+    expect(launch).toContain('**Do not post anywhere; Sean decides.**');
+    const title = /^> (Show HN: .+)$/m.exec(launch)[1];
+    expect(title).toMatch(/turn any OpenAPI spec or MCP server into an agent skill/);
+    expect([...title].length).toBeLessThanOrEqual(80);
+    const thread = launch.split('## X thread draft')[1].split('\n## ')[0];
+    const posts = [...thread.matchAll(/^\d\. (.+)$/gm)].map((m) => m[1]);
+    expect(posts.length).toBeGreaterThanOrEqual(5);
+    expect(posts.length).toBeLessThanOrEqual(6);
+    for (const post of posts) expect([...post].length).toBeLessThanOrEqual(280);
+    expect(thread.match(/\[[^\]]*(GIF|image)\]/g).length).toBe(thread.match(/\*Alt text:\*/g).length);
+    expect(launch.match(/^### \d\. /gm)).toHaveLength(3);
+    for (const category of ['Hand-written skills or prompts', 'MCP-to-skill converters', 'API documentation renderers', 'MCP inspectors']) {
+      expect(launch).toMatch(new RegExp(`^\\| ${category} \\|.*\\| [^|]{20,} \\|$`, 'm'));
+    }
+    expect(launch).not.toMatch(/mcp2skill|tool-atlas|\b(price|pricing|trading|crypto|payment|invoice)s?\b/i);
   });
   it('has a 1280x640 social preview under 1 MB and a README hero', () => {
     const png = readFileSync(join(root, 'docs', 'social-preview.png'));
