@@ -36,7 +36,7 @@ export default {
     // Quiet edges at rest; the focused node's edges at full strength with their labels, the rest fainter.
     await page.mouse.move(1, 1);
     const rest = await opacity(page, '.atlas .edge');
-    expect(rest.length === 1 && Number(rest[0]) === 0.45, `edges at rest: opacity ${rest}`);
+    expect(rest.length === 1 && Number(rest[0]) === 0.75, `edges at rest: opacity ${rest}`);
     await screenshot('first-view-1440');
     await page.locator('.hit[data-op="getTask"]').focus();
     await page.locator('.atlas[data-hot]').waitFor({ state: 'attached' });

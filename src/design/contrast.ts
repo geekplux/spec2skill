@@ -19,3 +19,10 @@ export function contrastRatio(a: string, b: string): number {
   const [hi, lo] = [luminance(a), luminance(b)].toSorted((x, y) => y - x) as [number, number];
   return (hi + 0.05) / (lo + 0.05);
 }
+
+/** The colour `fg` drawn at `alpha` opacity over `bg` (sRGB compositing, as browsers do), as #RRGGBB. */
+export function blend(fg: string, bg: string, alpha: number): string {
+  const [f, b] = [hexToRgb(fg), hexToRgb(bg)];
+  const channel = (i: number) => Math.round((alpha * f[i]! + (1 - alpha) * b[i]!) * 255).toString(16).padStart(2, '0');
+  return `#${channel(0)}${channel(1)}${channel(2)}`.toUpperCase();
+}
