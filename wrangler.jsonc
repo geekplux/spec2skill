@@ -1,5 +1,6 @@
 // One Worker with static assets (D1): Vite builds dist/, wrangler bundles worker/ (D2).
-// Local: `pnpm build && pnpm dev:worker`. Deployment is prepared in phase 21 and needs Sean's approval.
+// Local: `pnpm build && pnpm dev:worker`. Deploying: docs/DEPLOY.md (dry run: `pnpm run check:deploy`).
+// No secrets live here or anywhere else: the app needs none.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "spec2skill",
@@ -20,9 +21,13 @@
   // binding, /api/ai/describe answers 501 and the app stays deterministic. No API key or secret is needed.
   "ai": { "binding": "AI" },
   "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8" },
-  // AI results, 30-day TTL. The id is a placeholder: create the namespace with
-  // `wrangler kv namespace create SPEC_CACHE` and paste its id here before deploying (phase 21 DEPLOY.md).
+  // AI results, 30-day TTL.
+  // PLACEHOLDER id (all zeros): before the first deploy run `pnpm exec wrangler kv namespace create SPEC_CACHE`
+  // and paste the printed id here (docs/DEPLOY.md, step 2). The dry run accepts the placeholder.
   "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "00000000000000000000000000000000" }],
+  // Workers Logs: invocation metadata and console output only (the Worker never logs request bodies);
+  // query strings are redacted from logged URLs.
+  "observability": { "enabled": true, "redact_query_string": true },
   // `pnpm dev:worker` runs this env: Workers AI bindings always reach Cloudflare (login needed), so local
   // dev leaves AI out and the app stays deterministic, as without the binding in production.
   "env": {

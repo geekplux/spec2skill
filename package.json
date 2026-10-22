@@ -25,6 +25,8 @@
     "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
     "dev:worker": "wrangler dev --env local --ip 127.0.0.1 --port 8787",
     "types:worker": "wrangler types worker/worker-configuration.d.ts",
+    "check:deploy": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
+    "smoke:worker": "node scripts/smoke-worker.mjs",
     "lint": "oxlint --deny-warnings && node scripts/check-spacing.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p worker/tsconfig.json && tsc --noEmit -p tsconfig.cli.json",
     "test": "vitest run",
