@@ -71,7 +71,7 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
   const panes = useRef<HTMLDivElement>(null);
   const title = isSample ? `${model.source.title} (sample)` : model.source.title;
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
-  const summary = `${model.operations.length} ${noun} in ${graph.clusters.length} clusters, ${graph.edges.length} relationships`;
+  const summary = `${model.operations.length} ${noun} in ${graph.clusters.length} ${graph.clusters.length === 1 ? 'cluster' : 'clusters'}, ${graph.edges.length} relationships`;
   const view = tab === 'list' ? 'list' : 'map';
   const announce = useAnnounce();
 

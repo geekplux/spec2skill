@@ -88,7 +88,7 @@ export function ListView({ model, graph, match, edges, selected, onSelect, skill
       {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role -- a labelled scroller */}
       <div className="list" data-testid="list-view" role="region" aria-label={`${model.source.title} as text`} tabIndex={0}>
         <p className="list-summary">
-          {match ? `${match.size} of ${model.operations.length}` : model.operations.length} {noun} in {groups.length} clusters; {edges.length} relationships shown: {count('feeds')} feeds, {count('sub-path')} sub-path, {count('shared-schema')} shared schema.
+          {match ? `${match.size} of ${model.operations.length}` : model.operations.length} {noun} in {groups.length} {groups.length === 1 ? 'cluster' : 'clusters'}; {edges.length} relationships shown: {count('feeds')} feeds, {count('sub-path')} sub-path, {count('shared-schema')} shared schema.
           {graph.hubSchemas.length > 0 && ` Hub schemas (badges on the map, not edges): ${graph.hubSchemas.map((h) => `${h.name} on ${h.usedBy} operations`).join(', ')}.`}
         </p>
         {groups.length === 0 && <p className="list-empty">No {noun} match. Clear the search or show all filters.</p>}

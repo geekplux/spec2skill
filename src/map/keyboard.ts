@@ -147,8 +147,9 @@ export const keyLabel = (key: string): string => key.split(/\+(?=.)/).map((k) =>
  *  "Tasks API: 4 of 22 operations match, 18 of 85 relationships shown". */
 export function mapName(title: string, noun: string, operations: number, clusters: number, edges: number, match: number | null, shownEdges: number): string {
   const all = `${operations} ${noun}`;
-  if (match === null && shownEdges === edges) return `${title}: ${all} in ${clusters} clusters, ${edges} relationships`;
-  return `${title}: ${match === null ? `${all} in ${clusters} clusters` : `${match} of ${all} match`}, ${shownEdges} of ${edges} relationships shown`;
+  const groups = `${clusters} ${clusters === 1 ? 'cluster' : 'clusters'}`;
+  if (match === null && shownEdges === edges) return `${title}: ${all} in ${groups}, ${edges} relationships`;
+  return `${title}: ${match === null ? `${all} in ${groups}` : `${match} of ${all} match`}, ${shownEdges} of ${edges} relationships shown`;
 }
 
 export function nodeName(op: Operation, state: NodeState, cluster: string, relationships: number): string {
