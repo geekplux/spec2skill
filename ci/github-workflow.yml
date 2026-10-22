@@ -10,7 +10,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4 # version from package.json "packageManager"
@@ -21,13 +21,24 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test
+      - run: pnpm test # includes the docs link check (pnpm test:docs)
       - run: pnpm build
       - run: pnpm check:size
       - name: Headless-browser check (runner's google-chrome)
-        run: pnpm check:browser -- --phase 1
+        run: pnpm check:browser -- --phase 19
         env:
           CHROME_PATH: /usr/bin/google-chrome
+      - name: CLI writes and audits a sample skill
+        run: |
+          pnpm build:cli
+          node dist-cli/spec2skill.mjs --sample tasks --out "$RUNNER_TEMP"
+      - name: Examples gallery is up to date
+        run: pnpm gallery --check
+      - name: Every example skill passes its own tests and audit
+        run: |
+          for dir in examples/*/; do
+            (cd "$dir" && node --test scripts/*.test.mjs && node scripts/audit.mjs .)
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:

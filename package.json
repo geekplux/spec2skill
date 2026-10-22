@@ -30,7 +30,9 @@
     "test": "vitest run",
     "check:browser": "node scripts/check-browser.mjs",
     "check:size": "node scripts/check-size.mjs",
-    "gallery": "node scripts/build-gallery.mjs"
+    "gallery": "node scripts/build-gallery.mjs",
+    "capture:readme": "node scripts/capture-readme.mjs && node scripts/social-preview.mjs",
+    "test:docs": "node scripts/check-links.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
