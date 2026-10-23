@@ -8,7 +8,9 @@ import { describe, expect, it } from 'vitest';
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const read = (path) => readFileSync(join(root, path), 'utf8');
 /** wrangler.jsonc keeps every comment on its own line, so dropping those lines leaves plain JSON. */
-const wrangler = JSON.parse(read('wrangler.jsonc').replace(/^\s*\/\/.*$/gm, ''));
+const jsonc = (path) => JSON.parse(read(path).replace(/^\s*\/\/.*$/gm, ''));
+const wrangler = jsonc('wrangler.jsonc');
+const local = jsonc('wrangler.local.jsonc');
 
 describe('wrangler.jsonc', () => {
   it('is one Worker with static assets, /api/* routed to the Worker first', () => {
@@ -28,8 +30,26 @@ describe('wrangler.jsonc', () => {
     ]);
     expect(Object.keys(wrangler.vars)).toEqual(['AI_MODEL']);
     expect(wrangler.observability).toEqual({ enabled: true, redact_query_string: true });
-    // Local dev (`pnpm dev:worker`) has no AI binding, so it never needs a Cloudflare login.
-    expect(wrangler.env.local.ai).toBeUndefined();
+  });
+  it('is production only: no named environments (no warning on a bare `wrangler deploy`), custom domain declared', () => {
+    expect(wrangler.env).toBeUndefined();
+    expect(wrangler.routes).toEqual([{ pattern: 'spec2skill.geekplux.com', custom_domain: true }]);
+  });
+  it('gives Workers Builds previews AI and their own rate limiters, but never the production KV namespace', () => {
+    expect(wrangler.previews.ai).toEqual({ binding: 'AI' });
+    expect(wrangler.previews.vars).toEqual(wrangler.vars);
+    expect(wrangler.previews.ratelimits.map((r) => r.name)).toEqual(['RATE_LIMITER', 'AI_RATE_LIMITER']);
+    expect(wrangler.previews.ratelimits.map((r) => r.namespace_id)).not.toContain('1001');
+    expect(wrangler.previews.kv_namespaces).toBeUndefined();
+  });
+});
+
+describe('wrangler.local.jsonc', () => {
+  it('mirrors the production Worker for `pnpm dev:worker`, without AI (no Cloudflare login needed)', () => {
+    for (const key of ['name', 'main', 'compatibility_date', 'assets', 'ratelimits', 'vars']) expect(local[key]).toEqual(wrangler[key]);
+    expect(local.ai).toBeUndefined();
+    expect(local.routes).toBeUndefined();
+    expect(local.kv_namespaces.map((kv) => kv.binding)).toEqual(['SPEC_CACHE']);
   });
 });
 
@@ -75,7 +95,9 @@ describe('docs/DEPLOY.md', () => {
       'pnpm exec wrangler kv namespace create SPEC_CACHE',
       '00000000000000000000000000000000',
       'pnpm install --frozen-lockfile && pnpm build && pnpm run check:deploy',
-      'pnpm build && pnpm exec wrangler deploy\n',
+      'pnpm run build',
+      'npx wrangler deploy',
+      'https://spec2skill.geekplux.com',
       '/api/health',
       'Download .zip',
       'audit passed',
@@ -85,7 +107,8 @@ describe('docs/DEPLOY.md', () => {
       expect(doc).toContain(text);
     }
   });
-  it('documents the placeholder id that wrangler.jsonc ships with', () => {
-    expect(doc).toContain(wrangler.kv_namespaces[0].id);
+  it('wrangler.jsonc uses a real KV namespace id, not the placeholder', () => {
+    expect(wrangler.kv_namespaces[0].id).toMatch(/^[0-9a-f]{32}$/);
+    expect(wrangler.kv_namespaces[0].id).not.toBe('0'.repeat(32));
   });
 });

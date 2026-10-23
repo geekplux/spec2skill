@@ -1,6 +1,7 @@
 // One Worker with static assets (D1): Vite builds dist/, wrangler bundles worker/ (D2).
-// Local: `pnpm build && pnpm dev:worker`. Deploying: docs/DEPLOY.md (dry run: `pnpm run check:deploy`).
-// No secrets live here or anywhere else: the app needs none.
+// This file is PRODUCTION only (top level) plus the `previews` block for Workers Builds branch previews.
+// Workers Builds runs `pnpm run build`, then `npx wrangler deploy` (no --env). Local dev uses wrangler.local.jsonc.
+// Deploying: docs/DEPLOY.md (dry run: `pnpm run check:deploy`). No secrets live here or anywhere else.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "spec2skill",
@@ -12,6 +13,8 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
+  // Custom domain, also attached in the dashboard: declaring it here keeps `wrangler deploy` from removing it.
+  "routes": [{ "pattern": "spec2skill.geekplux.com", "custom_domain": true }],
   // 30 requests / 60 s per client IP for /api/fetch-spec and /api/mcp/tools (D19); 10 / 60 s for /api/ai/describe.
   "ratelimits": [
     { "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
@@ -21,23 +24,21 @@
   // binding, /api/ai/describe answers 501 and the app stays deterministic. No API key or secret is needed.
   "ai": { "binding": "AI" },
   "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8" },
-  // AI results, 30-day TTL.
-  // PLACEHOLDER id (all zeros): before the first deploy run `pnpm exec wrangler kv namespace create SPEC_CACHE`
-  // and paste the printed id here (docs/DEPLOY.md, step 2). The dry run accepts the placeholder.
-  "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "00000000000000000000000000000000" }],
+  // AI results, 30-day TTL. Namespace id (docs/DEPLOY.md, step 2),
+  // created with `pnpm exec wrangler kv namespace create SPEC_CACHE`.
+  "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "b7d9422f1e0748e591bb18006fb87c38" }],
   // Workers Logs: invocation metadata and console output only (the Worker never logs request bodies);
   // query strings are redacted from logged URLs.
   "observability": { "enabled": true, "redact_query_string": true },
-  // `pnpm dev:worker` runs this env: Workers AI bindings always reach Cloudflare (login needed), so local
-  // dev leaves AI out and the app stays deterministic, as without the binding in production.
-  "env": {
-    "local": {
-      "ratelimits": [
-        { "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
-        { "name": "AI_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
-      ],
-      "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8" },
-      "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "00000000000000000000000000000000" }]
-    }
+  // Workers Builds branch previews (`npx wrangler preview`) do not inherit the bindings above. Previews get
+  // AI and their own rate-limit counters but no SPEC_CACHE (the cache is optional), so they never touch
+  // production KV and need no second namespace id.
+  "previews": {
+    "ratelimits": [
+      { "name": "RATE_LIMITER", "namespace_id": "2001", "simple": { "limit": 30, "period": 60 } },
+      { "name": "AI_RATE_LIMITER", "namespace_id": "2002", "simple": { "limit": 10, "period": 60 } }
+    ],
+    "ai": { "binding": "AI" },
+    "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8" }
   }
 }

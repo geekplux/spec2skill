@@ -9,7 +9,7 @@
 
 Paste a spec URL, an MCP server URL or the spec text, or pick a built-in sample. spec2skill writes a complete skill directory that teaches a coding agent to call that API well, proves it with its own audit, and puts a map of every operation right beside it so you can check what it teaches.
 
-**Live demo:** coming soon (until then, [run it locally](#quick-start) with one command, or [deploy your own](docs/DEPLOY.md)). No account, no API key; the built-in samples work offline.
+**Live demo:** [spec2skill.geekplux.com](https://spec2skill.geekplux.com) (or [run it locally](#quick-start) with one command, or [deploy your own](docs/DEPLOY.md)). No account, no API key; the built-in samples work offline.
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="docs/media/hero.png">
@@ -50,7 +50,7 @@ Browse three complete generated skills in the [examples gallery](examples/README
 
 ## Quick start
 
-**Web app.** Open the live demo (coming soon), or run it locally with Node 22 and pnpm:
+**Web app.** Open the [live demo](https://spec2skill.geekplux.com), or run it locally with Node 22 and pnpm:
 
 ```sh
 pnpm install && pnpm dev
