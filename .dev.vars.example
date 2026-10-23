@@ -3,5 +3,5 @@
 # generator all work without anything in this file.
 
 # Workers AI model used by /api/ai/describe when the AI binding is present (default in wrangler.jsonc).
-# Local dev (`--env local`) has no AI binding, so this only matters with `wrangler dev --remote`.
+# Local dev (`wrangler.local.jsonc`) has no AI binding, so this only matters with `wrangler dev --remote`.
 # AI_MODEL=@cf/meta/llama-3.1-8b-instruct-fp8

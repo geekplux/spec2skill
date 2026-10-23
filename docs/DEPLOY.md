@@ -18,19 +18,19 @@ This guide is for maintainers and for anyone who wants to run their own copy.
 
 ## 2. One-time setup: the KV namespace
 
-The Worker caches AI results in a KV namespace bound as `SPEC_CACHE`. `wrangler.jsonc` ships with a clearly marked placeholder id (`00000000000000000000000000000000`) that must be replaced before the first real deploy:
+The Worker caches AI results in a KV namespace bound as `SPEC_CACHE`. `wrangler.jsonc` ships with a placeholder id (`00000000000000000000000000000000`), and `wrangler deploy` fails with `KV namespace '00000000000000000000000000000000' not found` until it is replaced. This id is the **only** value to fill in:
 
 ```sh
 pnpm exec wrangler kv namespace create SPEC_CACHE
 ```
 
-Wrangler prints the new namespace's `id`. Paste it into `wrangler.jsonc`, in the **top-level** `kv_namespaces` entry (the one right above `"observability"`):
+Wrangler prints the new namespace's `id`. In `wrangler.jsonc`, replace the 32 zeros in the top-level `kv_namespaces` line (directly under the comment "The ONLY value to fill in before the first deploy"):
 
 ```jsonc
 "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "<the id wrangler printed>" }],
 ```
 
-Leave the entry under `env.local` alone: it is only used by `pnpm dev:worker`, which keeps KV local. A namespace id is not a secret, so committing it is fine.
+Commit and push it to `main`. A namespace id is not a secret, so committing it is fine. Leave `wrangler.local.jsonc` alone: it is only used by `pnpm dev:worker`, where KV is simulated locally.
 
 ## 3. Optional: Workers AI
 
@@ -40,13 +40,20 @@ The app works fully without it. To deploy without AI, delete the `"ai": { "bindi
 
 Rate limits (`RATE_LIMITER`: 30 requests per minute per IP for the proxy, `AI_RATE_LIMITER`: 10 per minute for AI) need no setup.
 
-## 4. Build and dry run
+## 4. How the config is laid out
+
+- **`wrangler.jsonc`, top level = production.** There are no named environments, so a bare `wrangler deploy` (what Workers Builds runs) deploys production and prints no "multiple environments" warning.
+- **Custom domain.** `routes` declares `spec2skill.geekplux.com` as a custom domain (`custom_domain: true`). It was first attached in the dashboard; declaring it here means `wrangler deploy` keeps it instead of fighting the dashboard. The `workers.dev` URL stays on as well.
+- **`previews` block.** Workers Builds runs `npx wrangler preview` for non-production branches, and Previews do not inherit top-level bindings. The block gives Previews the AI binding, `AI_MODEL` and their own rate-limit counters, and deliberately no `SPEC_CACHE` (the cache is optional), so Previews never touch production KV.
+- **`wrangler.local.jsonc`** = local dev only (`pnpm dev:worker`, `pnpm smoke:worker`): the same Worker without AI, so it needs no Cloudflare login.
+
+## 5. Build and dry run
 
 ```sh
 pnpm install --frozen-lockfile && pnpm build && pnpm run check:deploy
 ```
 
-`check:deploy` runs `wrangler deploy --dry-run --outdir .wrangler/dry-run`: it bundles the Worker, reads `dist/`, prints the bindings and stops without uploading anything. Expect this binding list:
+`check:deploy` runs `wrangler deploy --dry-run --outdir .wrangler/dry-run`: it bundles the Worker, reads `dist/`, prints the bindings and stops without uploading anything. Expect this binding list, and no warnings:
 
 ```text
 env.SPEC_CACHE (<your namespace id>)                            KV Namespace
@@ -57,8 +64,6 @@ env.ASSETS                                                      Assets
 env.AI_MODEL ("@cf/meta/llama-3.1-8b-instruct-fp8")             Environment Variable
 ```
 
-Wrangler also warns that several environments are defined and none was named. That is expected: the top-level configuration is the production one, and `env.local` exists only for `pnpm dev:worker`.
-
 Optionally, run the final local smoke (the real Worker under `wrangler dev`, one headless Chrome; everything it starts is stopped again):
 
 ```sh
@@ -67,19 +72,23 @@ pnpm build && pnpm smoke:worker
 
 It must end with `worker smoke passed`.
 
-## 5. Deploy
+## 6. Deploy (Workers Builds)
 
-The exact deploy command (run it by hand; the repo deliberately has no `deploy` script):
+Production deploys run in Cloudflare Workers Builds, connected to this GitHub repository (Workers & Pages, spec2skill, Settings, Builds):
 
-```sh
-pnpm build && pnpm exec wrangler deploy
-```
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Build command | `pnpm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Preview command (non-production branches) | `npx wrangler preview` |
+| Root directory | `/` |
 
-Wrangler prints the Worker's URL, `https://spec2skill.<your-subdomain>.workers.dev`. To serve it from your own domain, add a custom domain to the Worker in the Cloudflare dashboard (Workers & Pages, spec2skill, Settings, Domains & Routes).
+Every push to `main` builds and deploys to **https://spec2skill.geekplux.com**. The repo deliberately has no `deploy` script. To deploy by hand instead (same result): `pnpm build && pnpm exec wrangler deploy`.
 
-## 6. Post-deploy smoke
+### Post-deploy smoke
 
-Replace `<worker>` with the URL wrangler printed.
+Replace `<worker>` with `spec2skill.geekplux.com`.
 
 1. `curl -s https://<worker>/api/health` returns `{"ok":true,"ai":true,"model":"@cf/meta/llama-3.1-8b-instruct-fp8"}` (or `{"ok":true,"ai":false}` without the AI binding).
 2. `curl -s -X POST https://<worker>/api/fetch-spec -d '{"url":"http://127.0.0.1/"}'` returns a `blocked-host` error (the proxy refuses private addresses).
@@ -101,9 +110,9 @@ pnpm exec wrangler rollback           # roll back to the previous version (asks 
 
 ## 8. After the first deploy
 
-- **README live demo.** In `README.md`, replace the "coming soon" link in the `**Live demo:**` line (and "Open the live demo (coming soon)" in Quick start) with the Worker or custom-domain URL.
+- **README live demo.** `README.md` links to https://spec2skill.geekplux.com.
 - **Social preview.** On GitHub, open the repository's Settings, General, Social preview, and upload `docs/social-preview.png` (1280 x 640).
-- **Repository website.** Set the repository's "Website" field (About, the gear icon) to the same URL.
+- **Repository website.** The repository's "Website" field is https://spec2skill.geekplux.com.
 - **Logs.** Workers Logs are on (`observability` in `wrangler.jsonc`): invocation metadata and console output only, with query strings redacted. The Worker never logs request bodies.
 
 ## Not covered here

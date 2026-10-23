@@ -6,7 +6,7 @@
 //   pnpm build && flock /workspace/gx-projects/logs/browser.lock pnpm smoke:worker
 //   env: SMOKE_PORT (default 8787), CHROME_PATH, CHROME_ARGS
 //   Screenshots: docs/screenshots/phase-21/worker-dev-landing.png, worker-dev-health.png.
-// Manual cleanup if the script is SIGKILLed: pkill -f "wrangler.js dev --env local"; pkill workerd
+// Manual cleanup if the script is SIGKILLed: pkill -f "wrangler.js dev -c wrangler.local.jsonc"; pkill workerd
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { unzipSync } from 'fflate';
@@ -92,7 +92,7 @@ async function main() {
   if (!existsSync(join(ROOT, 'dist', 'index.html'))) throw new Error('dist/ not found; run `pnpm build` first');
   mkdirSync(OUT, { recursive: true });
   const wrangler = join(ROOT, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
-  const args = [wrangler, 'dev', '--env', 'local', '--ip', '127.0.0.1', '--port', String(PORT), '--show-interactive-dev-session=false'];
+  const args = [wrangler, 'dev', '-c', 'wrangler.local.jsonc', '--ip', '127.0.0.1', '--port', String(PORT), '--show-interactive-dev-session=false'];
   await startServer('wrangler dev', process.execPath, args, ORIGIN, { readyPath: '/api/health', timeoutMs: 90_000 });
   await httpChecks();
   await browserChecks();
