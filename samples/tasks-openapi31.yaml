@@ -1,0 +1,575 @@
+openapi: 3.1.0
+info:
+  title: Tasks API
+  version: 1.0.0
+  summary: Projects, tasks, comments, labels and members for a small team task tracker.
+  description: |
+    A hand-written sample for spec2skill. Projects hold tasks; tasks have comments and
+    labels; members belong to projects and can be assigned tasks. Lists use cursor
+    pagination: pass `nextCursor` from one page as `cursor` to get the next.
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: https://tasks.example.com/{basePath}
+    variables:
+      basePath:
+        default: v1
+security:
+  - bearerAuth: []
+tags:
+  - name: projects
+    description: Containers for tasks, labels and members.
+  - name: tasks
+    description: Units of work inside a project.
+  - name: comments
+    description: Discussion on a task.
+  - name: labels
+    description: Project-scoped labels for tasks.
+  - name: members
+    description: People who can see a project and be assigned its tasks.
+paths:
+  /projects:
+    get:
+      operationId: listProjects
+      summary: List projects
+      tags: [projects]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - name: archived
+          in: query
+          description: Include archived projects.
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: A page of projects.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createProject
+      summary: Create a project
+      tags: [projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectInput' }
+      responses:
+        '201':
+          description: The new project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /projects/{projectId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      operationId: getProject
+      summary: Get a project
+      tags: [projects]
+      responses:
+        '200':
+          description: The project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateProject
+      summary: Update a project
+      tags: [projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectPatch' }
+      responses:
+        '200':
+          description: The updated project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteProject
+      summary: Delete a project
+      description: Deletes the project with all its tasks, comments and labels. This cannot be undone.
+      tags: [projects]
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /projects/{projectId}/tasks:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      operationId: listTasks
+      summary: List tasks in a project
+      tags: [tasks]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/TaskStatus' }
+        - name: assigneeId
+          in: query
+          description: Only tasks assigned to this member.
+          schema: { type: string }
+        - name: labelId
+          in: query
+          description: Only tasks with this label.
+          schema: { type: string }
+      responses:
+        '200':
+          description: A page of tasks.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TaskPage' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      operationId: createTask
+      summary: Create a task
+      tags: [tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TaskInput' }
+      responses:
+        '201':
+          description: The new task.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /tasks/{taskId}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      operationId: getTask
+      summary: Get a task
+      tags: [tasks]
+      responses:
+        '200':
+          description: The task.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateTask
+      summary: Update a task
+      description: Change the title, status, assignee, labels or due date. Send only the fields to change.
+      tags: [tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TaskPatch' }
+      responses:
+        '200':
+          description: The updated task.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteTask
+      summary: Delete a task
+      tags: [tasks]
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /tasks/{taskId}/complete:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    post:
+      operationId: completeTask
+      summary: Mark a task as done
+      tags: [tasks]
+      responses:
+        '200':
+          description: The completed task.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /tasks/{taskId}/comments:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      operationId: listComments
+      summary: List comments on a task
+      tags: [comments]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: A page of comments, oldest first.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommentPage' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      operationId: createComment
+      summary: Comment on a task
+      tags: [comments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommentInput' }
+      responses:
+        '201':
+          description: The new comment.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Comment' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /comments/{commentId}:
+    parameters:
+      - name: commentId
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      operationId: updateComment
+      summary: Edit a comment
+      tags: [comments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommentInput' }
+      responses:
+        '200':
+          description: The edited comment.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Comment' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteComment
+      summary: Delete a comment
+      tags: [comments]
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /projects/{projectId}/labels:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      operationId: listLabels
+      summary: List labels in a project
+      tags: [labels]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: A page of labels.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LabelPage' }
+    post:
+      operationId: createLabel
+      summary: Create a label
+      tags: [labels]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LabelInput' }
+      responses:
+        '201':
+          description: The new label.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Label' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /labels/{labelId}:
+    delete:
+      operationId: deleteLabel
+      summary: Delete a label
+      description: Deletes the label and removes it from every task.
+      tags: [labels]
+      parameters:
+        - name: labelId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /projects/{projectId}/members:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      operationId: listMembers
+      summary: List project members
+      tags: [members]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: A page of members.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemberPage' }
+    post:
+      operationId: addMember
+      summary: Invite a member to a project
+      tags: [members]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MemberInput' }
+      responses:
+        '201':
+          description: The new member.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /projects/{projectId}/members/{memberId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: memberId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getMember
+      summary: Get a member of a project
+      tags: [members]
+      responses:
+        '200':
+          description: The member.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: removeMember
+      summary: Remove a member from a project
+      description: Their tasks in this project become unassigned.
+      tags: [members]
+      responses:
+        '204': { description: Removed. }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "A personal access token, sent as `Authorization: Bearer <token>`."
+  parameters:
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema: { type: string }
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      schema: { type: string }
+    Cursor:
+      name: cursor
+      in: query
+      description: The `nextCursor` of the previous page. Omit for the first page.
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      description: Page size.
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+  responses:
+    BadRequest:
+      description: The request body is invalid.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Missing or invalid token.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: No such resource, or you cannot see it.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Project:
+      type: object
+      required: [id, name, archived, createdAt]
+      properties:
+        id: { type: string, examples: [prj_7Hq2] }
+        name: { type: string }
+        description: { type: [string, 'null'] }
+        archived: { type: boolean }
+        ownerId: { type: string, description: The member who created the project. }
+        createdAt: { type: string, format: date-time }
+    ProjectInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: [string, 'null'] }
+    ProjectPatch:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: [string, 'null'] }
+        archived: { type: boolean }
+    TaskStatus:
+      type: string
+      enum: [todo, in_progress, done]
+    Task:
+      type: object
+      required: [id, projectId, title, status, labelIds, createdAt]
+      properties:
+        id: { type: string, examples: [tsk_91xD] }
+        projectId: { type: string }
+        title: { type: string }
+        description: { type: [string, 'null'] }
+        status: { $ref: '#/components/schemas/TaskStatus' }
+        assigneeId:
+          type: [string, 'null']
+          description: The member the task is assigned to.
+        labelIds:
+          type: array
+          items: { type: string }
+        dueDate: { type: [string, 'null'], format: date }
+        createdAt: { type: string, format: date-time }
+    TaskInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: [string, 'null'] }
+        assigneeId: { type: [string, 'null'] }
+        labelIds:
+          type: array
+          items: { type: string }
+        dueDate: { type: [string, 'null'], format: date }
+    TaskPatch:
+      type: object
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: [string, 'null'] }
+        status: { $ref: '#/components/schemas/TaskStatus' }
+        assigneeId: { type: [string, 'null'] }
+        labelIds:
+          type: array
+          items: { type: string }
+        dueDate: { type: [string, 'null'], format: date }
+    Comment:
+      type: object
+      required: [id, taskId, authorId, body, createdAt]
+      properties:
+        id: { type: string }
+        taskId: { type: string }
+        authorId: { type: string, description: The member who wrote the comment. }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+        editedAt: { type: [string, 'null'], format: date-time }
+    CommentInput:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1, maxLength: 10000 }
+    Label:
+      type: object
+      required: [id, projectId, name, color]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        name: { type: string }
+        color: { type: string, description: 'A colour name such as "teal"; shown with the name, never alone.' }
+    LabelInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 50 }
+        color: { type: string }
+    Role:
+      type: string
+      enum: [owner, editor, viewer]
+    Member:
+      type: object
+      required: [id, projectId, name, role]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+    MemberInput:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+        role:
+          $ref: '#/components/schemas/Role'
+          description: Defaults to editor.
+    PageInfo:
+      type: object
+      required: [nextCursor]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+          description: Pass as `cursor` to get the next page; null on the last page.
+    ProjectPage:
+      allOf:
+        - $ref: '#/components/schemas/PageInfo'
+        - type: object
+          required: [data]
+          properties:
+            data: { type: array, items: { $ref: '#/components/schemas/Project' } }
+    TaskPage:
+      allOf:
+        - $ref: '#/components/schemas/PageInfo'
+        - type: object
+          required: [data]
+          properties:
+            data: { type: array, items: { $ref: '#/components/schemas/Task' } }
+    CommentPage:
+      allOf:
+        - $ref: '#/components/schemas/PageInfo'
+        - type: object
+          required: [data]
+          properties:
+            data: { type: array, items: { $ref: '#/components/schemas/Comment' } }
+    LabelPage:
+      allOf:
+        - $ref: '#/components/schemas/PageInfo'
+        - type: object
+          required: [data]
+          properties:
+            data: { type: array, items: { $ref: '#/components/schemas/Label' } }
+    MemberPage:
+      allOf:
+        - $ref: '#/components/schemas/PageInfo'
+        - type: object
+          required: [data]
+          properties:
+            data: { type: array, items: { $ref: '#/components/schemas/Member' } }
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, examples: [not_found] }
+        message: { type: string }

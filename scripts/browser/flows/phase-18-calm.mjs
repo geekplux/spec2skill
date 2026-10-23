@@ -1,0 +1,168 @@
+// Phase 18: calm polish, nothing lost (docs/DESIGN.md "Calm polish audit"). On first load nothing that
+// DESIGN.md folds is open, the accent marks one thing, and the focal point is on screen at 1440 and 390.
+// Then every folded item is reached by keyboard only: Tab to its toggle, Enter or Space opens it,
+// focus moves inside (or, for text-only content, the text is in the accessibility tree); each toggle
+// has a name and an expanded state (read from Chrome's accessibility tree); under reduced motion
+// nothing animates. The map's screen-reader summary and the list view are still in the tree.
+const expect = (ok, message) => {
+  if (!ok) throw new Error(message);
+};
+const HOST = 'https://specs.example.test';
+const WARNED = `openapi: 3.0.3
+info: {title: Shelf API, version: "1"}
+paths:
+  /shelves:
+    get:
+      responses: {"200": {description: ok, content: {application/json: {schema: {$ref: "https://elsewhere.example.test/shelf.json#/Shelf"}}}}}
+  /shelves/{shelfId}:
+    get:
+      parameters: [{name: shelfId, in: path, required: true, schema: {type: string}}]
+      responses: {"200": {description: ok}}
+`;
+
+/**
+ * The folded items (DESIGN.md audit table): the toggle, its expected name, the content it reveals,
+ * the control Tab reaches inside (null: text only), and what must be on screen first.
+ */
+const FOLDED = [
+  { name: /^More options$/, toggle: 'button[aria-controls="source-more"]', content: '#source-more', inside: 'select' },
+  { name: /^Options$/, toggle: '.options > summary', content: '#opt-slug', inside: '#opt-slug', pane: true },
+  { name: /^Audit passed: 9 of 9 checks$/, toggle: '.audit > summary', content: '.audit ul', inside: null, text: 'Every operation: passed', pane: true },
+  { name: /^Install command$/, toggle: '.install > summary', content: '.install pre', inside: '.install button', text: 'unzip tasks-api-skill.zip', pane: true },
+  { name: /^Filters$/, toggle: '.filters > summary', content: '.filters fieldset', inside: '.filters input[type="checkbox"]', tab: 'map' },
+  { name: /^Legend$/, toggle: '.legend > summary', content: '.legend p', inside: null, text: 'Ctrl + scroll to zoom', tab: 'map' },
+  { name: /^\d+ relationships: /, toggle: '.rels > summary', content: '.rels ul', inside: null, text: 'feeds', tab: 'list' },
+];
+/** Folded only once a user source is loaded. */
+const LOADED = [
+  { name: /^\d+ warnings?$/, toggle: '.warnings > summary', content: '.warnings ul', inside: null, text: 'external' },
+  { name: /^Try a built-in sample$/, toggle: '.samples-fold > summary', content: '.samples-fold .chips', inside: '.samples-fold .chip' },
+];
+
+export default {
+  name: 'phase-18-calm',
+  phase: 18,
+  async run({ page, origin, screenshot, axe }) {
+    await page.route(`${HOST}/**`, (route) => route.abort('accessdenied'));
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Accessibility.enable');
+    /** Chrome's accessibility node for the first element matching `selector`: role, name, expanded, ignored. */
+    const ax = async (selector) => {
+      const { root } = await cdp.send('DOM.getDocument', { depth: 0 });
+      const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector });
+      expect(nodeId, `no element ${selector}`);
+      const { nodes } = await cdp.send('Accessibility.getPartialAXTree', { nodeId, fetchRelatives: false });
+      const n = nodes[0];
+      const prop = (p) => n.properties?.find((x) => x.name === p)?.value.value;
+      return { role: n.role?.value, name: (n.name?.value ?? '').replace(/\s+/g, ' ').trim(), expanded: prop('expanded'), ignored: n.ignored };
+    };
+    const ready = async () => {
+      await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
+      await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' });
+    };
+    const isActive = (selector) => page.evaluate((s) => !!document.activeElement?.matches(s), selector);
+    /** Tab from the top of the page until `selector` has focus (keyboard only). */
+    const tabTo = async (selector, label) => {
+      await page.locator('.skip').focus();
+      for (let i = 0; i < 160; i++) {
+        if (await isActive(selector)) return;
+        await page.keyboard.press('Tab');
+      }
+      throw new Error(`${label}: Tab never reached ${selector}`);
+    };
+    /** Select the `id` tab by keyboard (arrows on the tablist), as a keyboard user would. */
+    const tabKey = async (id) => {
+      if ((await page.locator(`#tab-${id}`).getAttribute('aria-selected')) === 'true') return;
+      await tabTo('[role="tab"][aria-selected="true"]', `tab ${id}`);
+      for (let i = 0; i < 3 && (await page.locator(`#tab-${id}`).getAttribute('aria-selected')) !== 'true'; i++) await page.keyboard.press('ArrowRight');
+      expect((await page.locator(`#tab-${id}`).getAttribute('aria-selected')) === 'true', `could not select the ${id} tab by keyboard`);
+    };
+    const walk = async (items, width) => {
+      for (const [i, item] of items.entries()) {
+        const label = `${width}: ${item.name}`;
+        const tab = item.tab ?? (item.pane && width < 1024 ? 'skill' : undefined);
+        if (tab) await tabKey(tab);
+        await tabTo(item.toggle, label);
+        const closed = await ax(item.toggle);
+        expect(item.name.test(closed.name), `${label}: toggle named "${closed.name}"`);
+        expect(closed.expanded === false, `${label}: toggle does not expose a collapsed state (${JSON.stringify(closed)})`);
+        expect(!(await page.locator(item.content).first().isVisible()), `${label}: content visible before opening`);
+        await page.keyboard.press(i % 2 ? 'Space' : 'Enter');
+        const opened = await ax(item.toggle);
+        expect(opened.expanded === true, `${label}: toggle not expanded after ${i % 2 ? 'Space' : 'Enter'}`);
+        expect(await page.locator(item.content).first().isVisible(), `${label}: content not visible after opening`);
+        expect(await page.evaluate(() => document.getAnimations().length === 0), `${label}: something animates under reduced motion`);
+        if (item.inside) {
+          await page.keyboard.press('Tab');
+          expect(await isActive(item.inside), `${label}: Tab from the toggle went to ${await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 80))}`);
+          await page.keyboard.press('Shift+Tab');
+        }
+        if (item.text) {
+          const tree = await page.locator(item.content).first().ariaSnapshot();
+          expect(tree.toLowerCase().includes(item.text.toLowerCase()), `${label}: "${item.text}" not in the accessibility tree: ${tree.slice(0, 200)}`);
+        }
+        expect(await isActive(item.toggle), `${label}: focus not back on the toggle`);
+        await page.keyboard.press('Enter'); // closed again, as found
+        expect((await ax(item.toggle)).expanded === false, `${label}: toggle did not close`);
+        console.log(`  ${label}: reached, named, opened, closed`);
+      }
+    };
+    const meridianFills = () => page.evaluate(() => {
+      const probe = document.createElement('i');
+      probe.style.color = 'var(--meridian)';
+      document.body.append(probe);
+      const accent = getComputedStyle(probe).color;
+      probe.remove();
+      return [...document.querySelectorAll('button, summary, a')]
+        .filter((el) => el.checkVisibility() && getComputedStyle(el).backgroundColor === accent)
+        .map((el) => el.textContent.trim());
+    });
+
+    await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
+    for (const [width, height] of [[1440, 900], [390, 844]]) {
+      await page.setViewportSize({ width, height });
+      await page.goto(`${origin}/?sample=tasks`);
+      await ready();
+      await page.evaluate(() => document.fonts.ready);
+
+      // First load: nothing DESIGN.md folds is open, one accent fill, the focal point on screen.
+      const open = await page.evaluate(() => [...document.querySelectorAll('details[open]')].map((d) => d.className));
+      expect(open.length === 0, `${width}: disclosures open on first load: ${open}`);
+      expect(await page.locator('#source-more').isHidden(), `${width}: More options open on first load`);
+      const fills = await meridianFills();
+      expect(fills.length === 1 && fills[0] === 'Download .zip', `${width}: accent fills ${JSON.stringify(fills)}`);
+      const box = async (selector) => page.locator(selector).first().boundingBox();
+      const [tree, audit, preview, actions] = [await box('[role="tree"]'), await box('.audit > summary'), await box('#skill-preview'), await box('.actions')];
+      const fold = width >= 1024 ? height : actions.y; // phones: above the sticky Download bar
+      expect(tree.y + Math.min(tree.height, 100) <= fold && audit.y + audit.height <= fold && preview.y + 40 <= fold,
+        `${width}: tree, "Audit passed" or the preview start below ${fold}px: ${JSON.stringify({ tree, audit, preview })}`);
+      if (width >= 1024) expect(preview.y + preview.height <= height && actions.y + actions.height <= height, `${width}: preview or Download below the fold`);
+      expect((await page.locator('.audit > summary').textContent()).includes('Audit passed'), `${width}: audit line`);
+
+      // The map's screen-reader summary and the list view are still in the accessibility tree.
+      if (width < 1024) await tabKey('map');
+      const atlas = await ax('[data-testid="atlas"]');
+      expect(!atlas.ignored && /22 operations in 5 clusters/.test(atlas.name), `${width}: map summary ${JSON.stringify(atlas)}`);
+      const help = await page.getByTestId('atlas').getAttribute('aria-describedby');
+      expect((await page.locator(`[id="${help}"]`).textContent()).includes('The List view shows the same map as text'), `${width}: map description`);
+      const listTab = await ax('#tab-list');
+      expect(listTab.role === 'tab' && listTab.name === 'List' && !listTab.ignored, `${width}: list tab ${JSON.stringify(listTab)}`);
+      await tabKey('list');
+      const list = await ax('[data-testid="list-view"]');
+      expect(!list.ignored && list.name === 'Tasks API as text', `${width}: list view ${JSON.stringify(list)}`);
+      await tabKey(width < 1024 ? 'skill' : 'map');
+
+      await walk(FOLDED, width);
+      await axe(`folded items ${width}`);
+
+      // A loaded source folds the sample chips; its warnings stay one step away.
+      await tabKey(width < 1024 ? 'skill' : 'map');
+      await page.locator('#source-field').fill(WARNED);
+      await page.locator('#source-field').press('Enter');
+      await page.locator('.title h1', { hasText: 'Shelf API' }).waitFor();
+      await ready();
+      await walk(LOADED, width);
+      await screenshot(`folded-items-${width}`);
+    }
+  },
+};

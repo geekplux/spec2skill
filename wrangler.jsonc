@@ -1,0 +1,43 @@
+// One Worker with static assets (D1): Vite builds dist/, wrangler bundles worker/ (D2).
+// Local: `pnpm build && pnpm dev:worker`. Deploying: docs/DEPLOY.md (dry run: `pnpm run check:deploy`).
+// No secrets live here or anywhere else: the app needs none.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "spec2skill",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-21",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // 30 requests / 60 s per client IP for /api/fetch-spec and /api/mcp/tools (D19); 10 / 60 s for /api/ai/describe.
+  "ratelimits": [
+    { "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
+    { "name": "AI_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
+  ],
+  // Optional lean AI (phase 17): cluster names and skill prose for user-loaded specs. Without the AI
+  // binding, /api/ai/describe answers 501 and the app stays deterministic. No API key or secret is needed.
+  "ai": { "binding": "AI" },
+  "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8" },
+  // AI results, 30-day TTL.
+  // PLACEHOLDER id (all zeros): before the first deploy run `pnpm exec wrangler kv namespace create SPEC_CACHE`
+  // and paste the printed id here (docs/DEPLOY.md, step 2). The dry run accepts the placeholder.
+  "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "00000000000000000000000000000000" }],
+  // Workers Logs: invocation metadata and console output only (the Worker never logs request bodies);
+  // query strings are redacted from logged URLs.
+  "observability": { "enabled": true, "redact_query_string": true },
+  // `pnpm dev:worker` runs this env: Workers AI bindings always reach Cloudflare (login needed), so local
+  // dev leaves AI out and the app stays deterministic, as without the binding in production.
+  "env": {
+    "local": {
+      "ratelimits": [
+        { "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
+        { "name": "AI_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
+      ],
+      "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8" },
+      "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "00000000000000000000000000000000" }]
+    }
+  }
+}

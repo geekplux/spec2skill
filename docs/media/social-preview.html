@@ -1,0 +1,66 @@
+<!doctype html>
+<!-- The repository's social preview card (1280x640). Rendered to docs/social-preview.png by
+     `node scripts/social-preview.mjs` (part of `pnpm capture:readme`); it crops docs/media/hero.png. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>spec2skill social preview</title>
+<style>
+  @font-face {
+    font-family: 'Bricolage Grotesque';
+    src: url('../../node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1280px; height: 640px; overflow: hidden; }
+  body {
+    background: #F7F3EA;
+    color: #1C2430;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    display: grid;
+    grid-template-columns: 472px 1fr;
+    gap: 40px;
+    padding: 64px 0 0 64px;
+    border-top: 6px double #1C2430;
+  }
+  .words { display: flex; flex-direction: column; gap: 24px; padding-bottom: 64px; }
+  .words img { width: 340px; height: auto; }
+  h1 {
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-size: 44px;
+    line-height: 1.12;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  ul { list-style: none; padding: 0; font-size: 21px; line-height: 1.45; color: #59636F; }
+  li::before { content: "\2192\00a0"; color: #1C2430; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 0.92em; color: #1C2430; }
+  .foot { margin-top: auto; font-size: 18px; color: #59636F; }
+  .shot {
+    align-self: start;
+    height: 576px;
+    overflow: hidden;
+    border: 1px solid #1C2430;
+    border-right: 0;
+    border-bottom: 0;
+    background: #FFFDF7;
+  }
+  /* The hero (1440x900) at 82 %, from y 196: its skill pane and the left part of the map. */
+  .shot img { display: block; width: 1181px; max-width: none; margin-top: -161px; }
+</style>
+</head>
+<body>
+  <div class="words">
+    <img src="wordmark.svg" alt="spec2skill">
+    <h1>Turn any OpenAPI spec or MCP server into an agent skill in one click.</h1>
+    <ul>
+      <li>OpenAPI 3.x, Swagger 2.0 and MCP</li>
+      <li>Inferred workflows: outputs feed inputs</li>
+      <li><code>audit passed</code>, tests and evals inside</li>
+      <li>A map to check what it teaches</li>
+    </ul>
+    <p class="foot">Open source · MIT · works offline</p>
+  </div>
+  <div class="shot"><img src="hero.png" alt=""></div>
+</body>
+</html>

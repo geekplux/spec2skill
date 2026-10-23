@@ -1,0 +1,60 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Cyclic", "version": "1" },
+  "paths": {
+    "/nodes": {
+      "post": {
+        "operationId": "createNode",
+        "parameters": [{ "$ref": "#/components/parameters/Loop1" }],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/A" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Node" } } }
+          }
+        }
+      }
+    },
+    "/deep": {
+      "get": {
+        "operationId": "getDeep",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Deep/properties/self" } } }
+          },
+          "default": { "$ref": "#/components/responses/Again" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "Loop1": { "$ref": "#/components/parameters/Loop2" },
+      "Loop2": { "$ref": "#/components/parameters/Loop1" }
+    },
+    "responses": {
+      "Again": { "$ref": "#/components/responses/Again" }
+    },
+    "schemas": {
+      "Node": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "parent": { "$ref": "#/components/schemas/Node" },
+          "children": { "type": "array", "items": { "$ref": "#/components/schemas/Node" } }
+        }
+      },
+      "A": { "allOf": [{ "$ref": "#/components/schemas/B" }, { "properties": { "a": { "type": "string" } } }] },
+      "B": { "allOf": [{ "$ref": "#/components/schemas/A" }, { "properties": { "b": { "type": "integer" } } }] },
+      "Alias1": { "$ref": "#/components/schemas/Alias2" },
+      "Alias2": { "$ref": "#/components/schemas/Alias1" },
+      "Deep": {
+        "type": "object",
+        "properties": { "self": { "$ref": "#/components/schemas/Deep/properties/self" } }
+      }
+    }
+  }
+}

@@ -102,3 +102,17 @@ This project will be released as open source and is not meant to be commercializ
 - **Open-source packaging is part of the product,** planned as real phases: README that sells in 10 seconds (one-line pitch, hero GIF or screenshot, live demo link placeholder, quick start, how it works, roadmap), LICENSE (MIT), CONTRIBUTING.md, CODE_OF_CONDUCT.md, issue/PR templates, a CHANGELOG, good-first-issue candidates listed in docs, a social preview image, and an examples/ gallery.
 - **Quality signals:** tests and CI config (in ci/ until workflow scope is granted), typed public APIs, small dependency footprint, fast load, accessible (keyboard + screen reader), docs for extending it.
 - **Launch-ready:** include a short launch kit in docs/LAUNCH.md (Show HN / X post draft, 3 demo scenarios, comparison with alternatives). Do not post anything anywhere.
+
+## Rename 2026-10-20 (Sean)
+The product is now **spec2skill** (repo geekplux/spec2skill), and the headline is "any OpenAPI spec or MCP server into an agent skill in one click", with the map as the way to understand and check it. Full details: /workspace/gx-projects/logs/tool-atlas.rename.md
+
+## Design direction 2026-10-21 (Sean)
+Calmer, less cramped layout plus a dedicated polish phase, starting with your next phase (do not redo the current one). Full details: /workspace/gx-projects/logs/tool-atlas.design-direction.md
+
+## Speed mode 2026-10-21 (Sean): go as fast as possible, starting now
+Sean wants maximum development speed. Quality bar for shipped code is unchanged, but cut verification overhead:
+- Exactly two review rounds per phase (review, fix, second review, fix), then stop. Never run a third review round.
+- Per phase run lint, typecheck, unit tests and build. Run the headless-browser suite (check:browser / smoke / e2e / a11y probes) at most ONCE per phase, at the end, and only the flows the phase touched.
+- Wrap EVERY headless Chrome / Playwright / browser check in a shared lock so only one project on this machine runs a browser at a time: `flock /workspace/gx-projects/logs/browser.lock <command>`. Close preview servers right after.
+- Screenshots: per phase only 1-2 key shots (1440 light) for the PR description, compressed WebP. The full 1440/390 light/dark before/after set is done once, in the calm-polish phase.
+- Keep PRs focused; don't gold-plate docs mid-phase.

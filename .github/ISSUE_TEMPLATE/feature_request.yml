@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest something that would make spec2skill or its generated skills more useful.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The situation and what gets in the way today. A real API or skill you work with helps.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would help?
+      description: The change you have in mind. Small and scoped is easier to land.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you have considered
+  - type: checkboxes
+    id: roadmap
+    attributes:
+      label: Checks
+      options:
+        - label: I looked at the roadmap in the README and docs/GOOD_FIRST_ISSUES.md.
+          required: true

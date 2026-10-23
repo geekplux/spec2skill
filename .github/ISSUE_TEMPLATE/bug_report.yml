@@ -1,0 +1,47 @@
+name: Bug report
+description: Something in the app, the CLI or a generated skill does not work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. If a spec parses but its map or skill looks wrong, the "Spec not mapped well" form is a better fit.
+        Never paste credentials or a private spec here.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - Web app
+        - CLI (spec2skill)
+        - A generated skill (kit, scripts, audit, evals)
+        - Worker proxy (URL fetching, MCP)
+        - Docs
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Start from a built-in sample or a public spec URL if you can.
+      placeholder: |
+        1. Open the app and pick the Petstore sample
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser or Node version, and operating system
+      placeholder: Firefox 140 on Linux / Node 22.12 on macOS
+  - type: textarea
+    id: output
+    attributes:
+      label: Error message, console output or `audit` output
+      render: text

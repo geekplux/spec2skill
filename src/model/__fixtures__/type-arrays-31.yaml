@@ -1,0 +1,19 @@
+openapi: 3.1.0
+info: { title: Nullable, version: '1' }
+paths: {}
+components:
+  schemas:
+    Owner:
+      type: object
+      properties: { name: { type: string } }
+    Thing:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string }
+        note: { type: [string, 'null'] }
+        count: { type: [integer, 'null'], format: int32 }
+        owner:
+          anyOf: [{ $ref: '#/components/schemas/Owner' }, { type: 'null' }]
+        tags: { type: [array, 'null'], items: { type: string } }
+        kind: { const: a, type: string }

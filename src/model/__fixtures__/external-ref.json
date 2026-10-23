@@ -1,0 +1,33 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "External", "version": "1" },
+  "paths": {
+    "/pets": {
+      "get": {
+        "operationId": "listPets",
+        "parameters": [
+          { "$ref": "./parameters.yaml#/Limit" },
+          { "name": "kind", "in": "query", "schema": { "$ref": "https://schemas.example.com/kind.json" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "https://schemas.example.com/pet.json#/Pet" } }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Owner": {
+        "type": "object",
+        "properties": { "pet": { "$ref": "pet.yaml#/components/schemas/Pet" }, "missing": { "$ref": "#/components/schemas/Nope" } }
+      }
+    }
+  }
+}

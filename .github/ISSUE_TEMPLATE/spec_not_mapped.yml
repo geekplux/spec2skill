@@ -1,0 +1,44 @@
+name: Spec not mapped well
+description: A spec or MCP server loads, but the map, the relationships or the generated skill look wrong or incomplete.
+labels: [mapping]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please share only public specs, or a minimal snippet that shows the problem. Never paste credentials, tokens or a private spec.
+  - type: textarea
+    id: source
+    attributes:
+      label: Spec URL or a minimal snippet
+      description: A public URL, or the smallest JSON/YAML that reproduces it.
+      render: yaml
+    validations:
+      required: true
+  - type: dropdown
+    id: detected
+    attributes:
+      label: What type did spec2skill detect?
+      description: Shown in the lede under the title, e.g. "OpenAPI 3.1.0".
+      options:
+        - OpenAPI 3.0
+        - OpenAPI 3.1
+        - Swagger 2.0
+        - MCP tools/list
+        - It was not detected (error)
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: listAlbums should feed getAlbum through albumId.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead?
+      description: Missing or wrong operations, relationships, clusters, warnings, or text in the generated skill. A screenshot helps.
+    validations:
+      required: true

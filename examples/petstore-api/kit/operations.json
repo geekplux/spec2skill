@@ -1,0 +1,736 @@
+{
+  "generator": "spec2skill 0.0.0",
+  "skill": "petstore-api",
+  "kind": "http",
+  "sourceHash": "1c8c5b08bbe56ddd770e4d4f18c3c18397fff7979ff8d2cc70fd072e1f65e09c",
+  "envPrefix": "PETSTORE_API",
+  "servers": [
+    "https://petstore.swagger.io/v2",
+    "http://petstore.swagger.io/v2"
+  ],
+  "auth": [
+    {
+      "id": "api_key",
+      "type": "apiKey",
+      "in": "header",
+      "name": "api_key",
+      "env": [
+        "PETSTORE_API_API_KEY"
+      ]
+    },
+    {
+      "id": "petstore_auth",
+      "type": "oauth2",
+      "env": [
+        "PETSTORE_API_TOKEN"
+      ]
+    }
+  ],
+  "operations": [
+    {
+      "id": "addPet",
+      "title": "Add a new pet to the store",
+      "crud": "create",
+      "method": "post",
+      "path": "/pet",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "category",
+          "in": "body",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "name": "id",
+          "in": "body",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "name": "name",
+          "in": "body",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "photoUrls",
+          "in": "body",
+          "required": true,
+          "type": "array"
+        },
+        {
+          "name": "status",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "enum": [
+            "available",
+            "pending",
+            "sold"
+          ]
+        },
+        {
+          "name": "tags",
+          "in": "body",
+          "required": false,
+          "type": "array"
+        }
+      ],
+      "output": [],
+      "security": [
+        [
+          "petstore_auth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "updatePet",
+      "title": "Update an existing pet",
+      "crud": "update",
+      "method": "put",
+      "path": "/pet",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "category",
+          "in": "body",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "name": "id",
+          "in": "body",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "name": "name",
+          "in": "body",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "photoUrls",
+          "in": "body",
+          "required": true,
+          "type": "array"
+        },
+        {
+          "name": "status",
+          "in": "body",
+          "required": false,
+          "type": "string",
+          "enum": [
+            "available",
+            "pending",
+            "sold"
+          ]
+        },
+        {
+          "name": "tags",
+          "in": "body",
+          "required": false,
+          "type": "array"
+        }
+      ],
+      "output": [],
+      "security": [
+        [
+          "petstore_auth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "findPetsByStatus",
+      "title": "Finds Pets by status",
+      "crud": "list",
+      "method": "get",
+      "path": "/pet/findByStatus",
+      "inputs": [
+        {
+          "name": "status",
+          "in": "query",
+          "required": true,
+          "type": "array",
+          "enum": [
+            "available",
+            "pending",
+            "sold"
+          ]
+        }
+      ],
+      "output": [
+        "category",
+        "id",
+        "name",
+        "photoUrls",
+        "status",
+        "tags"
+      ],
+      "security": [
+        [
+          "petstore_auth"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "next": [
+        {
+          "to": "getPetById",
+          "via": "id -> petId",
+          "confidence": "exact"
+        },
+        {
+          "to": "updatePetWithForm",
+          "via": "id -> petId",
+          "confidence": "exact"
+        },
+        {
+          "to": "deletePet",
+          "via": "id -> petId",
+          "confidence": "exact"
+        },
+        {
+          "to": "uploadFile",
+          "via": "id -> petId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "findPetsByTags",
+      "title": "Finds Pets by tags",
+      "crud": "list",
+      "method": "get",
+      "path": "/pet/findByTags",
+      "inputs": [
+        {
+          "name": "tags",
+          "in": "query",
+          "required": true,
+          "type": "array"
+        }
+      ],
+      "output": [
+        "category",
+        "id",
+        "name",
+        "photoUrls",
+        "status",
+        "tags"
+      ],
+      "security": [
+        [
+          "petstore_auth"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "deprecated": true,
+      "next": [
+        {
+          "to": "getPetById",
+          "via": "id -> petId",
+          "confidence": "exact"
+        },
+        {
+          "to": "updatePetWithForm",
+          "via": "id -> petId",
+          "confidence": "exact"
+        },
+        {
+          "to": "deletePet",
+          "via": "id -> petId",
+          "confidence": "exact"
+        },
+        {
+          "to": "uploadFile",
+          "via": "id -> petId",
+          "confidence": "exact"
+        }
+      ]
+    },
+    {
+      "id": "getPetById",
+      "title": "Find pet by ID",
+      "crud": "read",
+      "method": "get",
+      "path": "/pet/{petId}",
+      "inputs": [
+        {
+          "name": "petId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "output": [
+        "category",
+        "id",
+        "name",
+        "photoUrls",
+        "status",
+        "tags"
+      ],
+      "security": [
+        [
+          "api_key"
+        ]
+      ],
+      "readOnly": true,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "updatePetWithForm",
+      "title": "Updates a pet in the store with form data",
+      "crud": "action",
+      "method": "post",
+      "path": "/pet/{petId}",
+      "body": {
+        "type": "application/x-www-form-urlencoded",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "petId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        },
+        {
+          "name": "name",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "output": [],
+      "security": [
+        [
+          "petstore_auth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "deletePet",
+      "title": "Deletes a pet",
+      "crud": "delete",
+      "method": "delete",
+      "path": "/pet/{petId}",
+      "inputs": [
+        {
+          "name": "api_key",
+          "in": "header",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "petId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "output": [],
+      "security": [
+        [
+          "petstore_auth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": true,
+      "next": []
+    },
+    {
+      "id": "uploadFile",
+      "title": "uploads an image",
+      "crud": "action",
+      "method": "post",
+      "path": "/pet/{petId}/uploadImage",
+      "body": {
+        "type": "multipart/form-data",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "petId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        },
+        {
+          "name": "additionalMetadata",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "file",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "code",
+        "message",
+        "type"
+      ],
+      "security": [
+        [
+          "petstore_auth"
+        ]
+      ],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "createUser",
+      "title": "Create user",
+      "crud": "create",
+      "method": "post",
+      "path": "/user",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "email",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "firstName",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "body",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "name": "lastName",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "password",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "phone",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "userStatus",
+          "in": "body",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "name": "username",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "output": [],
+      "security": [],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "createUsersWithArrayInput",
+      "title": "Creates list of users with given input array",
+      "crud": "create",
+      "method": "post",
+      "path": "/user/createWithArray",
+      "body": {
+        "type": "application/json",
+        "whole": true
+      },
+      "inputs": [
+        {
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "type": "array"
+        }
+      ],
+      "output": [],
+      "security": [],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "createUsersWithListInput",
+      "title": "Creates list of users with given input array",
+      "crud": "create",
+      "method": "post",
+      "path": "/user/createWithList",
+      "body": {
+        "type": "application/json",
+        "whole": true
+      },
+      "inputs": [
+        {
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "type": "array"
+        }
+      ],
+      "output": [],
+      "security": [],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "loginUser",
+      "title": "Logs user into the system",
+      "crud": "action",
+      "method": "get",
+      "path": "/user/login",
+      "inputs": [
+        {
+          "name": "username",
+          "in": "query",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "password",
+          "in": "query",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "logoutUser",
+      "title": "Logs out current logged in user session",
+      "crud": "action",
+      "method": "get",
+      "path": "/user/logout",
+      "inputs": [],
+      "output": [],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "getUserByName",
+      "title": "Get user by user name",
+      "crud": "read",
+      "method": "get",
+      "path": "/user/{username}",
+      "inputs": [
+        {
+          "name": "username",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [
+        "email",
+        "firstName",
+        "id",
+        "lastName",
+        "password",
+        "phone",
+        "userStatus",
+        "username"
+      ],
+      "security": [],
+      "readOnly": true,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "updateUser",
+      "title": "Updated user",
+      "crud": "update",
+      "method": "put",
+      "path": "/user/{username}",
+      "body": {
+        "type": "application/json",
+        "whole": false
+      },
+      "inputs": [
+        {
+          "name": "username",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "firstName",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "body",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "name": "lastName",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "password",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "phone",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "userStatus",
+          "in": "body",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "name": "username",
+          "in": "body",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "output": [],
+      "security": [],
+      "readOnly": false,
+      "destructive": false,
+      "next": []
+    },
+    {
+      "id": "deleteUser",
+      "title": "Delete user",
+      "crud": "delete",
+      "method": "delete",
+      "path": "/user/{username}",
+      "inputs": [
+        {
+          "name": "username",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "output": [],
+      "security": [],
+      "readOnly": false,
+      "destructive": true,
+      "next": []
+    }
+  ],
+  "chains": [
+    {
+      "ops": [
+        "findPetsByStatus",
+        "getPetById"
+      ],
+      "via": [
+        "id -> petId"
+      ],
+      "inferred": [
+        false
+      ]
+    },
+    {
+      "ops": [
+        "findPetsByStatus",
+        "updatePetWithForm"
+      ],
+      "via": [
+        "id -> petId"
+      ],
+      "inferred": [
+        false
+      ]
+    },
+    {
+      "ops": [
+        "findPetsByStatus",
+        "deletePet"
+      ],
+      "via": [
+        "id -> petId"
+      ],
+      "inferred": [
+        false
+      ]
+    },
+    {
+      "ops": [
+        "findPetsByStatus",
+        "uploadFile"
+      ],
+      "via": [
+        "id -> petId"
+      ],
+      "inferred": [
+        false
+      ]
+    }
+  ]
+}

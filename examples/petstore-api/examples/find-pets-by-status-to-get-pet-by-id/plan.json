@@ -1,0 +1,52 @@
+{
+  "skill": "petstore-api",
+  "mode": "dry-run",
+  "chain": [
+    "findPetsByStatus",
+    "getPetById"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "op": "findPetsByStatus",
+      "destructive": false,
+      "args": {
+        "status": [
+          "available"
+        ]
+      },
+      "request": {
+        "method": "GET",
+        "url": "https://petstore.swagger.io/v2/pet/findByStatus?status=available",
+        "headers": {
+          "authorization": "Bearer REDACTED"
+        },
+        "missingAuth": []
+      },
+      "fedBy": []
+    },
+    {
+      "step": 2,
+      "op": "getPetById",
+      "destructive": false,
+      "args": {
+        "petId": 0
+      },
+      "request": {
+        "method": "GET",
+        "url": "https://petstore.swagger.io/v2/pet/0",
+        "headers": {
+          "api_key": "REDACTED"
+        },
+        "missingAuth": []
+      },
+      "fedBy": [
+        {
+          "arg": "petId",
+          "from": "findPetsByStatus",
+          "field": "id"
+        }
+      ]
+    }
+  ]
+}
