@@ -107,7 +107,8 @@ describe('docs/DEPLOY.md', () => {
       expect(doc).toContain(text);
     }
   });
-  it('documents the placeholder id that wrangler.jsonc ships with', () => {
-    expect(doc).toContain(wrangler.kv_namespaces[0].id);
+  it('wrangler.jsonc uses a real KV namespace id, not the placeholder', () => {
+    expect(wrangler.kv_namespaces[0].id).toMatch(/^[0-9a-f]{32}$/);
+    expect(wrangler.kv_namespaces[0].id).not.toBe('0'.repeat(32));
   });
 });

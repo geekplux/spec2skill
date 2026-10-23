@@ -18,13 +18,13 @@ This guide is for maintainers and for anyone who wants to run their own copy.
 
 ## 2. One-time setup: the KV namespace
 
-The Worker caches AI results in a KV namespace bound as `SPEC_CACHE`. `wrangler.jsonc` ships with a placeholder id (`00000000000000000000000000000000`), and `wrangler deploy` fails with `KV namespace '00000000000000000000000000000000' not found` until it is replaced. This id is the **only** value to fill in:
+The Worker caches AI results in a KV namespace bound as `SPEC_CACHE`. The production namespace already exists and its id (`b7d9422f1e0748e591bb18006fb87c38`) is set in `wrangler.jsonc`. If you ever recreate it (a deploy failing with `KV namespace '…' not found` means the id is wrong; the original placeholder was `00000000000000000000000000000000`), run:
 
 ```sh
 pnpm exec wrangler kv namespace create SPEC_CACHE
 ```
 
-Wrangler prints the new namespace's `id`. In `wrangler.jsonc`, replace the 32 zeros in the top-level `kv_namespaces` line (directly under the comment "The ONLY value to fill in before the first deploy"):
+Wrangler prints the new namespace's `id`. In `wrangler.jsonc`, replace the id in the top-level `kv_namespaces` line:
 
 ```jsonc
 "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "<the id wrangler printed>" }],

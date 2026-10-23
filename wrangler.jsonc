@@ -24,9 +24,9 @@
   // binding, /api/ai/describe answers 501 and the app stays deterministic. No API key or secret is needed.
   "ai": { "binding": "AI" },
   "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8" },
-  // AI results, 30-day TTL. The ONLY value to fill in before the first deploy (docs/DEPLOY.md, step 2):
-  // run `pnpm exec wrangler kv namespace create SPEC_CACHE` and replace the 32 zeros on the next line with the printed id.
-  "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "00000000000000000000000000000000" }],
+  // AI results, 30-day TTL. Namespace id (docs/DEPLOY.md, step 2),
+  // created with `pnpm exec wrangler kv namespace create SPEC_CACHE`.
+  "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "b7d9422f1e0748e591bb18006fb87c38" }],
   // Workers Logs: invocation metadata and console output only (the Worker never logs request bodies);
   // query strings are redacted from logged URLs.
   "observability": { "enabled": true, "redact_query_string": true },
