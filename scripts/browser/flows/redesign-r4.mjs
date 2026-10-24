@@ -7,14 +7,14 @@
 // what it draws, with a vertical wheel scrolling the page; every hover link of every sample inside the
 // frame's ring; each sample at 1280x800 and 1440x900 loading at the top with its map inside the frame;
 // and, moved from the retired phase-6-map flow, data-ready within 1500 ms (P3), sample switching
-// online and offline, Map | List, no page scroll at 390 and 200 %, CVD shots. Runs DESIGN.md section 8
-// checks 1-4 (and 7 under reduced motion), the grid (check 6) and axe on rest, hover and pinned, light
-// and dark. Saves viewport WebP shots in docs/screenshots/redesign-r4/.
+// online and offline, Map | List, no page scroll at 390 and 200 %, CVD shots, and DESIGN.md section 8
+// checks 1-4 on the keyboard-focused row and the search (rest, hover, pinned, phone and reduced motion
+// run in redesign-acceptance since R7). Saves viewport WebP shots in docs/screenshots/redesign-r4/.
 //   pnpm build && pnpm check:browser -- --phase 21 --flow redesign-r4 --capture redesign-r4
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { designChecks, gridCheck, settled } from '../redesign-checks.mjs';
+import { designChecks, settled } from '../redesign-checks.mjs';
 import { ROOT } from '../session.mjs';
 
 const OUT = join(ROOT, 'docs', 'screenshots', 'redesign-r4');
@@ -239,9 +239,6 @@ export default {
       expect(n === 0, `the result frame still has a ${name} button`);
     }
     expect((await page.locator('details.filters, details.legend, [data-testid="detail"], .toolbar, .camera').count()) === 0, 'Filters, Legend disclosure, detail panel or zoom camera still rendered');
-    await checks('rest 1440 light', 'light');
-    problems.push(...(await gridCheck(page, { label: 'grid rest 1440 light' })));
-    await axe('rest 1440 light');
     await page.mouse.move(0, 0);
     await toMap(page);
     await webp(page, 'rest-1440-light', dir);
@@ -291,8 +288,6 @@ export default {
     // browser there (getTask's has seven rows): it rises beside its row rather than being cut (R7).
     expect(close(h.card.left, 16, 1) && h.card.top <= -39 && h.card.below >= 0 && h.card.cut <= 1 && close(h.card.w, 300) && h.card.radius === '10px' && h.card.bg === tl['--gray-1'] && h.card.shadow.includes(tl['--gray-7']) && h.card.shadow.includes('0px 8px 24px') && h.card.pad === '16px' && h.card.inFrame && h.card.hidden === 'true', `operation card ${JSON.stringify(h.card)}`);
     expect(h.text.startsWith('GET /tasks/{taskId}') && h.text.includes('Get a task') && h.dl.join('|') === 'Input|Output|Fed by|Feeds|Shares schema|Sub-paths|In skill', `card contents ${h.dl} ${h.text.slice(0, 60)}`);
-    await checks('hover getTask 1440 light', 'light');
-    await axe('hover getTask 1440 light');
     await webp(page, 'hover-gettask-1440-light', dir);
     // The pointer can travel from the row to the card without losing it (150 ms grace).
     const preview = await page.locator('[data-testid="op-preview"]').boundingBox();
@@ -347,8 +342,6 @@ export default {
     expect((await page.getByRole('dialog', { name: /Get a task/ }).count()) === 1, 'pinned card is not a dialog named by its title');
     await page.mouse.move(0, 0);
     await page.waitForTimeout(300); // the row's hover background fades out
-    await checks('pinned getTask 1440 light', 'light');
-    await axe('pinned getTask 1440 light');
     await screenshot('r4-pinned-gettask');
     await page.keyboard.press('Tab');
     expect((await active(page)) === 'Close details', `Tab from the pinned row goes to ${await active(page)}, expected Close`);
@@ -437,24 +430,17 @@ export default {
     await ready(page, `${origin}/?sample=tasks`);
     const dd = await page.evaluate(drawing);
     expect(dd.del?.color === dd.t['--destructive'] && dd.ln.stroke === dd.t['--gray-9'] && dd.wf.every((w) => w.stroke === dd.t['--indigo-9']), `dark drawing ${JSON.stringify([dd.del, dd.ln, dd.wf])}`);
-    await checks('rest 1440 dark', 'dark');
-    problems.push(...(await gridCheck(page, { label: 'grid rest 1440 dark' })));
-    await axe('rest 1440 dark');
     await page.mouse.move(0, 0);
     await toMap(page);
     await webp(page, 'rest-1440-dark', dir);
     await getTask.hover();
     await page.locator('[data-testid="op-preview"]').waitFor(); await settled(page);
     await page.waitForTimeout(300);
-    await checks('hover getTask 1440 dark', 'dark');
-    await axe('hover getTask 1440 dark');
     await screenshot('r4-hover-dark');
     await getTask.click();
     await pinned.waitFor(); await settled(page);
     await page.mouse.move(0, 0);
     await page.waitForTimeout(300);
-    await checks('pinned getTask 1440 dark', 'dark');
-    await axe('pinned getTask 1440 dark');
     await page.emulateMedia({ colorScheme: 'light' });
 
     // 7. "N more" (filesystem's File card holds 9 tools): focusable, aria-expanded, expands in place;
@@ -599,15 +585,6 @@ export default {
     await context.setOffline(false);
     await page.unroute('**/favicon.svg');
 
-    // 11. Reduced motion: nothing animates (check 7) at rest or on hover.
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    await ready(page, `${origin}/?sample=tasks`);
-    await getTask.hover();
-    await page.locator('[data-testid="op-preview"]').waitFor(); await settled(page);
-    await checks('reduced motion hover', 'light', ['motion']);
-    await page.mouse.move(0, 0);
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
-
     // 12. Phones and 200 %: no page scroll sideways; the map (one tap from the List, R5) scrolls in its region.
     await page.setViewportSize(viewports.mobile);
     await page.goto(`${origin}/?sample=tasks`);
@@ -617,8 +594,6 @@ export default {
     await ready(page);
     const [scroll, inner] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     expect(scroll <= inner, `390 px: horizontal page scroll (${scroll} > ${inner})`);
-    await checks('rest 390 light', 'light');
-    await axe('rest 390 light');
     await page.mouse.move(0, 0);
     await toMap(page);
     await webp(page, 'rest-390-light', dir);
@@ -627,7 +602,6 @@ export default {
     const sheet = await pinned.evaluate((el) => ({ position: getComputedStyle(el).position, bottom: Math.round(el.getBoundingClientRect().bottom) }));
     expect(sheet.position === 'fixed' && sheet.bottom === 844, `390 px: the pinned card is not a bottom sheet ${JSON.stringify(sheet)}`);
     expect((await page.locator('[data-testid="op-preview"]').count()) === 0, '390 px: a preview shows beside the sheet');
-    await axe('pinned 390 light');
     await page.keyboard.press('Escape');
     await pinned.waitFor({ state: 'detached' });
     const cdp = await page.context().newCDPSession(page);

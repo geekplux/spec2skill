@@ -10,7 +10,7 @@ const CURL = `curl 'https://tasks.example.com/v1/tasks/<taskId>' \\\n  -H "Autho
 const expect = (ok, message) => {
   if (!ok) throw new Error(message);
 };
-// Below 1024 px the map sits behind the Map tab (phase 11): select it before waiting for the map.
+// Phones open on the List (R5): select the Map tab before waiting for the map.
 const ready = async (page) => {
   const tab = page.locator('#tab-map');
   await tab.waitFor();

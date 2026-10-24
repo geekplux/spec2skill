@@ -25,7 +25,7 @@ jobs:
       - run: pnpm build
       - run: pnpm check:size
       - name: Headless-browser check (runner's google-chrome)
-        run: pnpm check:browser -- --phase 19
+        run: pnpm check:browser -- --phase 21 # every flow, the redesign acceptance suite included
         env:
           CHROME_PATH: /usr/bin/google-chrome
       - name: CLI writes and audits a sample skill

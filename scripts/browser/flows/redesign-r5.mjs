@@ -7,9 +7,9 @@
 // the audit always open), "In skill" opening the file, the pinned card clear of the skill browser for
 // every row, the list view, 900 px (files and preview over the audit), the phone scroll at 390 (a rule,
 // not a frame; Download first; List by default; the compact chain; 44 px file rows opening a full-width
-// preview; the audit row), the command line box not breaking words at 390, and DESIGN.md section 8
-// checks 1-4 with axe at 1440 and 390 in light and dark, check 6 (the grid, with the skill browser's
-// columns) and check 7 under reduced motion. Saves WebP shots in docs/screenshots/redesign-r5/.
+// preview; the audit row), the command line box not breaking words at 390, and axe on the docked
+// card, warnings, the phone preview and 320 px. DESIGN.md section 8 on home, list and phone (with the
+// grid's skill browser columns) runs in redesign-acceptance (R7). Saves WebP shots in docs/screenshots/redesign-r5/.
 //   pnpm build && pnpm check:browser -- --phase 21 --flow redesign-r5 --capture redesign-r5
 /* oxlint-disable unicorn/consistent-function-scoping -- page.evaluate callbacks are serialised: their helpers stay inside */
 import { execFileSync } from 'node:child_process';
@@ -17,7 +17,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { unzipSync } from 'fflate';
-import { designChecks, gridCheck, settled } from '../redesign-checks.mjs';
+import { settled } from '../redesign-checks.mjs';
 import { ROOT } from '../session.mjs';
 
 const OUT = join(ROOT, 'docs', 'screenshots', 'redesign-r5');
@@ -125,12 +125,6 @@ export default {
     const axe = async (label) => (await settle(page), runAxe(label));
     // Committed shots only with --capture redesign-r5; otherwise into this run's folder.
     const dir = capture ? OUT : outDir;
-    const problems = [];
-    const checks = async (label, theme, list = ['type', 'colour', 'lines', 'dot']) => {
-      const found = await designChecks(page, { theme, label, checks: list });
-      console.log(`  ${label}: ${found.length} problem(s)${found.length ? `\n    ${found.join('\n    ')}` : ''}`);
-      problems.push(...found);
-    };
     await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
@@ -284,14 +278,8 @@ export default {
     // (At rest: a fresh load, nothing hovered, focused or opened.)
     await ready(page, `${origin}/?sample=tasks`);
     await page.mouse.move(0, 0);
-    await checks('home 1440 light', 'light');
-    problems.push(...(await gridCheck(page, { label: 'grid 1440 light' })));
-    await axe('home 1440 light');
     await webp(page, 'home-1440-light', dir, { fullPage: true, clip: await frameClip(page) });
     await page.emulateMedia({ colorScheme: 'dark' });
-    await checks('home 1440 dark', 'dark');
-    problems.push(...(await gridCheck(page, { label: 'grid 1440 dark' })));
-    await axe('home 1440 dark');
     m = await page.evaluate(measure);
     expect(m.audit.glyph[1] === m.t['--indigo-9'] && m.preview.bg === m.t['--gray-2'], 'dark: audit glyph or code box off token');
     await webp(page, 'home-1440-dark', dir, { fullPage: true, clip: await frameClip(page) });
@@ -326,8 +314,6 @@ export default {
     expect(list.disc[0] === '"3"' && list.disc[1] === list.disc[2], `stop disc ${list.disc}`);
     expect(list.del[0] === list.del[1] && list.del[2], `destructive row ${list.del}`);
     expect(list.relations === '13 relationships', `getTask relationships ${list.relations}`);
-    await checks('list 1440 light', 'light');
-    await axe('list 1440 light');
     await webp(page, 'list-1440-light', dir, { fullPage: true, clip: await frameClip(page) });
     await page.locator('.lrow[data-op="getTask"]').click();
     await pinned.waitFor(); await settled(page);
@@ -335,8 +321,6 @@ export default {
     await axe('list docked card 1440 light');
     await page.keyboard.press('Escape');
     await page.emulateMedia({ colorScheme: 'dark' });
-    await checks('list 1440 dark', 'dark');
-    await axe('list 1440 dark');
     await page.emulateMedia({ colorScheme: 'light' });
 
     // A spec without a workflow has no caption; one operation reads "1 operation"; a warning opens from its tag.
@@ -399,12 +383,8 @@ export default {
       return [method.left - r.left, head.left - r.left, li.left - head.left, getComputedStyle(row.parentElement).boxShadow];
     });
     expect(bleed[0] === 8 && bleed[1] === 8 && bleed[2] === 0 && bleed[3].includes('0.5px'), `390 list row bleed ${bleed}`);
-    await checks('home 390 light', 'light');
-    await axe('home 390 light');
     await webp(page, 'phone-390-light', dir, { fullPage: true });
     await page.emulateMedia({ colorScheme: 'dark' });
-    await checks('home 390 dark', 'dark');
-    await axe('home 390 dark');
     await page.emulateMedia({ colorScheme: 'light' });
 
     // A file row opens a full-width preview with Close; Close returns to the row.
@@ -481,14 +461,5 @@ export default {
     await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
     await sideways('map');
     await axe('map 320 light');
-
-    // Check 7: under reduced motion nothing runs.
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
-    await ready(page, `${origin}/?sample=tasks`);
-    await checks('reduced motion 1440', 'light', ['motion']);
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
-
-    expect(problems.length === 0, `DESIGN.md section 8 checks failed:\n${problems.join('\n')}`);
   },
 };

@@ -1,5 +1,6 @@
 // Phase 5: design system and app shell (Route map tokens since redesign R1). The theme follows the
-// system (no toggle, nothing stored or pinned), self-hosted IBM Plex, favicon and logo, reduced
+// system (no toggle, nothing stored or pinned), self-hosted IBM Plex (Sans and Mono, tabular figures),
+// favicon and the Overlap logo, reduced
 // motion, focus style, axe in both themes, CVD screenshots, and no horizontal scroll at 390 px and
 // at 200 % zoom.
 const DARK_PAGE = 'rgb(17, 17, 17)'; // gray-1 dark
@@ -50,6 +51,13 @@ export default {
     expect(h1Font.startsWith('"IBM Plex Sans"'), `h1 font is ${h1Font}`);
     expect(await page.evaluate(() => document.fonts.check('600 20px "IBM Plex Sans"')), 'font not loaded');
     expect(fonts.length > 0 && fonts.every((f) => f.startsWith(`200 ${origin}/assets/`)), `font responses: ${fonts}`);
+    // Moved from the retired redesign-r1 flow (R7): IBM Plex Mono too, tabular figures on the root, and
+    // the header's Overlap mark (the skill's circle clipped by the spec's square) beside live text.
+    const plex = await page.evaluate(() => ({
+      mono: document.fonts.check('400 12px "IBM Plex Mono"'), body: getComputedStyle(document.body).fontFamily,
+      tnum: getComputedStyle(document.documentElement).fontFeatureSettings, mark: !!document.querySelector('header .wordmark svg.logo [clip-path]'),
+    }));
+    expect(plex.mono && plex.body.startsWith('"IBM Plex Sans"') && plex.tnum.includes('tnum') && plex.mark, `type and logo: ${JSON.stringify(plex)}`);
 
     // Favicon and logo are served and small.
     const icon = await page.locator('link[rel="icon"]').getAttribute('href');

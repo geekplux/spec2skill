@@ -1,6 +1,5 @@
-// Redesign R2 (docs/redesign/PLAN.md): the page shell. Runs the DESIGN.md section 8 checks 1-4
-// (sizes {12, 14, 20, 48}) on the home page at 1440 light and dark and 390 light, check 6 (the grid)
-// at 1440 (scripts/browser/redesign-checks.mjs), and the shell's behaviour: the frame 16 px clear of
+// Redesign R2 (docs/redesign/PLAN.md): the page shell (DESIGN.md section 8 on the home page, with the
+// grid, moved to redesign-acceptance in R7). Checks the shell's behaviour: the fluid grid at 1024, the frame 16 px clear of
 // the window, the one-line placeholder and uncut samples from 640 to 1440, header links scroll to their
 // sections without touching the URL, the phone menu (Escape, outside tap), the footer's Keyboard
 // shortcuts, the hero at 390 (input over a full-width Generate, the samples on one line). Saves full-page WebP shots in
@@ -8,7 +7,6 @@
 //   pnpm build && pnpm check:browser -- --phase 21 --flow redesign-r2 --capture redesign-r2
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { designChecks, gridCheck } from '../redesign-checks.mjs';
 import { ROOT } from '../session.mjs';
 
 const OUT = join(ROOT, 'docs', 'screenshots', 'redesign-r2');
@@ -51,23 +49,11 @@ export default {
   async run({ page, origin, axe, outDir, capture }) {
     // Committed shots only with --capture redesign-r2; otherwise into this run's folder (never over an earlier phase's).
     const dir = capture ? OUT : outDir;
-    const problems = [];
     for (const { width, height, scheme } of VIEWS) {
-      const label = `home ${width} ${scheme}`;
       await page.setViewportSize({ width, height });
       await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'no-preference' });
       await ready(page, origin);
-      const found = await designChecks(page, { theme: scheme, label, checks: ['type', 'colour', 'lines', 'dot'] });
-      console.log(`  ${label}: ${found.length} problem(s)`);
-      problems.push(...found);
-      if (width === 1440) {
-        const grid = await gridCheck(page, { label: `grid ${width} ${scheme}` });
-        console.log(`  grid ${width} ${scheme}: ${grid.length} problem(s)`);
-        problems.push(...grid);
-      }
-      const [scroll, inner] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
-      expect(scroll <= inner, `${label}: horizontal scroll (${scroll} > ${inner})`);
-      await axe(label);
+      // DESIGN.md section 8 (checks 1-4, the grid and axe) on this page runs in redesign-acceptance (R7).
       await page.mouse.move(0, 0);
       await webp(page, `home-${width}-${scheme}`, dir);
     }
@@ -180,7 +166,5 @@ export default {
     expect(phone.oneLine && phone.seg, '390: the samples do not fit one line');
     expect(phone.frame === '0px' && phone.h1 === '48px', `390: frame radius ${phone.frame}, h1 ${phone.h1}`);
     expect(phone.rule[0] === 0 && phone.rule[1] === 390 && Math.abs(phone.title - 16) <= 1, `390: the rule above the result is not full width, or the title left the gutter ${JSON.stringify(phone)}`);
-
-    expect(problems.length === 0, `DESIGN.md section 8 checks failed:\n${problems.join('\n')}`);
   },
 };

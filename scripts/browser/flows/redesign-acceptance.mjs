@@ -32,6 +32,7 @@ const DESK = { width: 1440, height: 900 };
 const PHONE = { width: 390, height: 844 };
 const PAGE_CHECKS = CHECKS.filter((c) => c !== 'motion'); // type, colour, lines, dot
 
+const node = (args) => execFileSync(process.execPath, args, { cwd: ROOT, encoding: 'utf8', stdio: 'pipe', timeout: 120_000 });
 const expect = (ok, message) => {
   if (!ok) throw new Error(message);
 };
@@ -165,7 +166,6 @@ export default {
     record('4 dot', 'src and index.html', dotted.map((at) => `check 4: middle dot at ${at}`));
 
     // Check 5: the CVD and contrast tests on the tokens; check 8: the size budget (dist is built).
-    const node = (args) => execFileSync(process.execPath, args, { cwd: ROOT, encoding: 'utf8', stdio: 'pipe', timeout: 120_000 });
     const run = (check, label, args) => {
       try {
         node(args);
