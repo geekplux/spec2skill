@@ -58,7 +58,7 @@ async function fromUrl(raw: string, mode: Mode, fetch: FetchFn): Promise<Doc> {
   } catch (e) {
     const error = asSource(e);
     if (mode !== 'auto' || !notSpec(error)) throw error;
-    return mcp(url, fetch).catch((second: unknown) => Promise.reject(fallbackError(error, second)));
+    return mcp(url, fetch).catch((second: unknown) => Promise.reject(fallbackError(error, asSource(second))));
   }
 }
 

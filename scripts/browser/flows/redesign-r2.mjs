@@ -87,7 +87,7 @@ export default {
 
     // Between 640 and 1440: the frame keeps at least 16 px from the window while its contents stay on
     // the column's left edge; the field's placeholder stays on one line; no sample label is cut.
-    for (const width of [640, 700, 900, 960, 1024, 1136, 1180, 1199, 1200, 1280, 1440]) {
+    for (const width of [640, 700, 900, 960, 1024, 1136, 1168, 1180, 1199, 1200, 1280, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       await page.waitForFunction(() => document.querySelector('.hero h1'));
       const m = await page.evaluate(() => {
@@ -95,12 +95,14 @@ export default {
         const r = frame.getBoundingClientRect();
         const input = document.querySelector('#source-field');
         return {
+          column: document.querySelector('.wrap').getBoundingClientRect().width - 2 * parseFloat(getComputedStyle(document.querySelector('.wrap')).paddingLeft),
           left: r.left, right: innerWidth - r.right, contents: r.left + parseFloat(getComputedStyle(frame).paddingLeft), h1: document.querySelector('.hero h1').getBoundingClientRect().left,
           placeholder: input.scrollHeight <= input.clientHeight + 1 && input.clientHeight <= 40, inputWidth: input.clientWidth,
           cut: [...document.querySelectorAll('.seg-item')].filter((el) => el.scrollWidth > el.clientWidth).map((el) => el.textContent),
           seg: (() => { const seg = document.querySelector('.samples .seg'); return seg.scrollWidth <= seg.clientWidth && seg.getBoundingClientRect().right <= document.querySelector('.samples').getBoundingClientRect().right + 0.5; })(),
         };
       });
+      expect(Math.abs(m.column - Math.min(1072, width - 96)) <= 1 || (width >= 1200 && Math.abs(m.column - 1072) <= 1), `${width}: the content column is ${m.column} px (1072 until the window must shrink it)`);
       expect(m.left >= 16 && m.right >= 16 && Math.abs(m.contents - m.h1) <= 1, `${width}: frame ${Math.round(m.left)}/${Math.round(m.right)} px from the window, contents at ${m.contents} vs column ${m.h1}`);
       expect(m.placeholder && m.inputWidth >= 240, `${width}: the placeholder wraps or the field is ${m.inputWidth} px`);
       expect(m.cut.length === 0 && m.seg, `${width}: sample labels cut ${JSON.stringify(m.cut)} or the control overflows`);

@@ -12,6 +12,8 @@ const text = (body: string, headers: Record<string, string> = {}, status = 200) 
 const json = (body: unknown, status = 200) => text(JSON.stringify(body), { 'content-type': 'application/json' }, status);
 const html = (status = 404) => text('<!doctype html><title>x</title>', { 'content-type': 'text/html' }, status);
 const asHtml = (body: string) => () => text(body, { 'content-type': 'text/html; charset=utf-8' });
+/** The MCP proxy route failing with an MCP-only reason. */
+const mcpFails = (code: 'needs-auth' | 'legacy-transport') => () => json({ error: { code, message: '' } }, code === 'needs-auth' ? 401 : 502);
 const cors = () => Promise.reject(new TypeError('Failed to fetch'));
 
 /** Runs loadSource against `routes` (exact URL -> handler); records calls, steps and writes. */
@@ -132,7 +134,7 @@ describe('loadSource: URLs', () => {
 
   it('keeps the spec error when the MCP retry fails too, and never retries outside Auto', async () => {
     const url = 'https://specs.example.test/data.json';
-    const both = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': () => json({ error: { code: 'http-error', message: 'The server answered 404.' } }, 502) });
+    const both = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': () => json({ error: { code: 'legacy-transport', message: '' } }, 502) });
     expect(codeOf(both.error)).toBe('unsupported');
     expect((both.error as Error).message).toContain('"hello"');
     const page = await run({ url }, { [url]: () => html(200), '/api/mcp/tools': () => json({ error: { code: 'http-error', message: 'The server answered 404.' } }, 502) });
@@ -146,12 +148,27 @@ describe('loadSource: URLs', () => {
     expect(codeOf(mcpOnly.error)).toBe('http-error');
   });
 
-  it('shows the MCP error instead when the MCP retry fails for a reason only MCP has', async () => {
+  it('shows an MCP-only error (credentials, older transport) only when the GET already looked like MCP', async () => {
     const url = 'https://specs.example.test/data.json';
+    // A JSON-RPC answer to GET, or a proxied "answered 405": the MCP reason is the useful one.
     for (const code of ['needs-auth', 'legacy-transport'] as const) {
-      const r = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': () => json({ error: { code, message: '' } }, code === 'needs-auth' ? 401 : 502) });
-      expect([codeOf(r.error), r.urls]).toEqual([code, [url, '/api/mcp/tools']]);
+      const rpc = await run({ url }, { [url]: () => json({ jsonrpc: '2.0', error: { code: -32600, message: 'POST only' } }), '/api/mcp/tools': mcpFails(code) });
+      expect([codeOf(rpc.error), rpc.urls]).toEqual([code, [url, '/api/mcp/tools']]);
     }
+    const proxied = await run({ url }, { [url]: cors, '/api/fetch-spec': () => json({ error: { code: 'http-error', message: 'The server answered 405.' } }, 502), '/api/mcp/tools': mcpFails('needs-auth') });
+    expect(codeOf(proxied.error)).toBe('needs-auth');
+    // The MCP client reports any POST 404/405 as the older transport and 401/403 as credentials: a
+    // mistyped URL, a docs page, a 5xx or another document keep the spec's own error.
+    const typo = await run({ url }, { [url]: () => text('', {}, 404), '/api/mcp/tools': mcpFails('legacy-transport') });
+    expect([codeOf(typo.error), (typo.error as Error).message]).toEqual(['http-error', expect.stringContaining('404')]);
+    const docs = await run({ url }, { [url]: () => html(200), '/api/mcp/tools': mcpFails('legacy-transport') });
+    expect(codeOf(docs.error)).toBe('html-page');
+    const waf = await run({ url }, { [url]: () => text('', {}, 404), '/api/mcp/tools': mcpFails('needs-auth') });
+    expect(codeOf(waf.error)).toBe('http-error');
+    const down = await run({ url }, { [url]: () => text('', {}, 502), '/api/mcp/tools': mcpFails('needs-auth') });
+    expect(codeOf(down.error)).toBe('http-error');
+    const other = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': mcpFails('legacy-transport') });
+    expect(codeOf(other.error)).toBe('unsupported');
   });
 
   it('tries a URL whose GET answers 5xx as MCP once, keeping the 5xx error when that fails', async () => {

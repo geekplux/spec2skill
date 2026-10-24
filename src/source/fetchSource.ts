@@ -42,12 +42,17 @@ export function toUrl(value: string): URL {
  */
 export const notSpec = (e: unknown) => e instanceof SourceError && (['not-a-spec', 'unsupported', 'html-page'].includes(e.code) || (e.code === 'http-error' && /\b(40[0456]|5\d\d)\b/.test(e.message)));
 
+/** The spec error itself says the URL is an MCP endpoint: its GET answered 405/406, or a JSON-RPC message. */
+const looksMcp = (e: unknown) => e instanceof SourceError && ((e.code === 'http-error' && /\b40[56]\b/.test(e.message)) || (e.code === 'unsupported' && /JSON-RPC/.test(e.message)));
+
 /**
- * The error to show when both tries failed: the MCP one when it is specific to MCP (the server needs
- * credentials, or speaks the older transport), else the spec's own, which says more.
+ * The error to show when both tries failed. The MCP one only when it is specific to MCP (credentials,
+ * the older transport) and the GET already looked like an MCP endpoint: the MCP client reports any POST
+ * 404/405 as the older transport and any 401/403 as credentials, which for a mistyped URL, a docs
+ * page or a 5xx would mislead. Otherwise the spec's own error, which says more.
  */
 export const fallbackError = (spec: unknown, asMcp: unknown): unknown =>
-  asMcp instanceof SourceError && (asMcp.code === 'needs-auth' || asMcp.code === 'legacy-transport') ? asMcp : spec;
+  looksMcp(spec) && asMcp instanceof SourceError && (asMcp.code === 'needs-auth' || asMcp.code === 'legacy-transport') ? asMcp : spec;
 
 /** Reads a direct or proxied answer: 405/406 or an event stream means an MCP endpoint. */
 async function read(res: Response, type = res.headers.get('content-type') ?? ''): Promise<Got | 'mcp'> {

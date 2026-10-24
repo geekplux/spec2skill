@@ -23,9 +23,10 @@ code { font-family: var(--font-mono); font-size: inherit; }
    below; below 640 px it is one column with a 16 px gutter. */
 :root { --gap: min(var(--space-88), 7.75vw); }
 .wrap { width: 100%; max-width: 1136px; margin: 0 auto; padding: 0 var(--space-32); }
-/* Below 1200 px the window no longer leaves 32 px outside the column, so the side padding grows to 48:
-   the frame, hanging 32 px, keeps 16 px from the window edge (D39). */
-@media (max-width: 1199px) { .wrap { padding: 0 var(--space-48); } }
+/* Below 1200 px the window no longer leaves 32 px outside the column, so the side padding grows to 48
+   (and the wrap to 1168, keeping the 1072 column until the window is too narrow): the frame, hanging
+   32 px, keeps at least 16 px from the window edge (D39). */
+@media (max-width: 1199px) { .wrap { max-width: 1168px; padding: 0 var(--space-48); } }
 .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--gap); }
 .muted { color: var(--gray-11); }
 .mono { font-family: var(--font-mono); }
