@@ -8,7 +8,7 @@ import type { Chain } from '../skillgen/types';
 import { topChains } from '../skillgen/graph-chains';
 import { type Rect, round } from './geometry';
 import { clusterFeeds, columnsOf } from './route-columns';
-import { type Lane, OPEN_REACH, Pen, type Span, routeWires, samplePath } from './route-path';
+import { type Lane, Pen, type Span, openReach, routeWires, samplePath } from './route-path';
 
 export const CARD_W = 202;
 export const COLUMN_GAP = 88;
@@ -453,11 +453,15 @@ export function hoverLinks(layout: RouteLayout, graph: AtlasGraph, op: string): 
 
 /**
  * The box every hover link of any operation stays in: `bounds` plus the loops' reach left of the
- * first column and right of the last, and the open corridors above and below the cards.
+ * first column and right of the last, and the open corridors above and below the cards, as deep
+ * as the operation with the most links could fill them.
  */
-export function hoverBounds(layout: RouteLayout): Rect {
+export function hoverBounds(layout: RouteLayout, graph: AtlasGraph): Rect {
+  const count = new Map<string, number>();
+  for (const e of graph.edges) for (const id of new Set([e.from, e.to])) count.set(id, (count.get(id) ?? 0) + 1);
+  const reach = openReach(Math.max(0, ...count.values()));
   const b = layout.bounds;
-  const [x0, y0] = [Math.min(b.x, -HOVER_REACH), Math.min(b.y, -OPEN_REACH)];
-  const [x1, y1] = [Math.max(b.x + b.w, layout.width + HOVER_REACH), Math.max(b.y + b.h, layout.height + OPEN_REACH)];
+  const [x0, y0] = [Math.min(b.x, -HOVER_REACH), Math.min(b.y, -reach)];
+  const [x1, y1] = [Math.max(b.x + b.w, layout.width + HOVER_REACH), Math.max(b.y + b.h, layout.height + reach)];
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }

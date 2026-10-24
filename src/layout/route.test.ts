@@ -12,7 +12,7 @@ import {
   CARD_W, CLEARANCE, COLUMN_STEP, HEAD, HOVER_REACH, MAX_ROWS, ROW, type RouteCard, type RouteLayout, hoverBounds, hoverLinks, methodOf, routeLayout,
 } from './route';
 import { columnsOf, feedbackOrder } from './route-columns';
-import { OPEN_REACH, TRACK, corridorY, routeAcross, routeWires, samplePath } from './route-path';
+import { OPEN_REACH, TRACK, corridorY, openReach, routeAcross, routeWires, samplePath } from './route-path';
 
 const routeOf = async (id: string) => {
   const model = await sampleModel(getSample(id)!);
@@ -74,16 +74,18 @@ function runs(d: string): { y: number; x0: number; x1: number }[] {
   return out;
 }
 
-/** No two rest links share a straight run (same y, overlapping by more than 2 px). */
-function expectNoSharedRuns(layout: RouteLayout) {
-  const all = layout.links.flatMap((l) => runs(l.d).map((r) => ({ ...r, id: l.id })));
+/** No two straight runs overlapping by more than 2 px sit closer than TRACK (less 0.1 px of rounding). */
+function expectApart(paths: { id: string; d: string }[]) {
+  const all = paths.flatMap((l) => runs(l.d).map((r) => ({ ...r, id: l.id })));
+  const close: string[] = [];
   for (const [i, a] of all.entries()) {
     for (const b of all.slice(i + 1)) {
-      if (a.id === b.id || Math.abs(a.y - b.y) >= 0.5) continue;
-      expect(Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), `${a.id} / ${b.id} at y ${a.y}`).toBeLessThanOrEqual(2);
+      if (a.id !== b.id && Math.abs(a.y - b.y) < TRACK - 0.1 && Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > 2) close.push(`${a.id} / ${b.id} at y ${a.y}, ${b.y}`);
     }
   }
+  expect(close).toEqual([]);
 }
+const expectNoSharedRuns = (layout: RouteLayout) => expectApart(layout.links);
 
 /** Off the first and last gap of each straight workflow step, no rest link comes within 12 px of the line. */
 function expectOffTheLine(layout: RouteLayout) {
@@ -284,13 +286,13 @@ describe('route map: the synthetic large spec', () => {
       links: layout.links.length,
       workflow: layout.workflow && { ops: layout.workflow.ops, y: layout.workflow.y, steps: layout.workflow.steps },
     };
+    expectNoSharedRuns(layout);
+    expectOffTheLine(layout);
     await expect(`${JSON.stringify(summary, null, 2)}\n`).toMatchFileSnapshot('./__snapshots__/synthetic.route.json');
     expect(layout.columns.length).toBeGreaterThan(4);
     expect(layout.scrolls).toBe(true);
     expect(layout.width).toBe(layout.columns.length * COLUMN_STEP - 88);
     expect(layout.workflow!.steps.find((s) => s.shape !== 'loop')!.shape).toBe('line');
-    expectNoSharedRuns(layout);
-    expectOffTheLine(layout);
     // The bundle holding the workflow's own step is not drawn on top of the line.
     const step = layout.workflow!.steps.find((s) => s.shape === 'line')!;
     const bundle = graph.bundles.find((b) => b.edges.includes(`feeds:${step.from}->${step.to}`));
@@ -374,7 +376,7 @@ describe('route map: parts', () => {
   it('hoverBounds holds every hover link of every operation', async () => {
     for (const sample of SAMPLES) {
       const { model, graph, layout } = await routeOf(sample.id);
-      const box = hoverBounds(layout);
+      const box = hoverBounds(layout, graph);
       expect(box.x).toBeLessThanOrEqual(-HOVER_REACH);
       expect(box.y + box.h).toBeGreaterThanOrEqual(layout.height + OPEN_REACH);
       for (const op of model.operations) {
@@ -385,7 +387,7 @@ describe('route map: parts', () => {
     }
   });
 
-  it('writes the method column: HTTP methods in capitals, MCP tools as read, write or delete (D41)', () => {
+  it('writes the method column: HTTP methods in capitals, MCP tools as read or write (D41)', () => {
     expect(methodOf(tool({ kind: 'endpoint', method: 'patch' }), 'update')).toEqual({ method: 'PATCH', destructive: false });
     expect(methodOf(tool({ kind: 'endpoint', method: 'delete' }), 'delete')).toEqual({ method: 'DELETE', destructive: true });
     expect(methodOf(tool({ hints: { destructive: true } }), 'update')).toEqual({ method: 'write', destructive: true });
@@ -406,6 +408,22 @@ describe('route map: parts', () => {
     expect(runs(b!)[0]!.y).toBe(runs(a!)[0]!.y - TRACK);
     expect(runs(a!)[0]!.y).toBeLessThanOrEqual(124);
     expect(runs(b!)[0]!.y).toBeGreaterThanOrEqual(108);
+  });
+
+  it('spreads 20 links across one tall card over both open corridors, then past them, always TRACK apart', () => {
+    const lane = { x: 290, w: 202, spans: [{ top: 0, bottom: 400 }] };
+    const wires = Array.from({ length: 20 }, (_, i) => ({ from: { x: 202, y: 20 + i * 18 }, to: { x: 580, y: 20 + i * 18 }, lanes: [lane] }));
+    const paths = routeWires(wires).map((d, i) => ({ id: `w${i}`, d }));
+    const ys = paths.map((p) => runs(p.d)[0]!.y);
+    const [above, below] = [ys.filter((y) => y < 0), ys.filter((y) => y > 400)];
+    // The upper 8 fill the corridor above, the next 8 overflow below, the last 4 (nearer the bottom) stay there past 8.
+    expect([above.length, below.length]).toEqual([8, 12]);
+    expect(below.toSorted((a, b) => a - b)).toEqual(Array.from({ length: 12 }, (_, k) => 408 + k * TRACK));
+    expect(ys.every((y) => y <= -8 || y >= 408)).toBe(true);
+    expectApart(paths);
+    // The deepest track is where openReach says it can be.
+    expect(Math.min(...above)).toBeGreaterThanOrEqual(-openReach(20));
+    expect(Math.max(...below)).toBeLessThanOrEqual(400 + openReach(20));
   });
 
   it('routes a link through a free corridor of each column it passes', () => {

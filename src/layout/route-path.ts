@@ -13,10 +13,12 @@ export interface Lane { x: number; w: number; spans: readonly Span[] }
 export const CORRIDOR_MARGIN = 8;
 /** Distance between links sharing a corridor. */
 export const TRACK = 6;
-/** Tracks an open corridor (above or below every card) holds at full spacing; more are packed into the same height. */
+/** Tracks an open corridor (above or below every card) takes before links overflow into the other one. */
 export const MAX_TRACKS = 8;
-/** The farthest a link reaches above the top card or below the bottom card of a column. */
-export const OPEN_REACH = CORRIDOR_MARGIN + TRACK * (MAX_TRACKS - 1);
+/** How far `links` links routed together can reach above the top card or below the bottom card of a column. */
+export const openReach = (links: number): number => CORRIDOR_MARGIN + TRACK * (Math.max(MAX_TRACKS, links) - 1);
+/** The reach of a set of at most MAX_TRACKS links. */
+export const OPEN_REACH = openReach(MAX_TRACKS);
 
 /** A free stretch of a lane: from `lo` to `hi` (open-ended above the top span or below the bottom one). */
 export interface Corridor { lo: number; hi: number }
@@ -122,24 +124,31 @@ export function routeWires(wires: readonly Wire[]): string[] {
   });
   const ys = new Map<string, number>(); // `${wire} ${lane x}` -> y
   for (const [lane, list] of asks) {
-    const free = corridors(lane).map((c) => ({ ...c, cap: Number.isFinite(c.hi - c.lo) ? Math.floor((c.hi - c.lo) / TRACK) + 1 : Infinity, in: [] as typeof list }));
+    // A closed corridor holds what fits TRACK px apart; an open one MAX_TRACKS, then the other open
+    // one; when every corridor is full, the nearest open one takes the rest, still TRACK px apart.
+    const free = corridors(lane).map((c) => ({ ...c, cap: Number.isFinite(c.hi - c.lo) ? Math.floor((c.hi - c.lo) / TRACK) + 1 : MAX_TRACKS, in: [] as typeof list }));
     const away = (c: Corridor, y: number) => (y < c.lo ? c.lo - y : y > c.hi ? y - c.hi : 0);
     for (const ask of list.toSorted((a, b) => a.ideal - b.ideal || a.wire - b.wire)) {
       // The nearest corridor with room; on a tie, the one nearer the middle of the link's ends.
       const w = wires[ask.wire]!;
       const mid = (w.from.y + w.to.y) / 2;
-      let pick = free[0]!;
+      let pick: (typeof free)[number] | undefined;
       let gap = Infinity;
-      for (const c of free) {
-        const d = away(c, ask.ideal);
-        if (c.in.length < c.cap && (d < gap || (d === gap && away(c, mid) < away(pick, mid)))) [pick, gap] = [c, d];
+      for (const full of [false, true]) {
+        for (const c of free) {
+          const open = !Number.isFinite(c.hi - c.lo);
+          if (full ? !open : c.in.length >= c.cap) continue;
+          const d = away(c, ask.ideal);
+          if (d < gap || (d === gap && pick && away(c, mid) < away(pick, mid))) [pick, gap] = [c, d];
+        }
+        if (pick) break;
       }
-      pick.in.push(ask);
+      pick!.in.push(ask);
     }
     for (const c of free) {
       const n = c.in.length;
       if (n === 0) continue;
-      const step = n === 1 ? 0 : Number.isFinite(c.hi - c.lo) ? Math.min(TRACK, (c.hi - c.lo) / (n - 1)) : Math.min(TRACK, (TRACK * (MAX_TRACKS - 1)) / (n - 1));
+      const step = TRACK;
       const mean = c.in.reduce((sum, a) => sum + a.ideal, 0) / n;
       const span = step * (n - 1);
       const start = Math.min(Math.max(mean - span / 2, c.lo), c.hi - span);
