@@ -226,6 +226,21 @@ export default {
     await rest(page);
     const view = (name) => page.getByRole('tablist', { name: 'View' }).getByRole('tab', { name });
     await replayed('the List view', () => view('List').click());
+    // A list row's grey fades in on hover and back out after it, like the map's rows; at rest a theme change snaps.
+    const rowFades = () => page.evaluate(() => document.getAnimations().filter((a) => a instanceof CSSTransition && a.effect?.target?.classList.contains('lrow')).map((a) => a.transitionProperty));
+    await page.locator('.lrow').nth(1).hover();
+    await page.waitForTimeout(60);
+    const rowIn = await rowFades();
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(60);
+    const rowOut = await rowFades();
+    expect(rowIn.includes('background-color') && rowOut.includes('background-color'), `a list row's grey does not fade both ways: in ${rowIn}, out ${rowOut}`);
+    await page.waitForFunction(() => !document.querySelector('.list:is([data-hover], [data-fading])'), null, { timeout: 1000 });
+    await settled(page);
+    await page.emulateMedia({ colorScheme: 'dark' });
+    const listThemed = await transitions();
+    await page.emulateMedia({ colorScheme: 'light' });
+    expect(listThemed.length === 0, `a theme change fades in the list: ${listThemed}`);
     await replayed('the Map view', () => view('Map').click());
     await replayed('a resize', () => page.setViewportSize({ width: 1280, height: 1000 }));
     await page.setViewportSize({ width: 1440, height: 1000 });
@@ -285,6 +300,35 @@ export default {
     expect(stages.every((s, i) => STAGES.includes(s) && (i === 0 || STAGES.indexOf(s) > STAGES.indexOf(stages[i - 1]))), `stages not in order: ${stages}`);
     // The button keeps its resting width through every stage, so the field beside it holds still.
     expect(changes.every((e) => Math.abs(e.width - restWidth) < 0.5), `Generate changes width: rest ${restWidth}, ${changes.map((e) => `${e.text} ${e.width}`).join(', ')}`);
+    // From about 1007 px (a field content box of 396 px) Generate is 112 px at rest and through every
+    // stage; from 960 to there it is 91 px at rest and 112 px through the stages, changing once each way.
+    const generateWidths = async (width) => {
+      await page.setViewportSize({ width, height: 900 });
+      await rest(page);
+      const before = await page.locator('.generate').evaluate((el) => el.getBoundingClientRect().width);
+      await page.evaluate(() => {
+        const btn = document.querySelector('.generate');
+        window.r6widths = [];
+        window.r6watch = new MutationObserver(() => window.r6widths.push({ stage: btn.dataset.stage ?? '', width: btn.getBoundingClientRect().width }));
+        window.r6watch.observe(btn, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['data-stage'] });
+      });
+      await page.locator('#source-field').fill(SLOW);
+      await page.locator('#source-field').press('Enter');
+      await page.locator('.generate[data-stage]').waitFor();
+      await page.locator('.generate[data-stage]').waitFor({ state: 'detached', timeout: 40_000 });
+      const seen = await page.evaluate(() => (window.r6watch.disconnect(), window.r6widths));
+      const staged = seen.filter((e) => e.stage);
+      const after = await page.locator('.generate').evaluate((el) => el.getBoundingClientRect().width);
+      console.log(`  Generate at ${width} px: ${Math.round(before * 100) / 100} at rest, ${[...new Set(staged.map((e) => `${e.stage} ${Math.round(e.width * 100) / 100}`))].join(', ')}`);
+      expect(staged.length >= 2 && staged.every((e) => Math.abs(e.width - 112) < 0.5) && Math.abs(after - before) < 0.5, `${width}: Generate changes width through the stages: rest ${before}, ${JSON.stringify(seen)}, after ${after}`);
+      return before;
+    };
+    const wide = await generateWidths(1024);
+    expect(Math.abs(wide - 112) < 0.5, `1024: Generate is ${wide} px at rest, not the stages' 112`);
+    const narrow = await generateWidths(980);
+    expect(narrow < 100, `980: Generate is ${narrow} px at rest, which leaves the URL under 240 px`);
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await rest(page);
     for (const s of stages) expect(log.some((e) => e.kind === 'said' && e.text.startsWith(s) && e.text.endsWith('…')), `stage ${s} not announced: ${JSON.stringify(log.filter((e) => e.kind === 'said'))}`);
     // No stage label for a sample switch.
     await page.evaluate(() => (window.r6log = []));
