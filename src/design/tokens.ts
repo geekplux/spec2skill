@@ -56,7 +56,7 @@ export const TYPE = {
 } as const;
 
 /** The one spacing scale, named by value (`--space-16` is 16px): layout CSS uses only these (scripts/check-spacing.mjs). */
-export const SPACE = { 2: '2px', 4: '4px', 8: '8px', 12: '12px', 14: '14px', 16: '16px', 20: '20px', 24: '24px', 32: '32px', 40: '40px', 48: '48px', 64: '64px', 88: '88px', 96: '96px', 104: '104px' } as const;
+export const SPACE = { 2: '2px', 4: '4px', 6: '6px', 8: '8px', 10: '10px', 12: '12px', 14: '14px', 16: '16px', 20: '20px', 24: '24px', 32: '32px', 40: '40px', 48: '48px', 64: '64px', 88: '88px', 96: '96px', 104: '104px' } as const;
 export const RADIUS = { sm: '4px', row: '6px', md: '8px', box: '10px', frame: '16px', pill: '999px' } as const;
 export const FONT = {
   sans: "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
@@ -65,4 +65,6 @@ export const FONT = {
 /** Self-hosted faces, Latin subset only (@fontsource/<family>): the weights loaded. */
 export const FACES = { 'ibm-plex-sans': [400, 500, 600], 'ibm-plex-mono': [400, 500, 600] } as const;
 /** Motion durations; all become 0ms under prefers-reduced-motion: reduce. */
-export const MOTION = { fast: '150ms', camera: '250ms', fade: '120ms' } as const;
+export const MOTION = { fast: '150ms', map: '250ms' } as const;
+/** The one shadow (DESIGN.md rule 10): the operation card floats over the map. */
+export const SHADOW = { float: '0 8px 24px rgba(0, 0, 0, 0.08)' } as const;

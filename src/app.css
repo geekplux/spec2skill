@@ -192,119 +192,122 @@ h3, h4 { font-weight: 600; }
 .summary { color: var(--gray-11); }
 .flag { margin-left: var(--space-8); padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-8); border-radius: var(--radius-sm); font-size: var(--text-12); }
 
-/* The atlas map (phase 6): cluster cards, nodes, three edge styles that never rely on colour alone. */
-/* Height from the map's top inside the result frame (--map-top, set by Map.tsx), leaving a 16px margin below. */
-.map { position: relative; height: clamp(360px, calc(100dvh - var(--map-top, 300px) - var(--space-16)), 900px); background: var(--gray-1); box-shadow: 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm); overflow: clip; }
-.map:has(> .atlas:focus-visible) { outline: 2px solid var(--gray-12); outline-offset: 2px; }
-.atlas { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; cursor: grab; }
-.atlas:focus-visible { outline: none; }
-.camera { transform-origin: 0 0; }
-.camera[data-animate] { transition: transform var(--motion-camera) ease-out; }
-/* Rules stay 0.5 px at every zoom (non-scaling strokes). */
-.grid-line, .card, .card-rule, .node .shape, .legend-node, .crud rect { vector-effect: non-scaling-stroke; stroke-width: var(--line); }
-.grid-line { fill: none; stroke: var(--gray-6); }
-.card { fill: var(--gray-2); stroke: var(--gray-7); }
-.card-rule { fill: none; stroke: var(--gray-6); }
-.territory-label { font: 600 var(--text-14) var(--font-sans); fill: var(--gray-12); }
-.hub, .sub, .crud text { font: var(--text-12) var(--font-mono); fill: var(--gray-11); }
-.node .shape, .legend-node { fill: var(--gray-1); stroke: var(--gray-8); }
-.node { cursor: pointer; }
-.node[data-hot] .shape { stroke: var(--gray-12); stroke-width: 1.5px; }
-/* Focus: a 2 px ink ring drawn in SVG around the node (A1); the far end of the `E` edge gets a dashed ring. */
-.hit { fill: transparent; stroke: none; outline: none; }
-.node:has(.hit:focus) .shape { stroke: var(--gray-12); }
-.ring { fill: none; stroke: none; }
-.node:has(.hit:focus) .ring { stroke: var(--gray-12); stroke-width: 2; }
-.node[data-target] .hit { stroke: var(--gray-12); stroke-width: 2; stroke-dasharray: 5 3; }
-.bar { fill: var(--gray-11); }
-/* The hatch is a graphic (3:1), so it keeps amber-11 in both themes; the `!` is text (--destructive, AA). */
-.bar.hatched { fill: url(#hatch); stroke: var(--amber-11); stroke-width: 0.75; }
-.hatch { fill: var(--amber-11); }
-.bang { fill: var(--destructive); }
-.n-method { font: 500 var(--text-12) var(--font-mono); fill: currentColor; }
-.bang { font: 600 var(--text-14) var(--font-mono); }
-.name { font: var(--text-12) var(--font-mono); fill: var(--gray-12); }
-.name[data-deprecated] { text-decoration: line-through; }
-.param { font-style: italic; fill: var(--gray-11); }
-.sub { font: var(--text-12) var(--font-sans); }
-.crud rect { fill: none; stroke: var(--gray-8); }
-.crud text { font-weight: 600; text-anchor: middle; }
-/* One hue for every link (gray-9, >= 3:1); kinds differ by line style, marker and label. */
-[data-kind='feeds'], [data-kind='sub-path'], [data-kind='shared-schema'] { --hue: var(--gray-9); }
-.diamond { --hue: var(--gray-9); fill: var(--hue); }
-.line { fill: none; stroke: var(--hue); stroke-width: 1.75; }
-.line[data-kind='feeds'] { stroke-dasharray: 6 4; }
-.line[data-kind='sub-path'] { stroke-width: 1.5; }
-.line[data-kind='shared-schema'] { stroke-dasharray: 1 4; stroke-linecap: round; }
-.mk-feeds { fill: var(--gray-9); }
-.mk-sub-path { fill: none; stroke: var(--gray-9); stroke-width: 1.5; }
-/* Edges rest at full strength (gray-9 is already quiet, contrast.test.ts); the hovered or focused
-   node's edges get bolder and the rest fade. */
-.edge { opacity: 1; transition: opacity var(--motion-fade) ease-out; }
-.edge[data-hot] .line { stroke-width: 2.5; }
-.edge[data-cycled] .line { stroke-width: 4.5; }
-.atlas[data-hot] .edge:not([data-hot]) { opacity: 0.12; }
-.edge-label { font: 500 var(--text-12) var(--font-mono); fill: var(--gray-11); paint-order: stroke; stroke: var(--gray-1); stroke-width: 4px; stroke-linejoin: round; }
-.edge-label[data-shown='false'], .atlas[data-far] .edge-label, .atlas[data-hot] .edge-label { visibility: hidden; }
-.atlas .edge-label[data-hot] { visibility: visible; }
-/* Bundled edges show only on highlight; their bundle (feeds style, bolder) and the large-spec cluster
-   links (a thick band) carry a text label, so neither relies on colour. */
-.edge[data-bundled]:not([data-hot]) { display: none; }
-.map-link { opacity: 1; transition: opacity var(--motion-fade) ease-out; }
-.map-link[data-link='bundle'] { opacity: 1; }
-.map-link[data-link='bundle'] .line { stroke-width: 2.5; }
-.map-link[data-link='clusters'] { --hue: var(--gray-9); }
-.map-link[data-link='clusters'] .line { stroke-width: 5; stroke-linecap: round; }
-/* Bundle labels follow the edge labels; cluster links (large specs, read zoomed out) always show. */
-.atlas .map-link[data-link='clusters'] .edge-label { visibility: visible; }
-.atlas[data-hot] .map-link:not([data-hot]) { opacity: 0.12; }
-/* While a node is hot, other links' labels hide (like edge labels) rather than fade below legible contrast. */
-.atlas[data-hot] .labels .map-link:not([data-hot]) .edge-label { visibility: hidden; }
-.node[data-summary] .name { font-weight: 600; }
-.toolbar { position: absolute; z-index: 2; top: var(--space-8); left: var(--space-8); display: flex; gap: var(--space-4); margin: 0; padding: 0; border: 0; }
-.toolbar .btn { min-width: 36px; padding-inline: var(--space-8); }
-.map-credit { position: absolute; z-index: 1; right: var(--space-8); bottom: var(--space-8); margin: 0; padding: 0 var(--space-4); background: var(--gray-1); color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); pointer-events: none; }
-.legend { margin: var(--space-8) 0 var(--space-24); font-size: var(--text-12); line-height: var(--leading-12); }
-.legend ul { display: flex; flex-wrap: wrap; gap: var(--space-8) var(--space-24); margin: var(--space-8) 0 0; padding: 0; list-style: none; }
-.legend li { display: flex; align-items: center; gap: var(--space-8); }
-.legend svg { flex: none; }
-.legend p { margin: var(--space-8) 0 0; color: var(--gray-11); }
-.legend-glyph { font: 600 var(--text-12) var(--font-mono); fill: var(--gray-12); }
-
-/* Detail panel (F10): 360 px right of the map on desktop, an overlay on tablets, a bottom sheet on phones (PLAN 3.3). */
-.atlas-wrap { position: relative; }
-/* The panel overlays the map from its right edge (PLAN 3.3), so opening it never shrinks the map. */
-.detail {
-  position: absolute; z-index: 3; top: 0; right: 0; width: min(360px, 88%); max-height: 100%; overflow: auto;
-  padding: var(--space-16) var(--space-16); background: var(--gray-1); box-shadow: 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm);
-  overflow-wrap: anywhere;
+/* The route map (docs/redesign/DESIGN.md 4-5, redesign R4). Tools row: Map | List, search, legend. */
+.map-pane { min-width: 0; }
+.tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-12) var(--space-16); margin-bottom: var(--space-24); }
+.tools-l { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); }
+.search {
+  display: flex; align-items: center; gap: var(--space-8); width: 202px; height: 40px; padding: 0 var(--space-12);
+  border-radius: var(--radius-box); box-shadow: inset 0 0 0 var(--line) var(--gray-7); color: var(--gray-11);
 }
-.detail-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); }
-.detail h2 { margin: var(--space-8) 0; font-size: var(--text-14); line-height: var(--leading-14); }
-.detail h3 { margin: var(--space-24) 0 var(--space-4); font-size: var(--text-14); }
-.detail h4 { margin: var(--space-8) 0 0; font-size: var(--text-12); color: var(--gray-11); }
-.detail p { margin: var(--space-4) 0; }
-.desc { white-space: pre-line; color: var(--gray-11); }
-.detail table { width: 100%; border-collapse: collapse; font-size: var(--text-12); line-height: var(--leading-12); }
-.detail th, .detail td { padding: var(--space-4); box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6); text-align: left; vertical-align: top; }
-.fields, .related { margin: 0; padding-left: var(--space-16); }
-.related li { padding-block: var(--space-4); }
+.search svg { flex: none; fill: none; stroke: currentColor; stroke-width: 1.25; stroke-linecap: round; }
+.search input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: none; color: var(--gray-12); font: inherit; outline: none; appearance: none; }
+.search input::-webkit-search-cancel-button { appearance: none; }
+.search input::placeholder { color: var(--gray-11); opacity: 1; }
+.search:has(input:focus-visible) { outline: 2px solid var(--gray-12); outline-offset: 2px; }
+.search kbd { min-width: 20px; height: 20px; line-height: 20px; text-align: center; }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-20); margin: 0; padding: 0; list-style: none; color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
+.legend li { display: inline-flex; align-items: center; gap: var(--space-8); }
+.legend svg { flex: none; }
+.lg-feed { stroke: var(--gray-9); stroke-width: 1px; }
+.lg-feed[data-inferred] { stroke-dasharray: 3 3; }
+.lg-route { stroke: var(--indigo-9); stroke-width: 2.5px; stroke-linecap: round; }
+
+/* The map: cards on the grid (x = 0, 290, 580, 870), links in one SVG underneath. Wider than the
+   frame, it scrolls sideways inside a focusable region (no zoom). */
+.map-wrap { position: relative; }
+.map-scroll { margin-right: calc(-1 * var(--space-32)); overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; } /* to the frame's edge */
+.map-scroll:focus-visible { outline: 2px solid var(--gray-12); outline-offset: -2px; }
+.route { position: relative; }
+.route-origin { position: absolute; }
+.links { position: absolute; overflow: visible; pointer-events: none; fill: none; }
+/* Feed links 1 px gray-9 with open arrowheads, inferred ones dashed; while a row is hot the rest turn
+   gray-6 and its own links are drawn 1.25 px in ink. The workflow: a 6 px gray-1 halo under a 2.5 px indigo line. */
+.ln { stroke: var(--gray-9); stroke-width: 1px; transition: stroke var(--motion-map) ease-out; }
+.ln[data-faded] { stroke: var(--gray-6); }
+.ln[data-inferred], .ln-hot[data-inferred] { stroke-dasharray: 3 3; }
+.ln-hot { stroke: var(--gray-12); stroke-width: 1.25px; }
+.halo { stroke: var(--gray-1); stroke-width: 6px; stroke-linecap: round; }
+.wf { stroke: var(--indigo-9); stroke-width: 2.5px; stroke-linecap: round; }
+.ah, .ahk { fill: none; stroke-width: 1.2px; stroke-linecap: round; stroke-linejoin: round; }
+.ah { stroke: var(--gray-9); }
+.ahk { stroke: var(--gray-12); }
+.ahr { fill: var(--indigo-9); }
+/* A resource: 202 wide, radius 8, gray-1, a gray-7 ring; head 36 (name 14/600, count 12) over a gray-6 rule. */
+.rc { position: absolute; width: 202px; padding-bottom: var(--space-4); border-radius: var(--radius-md); background: var(--gray-1); box-shadow: inset 0 0 0 var(--line) var(--gray-7); }
+.rc-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); height: 36px; margin: 0; padding: 0 var(--space-12);
+  font-size: var(--text-14); line-height: var(--leading-14); font-weight: 600; box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6);
+}
+.rc-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-count { flex: none; color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); font-weight: 400; }
+/* An operation: a 32 px button; method text in a 44 px column, the id in mono 14, the stop disc at its end. */
+.op {
+  display: flex; align-items: center; gap: var(--space-6); width: calc(100% - var(--space-8)); height: 32px; margin: 0 var(--space-4); padding: 0 var(--space-6) 0 var(--space-10);
+  border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-12); font: inherit; text-align: left; cursor: pointer;
+  transition: opacity var(--motion-map) ease-out, background-color var(--motion-map) ease-out;
+}
+.op:focus-visible { outline-offset: -2px; }
+.op .m { flex: none; width: 44px; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); white-space: nowrap; }
+.op .m[data-destructive] { color: var(--destructive); }
+.op .bang { font-weight: 600; } /* D41: a destructive tool's cue besides the colour */
+.op .id { flex: 1; min-width: 0; overflow: hidden; font: var(--text-14)/var(--leading-14) var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.op[data-route] .id { color: var(--indigo-11); font-weight: 600; }
+.op:hover, .op[data-hot] { background: var(--gray-3); }
+.op[data-dim] { opacity: 0.38; }
+.op[data-target] { outline: 2px dashed var(--gray-12); outline-offset: -2px; } /* the far end of the link E highlights */
+.stop { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--indigo-9); color: var(--indigo-contrast); font: 600 var(--text-12)/18px var(--font-sans); text-align: center; }
+.op.more .m { display: flex; align-items: center; }
+.op.more svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.op.more[aria-expanded='true'] svg { transform: rotate(180deg); }
+.op.more .id { color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-sans); }
+.map-credit { margin: var(--space-8) 0 0; color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); text-align: right; }
+
+/* The operation card (the one element with a shadow: it floats): 300 wide, radius 10, padding 16. */
+.op-card {
+  position: absolute; z-index: 3; width: 300px; padding: var(--space-16); border-radius: var(--radius-box); background: var(--gray-1);
+  box-shadow: 0 0 0 var(--line) var(--gray-7), var(--shadow-float); overflow-wrap: anywhere;
+}
+.oc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-8); }
+.oc-path { margin: 0; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); }
+.oc-close {
+  flex: none; height: 24px; margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-8)) 0 0; padding: 0 var(--space-8); border: 0; border-radius: var(--radius-row);
+  background: none; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-sans); cursor: pointer;
+}
+.oc-close:hover { background: var(--gray-3); color: var(--gray-12); }
+.oc-title { margin: var(--space-4) 0 var(--space-12); font-size: var(--text-14); line-height: var(--leading-14); font-weight: 600; }
+.oc-flag { margin-left: var(--space-8); padding: 0 var(--space-4); border-radius: var(--radius-sm); background: var(--gray-3); color: var(--gray-11); font-size: var(--text-12); font-weight: 400; }
+.oc-desc { margin: calc(-1 * var(--space-4)) 0 var(--space-12); color: var(--gray-11); white-space: pre-line; }
+.op-card dl { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--space-8) var(--space-12); margin: 0; font-size: var(--text-12); line-height: var(--leading-12); }
+.op-card dt { color: var(--gray-11); }
+.op-card dd { margin: 0; }
+.oc-link, .oc-ref {
+  padding: 0; border: 0; background: none; color: var(--gray-12); font: inherit; font-family: var(--font-mono); cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; text-decoration-color: var(--gray-8);
+}
+.oc-ref { color: var(--indigo-11); text-decoration-color: currentColor; }
+.oc-example { margin: var(--space-16) 0 var(--space-8); padding: var(--space-8); border-radius: var(--radius-row); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); font: var(--text-12)/var(--leading-12) var(--font-mono); white-space: pre; overflow-x: auto; }
+.oc-actions { display: flex; align-items: center; margin: 0; font-size: var(--text-12); line-height: var(--leading-12); }
+.oc-copy {
+  height: 32px; padding: 0 var(--space-12); border: 0; border-radius: var(--radius-row); background: var(--gray-1); color: var(--gray-12);
+  box-shadow: inset 0 0 0 var(--line) var(--gray-8); font: 500 var(--text-14)/var(--leading-14) var(--font-sans); cursor: pointer;
+}
+
+/* Text links (the list's rows and skill files). */
 .link { padding: 0; border: 0; background: none; color: var(--indigo-11); font: inherit; text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; cursor: pointer; }
 .link[aria-expanded] { color: var(--gray-11); } /* a disclosure toggle: quiet, like the summaries */
 .copied { margin-left: var(--space-8); font-weight: 600; }
-.example { margin: var(--space-8) 0; padding: var(--space-8); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); border-radius: var(--radius-sm); font: var(--text-12)/var(--leading-12) var(--font-mono); white-space: pre; overflow-x: auto; }
 kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm); color: var(--gray-11); font: var(--text-12) var(--font-mono); white-space: nowrap; }
-/* Skill pane beside the map (phase 11, PLAN 3.3). */
-.panes { display: grid; grid-template-columns: clamp(380px, 40%, 560px) minmax(0, 1fr); gap: var(--space-40); align-items: start; }
-.tabs { display: flex; margin: 0 0 var(--space-8); }
-.tabs [role='tab'] { font: inherit; min-height: 36px; padding: var(--space-4) var(--space-24); border: 0; box-shadow: inset 0 0 0 var(--line) var(--gray-8); background: var(--gray-1); color: var(--gray-12); cursor: pointer; }
-.tabs [role='tab'] + [role='tab'] { margin-left: -1px; }
-.tabs [role='tab']:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
-.tabs [role='tab']:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
-.tabs [aria-selected='true'] { background: var(--gray-3); color: var(--gray-12); font-weight: 600; }
+/* The map, then the skill pane under a rule (redesign R4; R5 restyles the pane as the skill browser). */
+.panes { display: block; }
+/* Map | List (and Skill | Map | List below 1024 px): a segmented control, the selected tab raised. */
+.tabs { display: inline-flex; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-box); background: var(--gray-3); }
+.tabs [role='tab'] { height: 32px; padding: 0 var(--space-12); border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-11); font: inherit; cursor: pointer; }
+.tabs [role='tab']:hover { color: var(--gray-12); }
+.tabs [aria-selected='true'] { background: var(--gray-1); color: var(--gray-12); font-weight: 500; box-shadow: 0 0 0 var(--line) var(--gray-7); }
 .skill-pane {
-  position: sticky; top: var(--space-8); display: flex; flex-direction: column; gap: var(--space-8);
-  height: clamp(560px, calc(100dvh - var(--panes-top, 260px) - var(--space-16)), 960px);
+  display: flex; flex-direction: column; gap: var(--space-8); margin-top: var(--space-40); padding-top: var(--space-32);
+  box-shadow: inset 0 var(--line) 0 var(--gray-6); height: clamp(560px, calc(100dvh - var(--space-64)), 960px);
 }
 .pane-head { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 0 var(--space-16); }
 .pane-head .kicker { grid-column: 1 / -1; }
@@ -312,7 +315,7 @@ kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-
 .pane-head h2 code { font-weight: 600; }
 .options { justify-self: end; font-size: var(--text-12); line-height: var(--leading-12); }
 /* Disclosure toggles are quiet: muted underlined text with the native marker, never the accent. */
-:is(.options, .filters, .rels, .legend, .install, .audit) > summary { width: fit-content; cursor: pointer; color: var(--gray-11); text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; }
+:is(.options, .rels, .install, .audit) > summary { width: fit-content; cursor: pointer; color: var(--gray-11); text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; }
 .options[open] { grid-column: 1 / -1; justify-self: stretch; }
 /* Label | field rows; the help line sits under its field. */
 .options-body { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-4) var(--space-16); align-items: center; padding-top: var(--space-8); }
@@ -363,9 +366,9 @@ kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-
 .in-skill { padding: var(--space-4) var(--space-8); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); border-radius: var(--radius-sm); }
 @media (max-width: 1023px) {
   html { scroll-padding-bottom: 7rem; } /* keep focused items clear of the sticky action bar (200 % zoom) */
-  .panes { display: block; }
+  .title + .tabs { display: flex; margin-bottom: var(--space-24); }
   .tabs [role='tab'] { flex: 1; }
-  .skill-pane { position: static; height: auto; }
+  .skill-pane { height: auto; margin-top: 0; padding-top: 0; box-shadow: none; }
   .skill-body { gap: 0 var(--space-16); }
   .preview { max-height: 60vh; }
   /* sticky over the scrolling skill: one hairline marks its edge */
@@ -375,27 +378,14 @@ kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-
 @media (max-width: 639px) {
   /* Phones: tree and audit share the row equally. */
   .skill-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .detail { position: fixed; top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 50dvh; border-radius: var(--radius-md) var(--radius-md) 0 0; }
-  body:has(.detail) { padding-bottom: 50dvh; } /* room to scroll the map above the bottom sheet */
+  .map-scroll { margin-right: calc(-1 * var(--space-16)); }
+  /* The pinned card is a bottom sheet; there is no hover preview on phones. */
+  .map-wrap .op-card[role='dialog'] { position: fixed; inset: auto 0 0 0 !important; width: auto; max-height: 50dvh; overflow: auto; border-radius: var(--radius-box) var(--radius-box) 0 0; }
+  .map-wrap .op-card[aria-hidden='true'] { display: none; }
+  body:has(.map-wrap .op-card[role='dialog']) { padding-bottom: 50dvh; } /* room to scroll the map above the bottom sheet */
   html { scroll-padding-bottom: 7rem; } /* clear of the sticky action bar */
   .title { margin-bottom: var(--space-16); }
-  .map { height: clamp(300px, 50vh, 560px); }
 }
-
-/* Search, filters and dimmed nodes (phase 12, F11): faded and dashed, never colour alone. */
-.search { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); margin: 0 0 var(--space-8); }
-.search label[for] { color: var(--gray-11); }
-.search .field { flex: 1 1 8rem; min-width: 0; min-height: 36px; }
-.search-count { margin: 0; color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
-.filters > summary { min-height: 36px; display: flex; align-items: center; }
-.filters[open] { flex-basis: 100%; order: 1; padding-bottom: var(--space-8); }
-.filters .help { margin: var(--space-8) 0 0; color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
-.filters fieldset { margin: 0 0 var(--space-4); padding: 0; border: 0; }
-.filters legend { float: left; min-width: 8.5rem; padding: 0; margin-right: var(--space-8); line-height: 28px; font-weight: 600; }
-.filters label { display: inline-flex; align-items: center; gap: var(--space-4); min-height: 28px; margin-right: var(--space-16); }
-.node[data-dim] :is(.shape, .bar, .crud rect) { opacity: 0.45; }
-.node[data-dim] text { opacity: 0.75; }
-.node[data-dim] .shape { stroke-dasharray: 4 3; }
 
 /* List view (F12, A3): one table per cluster, edges in words. */
 .list { min-width: 0; overflow-x: auto; outline-offset: 2px; }
@@ -409,18 +399,13 @@ kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-
 .list tr[data-open] > * { background: var(--gray-3); }
 .list tr[data-open] > th { font-weight: 600; }
 .list-empty { padding: var(--space-16); box-shadow: inset 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm); }
-/* List details: docked to the bottom of the viewport under the list (as on phones), so the tables
-   keep their full width and the panel shows wherever the row is; the scroll padding keeps the
-   focused row clear of it (Focus Not Obscured). */
-@media (min-width: 640px) {
-  .list-wrap[data-panel] { display: block; }
-  .list-wrap .detail {
-    position: sticky; z-index: 3; top: auto; right: auto; bottom: 0; width: auto; max-height: var(--list-detail-h);
-    margin-top: var(--space-16);
-  }
-  :root { --list-detail-h: min(45dvh, 480px); }
-  html:has(.list-wrap[data-panel]) { scroll-padding-bottom: calc(var(--list-detail-h) + var(--space-16)); }
-}
+/* The list's operation card: pinned and docked to the bottom of the viewport under the list, so the
+   tables keep their full width and the card shows wherever the row is; the scroll padding keeps the
+   focused row clear of it (Focus Not Obscured). R5 restyles the list. */
+.list-wrap { position: relative; }
+.op-card.docked { position: sticky; bottom: 0; width: auto; max-height: var(--list-detail-h); margin-top: var(--space-16); overflow: auto; }
+:root { --list-detail-h: min(45dvh, 480px); }
+html:has(.list-wrap[data-panel]) { scroll-padding-bottom: calc(var(--list-detail-h) + var(--space-16)); }
 
 /* Shortcut help: a native modal dialog. */
 .help-dialog { max-width: min(40rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: var(--space-16); color: var(--gray-12); background: var(--gray-1); border: 0; box-shadow: 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm); }

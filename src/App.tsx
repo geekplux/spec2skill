@@ -1,19 +1,20 @@
-import { Suspense, useCallback, startTransition, use, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, startTransition, use, useEffect, useMemo, useRef, useState } from 'react';
 import { useAnnounce } from './a11y/Announcer';
 import { aiProse, applyAi } from './ai/client';
 import { useAi } from './ai/useAi';
 import { buildGraph } from './graph';
 import { counted } from './graph/words';
 import { ListView } from './list/ListView';
-import { AtlasMap } from './map/Map';
+import { Legend } from './map/Legend';
+import { RouteMap } from './map/RouteMap';
 import { Search } from './map/Search';
 import { ShortcutHelp } from './map/ShortcutHelp';
 import type { AtlasGraph } from './graph';
 import type { ApiModel, SourceKind } from './model/types';
 import { DEFAULT_SAMPLE_ID, type Sample, getSample, sampleModel } from './samples';
-import { topInFrame } from './shell/frame';
 import { Layout } from './shell/Layout';
 import { type TabDef, Tabs, useWide } from './shell/Tabs';
+import { topChains } from './skillgen/graph-chains';
 import { skillSlug } from './skillgen/slug';
 import { type Explained, explain } from './source/errors';
 import { type Input, loadSource } from './source/fetchSource';
@@ -23,7 +24,7 @@ import { EmptyChart, ErrorPanel, LoadingSteps, type Progress } from './source/St
 import { SkillPane } from './skillpane/SkillPane';
 import { opFile } from './skillpane/tree';
 import { type Skill, useSkill, writeSkill } from './skillpane/useSkill';
-import { type Hidden, SHOW_ALL, edgeShown, facets, matches, searchIndex } from './state/filter';
+import { edgeShown, matches, searchIndex } from './state/filter';
 import { type UrlState, type View, canonicalUrl, readUrl, writeUrl } from './state/url';
 
 const KIND_LABEL: Record<SourceKind, string> = { openapi3: 'OpenAPI', swagger2: 'Swagger', mcp: 'MCP' };
@@ -40,13 +41,13 @@ interface WorkspaceProps {
   source: ApiModel | Promise<ApiModel>; tab: Tab; onTab: (tab: Tab) => void; wide: boolean; run: number;
   /** `#op=`: the operation whose details are open. */
   op?: string; onOp: (id: string | undefined, push: boolean) => void;
-  q: string; onQ: (q: string) => void; hidden: Hidden; onHidden: (h: Hidden) => void;
-  /** Open the keyboard shortcuts dialog (`?`, the search row's button). */
+  q: string; onQ: (q: string) => void;
+  /** Open the keyboard shortcuts dialog (`?`). */
   onHelp: () => void;
 }
 
-/** The skill pane beside the map (desktop) or behind Skill | Map | List tabs (below 1024 px), D21. */
-function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, onHidden, onHelp }: WorkspaceProps) {
+/** The map (or list) with its tools row, then the skill pane (desktop); behind Skill | Map | List tabs below 1024 px (D21). */
+function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, onHelp }: WorkspaceProps) {
   const isSample = source instanceof Promise;
   const model = isSample ? use(source) : source;
   const base = useMemo(() => buildGraph(model), [model]);
@@ -58,17 +59,17 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
   const aiText = !plainText ? ai : undefined;
   const graph = useMemo(() => (aiText ? applyAi(base, aiText.ai, aiText.summary) : base), [base, aiText]);
   const prose = useMemo(() => (aiText ? aiProse(graph, aiText.ai) : undefined), [graph, aiText]);
-  const index = useMemo(() => searchIndex(model, graph), [model, graph]);
-  const match = useMemo(() => matches(index, q, hidden), [index, q, hidden]);
-  const edges = useMemo(() => graph.edges.filter((e) => edgeShown(e, match, hidden)), [graph, match, hidden]);
-  const choices = useMemo(() => facets(model, graph), [model, graph]);
+  const index = useMemo(() => searchIndex(model), [model]);
+  const match = useMemo(() => matches(index, q), [index, q]);
+  const edges = useMemo(() => graph.edges.filter((e) => edgeShown(e, match)), [graph, match]);
+  // The strongest workflow, once per model: topChains takes 100-190 ms on a 1000-operation spec.
+  const chain = useMemo(() => topChains(model, base, 1)[0] ?? null, [model, base]);
   const selected = model.operations.some((o) => o.id === op) ? op : undefined;
   const search = useRef<HTMLInputElement>(null);
   const [opts, setOpts] = useState({ hash: '', slug: '', license: 'MIT' });
   const slug = (opts.hash === model.hash && opts.slug) || skillSlug(model);
   const { skill, error } = useSkill(model, graph, slug, opts.license, run, prose);
   const [file, setFile] = useState('SKILL.md');
-  const panes = useRef<HTMLDivElement>(null);
   const title = isSample ? `${model.source.title} (sample)` : model.source.title;
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
   const summary = `${model.operations.length} ${noun} in ${counted(graph.clusters.length, 'cluster')}, ${counted(graph.edges.length, 'relationship')}`;
@@ -94,16 +95,6 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
     emptySaid.current = model.hash;
     announce(`${title}: no operations. This spec has no paths, so there is no skill to write.`);
   }, [announce, model.operations.length, model.hash, title]);
-  // Panes fill the window from their top inside the result frame (app.css reads --panes-top).
-  useLayoutEffect(() => {
-    const el = panes.current!;
-    const measure = () => el.style.setProperty('--panes-top', `${Math.round(topInFrame(el))}px`);
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- the title above changes with the sample and the tabs with `wide`
-  }, [wide, model.hash]);
-
   // `/` focuses search (from the Skill tab it opens the Map tab first) and `?` opens the shortcut help,
   // from anywhere but a text field or the dialog itself (A1).
   useEffect(() => {
@@ -145,31 +136,34 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
         )}
       </div>
       {!wide && tabs}
-      <div className="panes" ref={panes}>
+      <div className="panes">
+        <div className="map-pane" hidden={!wide && tab === 'skill'}>
+          {model.operations.length > 0 && (
+            <div className="tools">
+              <div className="tools-l">
+                {wide && tabs}
+                <Search q={q} onQ={onQ} count={match && match.size} total={model.operations.length} noun={noun} input={search} />
+              </div>
+              {view === 'map' && <Legend />}
+            </div>
+          )}
+          <div className="sheet" id="panel-map" role="tabpanel" aria-labelledby={`tab-${view}`} data-view={view}>
+            {model.operations.length === 0 ? <EmptyChart /> : view === 'map' ? (
+              <RouteMap key={model.hash} model={model} graph={graph} base={base} chain={chain} skillFile={skillFile} onSkillFile={openFile} selected={selected} onSelect={onOp} match={match} edges={edges} />
+            ) : (
+              <ListView model={model} graph={graph} match={match} edges={edges} selected={selected} onSelect={(id) => onOp(id, true)} skillFile={skillFile} onSkillFile={openFile} announce={announce} />
+            )}
+          </div>
+        </div>
         <SkillPane skill={skill} error={error} ready={skill?.hash === model.hash} empty={model.operations.length === 0}
           options={{ key: model.hash, slug, license: opts.license }} onOptions={(o) => setOpts({ hash: model.hash, ...o })}
           file={file} onFile={setFile} run={run} tabpanel={wide ? undefined : { hidden: tab !== 'skill' }}
           plainText={ai && { on: plainText, onChange: setPlainText }} />
-        <div className="map-pane">
-          {wide && tabs}
-          <div className="sheet" id="panel-map" role="tabpanel" aria-labelledby={`tab-${view}`} hidden={!wide && tab === 'skill'} data-view={view}>
-            {model.operations.length === 0 ? <EmptyChart /> : <>
-            <Search q={q} onQ={onQ} hidden={hidden} onHidden={onHidden} facets={choices} count={match && match.size}
-              total={model.operations.length} noun={noun} edges={{ shown: edges.length, total: graph.edges.length }} onHelp={onHelp} input={search} />
-            {view === 'map' ? (
-              <AtlasMap key={model.hash} model={model} graph={graph} base={base} skillFile={skillFile} onSkillFile={openFile} selected={selected} onSelect={onOp} match={match} edges={edges} />
-            ) : (
-              <ListView model={model} graph={graph} match={match} edges={edges} selected={selected} onSelect={(id) => onOp(id, true)} skillFile={skillFile} onSkillFile={openFile} announce={announce} />
-            )}
-            </>}
-          </div>
-        </div>
       </div>
     </>
   );
 }
 
-const NO_FILTER = { q: '', hidden: SHOW_ALL };
 /** The URL's state; a link to an operation (#op=) opens on the Map tab, otherwise the skill comes first (D21). */
 const here = (): UrlState => {
   const u = readUrl(window.location.href);
@@ -179,7 +173,7 @@ const here = (): UrlState => {
 export function App() {
   // The URL is the source of truth (F13): each change writes history; back/forward re-read it.
   const [url, setUrl] = useState(here);
-  const [find, setFind] = useState({ q: url.q, hidden: SHOW_ALL });
+  const [find, setFind] = useState(url.q);
   const sample = getSample(url.sample ?? '') ?? getSample(DEFAULT_SAMPLE_ID)!;
   const tab: Tab = url.view ?? 'skill';
   const [run, setRun] = useState(0);
@@ -203,7 +197,7 @@ export function App() {
     const onPop = () => {
       const next = here();
       startTransition(() => setUrl(next));
-      setFind((f) => (f.q === next.q ? f : { ...f, q: next.q }));
+      setFind(next.q);
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
@@ -217,10 +211,10 @@ export function App() {
   };
   // The search reaches the URL once typing pauses.
   useEffect(() => {
-    const t = setTimeout(() => readUrl(window.location.href).q !== find.q && go({ q: find.q }), 400);
+    const t = setTimeout(() => readUrl(window.location.href).q !== find && go({ q: find }), 400);
     return () => clearTimeout(t);
     // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `go` reads the URL itself; only the query matters
-  }, [find.q]);
+  }, [find]);
   /** A loaded source's skill is written before it is shown (the "Writing skill" step). */
   const write = (model: ApiModel, graph: AtlasGraph) => writeSkill(model, graph, skillSlug(model), 'MIT', run);
   /** Load a URL, text or file: steps while it loads, then its skill and map together (or an error). */
@@ -237,7 +231,7 @@ export function App() {
       setUser({ url: at, model });
       setDraft(at ?? ''); // pasted text has become the skill; a URL stays to say what is shown
       setJob(undefined);
-      setFind(NO_FILTER);
+      setFind('');
       if (opened) return;
       const now = here();
       if (!now.sample && !now.url && !mine) go({ sample: sample.id }); // so back returns to it
@@ -261,7 +255,7 @@ export function App() {
   const select = (next: Sample) => {
     stop();
     if (next.id === sample.id && !mine) return go({ sample: next.id }); // name it in the URL, no new entry
-    setFind(NO_FILTER);
+    setFind('');
     // keep the current sample visible while the next one is read
     startTransition(() => go({ sample: next.id, url: undefined, q: '', op: undefined }, true));
   };
@@ -282,7 +276,7 @@ export function App() {
       samples={<Samples value={mine ? undefined : sample.id} onSelect={select} />} status={status} busy={!!job} onShortcuts={showHelp}>
       <Suspense fallback={<p className="lede">Reading the sample…</p>}>
         <Workspace source={mine ?? sampleModel(sample)} tab={tab} onTab={(view) => go({ view })} wide={wide} run={run} op={url.op} onOp={(op, push) => go({ op }, push)}
-          q={find.q} onQ={(q) => setFind((f) => ({ ...f, q }))} hidden={find.hidden} onHidden={(hidden) => setFind((f) => ({ ...f, hidden }))} onHelp={showHelp} />
+          q={find} onQ={setFind} onHelp={showHelp} />
       </Suspense>
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}
     </Layout>

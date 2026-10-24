@@ -1,11 +1,11 @@
 // The list view (F12, A3): the whole map as text. One table per cluster, every operation a row,
-// every edge in words with its kind and label; obeys search and filters; rows open the same
-// detail panel as the map. Spec strings are React text only (S3).
+// every edge in words with its kind and label; obeys search; rows open the same operation card as
+// the map, pinned and docked under the list. Spec strings are React text only (S3).
 import { useEffect, useRef } from 'react';
 import { CRUD_LETTER, CRUD_ORDER, type AtlasGraph, type Edge } from '../graph';
-import { DetailPanel } from '../detail/DetailPanel';
 import { counted } from '../graph/words';
 import { RELATIONS, edgeText, edgesOf, relation } from '../map/keyboard';
+import { OpCard } from '../map/OpCard';
 import type { ApiModel, Operation } from '../model/types';
 
 /** A path or file name that may wrap after each `/`, never inside a segment. */
@@ -34,7 +34,7 @@ interface ListViewProps {
   model: ApiModel;
   graph: AtlasGraph;
   match: Set<string> | null;
-  /** The edges search and filters leave shown. */
+  /** The edges the search leaves shown. */
   edges: Edge[];
   selected?: string;
   onSelect: (id: string | undefined) => void;
@@ -51,7 +51,7 @@ export function ListView({ model, graph, match, edges, selected, onSelect, skill
   const op = selected ? ops.get(selected) : undefined;
   const open = (id: string) => {
     onSelect(id);
-    announce(`Details for ${id} open after the list.`);
+    announce(`Operation card for ${id} open after the list.`);
   };
   // Back/forward opens or closes details from outside; if that dropped focus (the panel unmounted)
   // or left it on another row, it goes to the row of the selection, or of the one just closed.
@@ -92,7 +92,7 @@ export function ListView({ model, graph, match, edges, selected, onSelect, skill
           {match ? `${match.size} of ${model.operations.length}` : model.operations.length} {noun} in {counted(groups.length, 'cluster')}; {counted(edges.length, 'relationship')} shown: {count('feeds')} feeds, {count('sub-path')} sub-path, {count('shared-schema')} shared schema.
           {graph.hubSchemas.length > 0 && ` Hub schemas (badges on the map, not edges): ${graph.hubSchemas.map((h) => `${h.name} on ${h.usedBy} operations`).join(', ')}.`}
         </p>
-        {groups.length === 0 && <p className="list-empty">No {noun} match. Clear the search or show all filters.</p>}
+        {groups.length === 0 && <p className="list-empty">No {noun} match. Clear the search.</p>}
         {groups.map(({ c, ids }) => (
           <table key={c.id} data-cluster={c.id}>
             <caption>
@@ -121,7 +121,7 @@ export function ListView({ model, graph, match, edges, selected, onSelect, skill
           </table>
         ))}
       </div>
-      {op && <DetailPanel model={model} graph={graph} op={op} onGo={open} onClose={close} announce={announce} inSkill={skillFile?.(op.id)} onInSkill={onSkillFile} />}
+      {op && <OpCard model={model} graph={graph} op={op} pinned className="docked" onGo={open} onClose={close} announce={announce} inSkill={skillFile?.(op.id)} onInSkill={onSkillFile} />}
     </div>
   );
 }

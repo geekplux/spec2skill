@@ -1,8 +1,8 @@
-// Keyboard navigation for the atlas (PLAN phase 7, A1/A2). Pure: given the layout, the focused
-// node and a key, what should happen; plus the words screen readers hear for nodes and edges.
+// Keyboard navigation for the route map (PLAN phase 7, A1/A2; redesign R4). Pure: given the route
+// layout's rows, the focused row and a key, what should happen; plus the words screen readers hear.
 import type { Edge } from '../graph';
 import { counted } from '../graph/words';
-import type { AtlasLayout, LayoutNode, NodeState } from '../layout/layout';
+import type { RouteLayout, RouteRow } from '../layout/route';
 import type { Operation } from '../model/types';
 
 export type Action =
@@ -10,28 +10,45 @@ export type Action =
   | { type: 'edge'; index: number | null }
   | { type: 'open' }
   | { type: 'close' }
-  | { type: 'zoom'; factor: number }
-  | { type: 'fit' }
-  | { type: 'help' }
-  | { type: 'pan'; dx: number; dy: number };
+  | { type: 'help' };
+
+/** A place keyboard focus can rest: an operation row, or a card's "N more" row (`more:<card>`). */
+export interface NavNode { id: string; card: string; x: number; y: number; w: number; h: number; more?: boolean }
+/** Rows in reading order: cards by column, then top to bottom. */
+export interface NavMap { nodes: NavNode[]; cards: string[] }
 
 export interface NavState {
-  focus: LayoutNode | undefined;
-  /** The focused node's edges (in graph order) and the one `E` has highlighted. */
+  focus: NavNode | undefined;
+  /** The focused operation's edges (in graph order) and the one `E` has highlighted. */
   edges: Edge[];
   edge: number | null;
 }
 
-const ZOOM: Record<string, number> = { '+': 1.25, '=': 1.25, '-': 0.8, _: 0.8 };
 const DIRS: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
-export const PAN_STEP = 80;
 
-const centre = (n: LayoutNode) => ({ x: n.x + n.w / 2, y: n.y + n.h / 2 });
+/** The id of a card's "N more" row. */
+export const moreId = (card: string): string => `more:${card}`;
 
-/** The nearest node in a direction: inside the 45° cone if any, else anywhere ahead; sideways offset counts double. */
-export function nearest(nodes: LayoutNode[], from: LayoutNode, [dx, dy]: [number, number]): LayoutNode | undefined {
+/**
+ * Where focus can go: every row, and each "N more" row; while a search narrows the map (`match`),
+ * only matching rows, and a "N more" row only while it hides a match.
+ */
+export function navOf(layout: RouteLayout, match: Set<string> | null): NavMap {
+  const nodes: NavNode[] = [];
+  for (const c of layout.cards) {
+    for (const r of c.rows) if (!match || match.has(r.op)) nodes.push({ id: r.op, card: c.id, x: r.x, y: r.y, w: r.w, h: r.h });
+    const m = c.more;
+    if (m && (!match || m.hidden.some((id) => match.has(id)))) nodes.push({ id: moreId(c.id), card: c.id, x: m.x, y: m.y, w: m.w, h: m.h, more: true });
+  }
+  return { nodes, cards: layout.cards.map((c) => c.id).filter((id) => nodes.some((n) => n.card === id)) };
+}
+
+const centre = (n: NavNode) => ({ x: n.x + n.w / 2, y: n.y + n.h / 2 });
+
+/** The nearest row in a direction: inside the 45° cone if any, else anywhere ahead; sideways offset counts double. */
+export function nearest(nodes: NavNode[], from: NavNode, [dx, dy]: [number, number]): NavNode | undefined {
   const o = centre(from);
-  let best: LayoutNode | undefined;
+  let best: NavNode | undefined;
   let bestScore = Infinity;
   for (const n of nodes) {
     const c = centre(n);
@@ -47,17 +64,14 @@ export function nearest(nodes: LayoutNode[], from: LayoutNode, [dx, dy]: [number
 export const edgesOf = (edges: Edge[], id: string): Edge[] => edges.filter((e) => e.from === id || e.to === id);
 export const otherEnd = (e: Edge, id: string): string => (e.from === id ? e.to : e.from);
 
-export function keyAction(atlas: AtlasLayout, s: NavState, key: string, shift = false): Action | null {
-  const dir = DIRS[key];
-  if (dir && shift) return { type: 'pan', dx: -dir[0] * PAN_STEP, dy: -dir[1] * PAN_STEP };
-  if (ZOOM[key]) return { type: 'zoom', factor: ZOOM[key] };
-  if (key === '0') return { type: 'fit' };
+export function keyAction(nav: NavMap, s: NavState, key: string): Action | null {
   if (key === '?') return { type: 'help' };
   const at = s.focus;
   if (!at) return null;
-  const to = (n: LayoutNode | undefined): Action | null => (n && n !== at ? { type: 'focus', id: n.id } : null);
-  if (dir) return to(nearest(atlas.nodes, at, dir));
-  const peers = atlas.nodes.filter((n) => n.cluster === at.cluster);
+  const to = (n: NavNode | undefined): Action | null => (n && n !== at ? { type: 'focus', id: n.id } : null);
+  const dir = DIRS[key];
+  if (dir) return to(nearest(nav.nodes, at, dir));
+  const peers = nav.nodes.filter((n) => n.card === at.card);
   switch (key) {
     case 'Home':
       return to(peers[0]);
@@ -65,13 +79,13 @@ export function keyAction(atlas: AtlasLayout, s: NavState, key: string, shift = 
       return to(peers.at(-1));
     case 'PageUp':
     case 'PageDown': {
-      const ids = atlas.clusters.map((c) => c.id);
-      const next = ids[(ids.indexOf(at.cluster) + (key === 'PageDown' ? 1 : ids.length - 1)) % ids.length];
-      return to(atlas.nodes.find((n) => n.cluster === next));
+      const ids = nav.cards;
+      const next = ids[(ids.indexOf(at.card) + (key === 'PageDown' ? 1 : ids.length - 1)) % ids.length];
+      return to(nav.nodes.find((n) => n.card === next));
     }
     case 'e':
     case 'E':
-      return s.edges.length ? { type: 'edge', index: s.edge === null ? 0 : (s.edge + 1) % s.edges.length } : null;
+      return !at.more && s.edges.length ? { type: 'edge', index: s.edge === null ? 0 : (s.edge + 1) % s.edges.length } : null;
     case 'Enter':
       return s.edge === null ? { type: 'open' } : { type: 'focus', id: otherEnd(s.edges[s.edge]!, at.id) };
     case ' ':
@@ -117,14 +131,11 @@ export const SHORTCUTS: { where: string; keys: string[]; what: string }[] = [
   { where: 'Anywhere outside a text field', keys: ['?'], what: 'Show these shortcuts' },
   { where: 'Search box', keys: ['Escape'], what: 'Clear the search' },
   { where: 'Map', keys: ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'], what: 'Move to the nearest operation that way (skips ones the search hides)' },
-  { where: 'Map', keys: ['PageUp', 'PageDown'], what: 'Previous or next cluster' },
-  { where: 'Map', keys: ['Home', 'End'], what: 'First or last operation in the cluster' },
-  { where: 'Map', keys: ['e', 'E'], what: 'Cycle the focused operation\'s edges' },
-  { where: 'Map', keys: ['Enter', ' '], what: 'Open details, or follow the highlighted edge (Enter)' },
-  { where: 'Map', keys: ['Escape'], what: 'Clear the edge highlight, then close details' },
-  { where: 'Map', keys: ['+', '=', '-', '_'], what: 'Zoom in or out' },
-  { where: 'Map', keys: ['0'], what: 'Fit the map to the screen' },
-  { where: 'Map', keys: ['Shift+ArrowLeft', 'Shift+ArrowUp', 'Shift+ArrowRight', 'Shift+ArrowDown'], what: 'Pan the map' },
+  { where: 'Map', keys: ['PageUp', 'PageDown'], what: 'Previous or next resource' },
+  { where: 'Map', keys: ['Home', 'End'], what: 'First or last operation in the resource' },
+  { where: 'Map', keys: ['e', 'E'], what: 'Cycle the focused operation\'s links' },
+  { where: 'Map', keys: ['Enter', ' '], what: 'Pin the operation card, follow the highlighted link (Enter), or show more rows' },
+  { where: 'Map', keys: ['Escape'], what: 'Clear the link highlight, then close the operation card' },
   { where: 'Skill files', keys: ['ArrowUp', 'ArrowDown'], what: 'Previous or next file' },
   { where: 'Skill files', keys: ['ArrowRight', 'ArrowLeft'], what: 'Open or close a folder, or go to its parent' },
   { where: 'Skill files', keys: ['Home', 'End'], what: 'First or last file' },
@@ -143,8 +154,7 @@ const KEY_LABEL: Record<string, string> = {
 /** How a key is printed: `Shift+ArrowLeft` -> `Shift + ←`. */
 export const keyLabel = (key: string): string => key.split(/\+(?=.)/).map((k) => KEY_LABEL[k] ?? k).join(' + ');
 
-/** A2 node name: "GET /tasks/{taskId}, Get a task, cluster Tasks, 4 relationships" (full, never truncated). */
-/** The map's accessible name; once search or filters narrow it, what matches and what is shown:
+/** The map's accessible name; once search narrows it, what matches and what is shown:
  *  "Tasks API: 4 of 22 operations match, 18 of 85 relationships shown". */
 export function mapName(title: string, noun: string, operations: number, clusters: number, edges: number, match: number | null, shownEdges: number): string {
   const all = `${operations} ${noun}`;
@@ -153,11 +163,19 @@ export function mapName(title: string, noun: string, operations: number, cluster
   return `${title}: ${match === null ? `${all} in ${groups}` : `${match} of ${all} match`}, ${shownEdges} of ${counted(edges, 'relationship')} shown`;
 }
 
-export function nodeName(op: Operation, state: NodeState, cluster: string, relationships: number): string {
+const READS = new Set(['GET', 'HEAD', 'OPTIONS', 'read']);
+
+/**
+ * A2 row name: "GET /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 13 relationships"
+ * (full, never truncated). Destructive rows say so in words (D41); other writes "changes data".
+ */
+export function nodeName(op: Operation, row: Pick<RouteRow, 'method' | 'destructive' | 'stop'>, cluster: string, relationships: number): string {
   const parts = [op.kind === 'tool' ? `Tool ${op.id}` : `${op.method!.toUpperCase()} ${op.path}`];
   if (op.title !== op.id && op.title !== op.path) parts.push(op.title);
-  if (state !== 'read') parts.push(state === 'destructive' ? 'destructive' : 'changes data');
+  if (row.destructive) parts.push('destructive');
+  else if (!READS.has(row.method)) parts.push('changes data');
   if (op.deprecated) parts.push('deprecated');
+  if (row.stop) parts.push(`workflow step ${row.stop}`);
   parts.push(`cluster ${cluster}`, counted(relationships, 'relationship'));
   return parts.join(', ');
 }

@@ -1,0 +1,315 @@
+// The route map (docs/redesign/DESIGN.md 5, redesign R4): resource cards in columns on the grid,
+// operations as real buttons, feed links and bundles between columns, the strongest workflow as one
+// indigo line; hover or focus a row and its links appear, the rest fades, and the operation card
+// previews it; click or Enter pins the card. Positions come from the pure route layout
+// (src/layout/route.ts). The map is one Tab stop (roving tabindex); arrows move between rows
+// (keyboard.ts). Wider than the frame, it scrolls sideways in a focusable region: no zoom.
+import { type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useAnnounce } from '../a11y/Announcer';
+import type { AtlasGraph, Edge } from '../graph';
+import { CARD_W, MAX_ROWS, type RouteCard, type RouteRow, hoverBounds, hoverLinks, routeLayout } from '../layout/route';
+import type { ApiModel } from '../model/types';
+import type { Chain } from '../skillgen/types';
+import { describeEdge, edgesOf, keyAction, mapName, moreId, navOf, nodeName, otherEnd } from './keyboard';
+import { OpCard } from './OpCard';
+
+/** The operation card: 300 wide, 16 px from the row, its top 40 px above the row's centre (V2Hover). */
+const CARD = { w: 300, gap: 16, lift: 40 };
+/** A pointer leaving a row has this long to reach its card before the preview goes. */
+const LINGER = 150;
+
+interface RouteMapProps {
+  model: ApiModel;
+  /** The graph as shown (cluster names may be AI-drafted). */
+  graph: AtlasGraph;
+  /** The deterministic graph the layout is computed from, so AI names never move a card. */
+  base?: AtlasGraph;
+  /** The strongest workflow, computed once per model (topChains is slow on large specs). */
+  chain: Chain | null;
+  /** The skill file documenting an operation, once the skill is written ("In skill"). */
+  skillFile?: (id: string) => string | undefined;
+  onSkillFile: (path: string) => void;
+  /** The operation whose card is pinned (`#op=`); `onSelect` pushes a history entry when `push`. */
+  selected?: string;
+  onSelect: (id: string | undefined, push: boolean) => void;
+  /** Search matches (null: all) and the relationships left shown. */
+  match: Set<string> | null;
+  edges: Edge[];
+}
+
+export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkillFile, selected, onSelect, match, edges: shownEdges }: RouteMapProps) {
+  const uid = useId();
+  const announce = useAnnounce();
+  const ops = useMemo(() => new Map(model.operations.map((op) => [op.id, op])), [model]);
+  const names = useMemo(() => new Map(graph.clusters.map((c) => [c.id, c.name])), [graph]);
+  const home = useMemo(() => new Map(base.clusters.flatMap((c) => c.operationIds.map((id) => [id, c] as const))), [base]);
+  // Feeds only on hover: sub-path and shared-schema relations are listed in the card (D45).
+  const feeds = useMemo(() => ({ ...base, edges: base.edges.filter((e) => e.kind === 'feeds') }), [base]);
+
+  // A card holding the pinned operation past its eighth row opens, so the row is there to pin.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => {
+    const c = selected ? home.get(selected) : undefined;
+    return c && c.operationIds.length > MAX_ROWS ? new Set([c.id]) : new Set();
+  });
+  const layout = useMemo(() => routeLayout(model, base, { expanded, chain }), [model, base, expanded, chain]);
+  const rowOf = useMemo(() => new Map(layout.cards.flatMap((c) => c.rows.map((r) => [r.op, { row: r, card: c }] as const))), [layout]);
+  if (selected && !rowOf.has(selected) && home.has(selected) && !expanded.has(home.get(selected)!.id)) {
+    setExpanded(new Set([...expanded, home.get(selected)!.id]));
+  }
+  const reach = useMemo(() => hoverBounds(layout, feeds), [layout, feeds]);
+  const nav = useMemo(() => navOf(layout, match), [layout, match]);
+  const shown = useMemo(() => new Set(shownEdges.map((e) => e.id)), [shownEdges]);
+  const degree = useMemo(() => {
+    const d = new Map<string, number>();
+    for (const e of shownEdges) for (const id of new Set([e.from, e.to])) d.set(id, (d.get(id) ?? 0) + 1);
+    return d;
+  }, [shownEdges]);
+
+  const wrap = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  const [avail, setAvail] = useState(Infinity);
+  const [scrollX, setScrollX] = useState(0);
+  const [hover, setHover] = useState<string | null>(null);
+  const linger = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [cursor, setCursor] = useState(selected);
+  const [seen, setSeen] = useState(selected);
+  if (seen !== selected) {
+    // Pinned from outside (back/forward, an edited #op=): focus follows.
+    setSeen(selected);
+    if (selected) setCursor(selected);
+  }
+  const [focusIn, setFocusIn] = useState(false);
+  const [edge, setEdge] = useState<number | null>(null);
+
+  const pinned = selected && rowOf.has(selected) ? selected : undefined;
+  const stop = pinned ?? (cursor && nav.nodes.some((n) => n.id === cursor) ? cursor : nav.nodes[0]?.id);
+  const at = nav.nodes.find((n) => n.id === stop);
+  const opAt = at && !at.more ? at.id : undefined;
+  const cycleEdges = opAt ? edgesOf(shownEdges, opAt) : [];
+  const cycled = edge === null ? undefined : cycleEdges[edge];
+  const focused = focusIn && opAt ? opAt : null;
+  const hot = pinned ?? hover ?? focused;
+  const lit = hot ? hoverLinks(layout, feeds, hot) : [];
+  const near = new Set(hot ? [hot, ...lit.flatMap((l) => [l.from, l.to])] : []);
+
+  // Sideways scrolling only when the map is wider than the frame (or has more than four columns).
+  useLayoutEffect(() => {
+    const el = wrap.current!;
+    const observer = new ResizeObserver(() => setAvail(el.clientWidth));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const scrolls = layout.scrolls || layout.width > avail + 0.5;
+  // The map's box and where the layout's (0, 0) sits in it. At rest everything drawn fits the cards'
+  // box plus what the links need above and below (loops may reach into the frame's padding). Scrolling,
+  // the region holds the hover bounds, so hover links and loops are never clipped, and is pulled left
+  // by as much (marginLeft), so the first column stays on the grid.
+  const b = layout.bounds;
+  const pad = scrolls
+    ? { left: -reach.x, top: -reach.y, w: reach.w, h: reach.h }
+    : { left: 0, top: Math.max(0, -b.y), w: layout.width, h: layout.height + Math.max(0, -b.y) + Math.max(0, b.y + b.h - layout.height) };
+  /** The layout's origin relative to the wrapper (the card is placed outside the scroller). */
+  const ox = scrolls ? -scrollX : 0;
+  const oy = pad.top;
+
+  const rowEl = (id: string) => wrap.current?.querySelector<HTMLElement>(`[data-nav="${CSS.escape(id)}"]`) ?? null;
+  const cardName = (id: string) => names.get(id) ?? layout.cards.find((c) => c.id === id)?.name ?? id;
+  // A row to focus once it is laid out (a link in the card to an operation behind "N more").
+  const pending = useRef<string | null>(null);
+  useEffect(() => {
+    const id = pending.current;
+    if (id && rowEl(id)) {
+      pending.current = null;
+      rowEl(id)!.focus();
+    }
+  });
+
+  // Back/forward changed the pin from outside: if that dropped focus or left it on another row, it follows.
+  const prev = useRef(selected);
+  useEffect(() => {
+    if (prev.current === selected) return;
+    const id = selected ?? prev.current;
+    prev.current = selected;
+    const active = document.activeElement;
+    const was = active?.getAttribute('data-nav');
+    if (id && (!active || active === document.body || !active.isConnected || (was != null && was !== id))) rowEl(id)?.focus();
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- runs when the pin changes
+  }, [selected]);
+  useEffect(() => () => clearTimeout(linger.current), []);
+
+  /** Move focus to a row; a pinned card follows it (replacing the history entry, or adding one when `push`). */
+  const focusNode = (id: string, push = false) => {
+    const card = nav.nodes.find((x) => x.id === id)?.card ?? home.get(id)?.id;
+    if (!card) return;
+    const more = id.startsWith('more:');
+    if (!more && (pinned || push)) onSelect(id, push);
+    setCursor(id);
+    setEdge(null);
+    setHover(null);
+    pending.current = id;
+    rowEl(id)?.focus();
+    const n = { card };
+    const peers = nav.nodes.filter((p) => p.card === n.card);
+    if (peers.some((p) => p.id === id)) announce(`${cardName(n.card)} cluster, ${peers.findIndex((p) => p.id === id) + 1} of ${peers.length}.`);
+  };
+  const close = () => {
+    const id = pinned;
+    onSelect(undefined, true);
+    if (id) requestAnimationFrame(() => rowEl(id)?.focus());
+  };
+  const toggle = (card: RouteCard) => {
+    const open = !expanded.has(card.id);
+    setExpanded((e) => (open ? new Set([...e, card.id]) : new Set([...e].filter((id) => id !== card.id))));
+    setCursor(moreId(card.id));
+    announce(open ? `${cardName(card.id)}: all ${card.count} operations shown.` : `${cardName(card.id)}: ${card.count - card.more!.count} of ${card.count} operations shown.`);
+  };
+  const pin = (id: string) => {
+    focusNode(id, true);
+    announce('Operation card open after the map; Tab to read it.');
+  };
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const a = keyAction(nav, { focus: at, edges: cycleEdges, edge }, e.key);
+    if (!a || a.type === 'help') return; // `?` bubbles to the app, which opens the shortcut help
+    e.preventDefault();
+    if (a.type === 'focus') focusNode(a.id);
+    else if (a.type === 'edge') {
+      setEdge(a.index);
+      announce(a.index === null ? 'Link highlight cleared.' : describeEdge(cycleEdges[a.index]!, opAt!, a.index, cycleEdges.length));
+    } else if (a.type === 'open') {
+      if (at?.more) toggle(layout.cards.find((c) => c.id === at.card)!);
+      else if (opAt) pin(opAt);
+    } else if (a.type === 'close' && pinned) close();
+  };
+  const onRowFocus = (id: string) => {
+    if (id !== cursor) {
+      setCursor(id);
+      setEdge(null);
+    }
+    setFocusIn(true);
+  };
+  const enter = (id: string) => {
+    clearTimeout(linger.current);
+    setHover(id);
+  };
+  const leave = () => {
+    clearTimeout(linger.current);
+    linger.current = setTimeout(() => setHover(null), LINGER);
+  };
+
+  // Where the card goes: right of the row, or flipped left of its card when it would leave the frame.
+  const cardOp = pinned ?? hover ?? focused;
+  const [place, setPlace] = useState<{ left: number; top: number; flip: boolean } | null>(null);
+  useLayoutEffect(() => {
+    const to = cardOp ? rowOf.get(cardOp) : undefined;
+    const el = wrap.current;
+    if (!to || !el || avail <= 0) {
+      setPlace(null);
+      return;
+    }
+    const w = el.getBoundingClientRect();
+    const frame = (el.closest('.frame') ?? el).getBoundingClientRect();
+    const right = Math.min(frame.right, window.innerWidth) - w.left;
+    let left = ox + to.card.x + CARD_W + CARD.gap;
+    const flip = left + CARD.w > right;
+    if (flip) left = Math.max(frame.left - w.left, ox + to.card.x - CARD.gap - CARD.w);
+    setPlace({ left, top: oy + to.row.cy - CARD.lift, flip });
+  }, [cardOp, rowOf, ox, oy, avail]);
+
+  const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
+  const routeShown = !hot; // the workflow's colour and discs rest while a row is hot (V2Hover)
+  const marker = (name: string) => `url(#${CSS.escape(`${uid}${name}`)})`;
+  const linkFaded = (ids: string[]) => !!hot || !ids.some((id) => shown.has(id));
+  const target = cycled && opAt ? otherEnd(cycled, opAt) : undefined;
+  const rowAttrs = (r: RouteRow) => {
+    const dim = (hot && !near.has(r.op)) || (match && !match.has(r.op));
+    return { 'data-hot': r.op === hot || undefined, 'data-dim': dim || undefined, 'data-target': r.op === target || undefined };
+  };
+  const card = cardOp && place ? ops.get(cardOp) : undefined;
+
+  const map = (
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a labelled group of cards, not a fieldset
+    <div className="route" role="group" data-testid="atlas" data-ready="true" data-hot={hot ?? undefined} aria-roledescription="map"
+      aria-label={mapName(model.source.title, noun, model.operations.length, graph.clusters.length, graph.edges.length, match && match.size, shownEdges.length)}
+      aria-describedby={`${uid}help`} style={{ width: pad.w, height: pad.h }}>
+      <div className="route-origin" style={{ left: pad.left, top: pad.top }}>
+        <svg className="links" aria-hidden="true" style={{ left: reach.x, top: reach.y }} width={reach.w} height={reach.h} viewBox={`${reach.x} ${reach.y} ${reach.w} ${reach.h}`}>
+          <defs>
+            <marker id={`${uid}ah`} viewBox="0 0 8 8" refX={7} refY={4} markerWidth={8} markerHeight={8} orient="auto"><path className="ah" d="M1 1.5 6.5 4 1 6.5" /></marker>
+            <marker id={`${uid}ahk`} viewBox="0 0 8 8" refX={7} refY={4} markerWidth={8} markerHeight={8} orient="auto"><path className="ahk" d="M1 1.5 6.5 4 1 6.5" /></marker>
+            <marker id={`${uid}ahr`} viewBox="0 0 8 8" refX={6.5} refY={4} markerWidth={7} markerHeight={7} orient="auto"><path className="ahr" d="M1 1 7 4 1 7z" /></marker>
+          </defs>
+          {/* Links, then the workflow's halo, then its line: the halo masks feeds at the line's end rows. */}
+          {layout.links.map((l) => {
+            const faded = linkFaded(l.edges);
+            return <path key={l.id} className="ln" data-link={l.kind} data-inferred={l.inferred || undefined} data-faded={faded || undefined} d={l.d} markerEnd={faded ? undefined : marker('ah')} />;
+          })}
+          {layout.workflow?.steps.map((s) => routeShown
+            ? <path key={`h${s.from}`} className="halo" d={s.d} />
+            : <path key={`f${s.from}`} className="ln" data-faded d={s.d} />)}
+          {routeShown && layout.workflow?.steps.map((s) => <path key={`r${s.from}`} className="wf" data-shape={s.shape} d={s.d} markerEnd={marker('ahr')} />)}
+          {lit.map((l) => <path key={l.edge} className="ln-hot" data-inferred={l.inferred || undefined} d={l.d} markerEnd={marker('ahk')} />)}
+        </svg>
+        {layout.cards.map((c) => (
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a labelled group of rows
+          <div key={c.id} className="rc" role="group" aria-labelledby={`${uid}c-${c.id}`} style={{ left: c.x, top: c.y, height: c.h }}>
+            <h3 className="rc-head" id={`${uid}c-${c.id}`}>
+              <span className="rc-name">{names.get(c.id) ?? c.name}</span>
+              <span className="rc-count"><span className="visually-hidden">, </span>{c.count}<span className="visually-hidden"> {noun}</span></span>
+            </h3>
+            {c.rows.map((r) => {
+              const op = ops.get(r.op)!;
+              return (
+                <button key={r.op} type="button" className="op" data-nav={r.op} data-op={r.op} data-route={(routeShown && r.stop) || undefined} {...rowAttrs(r)}
+                  tabIndex={r.op === stop ? 0 : -1} aria-haspopup="dialog" aria-expanded={r.op === pinned}
+                  aria-label={nodeName(op, r, names.get(c.id) ?? c.name, degree.get(r.op) ?? 0)}
+                  onKeyDown={onKeyDown} onFocus={() => onRowFocus(r.op)} onBlur={() => setFocusIn(false)}
+                  onClick={() => pin(r.op)} onPointerEnter={() => enter(r.op)} onPointerLeave={leave}>
+                  <span className="m" data-destructive={r.destructive || undefined}>
+                    {r.method}
+                    {/* D41: a destructive tool's method word is not DELETE, so a glyph says it besides the colour. */}
+                    {r.destructive && r.method !== 'DELETE' && <span className="bang" title="Destructive">!</span>}
+                  </span>
+                  <span className="id">{r.op}</span>
+                  {routeShown && r.stop !== undefined && <span className="stop">{r.stop}</span>}
+                </button>
+              );
+            })}
+            {c.more && (
+              <button type="button" className="op more" data-nav={moreId(c.id)} aria-expanded={c.more.expanded}
+                data-dim={(hot || match) && !c.more.hidden.some((id) => near.has(id) || match?.has(id)) ? true : undefined}
+                tabIndex={moreId(c.id) === stop ? 0 : -1} aria-label={`${c.more.count} more ${noun} in ${names.get(c.id) ?? c.name}`}
+                onKeyDown={onKeyDown} onFocus={() => onRowFocus(moreId(c.id))} onBlur={() => setFocusIn(false)} onClick={() => toggle(c)}>
+                <span className="m"><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></span>
+                <span className="id">{c.more.count} more</span>
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="map-wrap" ref={wrap} data-scrolls={scrolls || undefined}>
+      {scrolls ? (
+        // A Tab stop so the keyboard can scroll it (axe scrollable-region-focusable); arrows inside move between rows.
+        // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role -- a labelled scroller
+        <div className="map-scroll" ref={scroller} role="region" aria-label="Map, scrolls sideways" tabIndex={0}
+          style={{ marginLeft: reach.x }}
+          onScroll={(e) => setScrollX(e.currentTarget.scrollLeft)}>
+          {map}
+        </div>
+      ) : map}
+      <p className="visually-hidden" id={`${uid}help`}>Arrow keys move between {noun}, Page Up and Page Down change cluster, E cycles links, Enter pins the operation card, question mark lists every shortcut. The List view shows the same map as text.</p>
+      {card && place && (
+        <OpCard model={model} graph={graph} op={card} pinned={card.id === pinned} inSkill={skillFile?.(card.id)} onInSkill={onSkillFile}
+          onGo={(id) => focusNode(id, true)} onClose={close} announce={announce}
+          className={place.flip ? 'flip' : undefined} style={{ left: place.left, top: place.top }}
+          onPointerEnter={() => clearTimeout(linger.current)} onPointerLeave={card.id === pinned ? undefined : leave} />
+      )}
+      {graph.clusters.some((c) => c.nameSource === 'ai') && <p className="map-credit" data-testid="names-provenance">Names: AI-drafted</p>}
+    </div>
+  );
+}

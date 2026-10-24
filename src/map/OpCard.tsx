@@ -1,0 +1,141 @@
+// The operation card (docs/redesign/DESIGN.md 5): method and path, title, then a definition list of
+// inputs, output, links and the skill file. On hover or focus it previews (hidden from assistive
+// tech: the row's name carries the essentials, the pinned card the rest); click or Enter pins it,
+// which adds Close, the description, output fields, auth, links that move to the related operation
+// and a ready-to-paste example (it replaces the detail panel, D46). Spec strings are React text only (S3).
+import { type CSSProperties, Fragment, type ReactNode, useEffect, useId, useRef, useState } from 'react';
+import type { AtlasGraph } from '../graph';
+import { example, outputFields, typeLabel } from '../model/examples';
+import type { ApiModel, Operation } from '../model/types';
+import { edgesOf, relation } from './keyboard';
+
+/** Items separated by commas. */
+const list = (items: ReactNode[]) => items.map((item, i) => <Fragment key={i}>{i > 0 && ', '}{item}</Fragment>);
+
+export const opName = (op: Operation): string => (op.kind === 'tool' ? op.id : `${op.method!.toUpperCase()} ${op.path}`);
+
+/** The card's link groups (DESIGN.md 5), in display order, with the relations each one lists. */
+const GROUPS = [
+  ['Fed by', 'Fed by'],
+  ['Feeds', 'Feeds'],
+  ['Shares schema', 'Shares a schema'],
+  ['Sub-paths', 'Sub-paths'],
+  ['Sub-path of', 'Parent path'],
+] as const;
+
+export interface OpLinks { group: (typeof GROUPS)[number][0]; items: { id: string; via?: string }[] }
+
+/** The operation's links grouped as the card lists them; each other operation once per group. */
+export function opLinks(graph: AtlasGraph, id: string): OpLinks[] {
+  const related = edgesOf(graph.edges, id).map((e) => relation(e, id));
+  return GROUPS.map(([group, rel]) => {
+    const seen = new Set<string>();
+    const items = related.filter((r) => r.group === rel && !seen.has(r.other) && seen.add(r.other)).map((r) => ({ id: r.other, ...(r.via ? { via: r.via } : {}) }));
+    return { group, items };
+  }).filter((g) => g.items.length > 0);
+}
+
+interface OpCardProps {
+  model: ApiModel;
+  graph: AtlasGraph;
+  op: Operation;
+  /** Pinned: a non-modal dialog with Close; otherwise a preview hidden from assistive tech. */
+  pinned: boolean;
+  /** The skill file that documents `op`, opened in the skill preview by `onInSkill`. */
+  inSkill?: string;
+  onInSkill: (path: string) => void;
+  /** Pinned only: move to a related operation. */
+  onGo?: (id: string) => void;
+  onClose?: () => void;
+  announce?: (text: string) => void;
+  className?: string;
+  style?: CSSProperties;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
+}
+
+export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onClose, announce, className, style, onPointerEnter, onPointerLeave }: OpCardProps) {
+  const root = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(t);
+  }, [copied]);
+  // Escape anywhere in the pinned card closes it (focus goes back to the row, the caller's job).
+  useEffect(() => {
+    const el = root.current;
+    if (!el || !pinned || !onClose) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && (e.preventDefault(), e.stopPropagation(), onClose());
+    el.addEventListener('keydown', onKey);
+    return () => el.removeEventListener('keydown', onKey);
+  }, [pinned, onClose]);
+
+  const links = opLinks(graph, op.id);
+  const output = pinned ? outputFields(model, op.output?.schema) : [];
+  const schemes = pinned ? model.auth.filter((a) => op.security.some((set) => set.includes(a.id))) : [];
+  const code = pinned ? example(model, op) : '';
+  const copy = () =>
+    navigator.clipboard.writeText(code).then(
+      () => {
+        setCopied(true);
+        announce?.('Example copied to the clipboard.');
+      },
+      () => announce?.('Copy failed: select the example text and copy it.'),
+    );
+  // A related operation: a button in the pinned card, plain text in the preview (nothing in it takes focus).
+  const other = (id: string): ReactNode => (pinned && onGo ? <button type="button" className="oc-link mono" onClick={() => onGo(id)}>{id}</button> : <span className="mono">{id}</span>);
+
+  return (
+    <div ref={root} className={`op-card${className ? ` ${className}` : ''}`} style={style} data-testid={pinned ? 'op-card' : 'op-preview'}
+      role={pinned ? 'dialog' : undefined} aria-labelledby={pinned ? titleId : undefined} aria-hidden={pinned ? undefined : true}
+      onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
+      <div className="oc-head">
+        <p className="oc-path mono">{opName(op)}</p>
+        {pinned && onClose && <button type="button" className="oc-close" onClick={onClose}>Close<span className="visually-hidden"> details</span></button>}
+      </div>
+      <h3 className="oc-title" id={titleId}><span className="visually-hidden">{opName(op)}, </span>{op.title}{op.deprecated && <span className="oc-flag">deprecated</span>}</h3>
+      {pinned && op.description && op.description !== op.title && <p className="oc-desc">{op.description}</p>}
+      <dl>
+        <dt>Input</dt>
+        <dd>
+          {op.inputs.length === 0 ? 'None' : op.inputs.map((p, i) => (
+            <span className="oc-input" key={`${p.in} ${p.name}`}>{i > 0 && <br />}<span className="mono">{p.name}</span> <span className="muted">{[p.in, typeLabel(p.schema), p.required && 'required'].filter(Boolean).join(', ')}</span></span>
+          ))}
+        </dd>
+        <dt>Output</dt>
+        <dd>
+          {op.output ? <span className="mono">{typeLabel(op.output.schema)}</span> : 'None described'}
+          {output.length > 0 && <span className="oc-fields muted"> with {list(output.map((f) => <span className="mono" key={f.name}>{f.name}</span>))}</span>}
+        </dd>
+        {schemes.length > 0 && <>
+          <dt>Auth</dt>
+          <dd>{list(schemes.map((a) => <span key={a.id}><span className="mono">{a.id}</span> <span className="muted">{[a.type, a.scheme, a.bearerFormat, a.in && `in ${a.in}`, a.name].filter(Boolean).join(' ')}</span></span>))}</dd>
+        </>}
+        {links.map(({ group, items }) => (
+          <Fragment key={group}>
+            <dt>{group}</dt>
+            <dd>
+              {group === 'Shares schema'
+                ? list([...new Set(items.map((x) => x.via ?? ''))].map((schema) => <span key={schema}><span className="mono">{schema}</span> <span className="muted">with</span> {list(items.filter((x) => (x.via ?? '') === schema).map((x) => other(x.id)))}</span>))
+                : list(items.map((x) => other(x.id)))}
+            </dd>
+          </Fragment>
+        ))}
+        {inSkill && <>
+          <dt>In skill</dt>
+          {/* In the preview the link is for the pointer only (tabIndex -1): the preview is hidden from assistive tech. */}
+          <dd><button type="button" className="oc-ref mono" tabIndex={pinned ? undefined : -1} onClick={() => onInSkill(inSkill)} aria-label={`Show ${inSkill} in the skill`}>{inSkill}</button></dd>
+        </>}
+      </dl>
+      {pinned && <>
+        {/* One line per command line, scrolled sideways: wrapping would strand the trailing \.
+            The scroller is a Tab stop so keyboard users can scroll it (axe scrollable-region-focusable). */}
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+        <pre className="oc-example" data-testid="example" aria-label="Example request" tabIndex={0}><code>{code}</code></pre>
+        <p className="oc-actions"><button type="button" className="oc-copy" onClick={copy}>Copy example</button>{copied && <span className="copied" aria-hidden="true">Copied</span>}</p>
+      </>}
+    </div>
+  );
+}

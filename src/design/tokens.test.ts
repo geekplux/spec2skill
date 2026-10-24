@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import appCss from '../app.css?raw';
 import css from './tokens.css?raw';
-import { COLOR_TOKENS, FACES, FONT, LINE, MOTION, RADIUS, ROLE, SPACE, TYPE, color } from './tokens';
+import { COLOR_TOKENS, FACES, FONT, LINE, MOTION, RADIUS, ROLE, SHADOW, SPACE, TYPE, color } from './tokens';
 
 /** `--name: value;` declarations in the :root block (the first one). */
 function rootVars(source: string): Map<string, string> {
@@ -41,6 +41,7 @@ describe('tokens.css mirrors tokens.ts', () => {
       ...Object.entries(RADIUS).map(([k, v]) => [`radius-${k}`, v] as [string, string]),
       ...Object.entries(FONT).map(([k, v]) => [`font-${k}`, v] as [string, string]),
       ...Object.entries(MOTION).map(([k, v]) => [`motion-${k}`, v] as [string, string]),
+      ...Object.entries(SHADOW).map(([k, v]) => [`shadow-${k}`, v] as [string, string]),
     ]);
     expect(Object.fromEntries(vars)).toEqual(Object.fromEntries(expected));
   });
@@ -52,7 +53,7 @@ describe('tokens.css mirrors tokens.ts', () => {
 
   it('has the one spacing scale, each token named by its value, with the grid gap 88 and the section steps (docs/redesign/DESIGN.md 2)', () => {
     expect(Object.entries(SPACE).map(([k, v]) => `${k}=${v}`)).toEqual(Object.keys(SPACE).map((k) => `${k}=${k}px`));
-    expect(Object.keys(SPACE).map(Number)).toEqual([2, 4, 8, 12, 14, 16, 20, 24, 32, 40, 48, 64, 88, 96, 104]);
+    expect(Object.keys(SPACE).map(Number)).toEqual([2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32, 40, 48, 64, 88, 96, 104]);
     expect(RADIUS).toMatchObject({ sm: '4px', row: '6px', md: '8px', box: '10px', frame: '16px' });
   });
 
@@ -95,7 +96,7 @@ describe('app.css uses only the tokens', () => {
     const defined = new Set(rootVars(css).keys());
     const used = new Set([...source.matchAll(/var\(--([\w-]+)/g)].map((m) => m[1]!));
     const local = new Set([...source.matchAll(/(?:^|[;{\s])--([\w-]+)\s*:/g)].map((m) => m[1]!)); // set in app.css itself
-    for (const fromScript of ['map-top', 'panes-top', 'level']) local.add(fromScript); // set inline by Map.tsx, App.tsx, FileTree.tsx
+    for (const fromScript of ['level']) local.add(fromScript); // set inline by FileTree.tsx
     expect([...used].filter((name) => !defined.has(name) && !local.has(name))).toEqual([]);
     expect([...used, ...local].filter((name) => OLD_PALETTE.includes(name))).toEqual([]);
   });
@@ -117,6 +118,8 @@ describe('app.css uses only the tokens', () => {
     const line = String.raw`(?:var\(--line\)|calc\(-1 \* var\(--line\)\))`;
     const allowed = new RegExp(String.raw`^(?:(?:inset )?0 0 0 var\(--line\)|inset (?:0 ${line}|${line} 0) 0) (?:var\(--[\w-]+\)|currentColor)$`);
     const shadows = [...source.matchAll(/box-shadow:\s*([^;}]+)/g)].flatMap((m) => m[1]!.split(/,(?![^(]*\))/)).map((s) => s.trim());
-    expect(shadows.filter((s) => s !== 'none' && !allowed.test(s))).toEqual([]);
+    expect(shadows.filter((s) => s !== 'none' && s !== 'var(--shadow-float)' && !allowed.test(s))).toEqual([]);
+    // The one shadow that is not a line floats the operation card (rule 10).
+    expect([...source.matchAll(/^([^{}\n]+)\{[^}]*var\(--shadow-float\)/gm)].map((m) => m[1]!.trim())).toEqual(['.op-card']);
   });
 });

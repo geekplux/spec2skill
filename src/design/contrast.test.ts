@@ -28,15 +28,15 @@ const GRAPHICS: Token[] = ['gray-9', 'gray-11', 'gray-12', 'indigo-9', 'amber-11
  */
 const DECORATION: ColorToken[] = ['gray-3', 'gray-4', 'gray-5', 'gray-6', 'gray-7', 'gray-8', 'amber-8', 'amber-9'];
 
-/** The resting opacity app.css gives a map edge rule. */
-function restOpacity(selector: string): number {
-  const rule = appCss.split('\n').find((line) => line.startsWith(`${selector} { opacity: `));
-  const m = rule && /\{ opacity: ([\d.]+);/.exec(rule);
-  if (!m) throw new Error(`no resting opacity for ${selector} in app.css`);
-  return Number(m[1]);
+/** The stroke app.css gives a map line rule (`.ln { stroke: var(--gray-9); ...`), and whether it sets an opacity. */
+function stroke(selector: string): { token: Token; opacity: boolean } {
+  const rule = appCss.split('\n').find((line) => line.startsWith(`${selector} { `));
+  const m = rule && /stroke: var\(--([\w-]+)\)/.exec(rule);
+  if (!m) throw new Error(`no stroke for ${selector} in app.css`);
+  return { token: m[1] as Token, opacity: /opacity/.test(rule!) };
 }
-/** Every `--hue` app.css gives a map edge or link. */
-const EDGE_HUES = [...new Set([...appCss.matchAll(/--hue:\s*var\(--([\w-]+)\)/g)].map((m) => m[1] as Token))];
+/** Lines drawn at rest on the route map: feed links and bundles, the workflow, and their arrowheads. */
+const MAP_LINES = ['.ln', '.wf', '.ah', '.ahk', '.ln-hot'];
 
 describe('contrast helpers', () => {
   it('composites a colour at an opacity over a surface', () => {
@@ -81,19 +81,18 @@ describe.each<Theme>(['light', 'dark'])('%s theme', (theme) => {
     expect(contrastRatio(c('gray-9'), c('gray-1'))).toBeGreaterThanOrEqual(3);
   });
 
-  // Map edges and bundles at their resting opacity, composited over each surface, still reach 3:1.
-  const resting = ['.edge', ".map-link[data-link='bundle']", '.map-link'];
-  it.each(resting.flatMap((sel) => EDGE_HUES.flatMap((hue) => SURFACES.map((bg) => [sel, hue, bg]))))(
-    'resting %s %s on %s >= 3:1 after opacity',
-    (sel, hue, bg) => {
-      expect(GRAPHICS).toContain(hue);
-      const surface = c(bg as Token);
-      expect(contrastRatio(blend(c(hue as Token), surface, restOpacity(sel!)), surface)).toBeGreaterThanOrEqual(3);
-    },
-  );
+  // Route map lines (R4) are drawn at full opacity in a meaningful hue: 3:1 on both surfaces.
+  it.each(MAP_LINES.flatMap((sel) => SURFACES.map((bg) => [sel, bg])))('map line %s on %s >= 3:1, no opacity', (sel, bg) => {
+    const { token, opacity } = stroke(sel!);
+    expect(GRAPHICS).toContain(token);
+    expect(opacity).toBe(false);
+    expect(contrastRatio(c(token), c(bg as Token))).toBeGreaterThanOrEqual(3);
+  });
+});
 
-  it('finds the map edge hues in app.css', () => {
-    expect(EDGE_HUES.length).toBeGreaterThan(0);
+describe('the route map', () => {
+  it('finds its line rules in app.css', () => {
+    expect(MAP_LINES.map((sel) => stroke(sel).token)).toEqual(['gray-9', 'indigo-9', 'gray-9', 'gray-12', 'gray-12']);
   });
 
   it('every token used in app.css is checked here or listed as decoration', () => {

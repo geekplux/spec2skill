@@ -2,17 +2,17 @@
 
 Small, scoped tasks for a first contribution. Each names the files to start from and what "done" looks like. Comment on the matching issue (or open one with the "Feature request" form) before you start, so two people do not pick the same task. [CONTRIBUTING.md](../CONTRIBUTING.md) explains setup and the checks; [EXTENDING.md](EXTENDING.md) explains the pipeline.
 
-## 1. Collapse an expanded cluster again
+## 1. Keep expanded cards in the URL
 
-On large specs (over 400 operations) clusters start as summary cards and Enter expands one, but nothing folds it back. Add a "Collapse" control on an expanded cluster's label and a key (for example `Shift+Enter` on a node) that re-adds the cluster to the collapsed set.
-- Start from: `expand()` in `src/map/Map.tsx`, `startCollapsed()` in `src/layout/collapse.ts`, shortcuts in `src/map/ShortcutHelp.tsx`.
-- Done when: the control is keyboard-operable with a text label, focus lands on the summary card, the shortcut dialog lists the key, and the phase 13 browser flow covers it.
+On large specs a resource card shows 8 operations and a "N more" row that opens it in place. A shared link forgets which cards were open. Keep them in the URL (for example `?open=r1s,r7s`) so a link reopens them, and back/forward restore them.
+- Start from: `toggle()` and the `expanded` state in `src/map/RouteMap.tsx`, `readUrl()` and `writeUrl()` in `src/state/url.ts` (tests in `src/state/url.test.ts`).
+- Done when: unknown card ids are dropped from the URL, the URL tests cover it, and a browser flow opens a link with two cards expanded.
 
-## 2. Name the source on bundle labels
+## 2. Say what a bundle stands for
 
-A bundled feeds edge reads `projectId -> 4 ops in Members`. When several bundles stack on one cluster you cannot tell which operation feeds each. Include the source operation in the label, or show it on focus.
-- Start from: `bundleFeeds()` in `src/graph/infer.ts`, the bundle drawing in `src/map/Edge.tsx`.
-- Done when: the label or its accessible name names the source, the graph snapshots in `src/graph/__snapshots__/` are updated and reviewed, and long labels still fit.
+One source feeding the same input into many operations of a resource is drawn as one curve to the card's head (`projectId -> 4 ops in Members` in the graph). Nothing on the map says which input it fills. Name the bundle's input and its operations in the source's operation card (and in its row's accessible name).
+- Start from: `bundleFeeds()` in `src/graph/infer.ts`, `restLinks()` in `src/layout/route.ts` and the operation card in `src/map/OpCard.tsx`.
+- Done when: the card lists the bundle (input and count), `src/map/OpCard.test.ts` covers it, and long lists still fit the 300 px card.
 
 ## 3. NFKC-normalise text before the AI injection checks
 
@@ -35,8 +35,8 @@ Follow `prefers-contrast: more` on top of the light and dark themes (which follo
 ## 6. Export the map as SVG
 
 Let users save the current map as a standalone SVG file (for docs or a design review).
-- Start from: the map's `<svg>` in `src/map/Map.tsx` and the toolbar in `src/map/Toolbar.tsx`; inline the computed colours from `src/design/tokens.css` so the file renders on its own.
-- Done when: an "Export SVG" button with a text label downloads a file that opens correctly in a browser, keeps the edge line styles and labels, and contains no script.
+- Start from: `routeLayout()` in `src/layout/route.ts` (the debug render `scripts/debug/route-dump.mjs` already writes one SVG from it) and the tools row in `src/App.tsx`; take the colours from `src/design/tokens.css` so the file renders on its own.
+- Done when: an "Export SVG" button with a text label downloads a file that opens correctly in a browser, keeps the line styles of the legend, and contains no script.
 
 ## 7. More MCP verb prefixes
 
