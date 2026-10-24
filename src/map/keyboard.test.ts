@@ -131,7 +131,7 @@ describe('words for screen readers', () => {
   });
 
   it('names rows per A2 with the full path, writes, destructive (D41) and workflow steps in words', async () => {
-    expect(nodeName(op('getTask'), row('getTask'), 'Tasks', 19)).toBe('GET getTask, /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 19 relationships');
+    expect(nodeName(op('getTask'), row('getTask'), 'Tasks', 13)).toBe('GET getTask, /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 13 relationships');
     expect(nodeName(op('getProject'), row('getProject'), 'Projects', 2)).toBe('GET getProject, /projects/{projectId}, Get a project, cluster Projects, 2 relationships');
     expect(nodeName(op('deleteTask'), row('deleteTask'), 'Tasks', 1)).toBe('DELETE deleteTask, /tasks/{taskId}, Delete a task, destructive, cluster Tasks, 1 relationship');
     expect(nodeName(op('createTask'), row('createTask'), 'Tasks', 1)).toBe('POST createTask, /projects/{projectId}/tasks, Create a task, changes data, cluster Tasks, 1 relationship');
