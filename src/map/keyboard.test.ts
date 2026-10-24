@@ -131,16 +131,16 @@ describe('words for screen readers', () => {
   });
 
   it('names rows per A2 with the full path, writes, destructive (D41) and workflow steps in words', async () => {
-    expect(nodeName(op('getTask'), row('getTask'), 'Tasks', 19)).toBe('GET /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 19 relationships');
-    expect(nodeName(op('getProject'), row('getProject'), 'Projects', 2)).toBe('GET /projects/{projectId}, Get a project, cluster Projects, 2 relationships');
-    expect(nodeName(op('deleteTask'), row('deleteTask'), 'Tasks', 1)).toBe('DELETE /tasks/{taskId}, Delete a task, destructive, cluster Tasks, 1 relationship');
-    expect(nodeName(op('createTask'), row('createTask'), 'Tasks', 1)).toBe('POST /projects/{projectId}/tasks, Create a task, changes data, cluster Tasks, 1 relationship');
+    expect(nodeName(op('getTask'), row('getTask'), 'Tasks', 19)).toBe('GET getTask, /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 19 relationships');
+    expect(nodeName(op('getProject'), row('getProject'), 'Projects', 2)).toBe('GET getProject, /projects/{projectId}, Get a project, cluster Projects, 2 relationships');
+    expect(nodeName(op('deleteTask'), row('deleteTask'), 'Tasks', 1)).toBe('DELETE deleteTask, /tasks/{taskId}, Delete a task, destructive, cluster Tasks, 1 relationship');
+    expect(nodeName(op('createTask'), row('createTask'), 'Tasks', 1)).toBe('POST createTask, /projects/{projectId}/tasks, Create a task, changes data, cluster Tasks, 1 relationship');
     const fs = await sampleModel(getSample('filesystem')!);
     const fsLayout = routeLayout(fs, buildGraph(fs));
     const fsRow = (id: string) => fsLayout.cards.flatMap((c) => c.rows).find((r) => r.op === id)!;
     const tool = (id: string) => fs.operations.find((o) => o.id === id)!;
     expect(fsRow('write_file')).toMatchObject({ method: 'write', destructive: true });
-    expect(nodeName(tool('write_file'), fsRow('write_file'), 'File', 3)).toMatch(/^Tool write_file, .*, destructive, cluster File, 3 relationships$/);
+    expect(nodeName(tool('write_file'), fsRow('write_file'), 'File', 3)).toMatch(/^write write_file, .*, destructive, cluster File, 3 relationships$/);
     expect(nodeName(tool('read_text_file'), fsRow('read_text_file'), 'File', 3)).not.toMatch(/destructive|changes data/);
   });
 

@@ -216,17 +216,22 @@ export const GRID_PARTS = {
   left: {
     'h1': { sel: '.hero h1' },
     'frame contents': { sel: '.frame', content: true },
+    'first map column': { sel: '.rc[data-column="0"]', all: true },
     'command-line title': { sel: '#cli h2' },
     'How it works title': { sel: '#how h2' },
     'Made by title': { sel: '.made h2' },
   },
   right: {
     'hero field': { sel: '.source-field' },
+    'third map column': { sel: '.rc[data-column="2"]', all: true },
     'command box': { sel: '.cli' },
     'Made by rows': { sel: '.projects a', all: true },
   },
-  /** Each match starts one column further: 0, 290, 580, 870. */
-  columns: { 'How it works columns': { sel: '.how > li', all: true } },
+  /** Each match starts one column further: 0, 290, 580, 870 (`distinct`: each different x, left to right). */
+  columns: {
+    'How it works columns': { sel: '.how > li', all: true },
+    'map columns': { sel: '.rc[data-column="0"], .rc[data-column="1"], .rc[data-column="2"], .rc[data-column="3"]', all: true, distinct: true },
+  },
   /** Right edges at the column's right edge (1072 in). */
   end: {
     'hero field right': { sel: '.source-field', edge: 'right' },
@@ -240,14 +245,16 @@ function measure(parts) {
   const out = {};
   for (const [group, entries] of Object.entries(parts)) {
     out[group] = {};
-    for (const [name, { sel, all, content, edge = 'left' }] of Object.entries(entries)) {
+    for (const [name, { sel, all, content, distinct, edge = 'left' }] of Object.entries(entries)) {
       const els = all ? [...document.querySelectorAll(sel)] : [document.querySelector(sel)].filter(Boolean);
-      out[group][name] = els.map((el) => {
+      const xs = els.map((el) => {
         const r = el.getBoundingClientRect();
         const s = getComputedStyle(el);
         const inset = content ? parseFloat(edge === 'left' ? s.paddingLeft : s.paddingRight) : 0;
         return edge === 'left' ? r.left + inset : r.right - inset;
       });
+      // distinct: one x per column (several boxes stack in one), left to right.
+      out[group][name] = distinct ? [...new Set(xs.map((x) => Math.round(x * 10) / 10))].toSorted((a, b) => a - b) : xs;
     }
   }
   return out;

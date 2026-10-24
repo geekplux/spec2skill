@@ -39,6 +39,7 @@ interface RouteMapProps {
 
 export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkillFile, selected, onSelect, match, edges: shownEdges }: RouteMapProps) {
   const uid = useId();
+  const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
   const announce = useAnnounce();
   const ops = useMemo(() => new Map(model.operations.map((op) => [op.id, op])), [model]);
   const names = useMemo(() => new Map(graph.clusters.map((c) => [c.id, c.name])), [graph]);
@@ -161,7 +162,7 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
     const open = !expanded.has(card.id);
     setExpanded((e) => (open ? new Set([...e, card.id]) : new Set([...e].filter((id) => id !== card.id))));
     setCursor(moreId(card.id));
-    announce(open ? `${cardName(card.id)}: all ${card.count} operations shown.` : `${cardName(card.id)}: ${card.count - card.more!.count} of ${card.count} operations shown.`);
+    announce(open ? `${cardName(card.id)}: all ${card.count} ${noun} shown.` : `${cardName(card.id)}: ${card.count - card.more!.count} of ${card.count} ${noun} shown.`);
   };
   const pin = (id: string) => {
     focusNode(id, true);
@@ -183,6 +184,8 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
     } else if (a.type === 'close' && pinned) close();
   };
   const onRowFocus = (id: string) => {
+    // Focus scrolls a row that is only partly in the scroll region fully into it.
+    if (scrolls) rowEl(id)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     if (id !== cursor) {
       setCursor(id);
       setEdge(null);
@@ -217,7 +220,6 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
     setPlace({ left, top: oy + to.row.cy - CARD.lift, flip });
   }, [cardOp, rowOf, ox, oy, avail]);
 
-  const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
   const routeShown = !hot; // the workflow's colour and discs rest while a row is hot (V2Hover)
   const marker = (name: string) => `url(#${CSS.escape(`${uid}${name}`)})`;
   const linkFaded = (ids: string[]) => !!hot || !ids.some((id) => shown.has(id));
@@ -253,7 +255,7 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
         </svg>
         {layout.cards.map((c) => (
           // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a labelled group of rows
-          <div key={c.id} className="rc" role="group" aria-labelledby={`${uid}c-${c.id}`} style={{ left: c.x, top: c.y, height: c.h }}>
+          <div key={c.id} className="rc" role="group" aria-labelledby={`${uid}c-${c.id}`} data-column={c.column} style={{ left: c.x, top: c.y, height: c.h }}>
             <h3 className="rc-head" id={`${uid}c-${c.id}`}>
               <span className="rc-name">{names.get(c.id) ?? c.name}</span>
               <span className="rc-count"><span className="visually-hidden">, </span>{c.count}<span className="visually-hidden"> {noun}</span></span>
@@ -261,6 +263,8 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
             {c.rows.map((r) => {
               const op = ops.get(r.op)!;
               return (
+                // The stop disc is drawn from data-route by CSS (::after): the name says "workflow step N",
+                // and the visible text stays method and id, the start of the name (WCAG 2.5.3).
                 <button key={r.op} type="button" className="op" data-nav={r.op} data-op={r.op} data-route={(routeShown && r.stop) || undefined} {...rowAttrs(r)}
                   tabIndex={r.op === stop ? 0 : -1} aria-haspopup="dialog" aria-expanded={r.op === pinned}
                   aria-label={nodeName(op, r, names.get(c.id) ?? c.name, degree.get(r.op) ?? 0)}
@@ -269,10 +273,11 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
                   <span className="m" data-destructive={r.destructive || undefined}>
                     {r.method}
                     {/* D41: a destructive tool's method word is not DELETE, so a glyph says it besides the colour. */}
-                    {r.destructive && r.method !== 'DELETE' && <span className="bang" title="Destructive">!</span>}
+                    {r.destructive && r.method !== 'DELETE' && <span className="bang" title="Destructive" aria-hidden="true">!</span>}
                   </span>
+                  {/* A space between method and id for the text alternative (flex drops it visually). */}
+                  {' '}
                   <span className="id">{r.op}</span>
-                  {routeShown && r.stop !== undefined && <span className="stop">{r.stop}</span>}
                 </button>
               );
             })}

@@ -166,11 +166,13 @@ export function mapName(title: string, noun: string, operations: number, cluster
 const READS = new Set(['GET', 'HEAD', 'OPTIONS', 'read']);
 
 /**
- * A2 row name: "GET /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 13 relationships"
- * (full, never truncated). Destructive rows say so in words (D41); other writes "changes data".
+ * A2 row name: "GET getTask, /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 13 relationships"
+ * (full, never truncated). It starts with the row's visible text, method and id (WCAG 2.5.3 label in
+ * name), then the path. Destructive rows say so in words (D41); other writes "changes data".
  */
 export function nodeName(op: Operation, row: Pick<RouteRow, 'method' | 'destructive' | 'stop'>, cluster: string, relationships: number): string {
-  const parts = [op.kind === 'tool' ? `Tool ${op.id}` : `${op.method!.toUpperCase()} ${op.path}`];
+  const parts = [`${row.method} ${op.id}`];
+  if (op.kind !== 'tool') parts.push(op.path!);
   if (op.title !== op.id && op.title !== op.path) parts.push(op.title);
   if (row.destructive) parts.push('destructive');
   else if (!READS.has(row.method)) parts.push('changes data');
