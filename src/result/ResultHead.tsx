@@ -1,7 +1,7 @@
 // The result frame's head (docs/redesign/DESIGN.md 4.3): the API title, the meta line (source kind and
 // version, counts, tags) and, right, Install command (copies both commands) and Download .zip (the
 // audited zip). "N warnings" opens the parser's warnings under the head.
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useAnnounce } from '../a11y/Announcer';
 import { COPY_ICON, DOWNLOAD_ICON, checkIcon } from '../design/icons';
 import type { ApiModel, SourceKind } from '../model/types';
@@ -45,6 +45,7 @@ export function ResultHead({ model, sample, resources, links, skill, ready, slug
   const [copied, flashCopied] = useFlash();
   const [downloaded, flashDownloaded] = useFlash();
   const [failed, setFailed] = useState('');
+  const installRef = useRef<HTMLButtonElement>(null);
   const ops = model.operations.length;
   const empty = ops === 0;
   const noun = (model.source.kind === 'mcp' ? 'tool' : 'operation') + (ops === 1 ? '' : 's');
@@ -76,7 +77,7 @@ export function ResultHead({ model, sample, resources, links, skill, ready, slug
   );
   // The commands are its title (and announced on copy); nothing to install without operations.
   const installBtn = !empty && (
-    <button key="install" type="button" className="btn lg" onClick={copy} title={commands}>
+    <button key="install" ref={installRef} type="button" className="btn lg" onClick={copy} title={commands}>
       {copied ? checkIcon(16) : COPY_ICON}{copied ? 'Copied' : 'Install command'}
     </button>
   );
@@ -112,7 +113,7 @@ export function ResultHead({ model, sample, resources, links, skill, ready, slug
       {failed && (
         <div className="install-cmds">
           <pre><code>{failed}</code></pre>
-          <button type="button" className="sb-close" onClick={() => setFailed('')}>Close<span className="visually-hidden"> install command</span></button>
+          <button type="button" className="sb-close" onClick={() => (setFailed(''), installRef.current?.focus())}>Close<span className="visually-hidden"> install command</span></button>
         </div>
       )}
     </div>
