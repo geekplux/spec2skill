@@ -64,7 +64,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const problems = files.flatMap((f) => checkSpacing(readFileSync(join(ROOT, f), 'utf8'), f));
   for (const p of problems) console.error(p);
   if (problems.length > 0) {
-    console.error(`spacing check failed: ${problems.length} raw px/rem spacing value(s) (docs/DESIGN.md 3)`);
+    console.error(`spacing check failed: ${problems.length} raw px/rem spacing value(s) (docs/DESIGN.md section 2)`);
     process.exit(1);
   }
   console.log(`spacing check passed (${files.length} file${files.length === 1 ? '' : 's'})`);

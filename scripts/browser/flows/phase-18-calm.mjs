@@ -1,4 +1,4 @@
-// Phase 18: calm polish, nothing lost (docs/DESIGN.md "Calm polish audit"). On first load nothing that
+// Phase 18: calm polish, nothing lost (the calm polish audit of phase 18, kept in the history of docs/DESIGN.md before redesign R7). On first load nothing that
 // DESIGN.md folds is open, the accent marks the primary buttons, and the focal point (since redesign R2
 // the hero) is on screen at 1440 and 390. More options and the folded sample chips are gone in R2.
 // Then every folded item is reached by keyboard only: Tab to its toggle, Enter or Space opens it,

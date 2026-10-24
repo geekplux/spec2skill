@@ -1,4 +1,4 @@
-// The calm-layout audit (phase 18, docs/DESIGN.md "Calm polish audit"): visits every view once per
+// The calm-layout audit (phase 18; its table is in the history of docs/DESIGN.md before redesign R7): visits every view once per
 // viewport and saves `<view>-<width>.png`, so a `before` and an `after` run compare pair by pair.
 // Run by `pnpm check:browser -- --phase 18 --audit --viewports 1440x900,390x844 --label <name>`.
 // It only drives the UI with stable names (roles, ids, test ids), so it runs on the UI before and
@@ -41,7 +41,7 @@ const describe = (summary) => ({
 });
 const blocked = JSON.stringify({ error: { code: 'blocked-host', message: 'Private address.' } });
 
-/** Every audited view, in order (docs/DESIGN.md "Calm polish audit" has one row per view). */
+/** Every audited view, in order (the phase 18 audit table had one row per view). */
 export const VIEWS = [
   'first-view', 'skill-file', 'audit-expanded', 'options', 'download-done', 'map-focus', 'op-card', 'search', 'list-search',
   'shortcut-help', 'first-view-dark', 'loading', 'error', 'empty-spec', 'warnings', 'ai-labels',
