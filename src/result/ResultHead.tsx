@@ -44,8 +44,9 @@ export function ResultHead({ model, sample, resources, links, skill, ready, slug
   const [copied, flashCopied] = useFlash();
   const [downloaded, flashDownloaded] = useFlash();
   const [failed, setFailed] = useState('');
-  const empty = model.operations.length === 0;
-  const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
+  const ops = model.operations.length;
+  const empty = ops === 0;
+  const noun = (model.source.kind === 'mcp' ? 'tool' : 'operation') + (ops === 1 ? '' : 's');
   const commands = installCommands(slug).join(' && ');
   const warnings = model.warnings.length;
 
@@ -86,11 +87,13 @@ export function ResultHead({ model, sample, resources, links, skill, ready, slug
           {/* Spacing separates the parts on screen; hidden commas separate them for screen readers and copy. */}
           <div className="meta">
             <span>{sourceLabel(model.source.kind, model.source.specVersion)}</span>
-            <span><span className="visually-hidden">, </span><b>{model.operations.length}</b> {noun}</span>
+            <span><span className="visually-hidden">, </span><b>{ops}</b> {noun}</span>
             <span><span className="visually-hidden">, </span><b>{resources}</b> {resources === 1 ? 'resource' : 'resources'}</span>
             <span><span className="visually-hidden">, </span><b>{links}</b> {links === 1 ? 'link' : 'links'}</span>
             {sample && <span className="tag"><span className="visually-hidden">, </span>Sample</span>}
             {skill?.prose === 'ai' && <span className="tag" data-testid="prose-ai"><span className="visually-hidden">, </span>AI-drafted prose</span>}
+            {/* The comma sits outside the button (out of flow, so no extra gap): the button's name stays "N warnings". */}
+            {warnings > 0 && <span className="visually-hidden">, </span>}
             {warnings > 0 && (
               <button type="button" className="tag tag-btn" aria-expanded={warningsOpen} aria-controls={`${uid}w`} onClick={() => setWarningsOpen((o) => !o)}>
                 {warnings} {warnings === 1 ? 'warning' : 'warnings'}
