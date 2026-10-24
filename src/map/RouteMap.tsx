@@ -224,12 +224,13 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
     const flip = left + CARD.w > right;
     if (flip) left = Math.max(frame.left - w.left, ox + to.card.x - CARD.gap - CARD.w);
     // A tall card scrolls inside itself rather than covering the skill browser under the map: it may
-    // pass the map's bottom by the caption's height at most; near the bottom it rises (still beside
-    // its row) to keep at least CARD.minH.
+    // pass the map's bottom by the caption's height at most; near the bottom the pinned card rises
+    // (still beside its row) to keep at least CARD.minH. The short hover preview keeps its place.
     const limit = el.offsetHeight + CARD.below;
-    const top = Math.min(oy + to.row.cy - CARD.lift, limit - CARD.minH);
-    setPlace({ left, top, flip, maxHeight: limit - top });
-  }, [cardOp, rowOf, ox, oy, avail]);
+    const y = oy + to.row.cy - CARD.lift;
+    const cardTop = cardOp === pinned ? Math.min(y, limit - CARD.minH) : y;
+    setPlace({ left, top: cardTop, flip, maxHeight: Math.max(CARD.minH, limit - cardTop) });
+  }, [cardOp, pinned, rowOf, ox, oy, avail]);
 
   const routeShown = !hot; // the workflow's colour and discs rest while a row is hot (V2Hover)
   const marker = (name: string) => `url(#${CSS.escape(`${uid}${name}`)})`;

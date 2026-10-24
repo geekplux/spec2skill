@@ -11,6 +11,7 @@
 // checks 1-4 with axe at 1440 and 390 in light and dark, check 6 (the grid, with the skill browser's
 // columns) and check 7 under reduced motion. Saves WebP shots in docs/screenshots/redesign-r5/.
 //   pnpm build && pnpm check:browser -- --phase 21 --flow redesign-r5 --capture redesign-r5
+/* oxlint-disable unicorn/consistent-function-scoping -- page.evaluate callbacks are serialised: their helpers stay inside */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -69,7 +70,6 @@ const frameClip = (page) => page.evaluate(() => {
   return { x: Math.max(0, b.left - 24), y: b.top + window.scrollY - 24, width: Math.min(window.innerWidth, b.width + 48), height: b.height + 48 };
 });
 
-/* oxlint-disable unicorn/consistent-function-scoping -- serialised into the page */
 /** Runs in the page: the head, caption and skill browser as computed styles, with the tokens to compare against. */
 function measure() {
   const probe = document.createElement('i');
@@ -116,7 +116,6 @@ function measure() {
     },
   };
 }
-/* oxlint-enable unicorn/consistent-function-scoping */
 
 export default {
   name: 'redesign-r5',
@@ -157,6 +156,7 @@ export default {
     // Install command: copies both commands, says so, shows Copied with a check for 2 s.
     const install = page.locator('.fhead-actions .btn').first();
     await install.click();
+    await page.locator('.fhead-actions .btn', { hasText: /^Copied$/ }).waitFor({ timeout: 1500 }); // after the clipboard answers
     expect((await install.textContent()) === 'Copied' && (await install.locator('svg.i-check').count()) === 1, 'Install command: no Copied state');
     expect((await page.evaluate(() => navigator.clipboard.readText())) === COMMANDS, 'Install command: clipboard');
     expect((await said(page)) === `Install command copied: ${COMMANDS}`, `Install command: announced "${await said(page)}"`);
@@ -294,13 +294,13 @@ export default {
       const probe = document.createElement('i');
       document.body.append(probe);
       const token = (n) => ((probe.style.color = `var(${n})`), getComputedStyle(probe).color);
-      const t = { indigo9: token('--indigo-9'), destructive: token('--destructive'), gray11: token('--gray-11') };
+      const tk = { indigo9: token('--indigo-9'), destructive: token('--destructive') };
       probe.remove();
       return {
         captionAbove: caption && box(caption).bottom <= box(document.querySelector('.list')).top, groups: [...document.querySelectorAll('.lname')].map((n) => n.textContent),
         heads: [...document.querySelectorAll('.lhead button')].map((b) => [s(b).fontSize, s(b).fontWeight]),
         rows: [...document.querySelectorAll('.lrow')].map((r) => box(r).height), method: box(row.querySelector('.m')).width, path: row.querySelector('.path').textContent,
-        disc: [getComputedStyle(row, '::after').content, getComputedStyle(row, '::after').backgroundColor, t.indigo9], del: [s(del.querySelector('.m')).color, t.destructive, !!del.querySelector('svg.warn')],
+        disc: [getComputedStyle(row, '::after').content, getComputedStyle(row, '::after').backgroundColor, tk.indigo9], del: [s(del.querySelector('.m')).color, tk.destructive, !!del.querySelector('svg.warn')],
         relations: row.nextElementSibling?.getAttribute('aria-label'),
       };
     });
