@@ -159,41 +159,42 @@ code { font-family: var(--font-mono); font-size: inherit; }
   .made-in { padding-top: var(--space-40); }
   .project-text { grid-column: 1; grid-row: auto; }
   .projects code { margin-top: 0; }
-  .cli pre { word-break: break-all; }
   .foot-in { height: auto; padding: var(--space-24) 0; flex-direction: column; align-items: flex-start; gap: var(--space-16); }
   .foot-nav { flex-wrap: wrap; gap: var(--space-8) var(--space-20); }
 }
+/* Buttons (V2Home .btn): 32 px, or 40 (lg) in the frame head; radius 6, label 500, an icon 8 px before it.
+   Secondary: gray-1 with a gray-8 ring; primary: indigo-9 with white text (the view's one accent). */
 .btn {
-  font: inherit; min-height: 36px; padding: var(--space-4) var(--space-16); cursor: pointer;
-  border: 0; box-shadow: inset 0 0 0 var(--line) var(--gray-8); border-radius: var(--radius-md); background: var(--gray-1); color: var(--gray-12);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-8); height: 32px; padding: 0 var(--space-12);
+  border: 0; border-radius: var(--radius-row); background: var(--gray-1); box-shadow: inset 0 0 0 var(--line) var(--gray-8); color: var(--gray-12);
+  font: 500 var(--text-14)/var(--leading-14) var(--font-sans); white-space: nowrap; cursor: pointer;
   transition: background-color var(--motion-fast) ease-out, color var(--motion-fast) ease-out;
 }
-/* Pressed: a component fill and weight, never colour alone. */
-.btn[aria-pressed='true'] { background: var(--gray-3); color: var(--gray-12); font-weight: 600; }
-.btn.primary { background: var(--indigo-9); box-shadow: none; color: var(--indigo-contrast); font-weight: 600; } /* the view's one accent (DESIGN.md 4) */
+.btn.lg { height: 40px; padding: 0 var(--space-16); }
+.btn svg { flex: none; }
+.btn:not(:disabled, .primary):hover { background: var(--gray-3); }
+.btn.primary { background: var(--indigo-9); box-shadow: none; color: var(--indigo-contrast); }
 .btn:disabled { cursor: not-allowed; box-shadow: inset 0 0 0 var(--line) var(--gray-6); background: var(--gray-2); color: var(--gray-11); }
 
-.kicker { margin: 0; padding: 0; color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); font-weight: 600; }
-.kicker > span + span { margin-left: var(--space-16); }
 h2 { margin: 0 0 var(--space-16); font-size: var(--text-20); line-height: var(--leading-20); font-weight: 600; letter-spacing: -0.015em; }
 h3, h4 { font-weight: 600; }
 .lede { margin: 0; color: var(--gray-11); }
-.lede > span + span { margin-left: var(--space-16); }
-.title h2 { margin: 0; }
-.title { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-4) var(--space-16); margin-bottom: var(--space-24); }
-.h1-note { color: var(--gray-11); font-weight: 400; }
-.method {
-  display: inline-block; min-width: 4.6em; padding: 0 var(--space-4); margin-right: var(--space-8);
-  box-shadow: inset 0 0 0 var(--line) var(--gray-6); border-radius: var(--radius-sm); font: 500 var(--text-12)/var(--leading-12) var(--font-mono); text-align: center;
-}
-/* Methods are text; only destructive ones take a hue (DESIGN.md 2), next to their hatched bar and `!`. */
-[data-method] { color: var(--gray-11); }
-[data-method='delete'] { color: var(--destructive); }
-.summary { color: var(--gray-11); }
-.flag { margin-left: var(--space-8); padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-8); border-radius: var(--radius-sm); font-size: var(--text-12); }
+
+/* The frame head (DESIGN.md 4.3): title 20/600; the meta line 14 gray-11, numbers gray-12 500, 20 px
+   apart; tags gray-3, radius 4; Install command and Download .zip on the right. */
+.fhead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-24); margin-bottom: var(--space-32); }
+.fhead-l { min-width: 0; }
+.ftitle { margin: 0 0 var(--space-4); overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-20); color: var(--gray-11); }
+.meta b { color: var(--gray-12); font-weight: 500; }
+.tag { height: 20px; padding: 0 var(--space-6); border-radius: var(--radius-sm); background: var(--gray-3); color: var(--gray-11); font-size: var(--text-12); line-height: 20px; white-space: nowrap; }
+.tag-btn { border: 0; font-family: inherit; cursor: pointer; text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; }
+.tag-btn:hover { color: var(--gray-12); }
+.fhead-actions { display: flex; flex: none; gap: var(--space-8); }
+.warnings { max-height: 12rem; overflow: auto; margin: calc(-1 * var(--space-16)) 0 var(--space-32); padding-left: var(--space-24); color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
+.install-cmds { margin: calc(-1 * var(--space-16)) 0 var(--space-32); padding: var(--space-8) var(--space-12); border-radius: var(--radius-box); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); font: var(--text-12)/20px var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* The route map (docs/redesign/DESIGN.md 4-5, redesign R4). Tools row: Map | List, search, legend. */
-.map-pane { min-width: 0; }
 .tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-12) var(--space-16); margin-bottom: var(--space-24); }
 .tools-l { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); }
 .search {
@@ -280,7 +281,7 @@ h3, h4 { font-weight: 600; }
 /* The operation card (the one element with a shadow: it floats): 300 wide, radius 10, padding 16. */
 .op-card {
   position: absolute; z-index: 3; width: 300px; padding: var(--space-16); border-radius: var(--radius-box); background: var(--gray-1);
-  box-shadow: 0 0 0 var(--line) var(--gray-7), var(--shadow-float); overflow-wrap: anywhere;
+  box-shadow: 0 0 0 var(--line) var(--gray-7), var(--shadow-float); overflow-wrap: anywhere; overflow-y: auto;
 }
 .oc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-8); }
 .oc-path { margin: 0; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); }
@@ -311,116 +312,126 @@ h3, h4 { font-weight: 600; }
   box-shadow: inset 0 0 0 var(--line) var(--gray-8); font: 500 var(--text-14)/var(--leading-14) var(--font-sans); cursor: pointer;
 }
 
-/* Text links (the list's rows and skill files). */
-.link { padding: 0; border: 0; background: none; color: var(--indigo-11); font: inherit; text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; cursor: pointer; }
-.link[aria-expanded] { color: var(--gray-11); } /* a disclosure toggle: quiet, like the summaries */
 .copied { margin-left: var(--space-8); font-weight: 600; }
 kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm); color: var(--gray-11); font: var(--text-12) var(--font-mono); white-space: nowrap; }
-/* The map, then the skill pane under a rule (redesign R4; R5 restyles the pane as the skill browser). */
-.panes { display: block; }
-/* Map | List (and Skill | Map | List below 1024 px): a segmented control, the selected tab raised. */
+/* Map | List: a segmented control, the selected tab raised. */
 .tabs { display: inline-flex; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-box); background: var(--gray-3); }
 .tabs [role='tab'] { height: 32px; padding: 0 var(--space-12); border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-11); font: inherit; cursor: pointer; }
 .tabs [role='tab']:hover { color: var(--gray-12); }
 .tabs [aria-selected='true'] { background: var(--gray-1); color: var(--gray-12); font-weight: 500; box-shadow: 0 0 0 var(--line) var(--gray-7); }
-.skill-pane {
-  display: flex; flex-direction: column; gap: var(--space-8); margin-top: var(--space-40); padding-top: var(--space-32);
-  box-shadow: inset 0 var(--line) 0 var(--gray-6); height: clamp(560px, calc(100dvh - var(--space-64)), 960px);
+
+/* The strongest workflow in words, under the map (margin-top 16): stop discs, ids mono 14, the labels mono 12 gray-11. */
+.caption { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-12); margin-top: var(--space-16); color: var(--gray-11); }
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); margin: 0; padding: 0; list-style: none; color: var(--gray-12); }
+.chain li { display: inline-flex; align-items: center; gap: var(--space-8); }
+.chain .mono { font-size: var(--text-14); }
+.chain .via { color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
+.stop { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--indigo-9); color: var(--indigo-contrast); font: 600 var(--text-12)/18px var(--font-sans); text-align: center; }
+.tools + .caption { margin: 0 0 var(--space-24); } /* in the List view the chain heads the list */
+.tools + .caption[data-compact] { margin: 0 0 var(--space-8); }
+.caption[data-compact] .chain { flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
+
+/* The skill browser (DESIGN.md 4.3): a gray-6 rule, 40 above and 32 below it; files, preview and
+   audit on the grid's 202 / 492 / 202 (the 4-column grid with the preview spanning two columns). */
+.skill-browser {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr); column-gap: var(--gap); align-items: start;
+  margin-top: var(--space-40); padding-top: var(--space-32); box-shadow: inset 0 var(--line) 0 var(--gray-6);
 }
-.pane-head { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 0 var(--space-16); }
-.pane-head .kicker { grid-column: 1 / -1; }
-.pane-head h2 { margin: 0; }
-.pane-head h2 code { font-weight: 600; }
-.options { justify-self: end; font-size: var(--text-12); line-height: var(--leading-12); }
-/* Disclosure toggles are quiet: muted underlined text with the native marker, never the accent. */
-:is(.options, .rels, .install, .audit) > summary { width: fit-content; cursor: pointer; color: var(--gray-11); text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; }
-.options[open] { grid-column: 1 / -1; justify-self: stretch; }
-/* Label | field rows; the help line sits under its field. */
-.options-body { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-4) var(--space-16); align-items: center; padding-top: var(--space-8); }
-.options-body .field { max-width: 24rem; }
-.options .help { grid-column: 2; margin: 0 0 var(--space-4); color: var(--gray-11); }
-.options .check { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--space-8); min-height: 28px; }
-.field { font: var(--text-14)/var(--leading-14) var(--font-mono); padding: var(--space-4) var(--space-8); border: 0; box-shadow: inset 0 0 0 var(--line) var(--gray-8); border-radius: var(--radius-sm); background: var(--gray-1); color: var(--gray-12); }
-.field::placeholder { color: var(--gray-11); opacity: 1; }
+/* 2fr would be two columns without the gap between them: 492 = 2 x 202 + 88. */
+@media (min-width: 640px) { .skill-browser { grid-template-columns: minmax(0, 1fr) calc(2 * (100% - 3 * var(--gap)) / 4 + var(--gap)) minmax(0, 1fr); } }
+.sb-files, .sb-preview, .sb-audit { min-width: 0; }
+.sb-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); height: 20px; margin: 0 0 var(--space-16); font-size: var(--text-14); line-height: var(--leading-14); font-weight: 600; }
+.sb-head:focus { outline: none; }
+.sb-head:focus-visible { outline: 2px solid var(--gray-12); outline-offset: 2px; }
+.sb-head.mono { font-family: var(--font-mono); }
+.sb-note { margin: 0; color: var(--gray-11); }
+/* File rows: 28 px, icon 14, name mono 12, count 12 gray-11; selected gray-3 (rows bleed 8 px each side). */
+.tree { margin: 0 calc(-1 * var(--space-8)); }
+[role='treeitem'] {
+  display: flex; align-items: center; gap: var(--space-8); min-height: 28px; padding: 0 var(--space-8) 0 calc(var(--space-8) + (var(--level) - 1) * var(--space-16));
+  border-radius: var(--radius-row); color: var(--gray-12); cursor: pointer; outline-offset: -2px; transition: background-color var(--motion-map) ease-out;
+}
+[role='treeitem'] svg { flex: none; color: var(--gray-11); }
+[role='treeitem'] .n { flex: 1; min-width: 0; font: var(--text-12)/var(--leading-12) var(--font-mono); overflow-wrap: anywhere; }
+[role='treeitem'] .count { color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
+[role='treeitem']:hover, [role='treeitem'][aria-selected='true'] { background: var(--gray-3); }
+.writing .outline { margin: 0 0 var(--space-8); padding: 0; list-style: none; color: var(--gray-11); font: var(--text-12)/28px var(--font-mono); }
+.edit {
+  display: block; margin-top: var(--space-16); padding: 0; border: 0; background: none; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-sans); cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px;
+}
+.edit:hover { color: var(--gray-12); }
+.options { display: grid; gap: var(--space-4); margin-top: var(--space-12); font-size: var(--text-12); line-height: var(--leading-12); }
+.options label { color: var(--gray-11); }
+.options .help { margin: 0 0 var(--space-8); color: var(--gray-11); }
+.options .check { display: flex; align-items: center; gap: var(--space-8); min-height: 28px; color: var(--gray-12); }
+.field { min-width: 0; height: 32px; padding: 0 var(--space-8); border: 0; border-radius: var(--radius-row); background: var(--gray-1); box-shadow: inset 0 0 0 var(--line) var(--gray-8); color: var(--gray-12); font: var(--text-12)/var(--leading-12) var(--font-mono); }
 .field[aria-invalid='true'] { box-shadow: inset 0 0 0 var(--line) var(--amber-8); } /* with "Not used:" in its help line */
-/* Files and the audit line side by side (at most 40 % of the height), the open file below taking the rest; each scrolls inside. */
-.skill-body { flex: 1; min-height: 0; display: grid; grid-template: fit-content(40%) auto minmax(0, 1fr) / minmax(0, 1.2fr) minmax(0, 1fr); gap: 0 var(--space-24); }
-.file-head, .preview { grid-column: 1 / -1; }
-/* Stale or still writing: a ring and words ("Updating…"), never faded text (contrast stays AA). */
-.skill-body[data-stale] { box-shadow: 0 0 0 var(--line) var(--gray-8); border-radius: var(--radius-sm); }
-.writing .outline { opacity: 0.6; }
-.tree, .audit { min-height: 0; overflow: auto; }
-.tree { font: var(--text-12)/var(--leading-12) var(--font-mono); }
-/* A long name wraps under itself, not under its twisty (hanging indent). */
-[role='treeitem'] { padding: var(--space-4) var(--space-8) var(--space-4) calc(var(--space-8) + 1.2em + (var(--level) - 1) * 1.44em); text-indent: -1.2em; border-radius: var(--radius-sm); cursor: pointer; outline-offset: -2px; }
-[role='treeitem']:hover { background: var(--gray-3); }
-[role='treeitem'][aria-selected='true'] { background: var(--gray-3); font-weight: 600; }
-.twisty { display: inline-block; width: 1.2em; color: var(--gray-11); }
-.count { color: var(--gray-11); font: var(--text-12) var(--font-sans); }
-.file-head { margin: 0; padding: var(--space-16) 0 var(--space-4); color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
-.file-head code { color: var(--gray-12); font-weight: 600; }
-.file-head > span:not(.visually-hidden) { margin-left: var(--space-16); }
-.preview {
-  margin: 0; padding: 0 var(--space-16); overflow: auto; white-space: pre; font: var(--text-12)/18px var(--font-mono); color: var(--gray-12); outline-offset: -2px;
-  background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); border-radius: var(--radius-sm); /* the code box: the pane's one frame */
+/* Preview: file name 14/600, "N lines" 12 gray-11, a copy icon button; the code box gray-2, radius 10,
+   mono 12/20, line numbers gray-11 (generated, not part of the text), wraps, at most 392 tall. */
+.sb-preview h3 { display: flex; align-items: baseline; gap: var(--space-8); min-width: 0; margin: 0; font-size: var(--text-14); line-height: var(--leading-14); }
+.sb-preview .fname { overflow-wrap: anywhere; }
+.sb-preview .lines { color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); font-weight: 400; white-space: nowrap; }
+.sb-tools { display: flex; align-items: center; gap: var(--space-4); margin-right: calc(-1 * var(--space-6)); }
+.sb-preview .icon-btn { width: 28px; height: 28px; }
+.sb-close { height: 28px; padding: 0 var(--space-8); border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-sans); cursor: pointer; }
+.code {
+  max-height: 392px; overflow-y: auto; padding: var(--space-12) 0; border-radius: var(--radius-box); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6);
+  font: var(--text-12)/20px var(--font-mono); color: var(--gray-12); outline-offset: -2px;
 }
-.audit { padding: var(--space-8); font-size: var(--text-12); line-height: var(--leading-12); } /* room for the summary's focus ring inside the scroll box */
-.audit > summary { padding-block: var(--space-4); color: var(--gray-12); text-decoration: none; font: 600 var(--text-14)/var(--leading-14) var(--font-sans); }
-.audit > summary .tally { text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; }
-.verdict { white-space: nowrap; } /* "Audit passed:" never breaks inside; the tally has its own line */
-.tally { display: block; padding-left: 2.85em; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-sans); }
-.audit ul { margin: var(--space-4) 0; padding: 0; list-style: none; }
-.audit li[data-ok='false'] { font-weight: 600; }
-/* Pass: a ring and a check in the accent text; fail: a square and a cross in the destructive text. */
-.mark { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; margin-right: var(--space-4); box-shadow: inset 0 0 0 var(--line) currentColor; border-radius: 50%; font: 600 var(--text-12) var(--font-mono); color: var(--indigo-11); }
-[data-ok='false'] > .mark, [data-ok='false'] > summary .mark { border-radius: 0; color: var(--destructive); }
-.audit .help { margin: 0; color: var(--gray-11); }
-.outline { margin: var(--space-8) 0; padding-left: var(--space-16); box-shadow: inset var(--line) 0 0 var(--gray-7); font: var(--text-12)/20px var(--font-mono); list-style: none; }
-.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16); padding-top: var(--space-16); background: var(--gray-1); }
-.actions .primary { min-width: 10rem; transition: none; }
-.install { margin-top: var(--space-8); font-size: var(--text-12); line-height: var(--leading-12); }
-.install[open] { display: grid; justify-items: start; gap: var(--space-8); }
-.install pre { max-width: 100%; margin: 0 0 var(--space-8); white-space: pre-wrap; overflow-wrap: anywhere; }
-.in-skill { padding: var(--space-4) var(--space-8); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); border-radius: var(--radius-sm); }
-@media (max-width: 1023px) {
-  html { scroll-padding-bottom: 7rem; } /* keep focused items clear of the sticky action bar (200 % zoom) */
-  .title + .tabs { display: flex; margin-bottom: var(--space-24); }
-  .tabs [role='tab'] { flex: 1; }
-  .skill-pane { height: auto; margin-top: 0; padding-top: 0; box-shadow: none; }
-  .skill-body { gap: 0 var(--space-16); }
-  .preview { max-height: 60vh; }
-  /* sticky over the scrolling skill: one hairline marks its edge */
-  .actions { position: sticky; z-index: 1; bottom: 0; padding-bottom: var(--space-8); box-shadow: inset 0 var(--line) 0 var(--gray-6); }
-}
+.code .l { display: flex; min-height: 20px; padding-right: var(--space-16); white-space: pre-wrap; overflow-wrap: anywhere; }
+.code .l::before { content: attr(data-n) / ''; flex: none; width: 44px; padding-right: var(--space-16); color: var(--gray-11); text-align: right; user-select: none; }
+/* Stale (the next skill is being written): a ring and "Updating…", never faded text. */
+.sb-preview[data-stale] .code { box-shadow: inset 0 0 0 var(--line) var(--gray-8); }
+/* Audit, always open: the verdict (16 px indigo-9 disc with a white check) and "N of N"; a row per check
+   (indigo-11 check, 12/16) between gray-6 rules. A failed check: an amber `!` and the word "Failed". */
+.verdict { display: inline-flex; align-items: center; gap: var(--space-8); }
+.tally { display: inline-flex; align-items: center; gap: var(--space-8); color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); font-weight: 400; }
+.i-verdict circle { fill: var(--indigo-9); }
+.i-verdict path { stroke: var(--indigo-contrast); }
+.i-verdict[data-ok='false'] circle { fill: var(--amber-11); }
+.i-verdict[data-ok='false'] path { stroke: var(--gray-1); }
+.checks { margin: 0; padding: 0; list-style: none; }
+.checks li { display: flex; gap: var(--space-8); padding: calc(var(--space-14) / 2) 0; box-shadow: inset 0 var(--line) 0 var(--gray-6); font-size: var(--text-12); line-height: var(--leading-12); }
+.checks li:first-child { padding-top: 0; box-shadow: none; }
+.checks svg { flex: none; margin-top: calc(var(--space-2) / 2); color: var(--indigo-11); }
+.checks .i-fail { color: var(--amber-11); }
+.checks strong { font-weight: 600; }
+.audit-row { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 44px; padding: 0; border: 0; background: none; color: var(--gray-12); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
+.audit-row .i-chev { transition: transform var(--motion-map) ease-out; }
+.audit-row[aria-expanded='true'] .i-chev { transform: rotate(90deg); }
 
-@media (max-width: 639px) {
-  /* Phones: tree and audit share the row equally. */
-  .skill-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .map-scroll { margin-right: calc(-1 * var(--space-16)); }
-  /* The pinned card is a bottom sheet; there is no hover preview on phones. */
-  .map-wrap .op-card[role='dialog'] { position: fixed; inset: auto 0 0 0 !important; width: auto; max-height: 50dvh; overflow: auto; border-radius: var(--radius-box) var(--radius-box) 0 0; }
-  .map-wrap .op-card[aria-hidden='true'] { display: none; }
-  body:has(.map-wrap .op-card[role='dialog']) { padding-bottom: 50dvh; } /* room to scroll the map above the bottom sheet */
-  html { scroll-padding-bottom: 7rem; } /* clear of the sticky action bar */
-  html:has(.map-wrap .op-card[role='dialog']) { scroll-padding-bottom: calc(50dvh + var(--space-16)); } /* a focused row stays clear of the sheet (2.4.11) */
-  .title { margin-bottom: var(--space-16); }
+/* List view (DESIGN.md 6): groups by resource, a 14/600 heading with the count; rows 44 px min:
+   method mono 12 in a 48 px column, the id mono 14 with the path under it, the stop disc and the
+   destructive mark as on the map. */
+.list { min-width: 0; }
+.lgroup + .lgroup { margin-top: var(--space-24); }
+.lhead { margin: 0; }
+.lhead button {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; height: 28px; padding: 0; border: 0; background: none;
+  color: var(--gray-12); font: 600 var(--text-14)/var(--leading-14) var(--font-sans); text-align: left; cursor: pointer; box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6);
 }
-
-/* List view (F12, A3): one table per cluster, edges in words. */
-.list { min-width: 0; overflow-x: auto; outline-offset: 2px; }
-.list-summary { margin: 0 0 var(--space-16); color: var(--gray-11); }
-.list table { width: 100%; margin: 0 0 var(--space-24); border-collapse: collapse; font-size: var(--text-12); line-height: var(--leading-12); }
-.list caption { padding: var(--space-4) 0; box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-7); text-align: left; font: 600 var(--text-14)/var(--leading-14) var(--font-sans); }
-.crud-summary { margin-left: var(--space-16); font: var(--text-12)/var(--leading-12) var(--font-sans); color: var(--gray-11); }
-.list th, .list td { padding: var(--space-4); box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6); text-align: left; vertical-align: top; overflow-wrap: break-word; }
-.rels ul, .list td > ul { margin: var(--space-4) 0 0; padding-left: var(--space-16); }
-.list thead th { color: var(--gray-11); }
-.list tr[data-open] > * { background: var(--gray-3); }
-.list tr[data-open] > th { font-weight: 600; }
-.list-empty { padding: var(--space-16); box-shadow: inset 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm); }
+.lcount { display: inline-flex; align-items: center; gap: var(--space-8); color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); font-weight: 400; }
+.lhead .i-chev { transition: transform var(--motion-map) ease-out; }
+.lhead [aria-expanded='true'] .i-chev { transform: rotate(90deg); }
+.lrows { margin: var(--space-4) 0 0; padding: 0; list-style: none; }
+.lrow {
+  display: flex; align-items: center; gap: var(--space-8); width: 100%; min-height: 44px; padding: var(--space-4) 0; border: 0; background: none;
+  color: var(--gray-12); font: inherit; text-align: left; cursor: pointer; box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-5); outline-offset: -2px;
+  transition: background-color var(--motion-map) ease-out;
+}
+.lrow:hover, .lrow[data-open] { background: var(--gray-3); }
+.lrow .m { flex: none; width: 48px; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); }
+.lrow .m[data-destructive] { color: var(--destructive); }
+.lid { flex: 1; min-width: 0; }
+.lrow .id { display: block; font: var(--text-14)/var(--leading-14) var(--font-mono); overflow-wrap: anywhere; }
+.lrow .path { display: block; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); overflow-wrap: anywhere; }
+.lrow[data-route] .id { color: var(--indigo-11); font-weight: 600; }
+.lrow[data-route]::after { content: attr(data-route); flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--indigo-9); color: var(--indigo-contrast); font: 600 var(--text-12)/18px var(--font-sans); text-align: center; }
+.list-empty { margin: 0; padding: var(--space-16); border-radius: var(--radius-box); box-shadow: inset 0 0 0 var(--line) var(--gray-7); }
 /* The list's operation card: pinned and docked to the bottom of the viewport under the list, so the
-   tables keep their full width and the card shows wherever the row is; the scroll padding keeps the
-   focused row clear of it (Focus Not Obscured). R5 restyles the list. */
+   rows keep their width and the card shows wherever the row is; the scroll padding keeps the focused
+   row clear of it (Focus Not Obscured). */
 .list-wrap { position: relative; }
 .op-card.docked { position: sticky; bottom: 0; width: auto; max-height: var(--list-detail-h); margin-top: var(--space-16); overflow: auto; }
 :root { --list-detail-h: min(45dvh, 480px); }
@@ -437,24 +448,56 @@ html:has(.list-wrap[data-panel]) { scroll-padding-bottom: calc(var(--list-detail
 .help-dialog th, .help-dialog td { padding: var(--space-4) var(--space-8); box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6); text-align: left; vertical-align: top; }
 .help-dialog th { width: 40%; font-weight: 400; }
 
-/* Loading and error states (phase 15), inside the result frame. */
-.stage[data-status] > :not(.source-status) { filter: grayscale(1); } /* dimmed without fading: text keeps its contrast */
-.source-status { max-width: 44rem; margin: 0 0 var(--space-24); padding: var(--space-16) 0 var(--space-16) var(--space-24); box-shadow: inset var(--line) 0 0 var(--gray-7); }
-.source-status h2 { width: fit-content; margin: 0 0 var(--space-8); outline-offset: var(--space-4); } /* the error title is as large as the page title */
-/* Below 380 px the audit line takes its own row under the files rather than squeezing beside them. */
-@media (max-width: 379px) { .skill-body { grid-template: fit-content(40%) auto auto minmax(0, 1fr) / minmax(0, 1fr); } }
-.source-status p { margin: 0 0 var(--space-16); }
+/* Loading, error and empty states, inside the result frame. While loading the previous result stays,
+   greyscale (text keeps its contrast); an error replaces the frame's body: the title (20/600), the
+   reason (14 gray-11) and its two recovery actions. */
+.stage[data-status='loading'] > .stage-content { filter: grayscale(1); }
+.stage[data-status='error'] > .stage-content { display: none; }
+.source-status { max-width: 492px; }
+.source-status[data-testid='loading'] { margin-bottom: var(--space-32); }
+.source-status h2 { width: fit-content; margin: 0 0 var(--space-8); outline-offset: var(--space-4); }
+.source-status p { margin: 0 0 var(--space-16); color: var(--gray-11); }
 .steps { margin: 0 0 var(--space-16); padding: 0; list-style: none; }
 .steps li { display: flex; gap: var(--space-8); padding-block: var(--space-4); color: var(--gray-11); }
 .steps li:not([data-state='waiting']) { color: var(--gray-12); }
 .steps li[data-state='in progress'] { font-weight: 600; --tick: var(--indigo-11); }
 .tick { width: 1.25em; font-family: var(--font-mono); text-align: center; color: var(--tick, inherit); }
-.err-mark { display: inline-grid; place-items: center; width: 1.3em; height: 1.3em; margin-right: var(--space-8); box-shadow: inset 0 0 0 var(--line) var(--destructive); color: var(--destructive); font: 600 var(--text-14) var(--font-mono); }
-.command { margin: 0 0 var(--space-16); padding: var(--space-8) var(--space-16); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); border-radius: var(--radius-sm); font-size: var(--text-12); line-height: var(--leading-12); }
-.status-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16); }
-.warnings { flex-basis: 100%; font-size: var(--text-12); line-height: var(--leading-12); }
-.warnings summary { width: fit-content; padding: 0 var(--space-8); box-shadow: inset 0 0 0 var(--line) var(--gray-8); border-radius: var(--radius-pill); cursor: pointer; color: var(--gray-11); }
-.warnings ul { margin: var(--space-8) 0 0; padding-left: var(--space-24); max-height: 12rem; overflow: auto; }
-.empty-note { font-size: var(--text-20); line-height: var(--leading-20); } /* the empty spec's sentence, as large as the empty chart's */
+.err-mark { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: var(--space-8); border-radius: 50%; background: var(--amber-11); color: var(--gray-1); font: 600 var(--text-14)/var(--leading-14) var(--font-mono); vertical-align: 2px; }
+.command { margin: 0 0 var(--space-16); padding: var(--space-8) var(--space-12); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); border-radius: var(--radius-box); font: var(--text-12)/20px var(--font-mono); }
+.status-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); }
 .empty-chart { display: grid; justify-items: center; gap: var(--space-24); padding: var(--space-64) var(--space-24); color: var(--gray-12); font-size: var(--text-20); line-height: var(--leading-20); text-align: center; }
 .empty-ring { fill: none; stroke: var(--gray-7); }
+
+/* Between 640 and 1136 px: files and preview side by side, the audit under them. */
+@media (min-width: 640px) and (max-width: 1135px) {
+  .skill-browser { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); row-gap: var(--space-40); }
+  .sb-audit { grid-column: 1 / -1; }
+}
+
+/* Phones (V2Phone, below 640 px): the head stacks with full-width Download .zip then Install command;
+   Map | List and a full-width search; the skill's files as 44 px rows, each opening a full-width
+   preview; the audit one row that expands its checks. */
+@media (max-width: 639px) {
+  .fhead { flex-direction: column; margin-bottom: var(--space-24); }
+  .fhead-actions { flex-direction: column; width: 100%; }
+  .fhead-actions .btn { width: 100%; }
+  .tools-l { flex: 1; flex-wrap: nowrap; }
+  .tools-l .search { flex: 1; width: auto; }
+  .tools-l .search kbd { display: none; }
+  .skill-browser { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-24); }
+  .sb-head.mono { margin-bottom: var(--space-8); }
+  [role='treeitem'] { min-height: 44px; }
+  [role='treeitem'] .n { font-size: var(--text-14); line-height: var(--leading-14); }
+  .sb-audit { margin-top: 0; box-shadow: inset 0 var(--line) 0 var(--gray-6); }
+  .sb-audit .sb-head { height: auto; margin: 0; }
+  .sb-audit .checks { padding-bottom: var(--space-8); }
+  .lhead button { height: 44px; }
+  .lgroup + .lgroup { margin-top: var(--space-16); }
+  .lgroup:not([data-open]) + .lgroup:not([data-open]) { margin-top: 0; }
+  .map-scroll { margin-right: calc(-1 * var(--space-16)); }
+  /* The pinned card is a bottom sheet; there is no hover preview on phones. */
+  .map-wrap .op-card[role='dialog'] { position: fixed; inset: auto 0 0 0 !important; width: auto; max-height: 50dvh !important; overflow: auto; border-radius: var(--radius-box) var(--radius-box) 0 0; }
+  .map-wrap .op-card[aria-hidden='true'] { display: none; }
+  body:has(.map-wrap .op-card[role='dialog']) { padding-bottom: 50dvh; } /* room to scroll the map above the bottom sheet */
+  html:has(.map-wrap .op-card[role='dialog']) { scroll-padding-bottom: calc(50dvh + var(--space-16)); } /* a focused row stays clear of the sheet (2.4.11) */
+}

@@ -13,8 +13,9 @@ import type { Chain } from '../skillgen/types';
 import { describeEdge, edgesOf, keyAction, mapName, moreId, navOf, nodeName, otherEnd } from './keyboard';
 import { OpCard } from './OpCard';
 
-/** The operation card: 300 wide, 16 px from the row, its top 40 px above the row's centre (V2Hover). */
-const CARD = { w: 300, gap: 16, lift: 40 };
+/** The operation card: 300 wide, 16 px from the row, its top 40 px above the row's centre (V2Hover);
+ *  at most 64 px past the map's bottom (scrolling inside), never under 240 px tall. */
+const CARD = { w: 300, gap: 16, lift: 40, below: 64, minH: 240 };
 /** A pointer leaving a row has this long to reach its card before the preview goes. */
 const LINGER = 150;
 
@@ -205,7 +206,7 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
 
   // Where the card goes: right of the row, or flipped left of its card when it would leave the frame.
   const cardOp = pinned ?? hover ?? focused;
-  const [place, setPlace] = useState<{ left: number; top: number; flip: boolean } | null>(null);
+  const [place, setPlace] = useState<{ left: number; top: number; flip: boolean; maxHeight: number } | null>(null);
   useLayoutEffect(() => {
     const to = cardOp ? rowOf.get(cardOp) : undefined;
     const el = wrap.current;
@@ -219,7 +220,10 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
     let left = ox + to.card.x + CARD_W + CARD.gap;
     const flip = left + CARD.w > right;
     if (flip) left = Math.max(frame.left - w.left, ox + to.card.x - CARD.gap - CARD.w);
-    setPlace({ left, top: oy + to.row.cy - CARD.lift, flip });
+    // A tall card scrolls inside itself rather than covering the skill browser under the map: it may
+    // pass the map's bottom by the caption's height at most.
+    const y = oy + to.row.cy - CARD.lift;
+    setPlace({ left, top: y, flip, maxHeight: Math.max(CARD.minH, el.offsetHeight + CARD.below - y) });
   }, [cardOp, rowOf, ox, oy, avail]);
 
   const routeShown = !hot; // the workflow's colour and discs rest while a row is hot (V2Hover)
@@ -313,7 +317,7 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
       {card && place && (
         <OpCard model={model} graph={graph} op={card} pinned={card.id === pinned} inSkill={skillFile?.(card.id)} onInSkill={onSkillFile}
           onGo={(id) => focusNode(id, true)} onClose={close} announce={announce}
-          className={place.flip ? 'flip' : undefined} style={{ left: place.left, top: place.top }}
+          className={place.flip ? 'flip' : undefined} style={{ left: place.left, top: place.top, maxHeight: place.maxHeight }}
           onPointerEnter={() => clearTimeout(linger.current)} onPointerLeave={card.id === pinned ? undefined : leave} />
       )}
       {graph.clusters.some((c) => c.nameSource === 'ai') && <p className="map-credit" data-testid="names-provenance">Names: AI-drafted</p>}

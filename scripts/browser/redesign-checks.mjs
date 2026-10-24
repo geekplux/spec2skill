@@ -217,6 +217,7 @@ export const GRID_PARTS = {
     'h1': { sel: '.hero h1' },
     'frame contents': { sel: '.frame', content: true },
     'first map column': { sel: '.rc[data-column="0"]', all: true },
+    'files column': { sel: '.sb-files' },
     'command-line title': { sel: '#cli h2' },
     'How it works title': { sel: '#how h2' },
     'Made by title': { sel: '.made h2' },
@@ -227,6 +228,9 @@ export const GRID_PARTS = {
     'command box': { sel: '.cli' },
     'Made by rows': { sel: '.projects a', all: true },
   },
+  /** The skill browser's 202 / 492 / 202 (R5): the preview starts at the second column, the audit at the fourth. */
+  second: { 'skill preview': { sel: '.sb-preview' } },
+  fourth: { 'audit column': { sel: '.sb-audit' } },
   /** Each match starts one column further: 0, 290, 580, 870 (`distinct`: each different x, left to right). */
   columns: {
     'How it works columns': { sel: '.how > li', all: true },
@@ -237,7 +241,10 @@ export const GRID_PARTS = {
     'hero field right': { sel: '.source-field', edge: 'right' },
     'frame contents right': { sel: '.frame', content: true, edge: 'right' },
     'command box right': { sel: '.cli', edge: 'right' },
+    'audit column right': { sel: '.sb-audit', edge: 'right' },
   },
+  /** Right edges at the third column's right edge (782 in): the preview spans two columns. */
+  thirdEnd: { 'skill preview right': { sel: '.sb-preview', edge: 'right' } },
 };
 
 /** Runs in the page: the left (or right) x of each part's boxes. */
@@ -276,6 +283,10 @@ export function gridProblems(measured, { label = 'grid', tolerance = 1, grid = G
   for (const [name, xs] of Object.entries(measured.left ?? {})) want(name, xs, origin);
   for (const [name, xs] of Object.entries(measured.right ?? {})) want(name, xs, origin + grid.right);
   for (const [name, xs] of Object.entries(measured.end ?? {})) want(name, xs, origin + grid.width);
+  const step = grid.col + grid.gap;
+  for (const [name, xs] of Object.entries(measured.second ?? {})) want(name, xs, origin + step);
+  for (const [name, xs] of Object.entries(measured.fourth ?? {})) want(name, xs, origin + 3 * step);
+  for (const [name, xs] of Object.entries(measured.thirdEnd ?? {})) want(name, xs, origin + 2 * step + grid.col);
   for (const [name, xs] of Object.entries(measured.columns ?? {})) {
     if (xs.length === 0) problems.push(`[${label}] grid: ${name} not found`);
     xs.forEach((x, i) => want(`${name} #${i + 1}`, [x], origin + i * (grid.col + grid.gap)));

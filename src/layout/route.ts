@@ -120,6 +120,34 @@ export interface RouteOptions {
   chain?: Chain | null;
 }
 
+/**
+ * The resources' columns and the workflow as drawn: the chain runs forward only, so it ends before a
+ * step into a resource that is not further right; a chain of one stop is no workflow.
+ */
+function mainLine(graph: AtlasGraph, home: Map<string, string>, chain: Chain | undefined) {
+  const asked = chain?.ops.filter((id) => home.has(id)) ?? [];
+  const mainOrder = [...new Set(asked.map((id) => home.get(id)!))];
+  const column = columnsOf(graph, mainOrder);
+  let route = asked;
+  for (let i = 1; i < asked.length; i++) {
+    const [a, b] = [home.get(asked[i - 1]!)!, home.get(asked[i]!)!];
+    if (a !== b && column.get(b)! <= column.get(a)!) {
+      route = asked.slice(0, i);
+      break;
+    }
+  }
+  return { mainOrder, column, route: route.length < 2 ? [] : route };
+}
+
+/** The strongest workflow as the map draws it (its stops and the labels between them), or null. */
+export function drawnWorkflow(graph: AtlasGraph, chain: Chain | null): Chain | null {
+  if (!chain) return null;
+  const home = new Map(graph.clusters.flatMap((c) => c.operationIds.map((id) => [id, c.id] as const)));
+  const { route } = mainLine(graph, home, chain);
+  if (route.length < 2 || route.some((id, i) => id !== chain.ops[i])) return null;
+  return { ops: route, via: chain.via.slice(0, route.length - 1), inferred: chain.inferred.slice(0, route.length - 1) };
+}
+
 /** Method text and tone of a row (D41). */
 export function methodOf(op: Operation, crud: string | undefined): { method: string; destructive: boolean } {
   const destructive = op.method === 'delete' || op.hints.destructive === true;
@@ -150,19 +178,7 @@ export function routeLayout(model: ApiModel, graph: AtlasGraph, options: RouteOp
   const order = new Map(graph.clusters.map((c, i) => [c.id, i]));
   const home = new Map(graph.clusters.flatMap((c) => c.operationIds.map((id) => [id, c.id] as const)));
   const chain = options.chain === undefined ? topChains(model, graph, 1)[0] : (options.chain ?? undefined);
-  const asked = chain?.ops.filter((id) => home.has(id)) ?? [];
-  const mainOrder = [...new Set(asked.map((id) => home.get(id)!))];
-  const column = columnsOf(graph, mainOrder);
-  // The workflow runs forward only: it ends before a step into a resource that is not further right.
-  let route = asked;
-  for (let i = 1; i < asked.length; i++) {
-    const [a, b] = [home.get(asked[i - 1]!)!, home.get(asked[i]!)!];
-    if (a !== b && column.get(b)! <= column.get(a)!) {
-      route = asked.slice(0, i);
-      break;
-    }
-  }
-  if (route.length < 2) route = [];
+  const { mainOrder, column, route } = mainLine(graph, home, chain);
   const keep = new Set(route);
 
   const drafts = new Map<string, Draft>(

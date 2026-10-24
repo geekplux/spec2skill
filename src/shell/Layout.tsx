@@ -8,9 +8,9 @@ interface LayoutProps {
   source: ReactNode;
   /** "Samples" and its segmented control, under the field. */
   samples: ReactNode;
-  /** The result: today's skill pane and map, inside the frame. */
+  /** The result inside the frame: its head, the map or list, and the skill browser. */
   children: ReactNode;
-  /** The loading or error state, above the (greyscale while busy) result. */
+  /** The loading state (above the result, greyscale while busy) or the error (in its place). */
   status?: ReactNode;
   /** A load is in progress (the result below the steps is busy). */
   busy: boolean;
@@ -41,7 +41,7 @@ export function Layout({ source, samples, children, status, busy, onShortcuts }:
           </div>
         </section>
         <div className="wrap">
-          {/* While a status is shown, the previous result below it is greyscale (app.css). */}
+          {/* While loading, the previous result below the status is greyscale; an error takes its place (app.css). */}
           <section id="result" className="frame stage" tabIndex={-1} aria-label="Result" data-status={status ? (busy ? 'loading' : 'error') : undefined}>
             {status}
             <div className="stage-content" aria-busy={busy}>

@@ -89,4 +89,12 @@ describe('grid check (DESIGN.md 8.6)', () => {
     expect(gridProblems({ ...ok, columns: { how: [184, 474, 760] } })).toEqual(['[grid] grid: how #3 at x=576 from the column edge, expected 580']);
     expect(gridProblems({ left: {} })).toEqual(['[grid] grid: no h1 to measure the column from']);
   });
+  it('places the skill browser on 202 / 492 / 202: preview at the second column to the third\'s end, audit at the fourth', () => {
+    const skill = { ...ok, second: { 'skill preview': [474] }, thirdEnd: { 'skill preview right': [966] }, fourth: { 'audit column': [1054] } };
+    expect(gridProblems(skill)).toEqual([]);
+    expect(gridProblems({ ...skill, second: { 'skill preview': [480] }, fourth: { 'audit column': [960] } })).toEqual([
+      '[grid] grid: skill preview at x=296 from the column edge, expected 290',
+      '[grid] grid: audit column at x=776 from the column edge, expected 870',
+    ]);
+  });
 });

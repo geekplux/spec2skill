@@ -1,5 +1,5 @@
-// The loading and error states (PLAN 3.6, docs/DESIGN.md): one focal point each, shown above the
-// previous skill and map, which stay in place (greyscale while loading) so nothing jumps.
+// The loading and error states (docs/redesign/DESIGN.md 4.3): one focal point each, inside the result
+// frame. While loading, the previous result stays below, greyscale; an error takes its place.
 import { useEffect, useRef } from 'react';
 import { useAnnounce } from '../a11y/Announcer';
 import type { Explained } from './errors';

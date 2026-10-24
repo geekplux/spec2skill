@@ -140,7 +140,7 @@ export const SHORTCUTS: { where: string; keys: string[]; what: string }[] = [
   { where: 'Skill files', keys: ['ArrowRight', 'ArrowLeft'], what: 'Open or close a folder, or go to its parent' },
   { where: 'Skill files', keys: ['Home', 'End'], what: 'First or last file' },
   { where: 'Skill files', keys: ['Enter', ' '], what: 'Show the file, or open or close the folder' },
-  { where: 'Tabs', keys: ['ArrowLeft', 'ArrowRight', 'Home', 'End'], what: 'Switch between Skill, Map and List' },
+  { where: 'Tabs', keys: ['ArrowLeft', 'ArrowRight', 'Home', 'End'], what: 'Switch between Map and List' },
   { where: 'Source field', keys: ['Enter'], what: 'Load the URL or spec text' },
   { where: 'Source field', keys: ['Shift+Enter'], what: 'Add a new line' },
 ];

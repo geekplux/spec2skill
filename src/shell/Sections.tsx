@@ -1,6 +1,7 @@
 // The page below the result frame (docs/redesign/DESIGN.md 4.4-4.7): Command line, How it works,
 // Made by GeekPlux and the footer. Copy as in docs/redesign/target/V2Home.
 import { useAnnounce } from '../a11y/Announcer';
+import { COPY_ICON } from '../design/icons';
 import { Wordmark } from '../design/Logo';
 import { REPO, onInPage } from './Header';
 
@@ -10,12 +11,6 @@ export const CLI_COMMANDS = [
   'pnpm cli openapi.yaml --out .claude/skills',
 ];
 
-export const COPY_ICON = (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden="true">
-    <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
-    <path d="M10.5 5.5V4A1.5 1.5 0 0 0 9 2.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5" />
-  </svg>
-);
 
 const STEPS = [
   ['Parse', 'OpenAPI 3.0 and 3.1, Swagger 2.0 and MCP tool lists become one model, in your browser.'],

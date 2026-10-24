@@ -7,14 +7,14 @@ export interface TabDef<T extends string> { id: T; label: string; panel: string 
 export const nextTab = (key: string, i: number, n: number): number | undefined =>
   ({ ArrowRight: (i + 1) % n, ArrowLeft: (i + n - 1) % n, Home: 0, End: n - 1 })[key];
 
-/** True while the viewport is at least 1024 px wide: two panes instead of tabs (PLAN 3.3). */
-export function useWide(): boolean {
-  const query = '(min-width: 1024px)';
+/** True below 640 px: the phone layout (one column, the list first; DESIGN.md 6). */
+export function usePhone(): boolean {
+  const query = '(max-width: 639px)';
   return useSyncExternalStore((change) => {
     const media = window.matchMedia(query);
     media.addEventListener('change', change);
     return () => media.removeEventListener('change', change);
-  }, () => window.matchMedia(query).matches);
+  }, () => window.matchMedia(query).matches, () => false);
 }
 
 interface TabsProps<T extends string> { label: string; tabs: TabDef<T>[]; value: T; onChange: (id: T) => void }
