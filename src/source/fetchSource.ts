@@ -100,10 +100,11 @@ async function fromUrl(raw: string, mode: Mode, deps: LoadDeps): Promise<Doc> {
   const url = toUrl(raw);
   deps.step('fetch', `Fetching spec (${url.host})`);
   if (mode === 'mcp' || (mode === 'auto' && MCP_PATH.test(url.pathname))) return mcp(url, deps);
+  let got: Got | 'mcp' | undefined;
   try {
     const slow = new AbortController();
     const timer = setTimeout(() => slow.abort(), DIRECT_TIMEOUT_MS);
-    let got = await deps.fetch(url.href, { signal: AbortSignal.any([deps.signal, slow.signal]), credentials: 'omit' }).then((res) => read(res), (e: unknown) => {
+    got = await deps.fetch(url.href, { signal: AbortSignal.any([deps.signal, slow.signal]), credentials: 'omit' }).then((res) => read(res), (e: unknown) => {
       if (deps.signal.aborted) throw e;
       return undefined; // CORS, network or slow: ask the proxy
     }).finally(() => clearTimeout(timer));
@@ -112,15 +113,14 @@ async function fromUrl(raw: string, mode: Mode, deps: LoadDeps): Promise<Doc> {
       got = await read(res, res.headers.get('x-spec-content-type') ?? '');
       if (got !== 'mcp') got.url = res.headers.get('x-spec-url') ?? url.href;
     }
-    if (got === 'mcp') {
-      if (mode === 'openapi') throw new SourceError('http-error', 'The URL answered like an MCP server, not a spec.');
-      return await mcp(url, deps);
-    }
-    return parse({ url: url.href, ...got });
+    if (got !== 'mcp') return parse({ url: url.href, ...got });
   } catch (e) {
+    // Only a spec fetch or parse failure falls back to MCP.
     if (mode !== 'auto' || !notSpec(e)) throw e;
     return mcp(url, deps).catch((second: unknown) => Promise.reject(deps.signal.aborted ? second : fallbackError(e, second)));
   }
+  if (mode === 'openapi') throw new SourceError('http-error', 'The URL answered like an MCP server, not a spec.');
+  return mcp(url, deps); // the GET already said MCP: one attempt, its error as is
 }
 
 async function fromText(input: Exclude<Input, { url: string }>, deps: LoadDeps): Promise<Doc> {

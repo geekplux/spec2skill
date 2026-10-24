@@ -194,6 +194,17 @@ describe('a local server on 127.0.0.1', () => {
     expect(waf.err).not.toContain('credentials');
   });
 
+  it('makes one MCP attempt when the GET already said MCP, showing that attempt\'s error', async () => {
+    const url = 'https://tools.example.test/rpc';
+    for (const status of [405, 406]) {
+      let posts = 0;
+      const counted: CliDeps['fetch'] = async (input, init) => (init?.method === 'POST' && posts++, fake(() => new Response('', { status }), 500)(input, init));
+      const r = await cli([url, '--out', fresh()], counted);
+      expect([posts, r.code]).toEqual([1, EXIT.input]);
+      expect(r.err).toContain('The MCP server answered 500');
+    }
+  });
+
   it('never sends tools/call, and reports a missing spec with exit 3', async () => {
     expect(methods).not.toContain('tools/call');
     const r = await cli([`${base}/missing.json`, '--source', 'openapi', '--out', fresh()], realFetch);

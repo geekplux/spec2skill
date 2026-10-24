@@ -13,6 +13,7 @@ const json = (body: unknown, status = 200) => text(JSON.stringify(body), { 'cont
 const html = (status = 404) => text('<!doctype html><title>x</title>', { 'content-type': 'text/html' }, status);
 const asHtml = (body: string) => () => text(body, { 'content-type': 'text/html; charset=utf-8' });
 /** The MCP proxy route failing with an MCP-only reason. */
+const mcpDown = () => json({ error: { code: 'http-error', message: 'The MCP server answered 502 to initialize.' } }, 502);
 const mcpFails = (code: 'needs-auth' | 'legacy-transport') => () => json({ error: { code, message: '' } }, code === 'needs-auth' ? 401 : 502);
 const cors = () => Promise.reject(new TypeError('Failed to fetch'));
 
@@ -169,6 +170,14 @@ describe('loadSource: URLs', () => {
     expect(codeOf(down.error)).toBe('http-error');
     const other = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': mcpFails('legacy-transport') });
     expect(codeOf(other.error)).toBe('unsupported');
+  });
+
+  it('makes one MCP attempt when the GET already said MCP, showing that attempt\'s error', async () => {
+    const url = 'https://tools.example.test/rpc';
+    for (const answer of [() => text('', {}, 405), () => text('', {}, 406), () => text('', { 'content-type': 'text/event-stream' })]) {
+      const r = await run({ url }, { [url]: answer, '/api/mcp/tools': mcpDown });
+      expect([codeOf(r.error), (r.error as Error).message, r.urls]).toEqual(['http-error', 'The MCP server answered 502 to initialize.', [url, '/api/mcp/tools']]);
+    }
   });
 
   it('tries a URL whose GET answers 5xx as MCP once, keeping the 5xx error when that fails', async () => {
