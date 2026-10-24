@@ -35,7 +35,7 @@ export function Node({ node, op, crud, label, tabbable, hot, dim, target, onHove
           {/* Path parameters `{petId}` in italic as well as colour (PLAN 3.1). */}
           {tail(name, 20).split(/(\{[^}]*\}?)/).map((part, i) => (part.startsWith('{') ? <tspan key={i} className="param">{part}</tspan> : part))}
         </text>
-        <text className="sub" x={58} y={32}>{head(op.deprecated ? `deprecated · ${sub}` : sub, 29)}</text>
+        <text className="sub" x={58} y={32}>{head(op.deprecated ? `deprecated: ${sub}` : sub, 25)}</text>
         {crud && (
           <g className="crud" transform={`translate(${W - 22} 12)`}>
             <rect width={16} height={16} rx={3} />
@@ -63,7 +63,7 @@ export function Summary({ node, cluster, crud, noun, tabbable }: SummaryProps) {
     <g className="node" data-op={node.id} data-summary transform={`translate(${node.x} ${node.y})`}>
       <g aria-hidden="true">
         <rect className="shape" width={W} height={H} rx={6} />
-        <text className="name" x={12} y={17}>{count} · {roles.map((k) => CRUD_LETTER[k]).join(' ')}</text>
+        <text className="name" x={12} y={17}>{count}, {roles.map((k) => CRUD_LETTER[k]).join(' ')}</text>
         <text className="sub" x={12} y={32}>Collapsed: Enter or click to expand</text>
       </g>
       <rect className="ring" aria-hidden="true" x={-8} y={-8} width={W + 16} height={H + 16} rx={12} />

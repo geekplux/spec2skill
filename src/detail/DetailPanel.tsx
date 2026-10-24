@@ -55,7 +55,7 @@ export function DetailPanel({ model, graph, op, onGo, onClose, announce, inSkill
   return (
     <section className="detail" ref={root} aria-labelledby="detail-title" data-testid="detail">
       <div className="detail-head">
-        <p className="kicker">{op.kind === 'tool' ? 'MCP tool' : 'Endpoint'} · {cluster}</p>
+        <p className="kicker">{op.kind === 'tool' ? 'MCP tool' : 'Endpoint'} in {cluster}</p>
         <button type="button" className="btn" onClick={onClose}>Close <span className="visually-hidden">details</span></button>
       </div>
       <h2 id="detail-title"><code>{opName(op)}</code></h2>

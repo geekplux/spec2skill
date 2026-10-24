@@ -17,7 +17,7 @@ const render = (props: Partial<Parameters<typeof SkillPane>[0]> = {}) =>
 describe('SkillPane', () => {
   it('previews the selected file as literal text, never markup (S3)', () => {
     const html = render();
-    expect(html).toContain('<p class="file-head" id="file-head"><code>SKILL.md</code> · 5 lines</p>');
+    expect(html).toContain('<p class="file-head" id="file-head"><code>SKILL.md</code> <span>5 lines</span></p>');
     expect(html).toContain('<pre id="skill-preview" class="preview" tabindex="0" role="region" aria-labelledby="file-head">');
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
     expect(html).not.toMatch(/<(script|img)\b/);
@@ -45,11 +45,11 @@ describe('SkillPane', () => {
   it('marks a stale skill in words, not by fading the text', () => {
     const html = render({ ready: false });
     expect(html).toContain('<div class="skill-body" data-stale="true">');
-    expect(html).toContain('5 lines · Updating…</p>');
+    expect(html).toContain('<span>5 lines</span> <span>Updating…</span></p>');
     expect(render()).not.toContain('Updating');
   });
   it('falls back to SKILL.md when the selected file is not in this skill', () => {
-    expect(render({ file: 'references/nope.md' })).toContain('<code>SKILL.md</code> · 5 lines');
-    expect(render({ file: 'references/tasks.md' })).toContain('<code>references/tasks.md</code> · 1 lines');
+    expect(render({ file: 'references/nope.md' })).toContain('<code>SKILL.md</code> <span>5 lines</span>');
+    expect(render({ file: 'references/tasks.md' })).toContain('<code>references/tasks.md</code> <span>1 lines</span>');
   });
 });
