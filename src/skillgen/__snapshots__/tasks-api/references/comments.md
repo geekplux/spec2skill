@@ -4,7 +4,7 @@
 
 ## `listComments`
 
-`GET /tasks/{taskId}/comments` · list · read-only · idempotent · paginated (cursor)
+`GET /tasks/{taskId}/comments`: list, read-only, idempotent, paginated (cursor)
 
 > List comments on a task
 
@@ -22,7 +22,7 @@ Fed by: `listTasks` (`id -> taskId`), `createTask` (`id -> taskId`).
 
 ## `createComment`
 
-`POST /tasks/{taskId}/comments` · create
+`POST /tasks/{taskId}/comments`: create
 
 > Comment on a task
 
@@ -39,7 +39,7 @@ Fed by: `listTasks` (`id -> taskId`), `createTask` (`id -> taskId`).
 
 ## `updateComment`
 
-`PATCH /comments/{commentId}` · update
+`PATCH /comments/{commentId}`: update
 
 > Edit a comment
 
@@ -54,7 +54,7 @@ Fed by: `listComments` (`id -> commentId`), `createComment` (`id -> commentId`).
 
 ## `deleteComment`
 
-`DELETE /comments/{commentId}` · delete · destructive: confirm first · idempotent
+`DELETE /comments/{commentId}`: delete, destructive (confirm first), idempotent
 
 > Delete a comment
 

@@ -4,7 +4,7 @@
 
 ## `listMembers`
 
-`GET /projects/{projectId}/members` · list · read-only · idempotent · paginated (cursor)
+`GET /projects/{projectId}/members`: list, read-only, idempotent, paginated (cursor)
 
 > List project members
 
@@ -22,7 +22,7 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`),
 
 ## `addMember`
 
-`POST /projects/{projectId}/members` · create
+`POST /projects/{projectId}/members`: create
 
 > Invite a member to a project
 
@@ -40,7 +40,7 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`).
 
 ## `getMember`
 
-`GET /projects/{projectId}/members/{memberId}` · read · read-only · idempotent
+`GET /projects/{projectId}/members/{memberId}`: read, read-only, idempotent
 
 > Get a member of a project
 
@@ -55,7 +55,7 @@ Fed by: `listProjects` (`id -> projectId, ownerId -> memberId`), `createProject`
 
 ## `removeMember`
 
-`DELETE /projects/{projectId}/members/{memberId}` · delete · destructive: confirm first · idempotent
+`DELETE /projects/{projectId}/members/{memberId}`: delete, destructive (confirm first), idempotent
 
 > Remove a member from a project
 >

@@ -4,7 +4,7 @@
 
 ## `list_directory`
 
-MCP tool `list_directory` · list · read-only
+MCP tool `list_directory`: list, read-only
 
 > List Directory
 >
@@ -22,7 +22,7 @@ Fed by: `list_directory_with_sizes` (`listed path`, inferred), `search_files` (`
 
 ## `list_directory_with_sizes`
 
-MCP tool `list_directory_with_sizes` · list · read-only
+MCP tool `list_directory_with_sizes`: list, read-only
 
 > List Directory with Sizes
 >
@@ -41,7 +41,7 @@ Fed by: `list_directory` (`listed path`, inferred), `search_files` (`listed path
 
 ## `list_allowed_directories`
 
-MCP tool `list_allowed_directories` · list · read-only
+MCP tool `list_allowed_directories`: list, read-only
 
 > List Allowed Directories
 >
@@ -55,7 +55,7 @@ Feeds: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` (
 
 ## `create_directory`
 
-MCP tool `create_directory` · create · idempotent
+MCP tool `create_directory`: create, idempotent
 
 > Create Directory
 >
@@ -69,7 +69,7 @@ Returns `object` with `content`.
 
 ## `directory_tree`
 
-MCP tool `directory_tree` · read · read-only
+MCP tool `directory_tree`: read, read-only
 
 > Directory Tree
 >
