@@ -31,6 +31,19 @@ test('the skill passes its own audit', async () => {
   assert.ok(ok, JSON.stringify(checks.filter((c) => !c.ok)));
 });
 
+test('the audit passes when given a relative path from another folder (as the install command runs it)', () => {
+  const parent = mkdtempSync(join(tmpdir(), 'skill-install-'));
+  try {
+    const dir = join(parent, '.claude', 'skills', 'skill');
+    mkdirSync(dir, { recursive: true });
+    copyTo(dir);
+    const out = execFileSync(process.execPath, ['.claude/skills/skill/scripts/audit.mjs', '.claude/skills/skill'], { cwd: parent, encoding: 'utf8' });
+    assert.equal(out.trim().split('\n').at(-1), 'audit passed');
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+});
+
 const MUTATIONS = [
   ['an operation no doc mentions', 'operations', /not referenced: ghostOperation/,
     (dir) => editJson(dir, 'kit/operations.json', (api) => ({ ...api, operations: [...api.operations, { ...api.operations[0], id: 'ghostOperation' }] }))],

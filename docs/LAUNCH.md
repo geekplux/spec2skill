@@ -60,7 +60,7 @@ pnpm install && pnpm build && pnpm preview      # http://127.0.0.1:4173 (or `pnp
 3. Click **Audit passed** to see the nine checks, then **Download .zip** (`filesystem-mcp-skill.zip`).
 4. In a terminal:
    ```sh
-   unzip filesystem-mcp-skill.zip -d .claude/skills/
+   mkdir -p .claude/skills && unzip filesystem-mcp-skill.zip -d .claude/skills/
    cd .claude/skills/filesystem-mcp && node scripts/audit.mjs .
    ```
    Expect ten `ok` lines (the CLI audit adds "every example runs as a dry run") and `audit passed`.

@@ -37,7 +37,7 @@ export function metaFiles({ model, slug, env, examples }: SkillContext): FileTre
     '## Install',
     '',
     '```sh',
-    `unzip ${slug}-skill.zip -d .claude/skills/   # or your agent's skills directory`,
+    `mkdir -p .claude/skills && unzip ${slug}-skill.zip -d .claude/skills/   # or your agent's skills directory`,
     `node .claude/skills/${slug}/scripts/audit.mjs .claude/skills/${slug}   # prints "audit passed"`,
     '```',
     '',

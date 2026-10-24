@@ -15,13 +15,13 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { unzipSync } from 'fflate';
 import { designChecks, gridCheck } from '../redesign-checks.mjs';
 import { ROOT } from '../session.mjs';
 
 const OUT = join(ROOT, 'docs', 'screenshots', 'redesign-r5');
-const COMMANDS = 'unzip tasks-api-skill.zip -d .claude/skills/ && node .claude/skills/tasks-api/scripts/audit.mjs .claude/skills/tasks-api';
+const COMMANDS = 'mkdir -p .claude/skills && unzip tasks-api-skill.zip -d .claude/skills/ && node .claude/skills/tasks-api/scripts/audit.mjs .claude/skills/tasks-api';
 // One operation (no workflow) whose response points outside the document (a warning).
 const SINGLE = JSON.stringify({
   openapi: '3.0.3',
@@ -158,26 +158,24 @@ export default {
     await install.click();
     await page.locator('.fhead-actions .btn', { hasText: /^Copied$/ }).waitFor({ timeout: 1500 }); // after the clipboard answers
     expect((await install.textContent()) === 'Copied' && (await install.locator('svg.i-check').count()) === 1, 'Install command: no Copied state');
-    expect((await page.evaluate(() => navigator.clipboard.readText())) === COMMANDS, 'Install command: clipboard');
+    const clip = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clip === COMMANDS, `Install command: clipboard "${clip}"`);
     expect((await said(page)) === `Install command copied: ${COMMANDS}`, `Install command: announced "${await said(page)}"`);
     await page.waitForTimeout(2300);
     expect((await install.textContent()) === 'Install command', 'Install command: Copied did not return after 2 s');
 
-    // Download .zip: the audited zip, then Downloaded for 2 s.
+    // Download .zip, then Downloaded for 2 s; the copied Install command, run as is in a fresh empty
+    // folder holding only the zip, installs the skill and prints "audit passed".
     const tmp = mkdtempSync(join(tmpdir(), 'spec2skill-r5-'));
     const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download .zip' }).click()]);
     expect(download.suggestedFilename() === 'tasks-api-skill.zip', `download named ${download.suggestedFilename()}`);
     await download.saveAs(join(tmp, 'tasks-api-skill.zip'));
     expect((await page.locator('.fhead-actions .btn.primary').textContent()) === 'Downloaded', 'Download: no Downloaded state');
     const files = unzipSync(readFileSync(join(tmp, 'tasks-api-skill.zip')));
-    for (const [name, data] of Object.entries(files)) {
-      expect(name.startsWith('tasks-api/') && !name.includes('..'), `unsafe zip entry ${name}`);
-      mkdirSync(dirname(join(tmp, name)), { recursive: true });
-      writeFileSync(join(tmp, name), data);
-    }
-    const audit = execFileSync(process.execPath, ['scripts/audit.mjs', '.'], { cwd: join(tmp, 'tasks-api'), encoding: 'utf8' }).trim().split('\n').at(-1);
-    expect(audit === 'audit passed', `downloaded zip: audit printed "${audit}"`);
-    console.log(`  tasks-api-skill.zip: ${Object.keys(files).length} entries, audit passed`);
+    expect(Object.keys(files).every((name) => name.startsWith('tasks-api/') && !name.includes('..')), 'unsafe zip entry');
+    const audit = execFileSync('/bin/sh', ['-c', clip], { cwd: tmp, encoding: 'utf8' }).trim().split('\n').at(-1);
+    expect(audit === 'audit passed', `the copied Install command printed "${audit}"`);
+    console.log(`  tasks-api-skill.zip: ${Object.keys(files).length} entries; the copied Install command printed "audit passed"`);
     await page.waitForTimeout(2300);
     expect((await page.locator('.fhead-actions .btn.primary').textContent()) === 'Download .zip', 'Downloaded did not return after 2 s');
 

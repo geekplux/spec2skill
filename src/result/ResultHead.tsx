@@ -17,8 +17,9 @@ export function sourceLabel(kind: SourceKind, version: string): string {
   return v ? `${KIND[kind]} ${v.includes('.') ? v : `${v}.0`}` : KIND[kind];
 }
 
-/** The two commands that install and audit the downloaded skill. */
+/** The commands that install and audit the downloaded skill (the skills folder may not exist yet). */
 export const installCommands = (slug: string): string[] => [
+  'mkdir -p .claude/skills',
   `unzip ${slug}-skill.zip -d .claude/skills/`,
   `node .claude/skills/${slug}/scripts/audit.mjs .claude/skills/${slug}`,
 ];

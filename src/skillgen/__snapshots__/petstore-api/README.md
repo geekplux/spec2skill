@@ -5,7 +5,7 @@ An agent skill for the Swagger Petstore: read [SKILL.md](SKILL.md) first.
 ## Install
 
 ```sh
-unzip petstore-api-skill.zip -d .claude/skills/   # or your agent's skills directory
+mkdir -p .claude/skills && unzip petstore-api-skill.zip -d .claude/skills/   # or your agent's skills directory
 node .claude/skills/petstore-api/scripts/audit.mjs .claude/skills/petstore-api   # prints "audit passed"
 ```
 

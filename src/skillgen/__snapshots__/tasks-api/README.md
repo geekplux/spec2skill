@@ -5,7 +5,7 @@ An agent skill for the Tasks API: read [SKILL.md](SKILL.md) first.
 ## Install
 
 ```sh
-unzip tasks-api-skill.zip -d .claude/skills/   # or your agent's skills directory
+mkdir -p .claude/skills && unzip tasks-api-skill.zip -d .claude/skills/   # or your agent's skills directory
 node .claude/skills/tasks-api/scripts/audit.mjs .claude/skills/tasks-api   # prints "audit passed"
 ```
 

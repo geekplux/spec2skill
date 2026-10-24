@@ -36,7 +36,7 @@ describe('ResultHead', () => {
     expect(meta).toBe('OpenAPI 3.1, 22 operations, 5 resources, 78 links, Sample');
     expect(html).toContain('<b>22</b> operations');
     const commands = installCommands('tasks-api').join(' &amp;&amp; ');
-    expect(commands).toBe('unzip tasks-api-skill.zip -d .claude/skills/ &amp;&amp; node .claude/skills/tasks-api/scripts/audit.mjs .claude/skills/tasks-api');
+    expect(commands).toBe('mkdir -p .claude/skills &amp;&amp; unzip tasks-api-skill.zip -d .claude/skills/ &amp;&amp; node .claude/skills/tasks-api/scripts/audit.mjs .claude/skills/tasks-api');
     const buttons = [...html.matchAll(/<button [^>]*>.*?<\/button>/g)].map((m) => m[0]);
     expect(buttons.map((b) => b.replace(/<svg[\s\S]*?<\/svg>/, ''))).toEqual([
       `<button type="button" class="btn lg" title="${commands}">Install command</button>`,
