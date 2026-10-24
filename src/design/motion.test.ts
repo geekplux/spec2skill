@@ -39,10 +39,10 @@ const motion = mediaBlock(css, '(prefers-reduced-motion: no-preference)');
 describe('motion (DESIGN.md 7)', () => {
   it('has transitions only for the hover moment: an operation row and its text, and the links fading', () => {
     expect(declarations(motion.rest, 'transition').map((d) => `${d.selector} | ${d.value}`)).toEqual([
-      '.ln | stroke var(--motion-map) ease-out',
-      '.op | background-color var(--motion-map) ease-out',
-      '.op .m, .op .id, .rc-name | color var(--motion-map) ease-out',
-      '.lrow | background-color var(--motion-map) ease-out',
+      '.route:is([data-hot], [data-fading]) .ln | stroke var(--motion-map) ease-out',
+      '.route:is([data-hot], [data-fading]) .op | background-color var(--motion-map) ease-out',
+      '.route:is([data-hot], [data-fading]) :is(.op .m, .op .id, .rc-name) | color var(--motion-map) ease-out',
+      '.lrow:hover | background-color var(--motion-map) ease-out',
     ]);
   });
 

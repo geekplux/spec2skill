@@ -227,7 +227,7 @@ h3, h4 { font-weight: 600; }
 .links { position: absolute; overflow: visible; pointer-events: none; fill: none; }
 /* Feed links 1 px gray-9 with open arrowheads, inferred ones dashed; while a row is hot the rest turn
    gray-5 and its own links are drawn 1.25 px in ink. The workflow: a 6 px gray-1 halo under a 2.5 px indigo line. */
-.ln { stroke: var(--gray-9); stroke-width: 1px; transition: stroke var(--motion-map) ease-out; }
+.ln { stroke: var(--gray-9); stroke-width: 1px; }
 .ln[data-faded] { stroke: var(--gray-5); }
 .ln[data-inferred], .ln-hot[data-inferred] { stroke-dasharray: 3 3; }
 .ln-hot { stroke: var(--gray-12); stroke-width: 1.25px; }
@@ -249,9 +249,12 @@ h3, h4 { font-weight: 600; }
 .op {
   display: flex; align-items: center; gap: var(--space-6); width: calc(100% - var(--space-8)); height: 32px; margin: 0 var(--space-4); padding: 0 var(--space-6) 0 var(--space-10);
   border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-12); font: inherit; text-align: left; cursor: pointer;
-  transition: background-color var(--motion-map) ease-out;
 }
-.op .m, .op .id, .rc-name { transition: color var(--motion-map) ease-out; }
+/* Hover or focus an operation (DESIGN.md 7): rows and links fade over 250 ms while a row is hot and for
+   250 ms after (data-fading), so they also fade back; a theme change or a search alone snaps (D67). */
+.route:is([data-hot], [data-fading]) .ln { transition: stroke var(--motion-map) ease-out; }
+.route:is([data-hot], [data-fading]) .op { transition: background-color var(--motion-map) ease-out; }
+.route:is([data-hot], [data-fading]) :is(.op .m, .op .id, .rc-name) { transition: color var(--motion-map) ease-out; }
 .op:focus-visible { outline-offset: -2px; }
 .op .m { flex: none; width: 44px; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); white-space: nowrap; }
 .op .m[data-destructive] { color: var(--destructive); }
@@ -425,8 +428,8 @@ kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-
 .lrow {
   display: flex; align-items: center; gap: var(--space-8); width: calc(100% + 2 * var(--space-8)); min-height: 44px; margin: 0 calc(-1 * var(--space-8)); padding: var(--space-4) var(--space-8);
   border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-12); font: inherit; text-align: left; cursor: pointer; outline-offset: -2px;
-  transition: background-color var(--motion-map) ease-out;
 }
+.lrow:hover { transition: background-color var(--motion-map) ease-out; } /* fades in on hover only: an open row and a theme change snap */
 .lrow:hover, .lrow[data-open] { background: var(--gray-3); }
 .lrow .m { flex: none; width: 48px; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); }
 .lrow .m[data-destructive] { color: var(--destructive); }
