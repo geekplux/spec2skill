@@ -154,4 +154,6 @@ The sequence plays while the result carries `data-enter` (`useEnter`), cleared w
 7. **Reduced motion**: no running or declared animation or transition at rest, on hover, in the list and on the phone.
 8. **Budgets and accessibility**: `pnpm check:size` passes; axe finds no violation of any impact.
 
-The states: every sample (Tasks API, Petstore, Filesystem MCP) in light and dark, at 1440 (rest, hover, pinned, list) and 390 (phone list, phone map, phone pinned sheet), plus no sideways page scroll in each.
+9. **Text overlap**: no two pieces of text print over each other (every rendered line of every visible text node, clipped by its clipping ancestors and narrowed to its em box, crossing another by more than 2 px on both axes fails), and in each Made by row the name, line and URL neither cross nor leave the row; on home at rest for every sample at 1440, 1024, 768, 640, 390 and 320 (D75).
+
+The states: every sample (Tasks API, Petstore, Filesystem MCP) in light and dark, at 1440 (rest, hover, pinned, the next row focused from the keyboard, a card pinned from the address with `#op=`, the shortcuts dialog, list) and 390 (phone list, phone map, phone pinned sheet), plus no sideways page scroll in each. `redesign-r4` also hovers every row of every sample and checks that no preview is cut or reaches the skill browser (D76).
