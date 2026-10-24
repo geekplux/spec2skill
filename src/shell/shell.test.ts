@@ -41,7 +41,7 @@ describe('page shell', () => {
     const hero = /<section class="hero"[\s\S]*?<\/section>/.exec(html)![0];
     expect(hero).toContain('placeholder="OpenAPI or MCP URL, or paste the spec"');
     expect(hero).toContain('aria-label="Open a spec file"');
-    expect(hero).toMatch(/<button type="submit" class="generate">Generate<\/button>/);
+    expect(hero).toMatch(/<button type="submit" class="generate"><span class="label">Generate<\/span><\/button>/);
     expect(hero).toContain('role="radiogroup" aria-labelledby="samples-label"');
     expect(html).toMatch(/<section id="result" class="frame stage" tabindex="-1" aria-label="Result">[\s\S]*<p>result<\/p>/);
   });

@@ -1,9 +1,11 @@
 import { Suspense, useCallback, startTransition, use, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useAnnounce } from './a11y/Announcer';
 import { aiProse, applyAi } from './ai/client';
 import { useAi } from './ai/useAi';
 import { buildGraph } from './graph';
 import { counted } from './graph/words';
+import { TIMING, enterMs, useEnter } from './design/motion';
 import { ListView } from './list/ListView';
 import { drawnWorkflow } from './layout/route';
 import { Legend } from './map/Legend';
@@ -23,7 +25,7 @@ import { type Explained, explain } from './source/errors';
 import { type Input, loadSource } from './source/fetchSource';
 import { Samples } from './source/Samples';
 import { SourceInput } from './source/SourceInput';
-import { EmptyChart, ErrorPanel, LoadingSteps, type Progress } from './source/Status';
+import { EmptyChart, ErrorPanel, LoadingSteps, type Progress, stageWord } from './source/Status';
 import { SkillBrowser } from './skillpane/SkillBrowser';
 import { opFile } from './skillpane/tree';
 import { type Skill, useSkill, writeSkill } from './skillpane/useSkill';
@@ -82,6 +84,9 @@ function Workspace({ source, view, onView, phone, run, op, onOp, q, onQ, onHelp 
   const summary = `${model.operations.length} ${noun} in ${counted(graph.clusters.length, 'resource')}, ${counted(graph.edges.length, 'link')}`;
   const announce = useAnnounce();
   const empty = model.operations.length === 0;
+  // The load sequence (DESIGN.md 7) plays once for each new result: the first one, a load, a sample
+  // switch, Generate. `data-enter` lets app.css run it; it goes once the last stop disc has popped.
+  const entering = useEnter([model, run], enterMs(workflow ? workflow.ops.length - 1 : 0));
 
   // Each new skill is announced with its audit (A2), after the sample's summary when the sample changed;
   // not on first load, where the page itself is the news.
@@ -140,7 +145,7 @@ function Workspace({ source, view, onView, phone, run, op, onOp, q, onQ, onHelp 
         </div>
       )}
       {view === 'list' && caption}
-      <div className="sheet" id="panel-map" role="tabpanel" aria-labelledby={`tab-${view}`} data-view={view}>
+      <div className="sheet" id="panel-map" role="tabpanel" aria-labelledby={`tab-${view}`} data-view={view} data-enter={entering || undefined}>
         {empty ? <EmptyChart /> : view === 'map' ? (
           <RouteMap key={model.hash} model={model} graph={graph} base={base} chain={chain} skillFile={skillFile} onSkillFile={openFile} selected={selected} onSelect={onOp} match={match} edges={edges} />
         ) : (
@@ -152,12 +157,19 @@ function Workspace({ source, view, onView, phone, run, op, onOp, q, onQ, onHelp 
       <SkillBrowser skill={skill} error={error} ready={ready} empty={empty}
         options={{ key: model.hash, slug, license: opts.license }} onOptions={(o) => setOpts({ hash: model.hash, ...o })}
         file={file.path} open={file.open} onFile={(path) => setFile({ path, open: true })} onClose={() => setFile((f) => ({ ...f, open: false }))}
-        run={run} phone={phone} plainText={ai && { on: plainText, onChange: setPlainText }} />
+        run={run} phone={phone} plainText={ai && { on: plainText, onChange: setPlainText }} enter={entering} />
     </>
   );
 }
 
 const here = (): UrlState => readUrl(window.location.href);
+
+/**
+ * Resolves once the browser has painted (a frame, then a task), so a stage label shows before the
+ * synchronous work of its step; at once in a hidden tab, which paints nothing (and would stall on rAF).
+ */
+const painted = (): Promise<void> | undefined => document.visibilityState === 'hidden' ? undefined
+  : new Promise((done) => requestAnimationFrame(() => setTimeout(done, 0)));
 
 export function App() {
   // The URL is the source of truth (F13): each change writes history; back/forward re-read it.
@@ -171,7 +183,11 @@ export function App() {
   // A loaded source (URL, text or file) is shown while the URL names no sample and the same `?url=`.
   const [user, setUser] = useState<{ url?: string; model: ApiModel }>();
   const mine = user && !url.sample && user.url === url.url ? user.model : undefined;
-  const [job, setJob] = useState<{ ctl: AbortController; progress: Progress }>();
+  // A load: its real progress, and the stage the Generate button names and the steps show (`shown`).
+  const [job, setJob] = useState<{ ctl: AbortController; progress: Progress; shown: Progress['at'] }>();
+  const shown = job && { at: job.shown, labels: job.progress.labels };
+  /** When the shown stage appeared, and the timer that shows a stage that had to wait. */
+  const hold = useRef<{ since: number; timer?: ReturnType<typeof setTimeout> }>({ since: 0 });
   const [failure, setFailure] = useState<Explained>();
   const field = useRef<HTMLTextAreaElement>(null);
   const [draft, setDraft] = useState('');
@@ -205,15 +221,38 @@ export function App() {
     return () => clearTimeout(t);
     // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `go` reads the URL itself; only the query matters
   }, [find]);
-  /** A loaded source's skill is written before it is shown (the "Writing skill" step). */
-  const write = (model: ApiModel, graph: AtlasGraph) => writeSkill(model, graph, skillSlug(model), 'MIT', run);
+  /** A loaded source's skill is written before it is shown (the "Writing skill" and "Auditing skill" steps). */
+  const write = (model: ApiModel, graph: AtlasGraph, audit: () => void | Promise<void>) => writeSkill(model, graph, skillSlug(model), 'MIT', run, undefined, audit);
   /** Load a URL, text or file: steps while it loads, then its skill and map together (or an error). */
   const load = (input: Input, opened = false) => {
     job?.ctl.abort();
     const ctl = new AbortController();
     setFailure(undefined);
-    setJob({ ctl, progress: { at: 'fetch', labels: {} } });
-    const step = (at: Progress['at'], label: string) => setJob((j) => j?.ctl === ctl ? { ctl, progress: { at, labels: { ...j.progress.labels, [at]: label } } } : j);
+    clearTimeout(hold.current.timer);
+    hold.current = { since: performance.now() };
+    setJob({ ctl, progress: { at: 'fetch', labels: {} }, shown: 'fetch' });
+    // Each stage shows when it starts, painted before its synchronous work, once the one before has been
+    // up at least 100 ms; a stage that starts sooner shows when that time is up if the thread is free,
+    // else it is skipped (the next one replaces it). Nothing waits for a label: the result is never held
+    // back, and a load that ends within 100 ms shows one stage only (D65).
+    const step = (at: Progress['at'], label: string) => {
+      const now = performance.now();
+      const show = now - hold.current.since >= TIMING.stage;
+      clearTimeout(hold.current.timer);
+      if (show) hold.current.since = now;
+      else {
+        hold.current.timer = setTimeout(() => {
+          hold.current.since = performance.now();
+          setJob((j) => j?.ctl === ctl ? { ...j, shown: j.progress.at } : j);
+        }, hold.current.since + TIMING.stage - now);
+      }
+      const update = () => setJob((j) => j?.ctl === ctl ? { ctl, progress: { at, labels: { ...j.progress.labels, [at]: label } }, shown: show ? at : j.shown } : j);
+      // After the first step (which load() and an effect call synchronously), commit at once so the
+      // label is on screen when the frame paints, before the step's work blocks the thread.
+      if (at === 'fetch') update();
+      else flushSync(update);
+      return painted();
+    };
     // The kind of source is detected (D37): a URL is tried as a spec, then as an MCP server.
     loadSource(input, 'auto', { fetch: (i, init) => fetch(i, init), signal: ctl.signal, step, write }).then(({ model }) => {
       if (ctl.signal.aborted) return;
@@ -238,6 +277,7 @@ export function App() {
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- only a new ?url= starts a load
   }, [url.url]);
   const stop = () => {
+    clearTimeout(hold.current.timer);
     job?.ctl.abort();
     setJob(undefined);
     setFailure(undefined);
@@ -255,13 +295,13 @@ export function App() {
     setRun((n) => n + 1);
   };
 
-  const status = job ? <LoadingSteps progress={job.progress} onCancel={() => (stop(), field.current?.focus())} />
+  const status = shown ? <LoadingSteps progress={shown} onCancel={() => (stop(), field.current?.focus())} />
     // The panel unmounts under its own buttons: focus goes to the field or the result frame, never to <body>.
     : failure && <ErrorPanel error={failure}
       onSample={() => (select(getSample(DEFAULT_SAMPLE_ID)!), requestAnimationFrame(() => document.getElementById('result')?.focus()))}
       onPaste={() => (stop(), field.current?.select(), field.current?.focus())} />;
   return (
-    <Layout source={<SourceInput value={draft} onValue={setDraft} onLoad={(input) => load(input)} onGenerate={generate} field={field} />}
+    <Layout source={<SourceInput value={draft} onValue={setDraft} onLoad={(input) => load(input)} onGenerate={generate} field={field} stage={shown && stageWord(shown)} />}
       samples={<Samples value={mine ? undefined : sample.id} onSelect={select} />} status={status} busy={!!job} onShortcuts={showHelp}>
       <Suspense fallback={<p className="lede">Reading the sample…</p>}>
         <Workspace source={mine ?? sampleModel(sample)} view={view} onView={(v) => go({ view: v })} phone={phone} run={run} op={url.op} onOp={(op, push) => go({ op }, push)}

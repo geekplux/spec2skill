@@ -4,7 +4,7 @@
 // previews it; click or Enter pins the card. Positions come from the pure route layout
 // (src/layout/route.ts). The map is one Tab stop (roving tabindex); arrows move between rows
 // (keyboard.ts). Wider than the frame, it scrolls sideways in a focusable region: no zoom.
-import { type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAnnounce } from '../a11y/Announcer';
 import type { AtlasGraph, Edge } from '../graph';
 import { CARD_W, MAX_ROWS, type RouteCard, type RouteRow, hoverExtent, hoverLinks, routeLayout } from '../layout/route';
@@ -255,20 +255,21 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
             <marker id={`${uid}ahk`} viewBox="0 0 8 8" refX={7} refY={4} markerWidth={8} markerHeight={8} orient="auto"><path className="ahk" d="M1 1.5 6.5 4 1 6.5" /></marker>
             <marker id={`${uid}ahr`} viewBox="0 0 8 8" refX={6.5} refY={4} markerWidth={7} markerHeight={7} orient="auto"><path className="ahr" d="M1 1 7 4 1 7z" /></marker>
           </defs>
-          {/* Links, then the workflow's halo, then its line: the halo masks feeds at the line's end rows. */}
+          {/* Links, then the workflow's halo, then its line: the halo masks feeds at the line's end rows.
+              The halo and line of step i carry pathLength 1 and --i, so a new result draws them left to right (DESIGN.md 7). */}
           {layout.links.map((l) => {
             const faded = linkFaded(l.edges);
             return <path key={l.id} className="ln" data-link={l.kind} data-from={l.from} data-to={l.to} data-edges={l.edges.join(' ')} data-inferred={l.inferred || undefined} data-faded={faded || undefined} d={l.d} markerEnd={faded ? undefined : marker('ah')} />;
           })}
-          {layout.workflow?.steps.map((s) => routeShown
-            ? <path key={`h${s.from}`} className="halo" d={s.d} />
+          {layout.workflow?.steps.map((s, i) => routeShown
+            ? <path key={`h${s.from}`} className="halo" d={s.d} pathLength={1} style={{ '--i': i } as CSSProperties} />
             : <path key={`f${s.from}`} className="ln" data-faded d={s.d} />)}
-          {routeShown && layout.workflow?.steps.map((s) => <path key={`r${s.from}`} className="wf" data-shape={s.shape} d={s.d} markerEnd={marker('ahr')} />)}
+          {routeShown && layout.workflow?.steps.map((s, i) => <path key={`r${s.from}`} className="wf" data-shape={s.shape} d={s.d} pathLength={1} style={{ '--i': i } as CSSProperties} markerEnd={marker('ahr')} />)}
           {lit.map((l) => <path key={l.edge} className="ln-hot" data-edge={l.edge} data-inferred={l.inferred || undefined} d={l.d} markerEnd={marker('ahk')} />)}
         </svg>
         {layout.cards.map((c) => (
           // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a labelled group of rows
-          <div key={c.id} className="rc" role="group" aria-labelledby={`${uid}c-${c.id}`} data-column={c.column} data-dim={cardDim(c) || undefined} style={{ left: c.x, top: c.y, height: c.h }}>
+          <div key={c.id} className="rc" role="group" aria-labelledby={`${uid}c-${c.id}`} data-column={c.column} data-dim={cardDim(c) || undefined} style={{ left: c.x, top: c.y, height: c.h, '--col': c.column } as CSSProperties}>
             <h3 className="rc-head" id={`${uid}c-${c.id}`}>
               <span className="rc-name">{names.get(c.id) ?? c.name}</span>
               <span className="rc-count"><span className="visually-hidden">, </span>{c.count}<span className="visually-hidden"> {noun}</span></span>
@@ -279,7 +280,7 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
                 // The stop disc is drawn from data-route by CSS (::after): the name says "workflow step N",
                 // and the visible text stays method and id, the start of the name (WCAG 2.5.3).
                 <button key={r.op} type="button" className="op" data-nav={r.op} data-op={r.op} data-route={(routeShown && r.stop) || undefined} {...rowAttrs(r)}
-                  tabIndex={r.op === stop ? 0 : -1} aria-haspopup="dialog" aria-expanded={r.op === pinned}
+                  tabIndex={r.op === stop ? 0 : -1} aria-haspopup="dialog" aria-expanded={r.op === pinned} style={r.stop ? { '--stop': r.stop } as CSSProperties : undefined}
                   aria-label={nodeName(op, r, names.get(c.id) ?? c.name, degree.get(r.op) ?? 0)}
                   onKeyDown={onKeyDown} onFocus={() => onRowFocus(r.op)} onBlur={() => setFocusIn(false)}
                   onClick={() => pin(r.op)} onPointerEnter={() => enter(r.op)} onPointerLeave={leave}>

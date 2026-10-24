@@ -17,9 +17,11 @@ const made = new Map<string, Skill>();
 /** AI prose always comes with its AI-named graph, so the prose source stands for both. */
 const keyOf = (model: ApiModel, slug: string, license: string, run: number, prose?: SkillProse) => JSON.stringify([model.hash, slug, license, run, prose?.source]);
 
-export async function writeSkill(model: ApiModel, graph: AtlasGraph, slug: string, license: string, run: number, prose?: SkillProse): Promise<Skill> {
+/** `beforeAudit`: the loader's audit step, between writing the files and auditing them (R6 stage labels). */
+export async function writeSkill(model: ApiModel, graph: AtlasGraph, slug: string, license: string, run: number, prose?: SkillProse, beforeAudit?: () => void | Promise<void>): Promise<Skill> {
   const gen = await load();
   const tree = gen.generateSkill(model, graph, { slug, license, prose });
+  await beforeAudit?.();
   const skill = { hash: model.hash, slug, tree, audit: gen.auditTree(tree), run, prose: prose?.source ?? 'deterministic', zip: () => gen.zipSkill(slug, tree) };
   made.set(keyOf(model, slug, license, run, prose), skill);
   if (made.size > 6) made.delete(made.keys().next().value!);

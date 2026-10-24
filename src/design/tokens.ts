@@ -64,7 +64,7 @@ export const FONT = {
 } as const;
 /** Self-hosted faces, Latin subset only (@fontsource/<family>): the weights loaded. */
 export const FACES = { 'ibm-plex-sans': [400, 500, 600], 'ibm-plex-mono': [400, 500, 600] } as const;
-/** Motion durations; all become 0ms under prefers-reduced-motion: reduce. */
-export const MOTION = { fast: '150ms', map: '250ms' } as const;
+/** Motion durations (DESIGN.md 7): the 250 ms base and a workflow segment's draw; 0ms under prefers-reduced-motion: reduce. */
+export const MOTION = { map: '250ms', draw: '300ms' } as const;
 /** The one shadow (DESIGN.md rule 10): the operation card floats over the map. */
 export const SHADOW = { float: '0 8px 24px rgba(0, 0, 0, 0.08)' } as const;

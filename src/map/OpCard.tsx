@@ -140,7 +140,7 @@ export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onC
             The scroller is a Tab stop so keyboard users can scroll it (axe scrollable-region-focusable). */}
         {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
         <pre className="oc-example" data-testid="example" aria-label="Example request" tabIndex={0}><code>{code}</code></pre>
-        <p className="oc-actions"><button type="button" className="oc-copy" onClick={copy}>Copy example</button>{copied && <span className="copied" aria-hidden="true">Copied</span>}</p>
+        <p className="oc-actions"><button type="button" className="oc-copy" onClick={copy}>Copy example</button>{copied && <span className="copied swap" aria-hidden="true">Copied</span>}</p>
       </>}
     </div>
   );

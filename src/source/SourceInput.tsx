@@ -2,6 +2,7 @@
 // and Generate. The kind of source is detected (src/source/fetchSource.ts); there is no selector.
 // Enter submits, Shift+Enter adds a line. Generate with an empty field writes the current skill again.
 import { type DragEvent, type FormEvent, type KeyboardEvent, type RefObject, useRef, useState } from 'react';
+import { SPINNER, Swap } from '../design/motion';
 import { sourceFieldLoads } from '../map/keyboard';
 import { type Input, isUrlInput } from './fetchSource';
 
@@ -15,13 +16,15 @@ interface SourceInputProps {
   /** Generate with an empty field: write the current skill again. */
   onGenerate: () => void;
   field: RefObject<HTMLTextAreaElement | null>;
+  /** While a source loads: the stage the Generate button names, with its spinner (DESIGN.md 7). */
+  stage?: string;
 }
 
 /** The file a drag carries, if any (the first one). */
 const dropped = (e: DragEvent) => e.dataTransfer.files?.[0];
 const carriesFile = (e: DragEvent) => [...e.dataTransfer.types].includes('Files');
 
-export function SourceInput({ value, onValue, onLoad, onGenerate, field }: SourceInputProps) {
+export function SourceInput({ value, onValue, onLoad, onGenerate, field, stage }: SourceInputProps) {
   const picker = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const submit = (e: FormEvent | KeyboardEvent) => {
@@ -62,7 +65,10 @@ export function SourceInput({ value, onValue, onLoad, onGenerate, field }: Sourc
             e.target.value = '';
             if (file) onLoad({ file });
           }} />
-        <button type="submit" className="generate">Generate</button>
+        {/* While loading, the stage and a spinner (the announcer says the stage, Status.tsx). */}
+        <button type="submit" className="generate" data-stage={stage}>
+          <Swap id={stage ?? ''}>{stage ? <>{SPINNER}{stage}</> : 'Generate'}</Swap>
+        </button>
       </div>
     </form>
   );

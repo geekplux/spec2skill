@@ -10,16 +10,20 @@ import { SourceError, isSourceErrorCode } from './errors';
 
 export type Mode = 'auto' | 'openapi' | 'mcp';
 export type Input = { url: string } | { text: string } | { file: Blob & { name: string } };
-export type StepId = 'fetch' | 'parse' | 'map' | 'write';
-export const STEPS: readonly StepId[] = ['fetch', 'parse', 'map', 'write'];
+export type StepId = 'fetch' | 'parse' | 'map' | 'write' | 'audit';
+export const STEPS: readonly StepId[] = ['fetch', 'parse', 'map', 'write', 'audit'];
 export const DIRECT_TIMEOUT_MS = 5000;
 
 export interface LoadDeps {
   fetch: (input: string, init?: RequestInit) => Promise<Response>;
   signal: AbortSignal;
-  /** A step starts, with its label ("Fetching spec (example.com)"); the steps before it are done. */
-  step: (id: StepId, label: string) => void;
-  write: (model: ApiModel, graph: AtlasGraph) => Promise<unknown>;
+  /**
+   * A step starts, with its label ("Fetching spec (example.com)"); the steps before it are done. Before
+   * a step that runs synchronous work, its promise (if any) is awaited, so the label can be painted first.
+   */
+  step: (id: StepId, label: string) => void | Promise<void>;
+  /** Writes the skill; `audit` starts the audit step, between writing the files and auditing them. */
+  write: (model: ApiModel, graph: AtlasGraph, audit: () => void | Promise<void>) => Promise<unknown>;
 }
 
 export interface Got { text: string; type?: string; url?: string }
@@ -136,13 +140,16 @@ export async function loadSource(input: Input, mode: Mode, deps: LoadDeps): Prom
   const { doc, options } = 'url' in input ? await fromUrl(input.url, mode, deps) : await fromText(input, deps);
   deps.signal.throwIfAborted();
   const found = detect(doc);
-  deps.step('parse', found.kind === 'unsupported' ? 'Parsing' : `Parsing (${KIND[found.kind]} ${'version' in found ? found.version : 'tools/list'})`);
+  await deps.step('parse', found.kind === 'unsupported' ? 'Parsing' : `Parsing (${KIND[found.kind]} ${'version' in found ? found.version : 'tools/list'})`);
+  deps.signal.throwIfAborted();
   const model = await normalise(doc, options);
   deps.signal.throwIfAborted();
-  deps.step('map', `Mapping ${model.operations.length} ${model.source.kind === 'mcp' ? 'tools' : 'operations'}`);
+  await deps.step('map', `Relating ${model.operations.length} ${model.source.kind === 'mcp' ? 'tools' : 'operations'}`);
+  deps.signal.throwIfAborted();
   const graph = buildGraph(model);
-  deps.step('write', 'Writing skill');
-  if (model.operations.length > 0) await deps.write(model, graph);
+  await deps.step('write', 'Writing skill');
+  deps.signal.throwIfAborted();
+  if (model.operations.length > 0) await deps.write(model, graph, () => deps.step('audit', 'Auditing skill'));
   deps.signal.throwIfAborted();
   return { model, graph };
 }

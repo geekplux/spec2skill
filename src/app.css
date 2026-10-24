@@ -355,7 +355,7 @@ kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-
 .tree { margin: 0 calc(-1 * var(--space-8)); }
 [role='treeitem'] {
   display: flex; align-items: center; gap: var(--space-8); min-height: 28px; padding: 0 var(--space-8) 0 calc(var(--space-8) + (var(--level) - 1) * var(--space-16));
-  border-radius: var(--radius-row); color: var(--gray-12); cursor: pointer; outline-offset: -2px; transition: background-color var(--motion-map) ease-out;
+  border-radius: var(--radius-row); color: var(--gray-12); cursor: pointer; outline-offset: -2px;
 }
 [role='treeitem'] svg { flex: none; color: var(--gray-11); }
 [role='treeitem'] .n { flex: 1; min-width: 0; font: var(--text-12)/var(--leading-12) var(--font-mono); overflow-wrap: anywhere; }
@@ -404,7 +404,6 @@ kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-
 .checks .i-fail { color: var(--amber-11); }
 .checks strong { font-weight: 600; }
 .audit-row { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 44px; padding: 0; border: 0; background: none; color: var(--gray-12); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
-.audit-row .i-chev { transition: transform var(--motion-map) ease-out; }
 .audit-row[aria-expanded='true'] .i-chev { transform: rotate(90deg); }
 
 /* List view (DESIGN.md 6): groups by resource, a 14/600 heading with the count; rows 44 px min:
@@ -419,7 +418,6 @@ kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-
   color: var(--gray-12); font: 600 var(--text-14)/var(--leading-14) var(--font-sans); text-align: left; cursor: pointer; box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6);
 }
 .lcount { display: inline-flex; align-items: center; gap: var(--space-8); color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); font-weight: 400; }
-.lhead .i-chev { transition: transform var(--motion-map) ease-out; }
 .lhead [aria-expanded='true'] .i-chev { transform: rotate(90deg); }
 .lrows { margin: var(--space-4) 0 0; padding: 0; list-style: none; }
 /* The rule stays on the column (on the item); the row's grey and focus ring bleed 8 px each side, like the file tree's rows. */
@@ -476,6 +474,47 @@ html:has(.list-wrap[data-panel]) { scroll-padding-bottom: calc(var(--list-detail
 .status-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); }
 .empty-chart { display: grid; justify-items: center; gap: var(--space-24); padding: var(--space-64) var(--space-24); color: var(--gray-12); font-size: var(--text-20); line-height: var(--leading-20); text-align: center; }
 .empty-ring { fill: none; stroke: var(--gray-7); }
+
+/* Motion (docs/redesign/DESIGN.md 7, D65-D67). Ease-out, 250 ms base, one-shot (the Generate spinner is
+   the one loop); nothing else moves. The transitions above are the hover moment (an operation row's grey,
+   lit and faded text, links fading to gray-5) and use --motion-map, 0 ms under reduced motion. Every
+   animation is declared here, only under prefers-reduced-motion: no-preference, so under reduce each
+   state appears at once and the spinner is a still arc. The load sequence runs while the result carries
+   data-enter (App.tsx sets it for each new result and clears it once the sequence is over), so a card
+   that mounts later (a hover, a search, a view toggle, "N more", a resize) never replays it. */
+@keyframes s2-fade { from { opacity: 0; } }
+@keyframes s2-rise { from { opacity: 0; transform: translateY(4px); } }
+/* pathLength 1: the dash covers the whole segment as the offset runs from 1 to 0. Hidden at the very
+   start, as a round cap would draw a dot where the dash has no length yet. */
+@keyframes s2-draw { from { stroke-dashoffset: 1; opacity: 0; } 1% { opacity: 1; } to { stroke-dashoffset: 0; } }
+@keyframes s2-pop { from { opacity: 0; transform: scale(0.5); } }
+@keyframes s2-nomark { from, to { marker-end: none; } }
+@keyframes s2-spin { to { transform: rotate(360deg); } }
+.label { display: inline-flex; align-items: center; gap: var(--space-8); }
+@media (prefers-reduced-motion: no-preference) {
+  /* Load or switch sample: cards rise and fade in column by column, 40 ms apart (the stagger stops at
+     column 8: further columns sit in the sideways scroll); the links fade in as one layer after them;
+     each workflow segment draws in 300 ms after the one before, its arrowhead once it is drawn, and
+     each stop disc pops as the line reaches it; the audit rows fade in, 30 ms apart. */
+  [data-enter] .rc { animation: s2-rise var(--motion-map) ease-out calc(min(var(--col, 0), 8) * 40ms) both; }
+  [data-enter] .links { animation: s2-fade var(--motion-map) ease-out 200ms both; }
+  [data-enter] :is(.halo, .wf) { stroke-dasharray: 1 1; animation: s2-draw var(--motion-draw) ease-out calc(450ms + var(--i, 0) * var(--motion-draw)) both; }
+  [data-enter] .wf {
+    animation: s2-draw var(--motion-draw) ease-out calc(450ms + var(--i, 0) * var(--motion-draw)) both,
+      s2-nomark 0s linear calc(450ms + (var(--i, 0) + 1) * var(--motion-draw)) backwards;
+  }
+  [data-enter] .op[data-route]::after { animation: s2-pop var(--motion-map) ease-out calc(450ms + (var(--stop, 1) - 1) * var(--motion-draw)) both; }
+  [data-enter] .checks li { animation: s2-fade var(--motion-map) ease-out calc(900ms + var(--i, 0) * 30ms) both; }
+  /* The list (phones open on it, D66): groups rise like the cards, the phone's audit row fades in. */
+  [data-enter] .lgroup { animation: s2-rise var(--motion-map) ease-out calc(min(var(--g, 0), 8) * 40ms) both; }
+  [data-enter] .audit-row { animation: s2-fade var(--motion-map) ease-out 900ms both; }
+  /* Hover or focus an operation: its links appear and the card rises 4 px as it fades in. */
+  .ln-hot { animation: s2-fade var(--motion-map) ease-out both; }
+  .op-card { animation: s2-rise var(--motion-map) ease-out both; }
+  /* Generate, Download, copy: the new label fades in; the stage spinner turns. */
+  .swap { animation: s2-fade var(--motion-map) ease-out both; }
+  .spinner { animation: s2-spin 800ms linear infinite; }
+}
 
 /* Between 640 and 1136 px: files and preview side by side, the audit under them. */
 @media (min-width: 640px) and (max-width: 1135px) {

@@ -96,7 +96,9 @@ describe('app.css uses only the tokens', () => {
     const defined = new Set(rootVars(css).keys());
     const used = new Set([...source.matchAll(/var\(--([\w-]+)/g)].map((m) => m[1]!));
     const local = new Set([...source.matchAll(/(?:^|[;{\s])--([\w-]+)\s*:/g)].map((m) => m[1]!)); // set in app.css itself
-    for (const fromScript of ['level']) local.add(fromScript); // set inline by FileTree.tsx
+    // Set inline: --level by FileTree.tsx; the load sequence's --col (a card's column), --i (a workflow
+    // segment, an audit row), --stop (a stop disc) and --g (a list group) by RouteMap, SkillBrowser and ListView.
+    for (const fromScript of ['level', 'col', 'i', 'stop', 'g']) local.add(fromScript);
     expect([...used].filter((name) => !defined.has(name) && !local.has(name))).toEqual([]);
     expect([...used, ...local].filter((name) => OLD_PALETTE.includes(name))).toEqual([]);
   });

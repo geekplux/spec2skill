@@ -4,6 +4,7 @@
 import { useId, useRef, useState } from 'react';
 import { useAnnounce } from '../a11y/Announcer';
 import { COPY_ICON, DOWNLOAD_ICON, checkIcon } from '../design/icons';
+import { Swap } from '../design/motion';
 import type { ApiModel, SourceKind } from '../model/types';
 import type { Skill } from '../skillpane/useSkill';
 import { useFlash } from './useFlash';
@@ -72,13 +73,13 @@ export function ResultHead({ model, sample, resources, links, skill, ready, slug
 
   const downloadBtn = (
     <button key="download" type="button" className="btn lg primary" onClick={download} disabled={!ready || empty} aria-describedby={empty ? 'skill-empty' : undefined}>
-      {downloaded ? checkIcon(16) : DOWNLOAD_ICON}{downloaded ? 'Downloaded' : 'Download .zip'}
+      <Swap id={String(downloaded)}>{downloaded ? checkIcon(16) : DOWNLOAD_ICON}{downloaded ? 'Downloaded' : 'Download .zip'}</Swap>
     </button>
   );
   // The commands are its title (and announced on copy); nothing to install without operations.
   const installBtn = !empty && (
     <button key="install" ref={installRef} type="button" className="btn lg" onClick={copy} title={commands}>
-      {copied ? checkIcon(16) : COPY_ICON}{copied ? 'Copied' : 'Install command'}
+      <Swap id={String(copied)}>{copied ? checkIcon(16) : COPY_ICON}{copied ? 'Copied' : 'Install command'}</Swap>
     </button>
   );
   return (

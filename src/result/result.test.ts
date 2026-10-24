@@ -39,8 +39,8 @@ describe('ResultHead', () => {
     expect(commands).toBe('mkdir -p .claude/skills &amp;&amp; unzip tasks-api-skill.zip -d .claude/skills/ &amp;&amp; node .claude/skills/tasks-api/scripts/audit.mjs .claude/skills/tasks-api');
     const buttons = [...html.matchAll(/<button [^>]*>.*?<\/button>/g)].map((m) => m[0]);
     expect(buttons.map((b) => b.replace(/<svg[\s\S]*?<\/svg>/, ''))).toEqual([
-      `<button type="button" class="btn lg" title="${commands}">Install command</button>`,
-      '<button type="button" class="btn lg primary" disabled="">Download .zip</button>',
+      `<button type="button" class="btn lg" title="${commands}"><span class="label">Install command</span></button>`,
+      '<button type="button" class="btn lg primary" disabled=""><span class="label">Download .zip</span></button>',
     ]);
     expect(html).not.toMatch(/<details|AI-drafted|warning/);
   });

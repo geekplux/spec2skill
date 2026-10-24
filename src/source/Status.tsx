@@ -7,10 +7,16 @@ import { STEPS, type StepId } from './fetchSource';
 
 export interface Progress { at: StepId; labels: Partial<Record<StepId, string>> }
 
-const DEFAULT: Record<StepId, string> = { fetch: 'Fetching spec', parse: 'Parsing', map: 'Mapping operations', write: 'Writing skill' };
+const DEFAULT: Record<StepId, string> = { fetch: 'Fetching spec', parse: 'Parsing', map: 'Relating operations', write: 'Writing skill', audit: 'Auditing skill' };
+
+/** The stage word the Generate button shows: the label's first word (Fetching or Reading, Parsing, Relating, Writing, Auditing). */
+export const stageWord = (progress: Progress): string => (progress.labels[progress.at] ?? DEFAULT[progress.at]).split(' ')[0]!;
 const STATE = [['✓', 'done'], ['▸', 'in progress'], ['○', 'waiting']] as const;
 
-/** The ordered steps with static glyphs (no moving indicator, so reduced motion needs nothing more). */
+/**
+ * The ordered steps with static glyphs; the Generate button names the stage with its spinner (R6). The
+ * stage shown here and announced is the one the button shows (held at least 250 ms, App.tsx).
+ */
 export function LoadingSteps({ progress, onCancel }: { progress: Progress; onCancel: () => void }) {
   const at = STEPS.indexOf(progress.at);
   const label = progress.labels[progress.at] ?? DEFAULT[progress.at];

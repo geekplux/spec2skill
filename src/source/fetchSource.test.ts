@@ -30,7 +30,7 @@ async function run(input: Input, routes: Record<string, Handler>, mode: Mode = '
       return route(url, init);
     },
     signal: ctl.signal,
-    step: (id, label) => steps.push(`${id}: ${label}`),
+    step: (id, label) => void steps.push(`${id}: ${label}`),
     write,
   };
   const out = await loadSource(input, mode, deps).then((r) => ({ ...r, error: undefined }), (error: unknown) => ({ error, model: undefined }));
@@ -56,9 +56,26 @@ describe('loadSource: URLs', () => {
     expect(r.error).toBeUndefined();
     expect(r.urls).toEqual([SPEC]);
     expect(r.calls[0]!.init).toMatchObject({ credentials: 'omit' });
-    expect(r.steps).toEqual(['fetch: Fetching spec (specs.example.test)', 'parse: Parsing (OpenAPI 3.1.0)', 'map: Mapping 22 operations', 'write: Writing skill']);
+    expect(r.steps).toEqual(['fetch: Fetching spec (specs.example.test)', 'parse: Parsing (OpenAPI 3.1.0)', 'map: Relating 22 operations', 'write: Writing skill']);
     expect(r.model!.source.url).toBe(SPEC);
     expect(r.write).toHaveBeenCalledOnce();
+  });
+
+  it('starts the audit step from the writer and waits for each step before its work (R6: the button names the stage)', async () => {
+    const log: string[] = [];
+    const deps: LoadDeps = {
+      fetch: async () => text(tasksYaml, { 'content-type': 'application/yaml' }),
+      signal: new AbortController().signal,
+      // Each step resolves a task later, as the app's does after a paint: the work must not start before.
+      step: (id) => new Promise<void>((done) => setTimeout(() => (log.push(`${id} shown`), done()), 0)),
+      write: async (_m, _g, audit) => {
+        log.push('written');
+        await audit();
+        log.push('audited');
+      },
+    };
+    await loadSource({ url: SPEC }, 'auto', deps);
+    expect(log).toEqual(['fetch shown', 'parse shown', 'map shown', 'write shown', 'written', 'audit shown', 'audited']);
   });
 
   it('falls back to /api/fetch-spec on a CORS or network failure and reads the x-spec-* headers', async () => {

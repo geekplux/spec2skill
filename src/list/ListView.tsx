@@ -5,7 +5,7 @@
 // pinned and docked under the list. Each row keeps its relationships in words for screen readers
 // (a list named "13 relationships"; the card lists them on screen). Obeys search. Spec strings are
 // React text only (S3).
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import { CHEVRON_ICON } from '../design/icons';
 import { CRUD_LETTER, CRUD_ORDER, type AtlasGraph, type Edge } from '../graph';
 import { counted } from '../graph/words';
@@ -104,11 +104,12 @@ export function ListView({ model, graph, match, edges, workflow, selected, onSel
           {graph.hubSchemas.length > 0 && ` Hub schemas (not drawn as links): ${graph.hubSchemas.map((h) => `${h.name} on ${h.usedBy} operations`).join(', ')}.`}
         </p>
         {groups.length === 0 && <p className="list-empty">No {noun} match. Clear the search.</p>}
-        {groups.map((g, i) => ({ ...g, shown: isOpen(g.c.operationIds, g.c.id, i) })).toSorted((a, b) => (phone ? Number(b.shown) - Number(a.shown) : 0)).map(({ c, ids, shown }) => {
+        {groups.map((g, i) => ({ ...g, shown: isOpen(g.c.operationIds, g.c.id, i) })).toSorted((a, b) => (phone ? Number(b.shown) - Number(a.shown) : 0)).map(({ c, ids, shown }, g) => {
           const crud = CRUD_ORDER.filter((k) => ids.some((id) => graph.crud[id] === k)).map((k) => `${CRUD_LETTER[k]} ${k}`).join(', ');
           const shownCount = `${ids.length < c.operationIds.length ? `${ids.length} of ` : ''}${c.operationIds.length}`;
           return (
-            <section key={c.id} className="lgroup" data-cluster={c.id} data-open={shown || undefined}>
+            // --g: a new result's groups rise in order, 40 ms apart (DESIGN.md 7, D65).
+            <section key={c.id} className="lgroup" data-cluster={c.id} data-open={shown || undefined} style={{ '--g': g } as CSSProperties}>
               <h3 className="lhead">
                 <button type="button" aria-expanded={shown} aria-controls={`lg-${c.id}`} onClick={() => setToggled((t) => new Map(t).set(c.id, !shown))}>
                   <span className="lname">{c.name}</span>

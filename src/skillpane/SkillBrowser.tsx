@@ -7,6 +7,7 @@
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react';
 import { useAnnounce } from '../a11y/Announcer';
 import { CHEVRON_ICON, COPY_ICON, FAIL_ICON, checkIcon, verdictIcon } from '../design/icons';
+import { Swap } from '../design/motion';
 import { useFlash } from '../result/useFlash';
 import type { AuditCheck, AuditResult } from '../skillgen/audit-core';
 import type { FileTree as Files } from '../skillgen/types';
@@ -116,9 +117,11 @@ interface SkillBrowserProps {
   run: number;
   plainText?: PlainText;
   phone: boolean;
+  /** A new result: the audit rows fade in, top to bottom (DESIGN.md 7). */
+  enter?: boolean;
 }
 
-export function SkillBrowser({ skill, error, ready, empty, options, onOptions, file, open, onFile, onClose, run, plainText, phone }: SkillBrowserProps) {
+export function SkillBrowser({ skill, error, ready, empty, options, onOptions, file, open, onFile, onClose, run, plainText, phone, enter }: SkillBrowserProps) {
   const heading = useRef<HTMLHeadingElement>(null);
   const announce = useAnnounce();
   const [editing, setEditing] = useState(false);
@@ -139,7 +142,7 @@ export function SkillBrowser({ skill, error, ready, empty, options, onOptions, f
   const showPreview = !phone || open;
 
   return (
-    <section className="skill-browser" id="skill" aria-labelledby="skill-title" data-ready={ready} aria-busy={!ready && !empty}>
+    <section className="skill-browser" id="skill" aria-labelledby="skill-title" data-ready={ready} aria-busy={!ready && !empty} data-enter={enter || undefined}>
       <div className="sb-files">
         <h3 className="sb-head mono" id="skill-title" tabIndex={-1} ref={heading}>{slug}/<span className="visually-hidden"> skill</span></h3>
         {empty ? <p className="sb-note" id="skill-empty">No operations, so no skill to write.</p>
@@ -160,7 +163,7 @@ export function SkillBrowser({ skill, error, ready, empty, options, onOptions, f
           <div className="sb-head">
             <h3 id="file-head"><span className="fname">{path}</span><span className="visually-hidden">, </span><span className="lines">{lines.length} {lines.length === 1 ? 'line' : 'lines'}</span>{!ready && <><span className="visually-hidden">, </span><span className="lines">Updating…</span></>}</h3>
             <span className="sb-tools">
-              <button type="button" className="icon-btn" aria-label={copied ? `${path} copied` : `Copy ${path}`} onClick={copy}>{copied ? checkIcon(16) : COPY_ICON}</button>
+              <button type="button" className="icon-btn" aria-label={copied ? `${path} copied` : `Copy ${path}`} onClick={copy}><Swap id={String(copied)}>{copied ? checkIcon(16) : COPY_ICON}</Swap></button>
               {phone && <button type="button" className="sb-close" onClick={close}>Close<span className="visually-hidden"> {path}</span></button>}
             </span>
           </div>
