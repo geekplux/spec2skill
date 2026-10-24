@@ -137,12 +137,18 @@ function drawing() {
     method: (() => { const m = rows[0].querySelector('.m'); return { w: box(m).width, font: s(m).fontFamily, size: s(m).fontSize, color: s(m).color }; })(),
     id: (() => { const i = rows[0].querySelector('.id'); return { font: s(i).fontFamily, size: s(i).fontSize, overflow: s(i).textOverflow, ws: s(i).whiteSpace }; })(),
     del: del ? { text: del.textContent, color: s(del).color } : null,
-    // D53: every destructive row carries the amber-11 warning mark (a graphic, aria-hidden) after its method word.
+    // D53: every destructive row carries the amber-11 warning mark (a graphic, aria-hidden) at its right end,
+    // left of a stop disc: [aria-hidden, fill, width, gap to the id, mark right minus where it should end].
     warn: [...document.querySelectorAll('.op[data-op]')].filter((r) => r.querySelector('.m[data-destructive]')).map((r) => {
-      const w = r.querySelector('.m svg.warn');
-      const m = r.querySelector('.m').getBoundingClientRect();
-      return w ? [w.getAttribute('aria-hidden'), getComputedStyle(w.querySelector('.warn-bg')).fill, w.getBoundingClientRect().width, w.getBoundingClientRect().left - (m.left + r.querySelector('.m').firstChild.textContent.length * 7.2)] : null;
+      const w = r.querySelector(':scope > svg.warn');
+      if (!w) return null;
+      const b = w.getBoundingClientRect();
+      const end = r.getBoundingClientRect().right - parseFloat(s(r).paddingRight) - (r.hasAttribute('data-route') ? 18 + parseFloat(s(r).columnGap) : 0);
+      return [w.getAttribute('aria-hidden'), s(w.querySelector('.warn-bg')).fill, b.width, b.left - r.querySelector('.id').getBoundingClientRect().right, b.right - end];
     }),
+    // Ids start at one x in every card (the 44 px method column on every row, D53).
+    idX: cards.map((c) => new Set([...c.querySelectorAll('.op[data-op] .id')].map((el) => Math.round(el.getBoundingClientRect().left * 10) / 10)).size),
+    methodW: [...new Set(rows.filter((r) => r.dataset.op).map((r) => box(r.querySelector('.m')).width))],
     stop: stop ? (() => { const a = getComputedStyle(stop, '::after'); return { n: a.content, w: parseFloat(a.width), h: parseFloat(a.height), bg: a.backgroundColor, color: a.color, size: a.fontSize, weight: a.fontWeight, radius: a.borderRadius }; })() : null,
     routeId: routeRow ? [s(routeRow.querySelector('.id')).color, s(routeRow.querySelector('.id')).fontWeight] : null,
     ln: ln ? { stroke: s(ln).stroke, width: s(ln).strokeWidth, dash: s(ln).strokeDasharray, marker: ln.getAttribute('marker-end'), head: s(svg.querySelector('marker path.ah')).stroke, fill: s(svg.querySelector('marker path.ah')).fill } : null,
@@ -192,7 +198,8 @@ export default {
     expect(close(d.method.w, 44) && d.method.font.includes('Mono') && d.method.size === '12px' && d.method.color === t['--gray-11'], `method column ${JSON.stringify(d.method)}`);
     expect(d.id.font.includes('Mono') && d.id.size === '14px' && d.id.overflow === 'ellipsis' && d.id.ws === 'nowrap', `operation id ${JSON.stringify(d.id)}`);
     expect(d.del?.text === 'DELETE' && d.del.color === t['--destructive'], `DELETE ${JSON.stringify(d.del)}`);
-    expect(d.warn.length === 5 && d.warn.every((w) => w && w[0] === 'true' && w[1] === t['--amber-11'] && close(w[2], 12) && w[3] >= 3), `destructive marks (deleteProject, removeMember, deleteTask, deleteComment, deleteLabel) ${JSON.stringify(d.warn)}`);
+    expect(d.warn.length === 5 && d.warn.every((w) => w && w[0] === 'true' && w[1] === t['--amber-11'] && close(w[2], 12) && w[3] >= 6 - 0.6 && close(w[4], 0)), `destructive marks (deleteProject, removeMember, deleteTask, deleteComment, deleteLabel) ${JSON.stringify(d.warn)}`);
+    expect(d.idX.every((n) => n === 1) && d.methodW.length === 1 && close(d.methodW[0], 44), `ids do not start at one x per card ${JSON.stringify([d.idX, d.methodW])}`);
     expect(d.stop && close(d.stop.w, 18) && close(d.stop.h, 18) && d.stop.bg === t['--indigo-9'] && d.stop.color === 'rgb(255, 255, 255)' && d.stop.size === '12px' && d.stop.weight === '600' && d.stop.radius === '50%', `stop disc ${JSON.stringify(d.stop)}`);
     expect(d.routeId?.[0] === t['--indigo-11'] && d.routeId[1] === '600', `workflow row id ${JSON.stringify(d.routeId)}`);
     expect(d.ln && d.ln.stroke === t['--gray-9'] && d.ln.width === '1px' && d.ln.dash === 'none' && d.ln.marker && d.ln.head === t['--gray-9'] && d.ln.fill === 'none', `feed link ${JSON.stringify(d.ln)}`);

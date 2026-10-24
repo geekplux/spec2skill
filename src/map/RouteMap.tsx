@@ -273,14 +273,13 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
                   aria-label={nodeName(op, r, names.get(c.id) ?? c.name, degree.get(r.op) ?? 0)}
                   onKeyDown={onKeyDown} onFocus={() => onRowFocus(r.op)} onBlur={() => setFocusIn(false)}
                   onClick={() => pin(r.op)} onPointerEnter={() => enter(r.op)} onPointerLeave={leave}>
-                  <span className="m" data-destructive={r.destructive || undefined}>
-                    {r.method}
-                    {/* D41/D53: every destructive row (DELETE too) carries an amber warning mark besides the word; the name says "destructive". */}
-                    {r.destructive && <svg className="warn" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path className="warn-bg" d="M6 .9 11.6 10.9H.4Z" /><path className="warn-x" d="M6 4.6v2.9M6 9.1v.05" /></svg>}
-                  </span>
+                  <span className="m" data-destructive={r.destructive || undefined}>{r.method}</span>
                   {/* A space between method and id for the text alternative (flex drops it visually). */}
                   {' '}
                   <span className="id">{r.op}</span>
+                  {/* D41/D53: every destructive row (DELETE too) carries an amber warning mark at its right end, left of
+                      a stop disc, so ids keep one x; the name says "destructive". */}
+                  {r.destructive && <svg className="warn" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path className="warn-bg" d="M6 .9 11.6 10.9H.4Z" /><path className="warn-x" d="M6 4.6v2.9M6 9.1v.05" /></svg>}
                 </button>
               );
             })}
