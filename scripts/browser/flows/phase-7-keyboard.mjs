@@ -31,7 +31,7 @@ async function press(page, key, op) {
 async function clipboard(page) {
   await page.getByRole('button', { name: 'Copy example' }).click();
   await page.getByTestId('announcer').filter({ hasText: 'Example copied' }).waitFor();
-  await page.locator('.copied', { hasText: 'Copied' }).waitFor();
+  await page.locator('.oc-copy', { hasText: /^Copied$/ }).waitFor(); // the label swaps to a check and Copied (R6)
   return page.evaluate(() => navigator.clipboard.readText());
 }
 

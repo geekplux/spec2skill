@@ -1,8 +1,10 @@
 // The page below the result frame (docs/redesign/DESIGN.md 4.4-4.7): Command line, How it works,
 // Made by GeekPlux and the footer. Copy as in docs/redesign/target/V2Home.
 import { useAnnounce } from '../a11y/Announcer';
-import { COPY_ICON } from '../design/icons';
+import { COPY_ICON, checkIcon } from '../design/icons';
+import { Swap } from '../design/motion';
 import { Wordmark } from '../design/Logo';
+import { useFlash } from '../result/useFlash';
 import { REPO, onInPage } from './Header';
 
 export const CLI_COMMANDS = [
@@ -28,8 +30,9 @@ const PROJECTS = [
 
 export function CommandLine() {
   const announce = useAnnounce();
+  const [copied, flashCopied] = useFlash();
   const copy = () => navigator.clipboard.writeText(CLI_COMMANDS.join('\n'))
-    .then(() => announce('Commands copied.'), () => announce('Copy failed: select the commands and copy them.'));
+    .then(() => (flashCopied(), announce('Commands copied.')), () => announce('Copy failed: select the commands and copy them.'));
   return (
     <section className="block" id="cli" tabIndex={-1} aria-labelledby="cli-title">
       <div className="wrap two">
@@ -39,7 +42,10 @@ export function CommandLine() {
         </div>
         <div className="cli">
           <pre><code>{CLI_COMMANDS.map((c) => <span key={c} className="cli-line"><span className="cli-p" aria-hidden="true">$ </span>{c}</span>)}</code></pre>
-          <button type="button" className="icon-btn" aria-label="Copy commands" onClick={copy}>{COPY_ICON}</button>
+          {/* Copied: a check for 2 s, fading in (DESIGN.md 7), as the preview's copy button. */}
+          <button type="button" className="icon-btn" aria-label={copied ? 'Commands copied' : 'Copy commands'} onClick={copy}>
+            <Swap id={String(copied)}>{copied ? checkIcon(16) : COPY_ICON}</Swap>
+          </button>
         </div>
       </div>
     </section>

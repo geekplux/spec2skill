@@ -3,10 +3,13 @@
 // tech: the row's name carries the essentials, the pinned card the rest); click or Enter pins it,
 // which adds Close, the description, output fields, auth, links that move to the related operation
 // and a ready-to-paste example (it replaces the detail panel, D46). Spec strings are React text only (S3).
-import { type CSSProperties, Fragment, type ReactNode, useEffect, useId, useRef, useState } from 'react';
+import { type CSSProperties, Fragment, type ReactNode, useEffect, useId, useRef } from 'react';
+import { checkIcon } from '../design/icons';
+import { Swap } from '../design/motion';
 import type { AtlasGraph } from '../graph';
 import { example, outputFields, typeLabel } from '../model/examples';
 import type { ApiModel, Operation } from '../model/types';
+import { useFlash } from '../result/useFlash';
 import { edgesOf, relation } from './keyboard';
 
 /** Items separated by commas. */
@@ -60,12 +63,7 @@ interface OpCardProps {
 export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onClose, announce, className, style, onPointerEnter, onPointerLeave }: OpCardProps) {
   const root = useRef<HTMLDivElement>(null);
   const titleId = useId();
-  const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => setCopied(false), 2000);
-    return () => clearTimeout(t);
-  }, [copied]);
+  const [copied, flashCopied] = useFlash();
   // Escape anywhere in the pinned card closes it (focus goes back to the row, the caller's job).
   useEffect(() => {
     const el = root.current;
@@ -82,7 +80,7 @@ export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onC
   const copy = () =>
     navigator.clipboard.writeText(code).then(
       () => {
-        setCopied(true);
+        flashCopied();
         announce?.('Example copied to the clipboard.');
       },
       () => announce?.('Copy failed: select the example text and copy it.'),
@@ -140,7 +138,8 @@ export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onC
             The scroller is a Tab stop so keyboard users can scroll it (axe scrollable-region-focusable). */}
         {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
         <pre className="oc-example" data-testid="example" aria-label="Example request" tabIndex={0}><code>{code}</code></pre>
-        <p className="oc-actions"><button type="button" className="oc-copy" onClick={copy}>Copy example</button>{copied && <span className="copied swap" aria-hidden="true">Copied</span>}</p>
+        {/* Copied: the label swaps to a check and "Copied" for 2 s, as the head's buttons (DESIGN.md 7). */}
+        <p className="oc-actions"><button type="button" className="oc-copy" onClick={copy}><Swap id={String(copied)}>{copied && checkIcon(16)}{copied ? 'Copied' : 'Copy example'}</Swap></button></p>
       </>}
     </div>
   );

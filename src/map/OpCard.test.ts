@@ -44,7 +44,7 @@ describe('OpCard', () => {
     expect(html).toMatch(/<dt>Feeds<\/dt><dd><span class="oc-feed"><button type="button" class="oc-link mono">getProject<\/button><span class="oc-via"><span class="nowrap">[^<]+ → projectId<\/span><\/span>/);
     expect(html).toContain('<button type="button" class="oc-ref mono" aria-label="Show references/tasks.md in the skill">references/tasks.md</button>');
     expect(html).toContain('curl &#x27;https://tasks.example.com/v1/tasks/&lt;taskId&gt;&#x27;');
-    expect(html).toContain('>Copy example</button>');
+    expect(html).toContain('<span class="label">Copy example</span></button>');
   });
 
   it('shows "In skill" only once there is a skill file', async () => {

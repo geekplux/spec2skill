@@ -317,7 +317,6 @@ h3, h4 { font-weight: 600; }
   box-shadow: inset 0 0 0 var(--line) var(--gray-8); font: 500 var(--text-14)/var(--leading-14) var(--font-sans); cursor: pointer;
 }
 
-.copied { margin-left: var(--space-8); font-weight: 600; }
 kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm); color: var(--gray-11); font: var(--text-12) var(--font-mono); white-space: nowrap; }
 /* Map | List: a segmented control, the selected tab raised. */
 .tabs { display: inline-flex; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-box); background: var(--gray-3); }
