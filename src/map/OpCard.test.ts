@@ -39,7 +39,9 @@ describe('OpCard', () => {
     expect(html).toContain('<button type="button" class="oc-close">Close<span class="visually-hidden"> details</span></button>');
     expect(html).toMatch(/<dt>Output<\/dt><dd><span class="mono">Task<\/span><span class="oc-fields muted"> with [\s\S]*<span class="mono">assigneeId<\/span>/);
     expect(html).toContain('<dt>Auth</dt><dd><span><span class="mono">bearerAuth</span> <span class="muted">http bearer JWT</span></span></dd>');
-    expect(html).toMatch(/<dt>Fed by<\/dt><dd><button type="button" class="oc-link mono">listTasks<\/button>/);
+    // Each feed with the field that fills the parameter (the detail panel's "via id -> taskId").
+    expect(html).toMatch(/<dt>Fed by<\/dt><dd><span class="oc-feed"><button type="button" class="oc-link mono">listTasks<\/button><span class="oc-via"><span class="nowrap">id → taskId<\/span><\/span><\/span>/);
+    expect(html).toMatch(/<dt>Feeds<\/dt><dd><span class="oc-feed"><button type="button" class="oc-link mono">getProject<\/button><span class="oc-via"><span class="nowrap">[^<]+ → projectId<\/span><\/span>/);
     expect(html).toContain('<button type="button" class="oc-ref mono" aria-label="Show references/tasks.md in the skill">references/tasks.md</button>');
     expect(html).toContain('curl &#x27;https://tasks.example.com/v1/tasks/&lt;taskId&gt;&#x27;');
     expect(html).toContain('>Copy example</button>');

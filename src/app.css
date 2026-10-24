@@ -292,9 +292,13 @@ h3, h4 { font-weight: 600; }
 .oc-title { margin: var(--space-4) 0 var(--space-12); font-size: var(--text-14); line-height: var(--leading-14); font-weight: 600; }
 .oc-flag { margin-left: var(--space-8); padding: 0 var(--space-4); border-radius: var(--radius-sm); background: var(--gray-3); color: var(--gray-11); font-size: var(--text-12); font-weight: 400; }
 .oc-desc { margin: calc(-1 * var(--space-4)) 0 var(--space-12); color: var(--gray-11); white-space: pre-line; }
-.op-card dl { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--space-8) var(--space-12); margin: 0; font-size: var(--text-12); line-height: var(--leading-12); }
+.op-card dl { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--space-8) var(--space-12); margin: 0; font-size: var(--text-12); line-height: var(--leading-12); }
 .op-card dt { color: var(--gray-11); }
 .op-card dd { margin: 0; }
+.oc-feed { display: block; }
+.oc-feed + .oc-feed { margin-top: var(--space-4); }
+.oc-via { display: block; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); }
+.nowrap { white-space: nowrap; }
 .oc-link, .oc-ref {
   padding: 0; border: 0; background: none; color: var(--gray-12); font: inherit; font-family: var(--font-mono); cursor: pointer;
   text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; text-decoration-color: var(--gray-8);

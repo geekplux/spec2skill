@@ -12,6 +12,9 @@ import { edgesOf, relation } from './keyboard';
 /** Items separated by commas. */
 const list = (items: ReactNode[]) => items.map((item, i) => <Fragment key={i}>{i > 0 && ', '}{item}</Fragment>);
 
+/** A feed's label as the map writes it, one mapping per unbreakable piece: "id -> taskId" becomes "id → taskId". */
+const arrow = (via: string) => list(via.split(', ').map((m) => <span className="nowrap" key={m}>{m.replaceAll(' -> ', ' → ')}</span>));
+
 export const opName = (op: Operation): string => (op.kind === 'tool' ? op.id : `${op.method!.toUpperCase()} ${op.path}`);
 
 /** The card's link groups (DESIGN.md 5), in display order, with the relations each one lists. */
@@ -119,7 +122,10 @@ export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onC
             <dd>
               {group === 'Shares schema'
                 ? list([...new Set(items.map((x) => x.via ?? ''))].map((schema) => <span key={schema}><span className="mono">{schema}</span> <span className="muted">with</span> {list(items.filter((x) => (x.via ?? '') === schema).map((x) => other(x.id)))}</span>))
-                : list(items.map((x) => other(x.id)))}
+                : pinned && (group === 'Fed by' || group === 'Feeds')
+                  // Pinned, a feed says which field fills which parameter, under the operation: "listTasks" / "id → taskId".
+                  ? items.map((x) => <span className="oc-feed" key={x.id}>{other(x.id)}{x.via && <span className="oc-via">{arrow(x.via)}</span>}</span>)
+                  : list(items.map((x) => other(x.id)))}
             </dd>
           </Fragment>
         ))}
