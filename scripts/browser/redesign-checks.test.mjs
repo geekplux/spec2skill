@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHECKS, SIZES, evaluate, gridProblems, parseShadows, radixColours } from './redesign-checks.mjs';
+import { CHECKS, SIZES, evaluate, gridProblems, overlapProblems, parseShadows, radixColours } from './redesign-checks.mjs';
 
 const allowed = radixColours().light;
 const GRAY1 = 'rgb(252, 252, 252)';
@@ -100,5 +100,30 @@ describe('grid check (DESIGN.md 8.6)', () => {
       '[grid] grid: skill preview at x=296 from the column edge, expected 290',
       '[grid] grid: audit column at x=776 from the column edge, expected 870',
     ]);
+  });
+});
+
+const box = (node, left, top, right, bottom, text = `t${node}`) => ({ node, el: 'span', text, left, top, right, bottom });
+
+describe('text overlap', () => {
+  it('passes text side by side, stacked, touching or crossing by 2 px at most', () => {
+    expect(overlapProblems([
+      box(1, 0, 0, 100, 14), box(2, 120, 0, 200, 14), // side by side
+      box(3, 0, 20, 100, 34), // the next line
+      box(4, 98, 20, 160, 34), // touching by 2 px
+      box(5, 0, 33, 50, 47), // one line under, 1 px into it
+    ])).toEqual([]);
+  });
+
+  it('flags two text nodes printed over each other, once per pair', () => {
+    const problems = overlapProblems([
+      box(1, 400, 100, 600, 114, 'Charts written in Markdown'), box(2, 380, 104, 575, 116, 'github.com/geekplux/markvis'),
+      box(2, 380, 124, 420, 136, 'github.com/geekplux/markvis'),
+    ], { label: '768' });
+    expect(problems).toEqual(['[768] overlap: "Charts written in Markdown" (span) and "github.com/geekplux/markvis" (span) cross by 175 x 10 px']);
+  });
+
+  it('never flags the lines of one text node against each other', () => {
+    expect(overlapProblems([box(1, 0, 0, 300, 20), box(1, 0, 10, 300, 30)])).toEqual([]);
   });
 });

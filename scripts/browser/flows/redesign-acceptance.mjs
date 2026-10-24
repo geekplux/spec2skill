@@ -1,14 +1,16 @@
 // Redesign R7: the acceptance suite of docs/redesign/DESIGN.md section 8, in full, in one place.
 // On every sample (Tasks API, Petstore, Filesystem MCP), light and dark, it runs on each state at rest
 // (after the load sequence, `settled`):
-//   1440  home at rest, hover (the workflow's last stop, its preview card), pinned card, list view
+//   1440  home at rest, hover (the workflow's last stop, its preview card), pinned card, the next row
+//         focused from the keyboard, a card pinned from the address (#op=), list view
 //   390   phone (List, the default), phone map, phone pinned card (the bottom sheet)
 //   check 1 type sizes, 2 colours, 3 lines, 4 middle dot in the rendered page (redesign-checks.mjs) and
 //   axe (check 8); check 6, the grid, on home at 1440 (h1, frame contents, first map column, files
 //   column, command-line title, How it works and Made by at one x; hero field, third map column,
 //   command box and Made by rows at 580; with the skill browser's and the map's columns; 1 px); no
 //   sideways page scroll; check 7 (reduced motion: no running animation or transition, none declared)
-//   on home, hover and the list at 1440 and the phone at 390.
+//   on home, hover and the list at 1440 and the phone at 390; no two pieces of text print over each
+//   other on home at rest at 1440, 1024, 768, 640, 390 and 320 (page-wide, and in each Made by row).
 // Then the source-level checks: 4 (no middle dot in src or index.html), 5 (the CVD and contrast unit
 // tests, src/design/cvd.test.ts and contrast.test.ts) and 8 (pnpm check:size). It prints the result of
 // every check for every state and fails on any problem. Other flows keep only checks this one does not
@@ -18,19 +20,24 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { runAxe } from '../axe.mjs';
-import { CHECKS, GRID_PARTS, designChecks, gridCheck, settled } from '../redesign-checks.mjs';
+import { CHECKS, GRID_PARTS, designChecks, gridCheck, overlapCheck, settled } from '../redesign-checks.mjs';
 import { ROOT } from '../session.mjs';
 
-/** The samples, each with the row hovered and pinned: the strongest workflow's last stop (it has the most links). */
+/**
+ * The samples, each with the row hovered and pinned (the strongest workflow's last stop: it has the
+ * most links) and the row pinned from the address (`#op=`, a row near the bottom of the map, D75).
+ */
 const SAMPLES = [
-  { id: 'tasks', title: 'Tasks API', op: 'getTask' },
-  { id: 'petstore', title: 'Swagger Petstore', op: 'getPetById' },
-  { id: 'filesystem', title: 'secure-filesystem-server', op: 'read_text_file' },
+  { id: 'tasks', title: 'Tasks API', op: 'getTask', hash: 'deleteTask' },
+  { id: 'petstore', title: 'Swagger Petstore', op: 'getPetById', hash: 'deleteUser' },
+  { id: 'filesystem', title: 'secure-filesystem-server', op: 'read_text_file', hash: 'move_file' },
 ];
 const THEMES = ['light', 'dark'];
 const DESK = { width: 1440, height: 900 };
 const PHONE = { width: 390, height: 844 };
 const PAGE_CHECKS = CHECKS.filter((c) => c !== 'motion'); // type, colour, lines, dot
+/** The widths the text-overlap check reads home at rest at (D75). */
+const OVERLAP_WIDTHS = [1440, 1024, 768, 640, 390, 320];
 
 const node = (args) => execFileSync(process.execPath, args, { cwd: ROOT, encoding: 'utf8', stdio: 'pipe', timeout: 120_000 });
 const expect = (ok, message) => {
@@ -43,6 +50,39 @@ async function ready(page, url) {
   await page.locator('[data-testid="atlas"][data-ready="true"], [data-testid="list-view"]').first().waitFor({ state: 'attached' });
   await page.evaluate(() => document.fonts.ready);
   await settled(page);
+}
+
+/**
+ * Runs in the page: in each Made by row, the boxes of the name, the line and the URL (their text, so a
+ * URL overflowing its cell counts) must not cross each other or leave the row.
+ */
+function madeByRows() {
+  // page.evaluate serialises this one function, so the helper stays inside.
+  // oxlint-disable-next-line unicorn/consistent-function-scoping
+  const box = (el) => {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const rects = [...range.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
+    return rects.length ? {
+      left: Math.min(...rects.map((r) => r.left)), right: Math.max(...rects.map((r) => r.right)),
+      top: Math.min(...rects.map((r) => r.top)), bottom: Math.max(...rects.map((r) => r.bottom)),
+    } : null;
+  };
+  const problems = [];
+  for (const row of document.querySelectorAll('.projects a')) {
+    const name = row.querySelector('b')?.textContent;
+    const outer = row.getBoundingClientRect();
+    const parts = [...row.children].map((el) => [el.tagName === 'B' ? 'name' : el.tagName === 'CODE' ? 'URL' : 'line', box(el)]).filter(([, b]) => b);
+    for (const [part, b] of parts) {
+      if (b.left < outer.left - 0.5 || b.right > outer.right + 0.5) problems.push(`Made by ${name}: the ${part} leaves the row (${Math.round(b.left - outer.left)} to ${Math.round(b.right - outer.left)} of ${Math.round(outer.width)} px)`);
+    }
+    parts.forEach(([pa, a], i) => parts.slice(i + 1).forEach(([pb, b]) => {
+      const x = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+      const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      if (x > 0.5 && y > 0.5) problems.push(`Made by ${name}: the ${pa} and the ${pb} cross by ${Math.round(x)} x ${Math.round(y)} px`);
+    }));
+  }
+  return problems;
 }
 
 /** The grid parts this sample's map has: a map of fewer than three columns has no third column to measure. */
@@ -79,7 +119,7 @@ export default {
     };
     const motion = async (label) => record('7 motion', label, await designChecks(page, { theme: 'light', label, checks: ['motion'] }));
 
-    for (const { id, title, op } of SAMPLES) {
+    for (const { id, title, op, hash } of SAMPLES) {
       for (const theme of THEMES) {
         await page.emulateMedia({ colorScheme: theme, reducedMotion: 'no-preference' });
 
@@ -110,6 +150,23 @@ export default {
         await page.keyboard.press('Escape');
         await page.getByTestId('op-card').waitFor({ state: 'detached' });
 
+        // Keyboard: Escape left focus on the row; an arrow key moves it to the next row, which shows
+        // its focus ring (focus-visible) and its preview.
+        await page.keyboard.press('ArrowDown');
+        const focused = await page.evaluate(() => document.activeElement?.matches('.op:focus-visible') && document.activeElement.dataset.op);
+        expect(focused && focused !== op, `${id}: ArrowDown from ${op} did not move keyboard focus to another row (${focused})`);
+        await settled(page);
+        await pageChecks(`${id} keyboard ${focused} 1440 ${theme}`, theme);
+
+        // Pinned from the address: #op= on load opens the card on a row near the map's bottom.
+        await page.goto('about:blank');
+        await ready(page, `${origin}/?sample=${id}#op=${hash}`);
+        await page.getByTestId('op-card').waitFor();
+        await page.mouse.move(0, 0);
+        await settled(page);
+        expect((await page.locator(`.op[data-op="${hash}"]`).getAttribute('aria-expanded')) === 'true', `${id}: #op=${hash} did not pin ${hash}`);
+        await pageChecks(`${id} pinned #op=${hash} 1440 ${theme}`, theme);
+
         // The list view.
         await page.getByRole('tablist', { name: 'View' }).getByRole('tab', { name: 'List' }).click();
         await page.getByTestId('list-view').waitFor();
@@ -130,6 +187,18 @@ export default {
         await page.getByTestId('op-card').waitFor();
         await settled(page);
         await pageChecks(`${id} phone pinned ${op} 390 ${theme}`, theme);
+      }
+
+      // Text overlap: no two pieces of text print over each other on home at rest, page-wide and in
+      // the Made by rows, from 1440 down to 320.
+      await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
+      for (const width of OVERLAP_WIDTHS) {
+        await page.setViewportSize({ width, height: 900 });
+        await ready(page, `${origin}/?sample=${id}`);
+        await page.mouse.move(0, 0);
+        const label = `${id} home ${width}`;
+        const made = (await page.evaluate(madeByRows)).map((p) => `[${label}] ${p}`);
+        record('text overlap', label, [...(await overlapCheck(page, { label })), ...made]);
       }
 
       // Check 7: under reduced motion nothing runs and nothing would, at rest, on hover, in the list and on the phone.

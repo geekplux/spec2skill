@@ -315,3 +315,84 @@ export function gridProblems(measured, { label = 'grid', tolerance = 1, grid = G
 export async function gridCheck(page, { label = 'grid', parts = GRID_PARTS, tolerance = 1 } = {}) {
   return gridProblems(await page.evaluate(measure, parts), { label, tolerance });
 }
+
+// ---------- Text overlap ----------
+
+/**
+ * Runs in the page: one box per rendered line of every visible text node under `scope` (Range client
+ * rects), clipped by every ancestor that clips its overflow, and narrowed to the em box (font size tall,
+ * centred on the line): the glyphs, not the line box, so lines of one paragraph never touch. Visually
+ * hidden text clips to nothing and drops out.
+ */
+function textBoxes({ scope, ignore }) {
+  const SKIP = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'TEXTAREA', 'OPTION']);
+  // oxlint-disable-next-line unicorn/consistent-function-scoping
+  const describe = (el) => {
+    const cls = el.getAttribute('class')?.trim();
+    return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${cls ? `.${cls.split(/\s+/).join('.')}` : ''}`;
+  };
+  const root = document.querySelector(scope);
+  if (!root) return [];
+  const boxes = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let index = 0;
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const parent = node.parentElement;
+    if (!parent || !node.textContent.trim() || SKIP.has(parent.tagName) || ignore.some((sel) => parent.closest(sel))) continue;
+    if (!parent.checkVisibility({ visibilityProperty: true, opacityProperty: true })) continue;
+    index += 1;
+    // The clip: the intersection of every ancestor box whose overflow is not visible.
+    let clip = { left: -Infinity, top: -Infinity, right: Infinity, bottom: Infinity };
+    for (let up = parent; up && up !== document.documentElement; up = up.parentElement) {
+      const s = getComputedStyle(up);
+      if (s.overflowX !== 'visible' || s.overflowY !== 'visible' || s.clipPath !== 'none' || (s.clip && s.clip !== 'auto')) {
+        const r = up.getBoundingClientRect();
+        clip = { left: Math.max(clip.left, r.left), top: Math.max(clip.top, r.top), right: Math.min(clip.right, r.right), bottom: Math.min(clip.bottom, r.bottom) };
+      }
+    }
+    const size = parseFloat(getComputedStyle(parent).fontSize) || 0;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    for (const r of range.getClientRects()) {
+      if (r.width < 1 || r.height < 1) continue;
+      const mid = (r.top + r.bottom) / 2;
+      const box = {
+        left: Math.max(r.left, clip.left), right: Math.min(r.right, clip.right),
+        top: Math.max(mid - size / 2, clip.top), bottom: Math.min(mid + size / 2, clip.bottom),
+      };
+      if (box.right - box.left < 1 || box.bottom - box.top < 1) continue;
+      boxes.push({ node: index, el: describe(parent), text: node.textContent.trim().replace(/\s+/g, ' ').slice(0, 40), ...box });
+    }
+  }
+  return boxes;
+}
+
+/**
+ * Problems for text boxes from textBoxes(): two boxes of different text nodes that cross by more than
+ * `min` px on both axes print over each other.
+ */
+export function overlapProblems(boxes, { label = 'overlap', min = 2 } = {}) {
+  const problems = [];
+  const seen = new Set();
+  const sorted = boxes.toSorted((a, b) => a.top - b.top);
+  for (let i = 0; i < sorted.length; i += 1) {
+    const a = sorted[i];
+    for (let j = i + 1; j < sorted.length && sorted[j].top < a.bottom - min; j += 1) {
+      const b = sorted[j];
+      if (a.node === b.node) continue;
+      const x = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+      const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      const key = [a.node, b.node].toSorted().join('|');
+      if (x > min && y > min && !seen.has(key)) {
+        seen.add(key);
+        problems.push(`[${label}] overlap: "${a.text}" (${a.el}) and "${b.text}" (${b.el}) cross by ${Math.round(x)} x ${Math.round(y)} px`);
+      }
+    }
+  }
+  return problems;
+}
+
+/** No two pieces of text under `scope` print over each other, on `page` as it is now. */
+export async function overlapCheck(page, { label = 'overlap', scope = 'body', ignore = [], min = 2 } = {}) {
+  return overlapProblems(await page.evaluate(textBoxes, { scope, ignore }), { label, min });
+}
