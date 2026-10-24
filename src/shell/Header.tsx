@@ -1,4 +1,4 @@
-import { type MouseEvent, useState } from 'react';
+import { type MouseEvent, useEffect, useRef, useState } from 'react';
 import { Wordmark } from '../design/Logo';
 
 export const REPO = 'https://github.com/geekplux/spec2skill';
@@ -18,15 +18,33 @@ export function onInPage(e: MouseEvent<HTMLAnchorElement>) {
 /** Wordmark left; How it works, Command line, GitHub right (behind a Menu button on phones). No other buttons. */
 export function Header() {
   const [open, setOpen] = useState(false);
+  const header = useRef<HTMLElement>(null);
+  const menu = useRef<HTMLButtonElement>(null);
+  // The phone menu closes on Escape (focus back on Menu) and on a click or tap outside the header.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setOpen(false);
+      menu.current?.focus();
+    };
+    const onDown = (e: PointerEvent) => !header.current?.contains(e.target as Node) && setOpen(false);
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onDown);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onDown);
+    };
+  }, [open]);
   const go = (e: MouseEvent<HTMLAnchorElement>) => {
     setOpen(false);
     onInPage(e);
   };
   return (
-    <header className="hdr">
+    <header className="hdr" ref={header}>
       <div className="wrap hdr-in">
         <a href="/" className="brand"><Wordmark /></a>
-        <button type="button" className="menu" aria-label="Menu" aria-expanded={open} aria-controls="site-nav" onClick={() => setOpen(!open)}>
+        <button type="button" ref={menu} className="menu" aria-label="Menu" aria-expanded={open} aria-controls="site-nav" onClick={() => setOpen(!open)}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" aria-hidden="true"><path d="M3.5 7h13M3.5 13h13" /></svg>
         </button>
         <nav id="site-nav" className="nav" aria-label="Site" data-open={open || undefined}>

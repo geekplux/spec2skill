@@ -4,7 +4,7 @@
 // panel at 1440, all in light and dark (sizes 12/14/20/48: the hero h1 is 48 since R2); check 7
 // under reduced motion; saves the 1440 light and dark
 // first view as WebP in docs/screenshots/redesign-r1/.
-//   pnpm build && pnpm check:browser -- --phase 21 --flow redesign-r1
+//   pnpm build && pnpm check:browser -- --phase 21 --flow redesign-r1 --capture redesign-r1
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { designChecks, radixColours } from '../redesign-checks.mjs';
@@ -24,7 +24,7 @@ async function ready(page, url) {
 }
 
 /** The viewport as WebP (quality 0.82), encoded by the browser itself from a PNG screenshot. */
-async function webp(page, name) {
+async function webp(page, name, dir) {
   const png = (await page.screenshot()).toString('base64');
   const data = await page.evaluate(async (src) => {
     const img = new Image();
@@ -34,8 +34,8 @@ async function webp(page, name) {
     canvas.getContext('2d').drawImage(img, 0, 0);
     return canvas.toDataURL('image/webp', 0.82).split(',')[1];
   }, png);
-  mkdirSync(OUT, { recursive: true });
-  const path = join(OUT, `${name}.webp`);
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, `${name}.webp`);
   writeFileSync(path, Buffer.from(data, 'base64'));
   console.log(`  screenshot ${path.slice(ROOT.length + 1)}`);
 }
@@ -43,7 +43,9 @@ async function webp(page, name) {
 export default {
   name: 'redesign-r1',
   phase: 21,
-  async run({ page, origin, axe }) {
+  async run({ page, origin, axe, outDir, capture }) {
+    // Committed shots only with --capture redesign-r1; otherwise into this run's folder (never over an earlier phase's).
+    const dir = capture ? OUT : outDir;
     const problems = [];
     const radix = radixColours();
     for (const scheme of ['light', 'dark']) {
@@ -72,7 +74,7 @@ export default {
         const found = await designChecks(page, { theme: scheme, label, checks: ['type', 'colour', 'lines', 'dot'] });
         console.log(`  ${label}: ${found.length} problem(s)`);
         problems.push(...found);
-        if (viewport.width === 1440) await webp(page, `first-view-1440-${scheme}`);
+        if (viewport.width === 1440) await webp(page, `first-view-1440-${scheme}`, dir);
         await axe(label);
       }
     }

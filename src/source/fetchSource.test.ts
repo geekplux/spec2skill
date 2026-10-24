@@ -11,6 +11,7 @@ const TOOLS = { tools: [{ name: 'read_file', description: 'Read a file', inputSc
 const text = (body: string, headers: Record<string, string> = {}, status = 200) => new Response(body, { status, headers });
 const json = (body: unknown, status = 200) => text(JSON.stringify(body), { 'content-type': 'application/json' }, status);
 const html = (status = 404) => text('<!doctype html><title>x</title>', { 'content-type': 'text/html' }, status);
+const asHtml = (body: string) => () => text(body, { 'content-type': 'text/html; charset=utf-8' });
 const cors = () => Promise.reject(new TypeError('Failed to fetch'));
 
 /** Runs loadSource against `routes` (exact URL -> handler); records calls, steps and writes. */
@@ -131,7 +132,7 @@ describe('loadSource: URLs', () => {
 
   it('keeps the spec error when the MCP retry fails too, and never retries outside Auto', async () => {
     const url = 'https://specs.example.test/data.json';
-    const both = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': () => json({ error: { code: 'legacy-transport', message: '' } }, 502) });
+    const both = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': () => json({ error: { code: 'http-error', message: 'The server answered 404.' } }, 502) });
     expect(codeOf(both.error)).toBe('unsupported');
     expect((both.error as Error).message).toContain('"hello"');
     const page = await run({ url }, { [url]: () => html(200), '/api/mcp/tools': () => json({ error: { code: 'http-error', message: 'The server answered 404.' } }, 502) });
@@ -143,6 +144,36 @@ describe('loadSource: URLs', () => {
     expect([codeOf(strict.error), strict.urls]).toEqual(['unsupported', [url]]);
     const mcpOnly = await run({ url }, { [url]: () => text('', {}, 405) }, 'openapi');
     expect(codeOf(mcpOnly.error)).toBe('http-error');
+  });
+
+  it('shows the MCP error instead when the MCP retry fails for a reason only MCP has', async () => {
+    const url = 'https://specs.example.test/data.json';
+    for (const code of ['needs-auth', 'legacy-transport'] as const) {
+      const r = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': () => json({ error: { code, message: '' } }, code === 'needs-auth' ? 401 : 502) });
+      expect([codeOf(r.error), r.urls]).toEqual([code, [url, '/api/mcp/tools']]);
+    }
+  });
+
+  it('tries a URL whose GET answers 5xx as MCP once, keeping the 5xx error when that fails', async () => {
+    const url = 'https://tools.example.test/rpc';
+    const ok = await run({ url }, { [url]: () => text('', {}, 500), '/api/mcp/tools': () => json(TOOLS) });
+    expect([ok.error, ok.urls, ok.model?.source.kind]).toEqual([undefined, [url, '/api/mcp/tools'], 'mcp']);
+    const down = await run({ url }, { [url]: () => text('', {}, 503), '/api/mcp/tools': () => json({ error: { code: 'http-error', message: 'The server answered 503.' } }, 502) });
+    expect([codeOf(down.error), down.urls]).toEqual(['http-error', [url, '/api/mcp/tools']]);
+    expect((down.error as Error).message).toContain('503');
+  });
+
+  it('accepts a spec or tools/list served as text/html, and still calls a real page a page', async () => {
+    const url = 'https://specs.example.test/spec';
+    const spec = await run({ url }, { [url]: asHtml(JSON.stringify(petstore)) }, 'openapi');
+    expect([spec.error, spec.model?.source.kind]).toEqual([undefined, 'swagger2']);
+    const yaml = await run({ url }, { [url]: asHtml(tasksYaml) }, 'openapi');
+    expect(yaml.model?.source.title).toBe('Tasks API');
+    const tools = await run({ url }, { [url]: asHtml(JSON.stringify({ tools: TOOLS.tools })) }, 'openapi');
+    expect(tools.model?.source.kind).toBe('mcp');
+    for (const body of ['<!DOCTYPE html><p>docs</p>', '<div>API docs</div>', '{"hello": 1}']) {
+      expect(codeOf((await run({ url }, { [url]: asHtml(body) }, 'openapi')).error)).toBe('html-page');
+    }
   });
 });
 

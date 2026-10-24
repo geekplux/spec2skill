@@ -23,6 +23,9 @@ code { font-family: var(--font-mono); font-size: inherit; }
    below; below 640 px it is one column with a 16 px gutter. */
 :root { --gap: min(var(--space-88), 7.75vw); }
 .wrap { width: 100%; max-width: 1136px; margin: 0 auto; padding: 0 var(--space-32); }
+/* Below 1200 px the window no longer leaves 32 px outside the column, so the side padding grows to 48:
+   the frame, hanging 32 px, keeps 16 px from the window edge (D39). */
+@media (max-width: 1199px) { .wrap { padding: 0 var(--space-48); } }
 .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--gap); }
 .muted { color: var(--gray-11); }
 .mono { font-family: var(--font-mono); }
@@ -61,17 +64,20 @@ code { font-family: var(--font-mono); font-size: inherit; }
 }
 .source .input:focus-visible { outline: none; }
 .source .input:focus { height: auto; min-height: var(--field-h); max-height: 12lh; field-sizing: content; } /* pasted text shows while editing */
-.source .input::placeholder { color: var(--gray-11); opacity: 1; }
-.source-field .icon-btn { margin-bottom: var(--space-4); }
+.source .input::placeholder { color: var(--gray-11); opacity: 1; text-overflow: ellipsis; }
+/* The placeholder stays on one line (cut with an ellipsis) instead of wrapping out of the 40 px box. */
+.source .input:placeholder-shown { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.source-field .icon-btn { margin: 0 var(--space-4) var(--space-4) 0; } /* its focus ring stays clear of Generate */
 .generate {
   flex: none; height: var(--field-h); padding: 0 var(--space-16); border: 0; border-radius: var(--radius-row);
   background: var(--indigo-9); color: var(--indigo-contrast); font: 500 var(--text-14)/var(--leading-14) var(--font-sans); white-space: nowrap; cursor: pointer;
 }
 /* "Samples" and the segmented control filling the rest of the row. */
-.samples { display: flex; align-items: center; gap: var(--space-16); }
+/* When "Samples" and the control no longer fit one line, the control wraps under the label. */
+.samples { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16); }
 .samples-label { color: var(--gray-11); }
 .seg { display: inline-flex; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-box); background: var(--gray-3); }
-.samples .seg { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.samples .seg { flex: 1 0 max-content; display: grid; grid-template-columns: repeat(3, minmax(max-content, 1fr)); }
 .seg-item {
   position: relative; display: flex; align-items: center; justify-content: center; height: 32px; padding: 0 var(--space-12);
   border-radius: var(--radius-row); color: var(--gray-11); white-space: nowrap; cursor: pointer;
@@ -90,6 +96,7 @@ code { font-family: var(--font-mono); font-size: inherit; }
 .block:focus, .block:focus-visible { outline: none; }
 .block h2, .made h2 { margin: 0 0 var(--space-8); }
 .two h2 + p, .block h2 + p { margin: 0; }
+#cli h2 + p { max-width: 44ch; }
 .cli { position: relative; min-width: 0; border-radius: var(--radius-box); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); }
 .cli pre { margin: 0; padding: var(--space-14) var(--space-48) var(--space-14) var(--space-16); font: var(--text-12)/20px var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; } /* wraps on narrow columns: never a scroll region */
 .cli-line { display: block; }
@@ -111,11 +118,15 @@ code { font-family: var(--font-mono); font-size: inherit; }
 .projects li:first-child a { padding-top: var(--space-4); box-shadow: none; }
 .projects b { font-weight: 500; }
 .project-text { grid-column: 2; grid-row: 1 / span 2; color: var(--gray-11); }
-.projects code { margin-top: var(--space-4); color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
+.projects code { margin-top: var(--space-4); color: var(--gray-11); font-size: var(--text-12); line-height: 20px; } /* rows of 72 px, as the target */
 .projects a:hover b { text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; }
 .foot { margin-top: var(--space-64); }
 .foot-in { height: 72px; display: flex; align-items: center; justify-content: space-between; box-shadow: inset 0 var(--line) 0 var(--gray-6); }
 
+@media (max-width: 959px) {
+  /* The hero stacks before its field gets too narrow for the placeholder. */
+  .two.hero-in { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-24); }
+}
 @media (max-width: 639px) {
   /* Phones (V2Phone): one column, a 16 px gutter; the field becomes input over a full-width Generate. */
   .wrap { padding: 0 var(--space-16); }
@@ -129,16 +140,19 @@ code { font-family: var(--font-mono); font-size: inherit; }
   }
   .hdr .nav[data-open] a { display: flex; align-items: center; min-height: 44px; }
   .hero { padding: var(--space-40) 0 var(--space-32); }
-  .hero-in { row-gap: var(--space-24); }
   .hero-lede { font-size: var(--text-14); line-height: var(--leading-14); letter-spacing: 0; }
   .source-field { flex-wrap: wrap; padding: var(--space-4); }
   .source .input { padding-inline: var(--space-12); }
   .generate { flex-basis: 100%; }
   .samples { flex-direction: column; align-items: stretch; gap: var(--space-8); }
+  .samples .seg { flex: none; }
   .samples .seg { grid-template-columns: auto auto auto; }
   .seg-item { padding: 0 var(--space-8); }
   /* The result is not a framed card on phones: a rule above it. */
-  .frame { margin: 0; padding: var(--space-32) 0 0; border-radius: 0; box-shadow: inset 0 var(--line) 0 var(--gray-6); }
+  .frame {
+    margin: 0 calc(-1 * var(--space-16)); padding: var(--space-32) var(--space-16) 0; border-radius: 0;
+    box-shadow: inset 0 var(--line) 0 var(--gray-6); /* the rule spans the window; the contents keep the gutter */
+  }
   .block { padding-top: var(--space-64); }
   .made { margin-top: var(--space-64); }
   .made-in { padding-top: var(--space-40); }

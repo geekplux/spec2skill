@@ -46,7 +46,7 @@ export function SourceInput({ value, onValue, onLoad, onGenerate, field }: Sourc
           setOver(false);
           onLoad({ file });
         }}>
-        <label htmlFor="source-field" className="visually-hidden">OpenAPI or MCP URL, or the spec text</label>
+        <label htmlFor="source-field" className="visually-hidden">Spec or server URL, or the spec text</label>
         <span id="source-hint" className="visually-hidden">Enter loads. Shift+Enter adds a new line. You can also drop a spec file here.</span>
         <textarea id="source-field" ref={field} className="input" rows={1} value={value} spellCheck={false} autoComplete="off"
           aria-describedby="source-hint" placeholder="OpenAPI or MCP URL, or paste the spec" onChange={(e) => onValue(e.target.value)}

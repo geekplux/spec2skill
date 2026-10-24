@@ -36,11 +36,18 @@ export function toUrl(value: string): URL {
 }
 
 /**
- * Errors that mean "not a spec": in Auto mode the URL is then tried as an MCP server (the web app has
- * no source selector, D37). A page (HTML) or a GET answered 400/404/405/406 may be an MCP endpoint that
- * only takes POST; if the MCP try fails too, the spec error is reported.
+ * Errors that mean "not a spec": in Auto mode the URL is then tried as an MCP server, once (the web app
+ * has no source selector, D37). A page (HTML), or a GET answered 400/404/405/406 or 5xx, may be an MCP
+ * endpoint that only takes POST.
  */
-export const notSpec = (e: unknown) => e instanceof SourceError && (['not-a-spec', 'unsupported', 'html-page'].includes(e.code) || (e.code === 'http-error' && /\b40[0456]\b/.test(e.message)));
+export const notSpec = (e: unknown) => e instanceof SourceError && (['not-a-spec', 'unsupported', 'html-page'].includes(e.code) || (e.code === 'http-error' && /\b(40[0456]|5\d\d)\b/.test(e.message)));
+
+/**
+ * The error to show when both tries failed: the MCP one when it is specific to MCP (the server needs
+ * credentials, or speaks the older transport), else the spec's own, which says more.
+ */
+export const fallbackError = (spec: unknown, asMcp: unknown): unknown =>
+  asMcp instanceof SourceError && (asMcp.code === 'needs-auth' || asMcp.code === 'legacy-transport') ? asMcp : spec;
 
 /** Reads a direct or proxied answer: 405/406 or an event stream means an MCP endpoint. */
 async function read(res: Response, type = res.headers.get('content-type') ?? ''): Promise<Got | 'mcp'> {
@@ -66,11 +73,21 @@ async function mcp(url: URL, deps: LoadDeps): Promise<Doc> {
   return { doc: { tools: r.tools }, options: { url: url.href, serverInfo: r.serverInfo, protocolVersion: r.protocolVersion } };
 }
 
+/**
+ * A fetched or pasted document. A body that starts like HTML is a page; a body served as text/html that
+ * still parses as a spec or a tools/list is accepted (some servers label everything text/html).
+ */
 export function parse(got: Got): Doc {
-  if (got.type?.includes('text/html') || /^\s*<(!doctype|html)/i.test(got.text)) throw new SourceError('html-page');
-  const { value } = parseText(got.text);
+  if (/^\s*<(!doctype|html)/i.test(got.text)) throw new SourceError('html-page');
+  const served = got.type?.includes('text/html');
+  let value: unknown;
+  try {
+    value = parseText(got.text).value;
+  } catch (e) {
+    throw served ? new SourceError('html-page') : e;
+  }
   const found = detect(value);
-  if (found.kind === 'unsupported') throw new SourceError('unsupported', found.message);
+  if (found.kind === 'unsupported') throw served ? new SourceError('html-page') : new SourceError('unsupported', found.message);
   return { doc: value, options: got.url ? { url: got.url } : {} };
 }
 
@@ -97,7 +114,7 @@ async function fromUrl(raw: string, mode: Mode, deps: LoadDeps): Promise<Doc> {
     return parse({ url: url.href, ...got });
   } catch (e) {
     if (mode !== 'auto' || !notSpec(e)) throw e;
-    return mcp(url, deps).catch((second: unknown) => Promise.reject(deps.signal.aborted ? second : e)); // the spec error says more
+    return mcp(url, deps).catch((second: unknown) => Promise.reject(deps.signal.aborted ? second : fallbackError(e, second)));
   }
 }
 
