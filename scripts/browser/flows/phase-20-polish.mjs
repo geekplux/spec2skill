@@ -36,7 +36,7 @@ export default {
 
     // Links at rest: quiet gray-9 at full opacity (3:1, redesign R1); on focus (route map, R4) the
     // focused row's links come in gray-12 with arrowheads and a slightly heavier stroke, the rest fade
-    // to gray-6 without arrowheads, and inferred links keep their dashes.
+    // to gray-5 without arrowheads (D47), and inferred links keep their dashes.
     await page.mouse.move(1, 1);
     const rest = await opacity(page, '.route .links .ln');
     expect(rest.length === 1 && Number(rest[0]) === 1, `links at rest: opacity ${rest}`);
@@ -44,7 +44,7 @@ export default {
     await page.locator('.op[data-op="getTask"]').focus();
     await page.locator('.route[data-hot]').waitFor({ state: 'attached' });
     const tone = (name) => page.evaluate((n) => { const i = document.createElement('i'); i.style.color = `var(${n})`; document.body.append(i); const c = getComputedStyle(i).color; i.remove(); return c; }, name);
-    const [ink, faint] = [await tone('--gray-12'), await tone('--gray-6')];
+    const [ink, faint] = [await tone('--gray-12'), await tone('--gray-5')];
     const hot = await page.locator('.route .links .ln-hot').evaluateAll((els) => els.map((el) => [getComputedStyle(el).stroke, getComputedStyle(el).strokeWidth, getComputedStyle(el).opacity, !!el.getAttribute('marker-end'), el.hasAttribute('data-inferred'), getComputedStyle(el).strokeDasharray]));
     const cold = await page.locator('.route .links .ln').evaluateAll((els) => els.map((el) => [getComputedStyle(el).stroke, !!el.getAttribute('marker-end')]));
     console.log(`  getTask focused: ${hot.length} links (stroke ${[...new Set(hot.map((h) => h[1]))]}), ${cold.length} others faded`);

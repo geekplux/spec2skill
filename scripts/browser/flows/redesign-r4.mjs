@@ -3,7 +3,9 @@
 // search with `/`, the legend) and that the old controls are gone; hover on getTask (related links,
 // fades, the operation card beside the row, flipped at the right edge); the pinned card (click or
 // Enter, Close, Escape back to the row, #op=); the keyboard (one Tab stop, arrows, `?`); search (fades,
-// announced count, q=); "N more" (filesystem); the sideways scroll region with hover links inside it;
+// announced count, q=); "N more" (filesystem); the sideways scroll region inside the frame, tight to
+// what it draws, with a vertical wheel scrolling the page; every hover link of every sample inside the
+// frame's ring; each sample at 1280x800 and 1440x900 loading at the top with its map inside the frame;
 // and, moved from the retired phase-6-map flow, data-ready within 1500 ms (P3), sample switching
 // online and offline, Map | List, no page scroll at 390 and 200 %, CVD shots. Runs DESIGN.md section 8
 // checks 1-4 (and 7 under reduced motion), the grid (check 6) and axe on rest, hover and pinned, light
@@ -40,6 +42,55 @@ async function ready(page, url) {
 /** The result frame at the top of the window (the hero comes first since R2). */
 const toMap = (page) => page.evaluate(() => document.querySelector('#result').scrollIntoView({ block: 'start' }));
 
+/** Runs in the page: the scroll region (if any) sits inside the frame's 1 px ring. */
+function inFrame() {
+  const frame = document.querySelector('#result').getBoundingClientRect();
+  const el = document.querySelector('.map-scroll') ?? document.querySelector('.route');
+  const b = el.getBoundingClientRect();
+  return b.left >= frame.left + 1 - 0.5 && b.right <= frame.right + 0.5 && b.top >= frame.top && b.bottom <= frame.bottom;
+}
+
+/**
+ * Hovers every row (scrolling the region to it only when `scroll`), and collects hover links whose
+ * visible part leaves the frame's ring, plus the union of cards, rest links and hover links against
+ * the map's box (both relative to the map, so the region's scroll cancels out).
+ */
+async function everyHover(page, scroll) {
+  const ids = await page.locator('.op[data-op]').evaluateAll((els) => els.map((el) => el.dataset.op));
+  const outside = [];
+  let drawn = null;
+  const grow = (b) => {
+    drawn = drawn ? { left: Math.min(drawn.left, b.left), top: Math.min(drawn.top, b.top), right: Math.max(drawn.right, b.right), bottom: Math.max(drawn.bottom, b.bottom) } : { ...b };
+  };
+  for (const id of ids) {
+    const row = page.locator(`.op[data-op="${id}"]`);
+    if (scroll) await row.evaluate((el) => el.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
+    await row.hover();
+    await page.waitForFunction((op) => document.querySelector(`.op[data-op="${op}"]`)?.hasAttribute('data-hot'), id);
+    const got = await page.evaluate(() => {
+      const frame = document.querySelector('#result').getBoundingClientRect();
+      const route = document.querySelector('.route').getBoundingClientRect();
+      const region = document.querySelector('.map-scroll')?.getBoundingClientRect();
+      const rel = (b) => ({ left: b.left - route.left, top: b.top - route.top, right: b.right - route.left, bottom: b.bottom - route.top });
+      const hot = [...document.querySelectorAll('.ln-hot')].map((p) => [p.dataset.edge, p.getBoundingClientRect()]);
+      const out = hot.filter(([, b]) => {
+        // What shows: the region clips sideways.
+        const left = region ? Math.max(b.left, region.left) : b.left;
+        const right = region ? Math.min(b.right, region.right) : b.right;
+        return right > left && (left < frame.left + 1 - 0.5 || right > frame.right - 1 + 0.5 || b.top < frame.top + 1 - 0.5 || b.bottom > frame.bottom - 1 + 0.5);
+      }).map(([edge]) => edge);
+      const rest = [...document.querySelectorAll('.rc, .links .ln, .links .wf')].map((el) => rel(el.getBoundingClientRect()));
+      return { out, boxes: [...rest, ...hot.map(([, b]) => rel(b))], route: rel(route) };
+    });
+    outside.push(...got.out.map((edge) => `${id}: ${edge}`));
+    got.boxes.forEach(grow);
+    drawn.route = got.route;
+  }
+  await page.mouse.move(0, 0);
+  const { route, ...box } = drawn;
+  return { rows: ids.length, outside, route, drawn: box };
+}
+
 /** The viewport as WebP (quality 0.82), encoded by the browser itself from a PNG screenshot. */
 async function webp(page, name, dir) {
   const png = (await page.screenshot()).toString('base64');
@@ -63,7 +114,7 @@ function drawing() {
   const probe = document.createElement('i');
   document.body.append(probe);
   const token = (name) => ((probe.style.color = `var(${name})`), getComputedStyle(probe).color);
-  const t = Object.fromEntries(['--gray-1', '--gray-6', '--gray-7', '--gray-9', '--gray-11', '--gray-12', '--indigo-9', '--indigo-11', '--destructive'].map((n) => [n, token(n)]));
+  const t = Object.fromEntries(['--gray-1', '--gray-5', '--gray-6', '--gray-7', '--gray-9', '--gray-11', '--gray-12', '--indigo-9', '--indigo-11', '--amber-11', '--destructive'].map((n) => [n, token(n)]));
   probe.remove();
   const box = (el) => el.getBoundingClientRect();
   const s = (el) => getComputedStyle(el);
@@ -86,6 +137,12 @@ function drawing() {
     method: (() => { const m = rows[0].querySelector('.m'); return { w: box(m).width, font: s(m).fontFamily, size: s(m).fontSize, color: s(m).color }; })(),
     id: (() => { const i = rows[0].querySelector('.id'); return { font: s(i).fontFamily, size: s(i).fontSize, overflow: s(i).textOverflow, ws: s(i).whiteSpace }; })(),
     del: del ? { text: del.textContent, color: s(del).color } : null,
+    // D53: every destructive row carries the amber-11 warning mark (a graphic, aria-hidden) after its method word.
+    warn: [...document.querySelectorAll('.op[data-op]')].filter((r) => r.querySelector('.m[data-destructive]')).map((r) => {
+      const w = r.querySelector('.m svg.warn');
+      const m = r.querySelector('.m').getBoundingClientRect();
+      return w ? [w.getAttribute('aria-hidden'), getComputedStyle(w.querySelector('.warn-bg')).fill, w.getBoundingClientRect().width, w.getBoundingClientRect().left - (m.left + r.querySelector('.m').firstChild.textContent.length * 7.2)] : null;
+    }),
     stop: stop ? (() => { const a = getComputedStyle(stop, '::after'); return { n: a.content, w: parseFloat(a.width), h: parseFloat(a.height), bg: a.backgroundColor, color: a.color, size: a.fontSize, weight: a.fontWeight, radius: a.borderRadius }; })() : null,
     routeId: routeRow ? [s(routeRow.querySelector('.id')).color, s(routeRow.querySelector('.id')).fontWeight] : null,
     ln: ln ? { stroke: s(ln).stroke, width: s(ln).strokeWidth, dash: s(ln).strokeDasharray, marker: ln.getAttribute('marker-end'), head: s(svg.querySelector('marker path.ah')).stroke, fill: s(svg.querySelector('marker path.ah')).fill } : null,
@@ -135,6 +192,7 @@ export default {
     expect(close(d.method.w, 44) && d.method.font.includes('Mono') && d.method.size === '12px' && d.method.color === t['--gray-11'], `method column ${JSON.stringify(d.method)}`);
     expect(d.id.font.includes('Mono') && d.id.size === '14px' && d.id.overflow === 'ellipsis' && d.id.ws === 'nowrap', `operation id ${JSON.stringify(d.id)}`);
     expect(d.del?.text === 'DELETE' && d.del.color === t['--destructive'], `DELETE ${JSON.stringify(d.del)}`);
+    expect(d.warn.length === 5 && d.warn.every((w) => w && w[0] === 'true' && w[1] === t['--amber-11'] && close(w[2], 12) && w[3] >= 3), `destructive marks (deleteProject, removeMember, deleteTask, deleteComment, deleteLabel) ${JSON.stringify(d.warn)}`);
     expect(d.stop && close(d.stop.w, 18) && close(d.stop.h, 18) && d.stop.bg === t['--indigo-9'] && d.stop.color === 'rgb(255, 255, 255)' && d.stop.size === '12px' && d.stop.weight === '600' && d.stop.radius === '50%', `stop disc ${JSON.stringify(d.stop)}`);
     expect(d.routeId?.[0] === t['--indigo-11'] && d.routeId[1] === '600', `workflow row id ${JSON.stringify(d.routeId)}`);
     expect(d.ln && d.ln.stroke === t['--gray-9'] && d.ln.width === '1px' && d.ln.dash === 'none' && d.ln.marker && d.ln.head === t['--gray-9'] && d.ln.fill === 'none', `feed link ${JSON.stringify(d.ln)}`);
@@ -180,8 +238,9 @@ export default {
     await toMap(page);
     await webp(page, 'rest-1440-light', dir);
 
-    // 2. Hover getTask: its links appear (1.25 px gray-12 with arrowheads); unrelated rows fade to
-    // 0.38 and links to gray-6; the workflow rests; the card previews beside the row (V2Hover).
+    // 2. Hover getTask: its links appear (1.25 px gray-12 with arrowheads); related rows are lit (ink,
+    // id 600, method 500), unrelated rows fade (gray-11, 400), cards with nothing related fade their
+    // name, links go gray-5; the workflow rests; the card previews beside the row (V2Hover).
     const getTask = page.locator('.op[data-op="getTask"]');
     await getTask.hover();
     await page.locator('[data-testid="op-preview"]').waitFor();
@@ -199,8 +258,9 @@ export default {
       return {
         hot: hot.map((p) => [s(p).stroke, s(p).strokeWidth, !!p.getAttribute('marker-end')]),
         ahk: s(document.querySelector('marker path.ahk')).stroke,
-        dim: rows.filter((r) => r.hasAttribute('data-dim')).map((r) => [s(r).opacity, s(r.querySelector('.id')).color, s(r.querySelector('.m')).color].join()),
-        lit: rows.filter((r) => !r.hasAttribute('data-dim')).map((r) => r.dataset.op),
+        dim: rows.filter((r) => r.hasAttribute('data-dim')).map((r) => [s(r).opacity, s(r.querySelector('.id')).color, s(r.querySelector('.id')).fontWeight, s(r.querySelector('.m')).color, s(r.querySelector('.m')).fontWeight].join()),
+        lit: rows.filter((r) => !r.hasAttribute('data-dim')).map((r) => [r.dataset.op, s(r.querySelector('.id')).color, s(r.querySelector('.id')).fontWeight, s(r.querySelector('.m')).color, s(r.querySelector('.m')).fontWeight, r.querySelector('.m').hasAttribute('data-destructive')]),
+        names: [...document.querySelectorAll('.rc')].map((el) => [el.querySelector('.rc-name').textContent, el.hasAttribute('data-dim'), s(el.querySelector('.rc-name')).color, s(el.querySelector('.rc-name')).fontWeight, [...el.querySelectorAll('.op[data-op]')].some((r) => !r.hasAttribute('data-dim'))]),
         faded: [...document.querySelectorAll('.ln[data-faded]')].map((p) => [s(p).stroke, !!p.getAttribute('marker-end')]),
         wf: document.querySelectorAll('.wf, .halo, .op[data-route]').length,
         card: { left: c.left - rc.right, top: c.top - (row.top + row.height / 2), w: c.width, radius: s(card).borderRadius, bg: s(card).backgroundColor, shadow: s(card).boxShadow, pad: s(card).paddingTop, inFrame: c.right <= frame.right, hidden: card.getAttribute('aria-hidden') },
@@ -210,9 +270,14 @@ export default {
     });
     const { t: tl } = d;
     expect(h.hot.length >= 5 && h.hot.every(([stroke, width, marker]) => stroke === tl['--gray-12'] && width === '1.25px' && marker) && h.ahk === tl['--gray-12'], `hover links ${JSON.stringify(h.hot)} ${h.ahk}`);
-    // Faded rows take gray-11, the lightest AA ink, rather than opacity 0.38 (D47).
-    expect(h.dim.length > 0 && h.dim.every((o) => o === `1,${tl['--gray-11']},${tl['--gray-11']}`) && h.lit.includes('getTask') && h.lit.includes('listTasks'), `hover fades ${JSON.stringify(h.dim)} lit ${h.lit}`);
-    expect(h.faded.length > 0 && h.faded.every(([stroke, marker]) => stroke === tl['--gray-6'] && !marker), `faded links ${JSON.stringify(h.faded)}`);
+    // Faded rows take gray-11 at 400, lit rows ink with id 600 and method 500: weight as well as lightness (D47).
+    const g11 = tl['--gray-11'];
+    const g12 = tl['--gray-12'];
+    expect(h.dim.length > 0 && h.dim.every((o) => o === `1,${g11},400,${g11},400`), `hover fades ${JSON.stringify(h.dim)}`);
+    const litIds = h.lit.map((l) => l[0]);
+    expect(['getTask', 'listTasks', 'getProject', 'listMembers'].every((id) => litIds.includes(id)) && h.lit.every(([, id, idw, m, mw, destructive]) => id === g12 && idw === '600' && m === (destructive ? tl['--destructive'] : g12) && mw === '500'), `lit rows ${JSON.stringify(h.lit)}`);
+    expect(h.names.every(([, dim, color, weight, related]) => (related ? !dim && color === g12 && weight === '600' : dim && color === g11 && weight === '500')) && h.names.some(([, dim]) => dim), `card names ${JSON.stringify(h.names)}`);
+    expect(h.faded.length > 0 && h.faded.every(([stroke, marker]) => stroke === tl['--gray-5'] && !marker), `faded links ${JSON.stringify(h.faded)}`);
     expect(h.wf === 0, 'the workflow line and its discs stay drawn while a row is hot');
     expect(close(h.card.left, 16, 1) && close(h.card.top, -40, 1) && close(h.card.w, 300) && h.card.radius === '10px' && h.card.bg === tl['--gray-1'] && h.card.shadow.includes(tl['--gray-7']) && h.card.shadow.includes('0px 8px 24px') && h.card.pad === '16px' && h.card.inFrame && h.card.hidden === 'true', `operation card ${JSON.stringify(h.card)}`);
     expect(h.text.startsWith('GET /tasks/{taskId}') && h.text.includes('Get a task') && h.dl.join('|') === 'Input|Output|Fed by|Feeds|Shares schema|Sub-paths|In skill', `card contents ${h.dl} ${h.text.slice(0, 60)}`);
@@ -310,9 +375,11 @@ export default {
     await page.getByTestId('announcer').filter({ hasText: /^\d+ of 22 operations match\.?$/ }).waitFor();
     const s = await page.evaluate(() => {
       const rows = [...document.querySelectorAll('.op[data-op]')];
-      return { dim: rows.filter((r) => r.hasAttribute('data-dim')).map((r) => getComputedStyle(r.querySelector('.id')).color), ink: rows.filter((r) => !r.hasAttribute('data-dim')).map((r) => [r.dataset.op, getComputedStyle(r.querySelector('.id')).color]), url: location.search };
+      // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page
+      const id = (r) => [getComputedStyle(r.querySelector('.id')).color, getComputedStyle(r.querySelector('.id')).fontWeight];
+      return { dim: rows.filter((r) => r.hasAttribute('data-dim')).map(id), ink: rows.filter((r) => !r.hasAttribute('data-dim')).map((r) => [r.dataset.op, ...id(r)]), url: location.search };
     });
-    expect(s.ink.length > 0 && s.ink.every(([id, color]) => /comment/i.test(id) && [t['--gray-12'], t['--indigo-11']].includes(color)) && s.dim.length === 22 - s.ink.length && s.dim.every((c) => c === t['--gray-11']) && s.url.includes('q=comment'), `search fade ${JSON.stringify(s)}`);
+    expect(s.ink.length > 0 && s.ink.every(([id, color, weight]) => /comment/i.test(id) && [t['--gray-12'], t['--indigo-11']].includes(color) && weight === '600') && s.dim.length === 22 - s.ink.length && s.dim.every(([c, w]) => c === t['--gray-11'] && w === '400') && s.url.includes('q=comment'), `search fade ${JSON.stringify(s)}`);
     await checks('search 1440 light', 'light');
     await axe('search 1440 light');
     // Tab from the search lands on the first match.
@@ -361,11 +428,11 @@ export default {
     await page.emulateMedia({ colorScheme: 'light' });
 
     // 7. "N more" (filesystem's File card holds 9 tools): focusable, aria-expanded, expands in place;
-    // destructive tools carry the `!` glyph and "destructive" in their names (D41).
+    // destructive tools carry the amber warning mark and "destructive" in their names (D41, D53).
     await ready(page, `${origin}/?sample=filesystem`);
     const more = page.locator('.op.more');
     expect((await more.count()) === 1 && (await more.getAttribute('aria-expanded')) === 'false' && (await more.textContent()) === '1 more', `"N more" row: ${await more.count()} ${await more.textContent()}`);
-    const bangs = await page.locator('.op:has(.bang)').evaluateAll((els) => els.map((el) => [el.dataset.op, el.getAttribute('aria-label'), el.querySelector('.m').hasAttribute('data-destructive')]));
+    const bangs = await page.locator('.op:has(svg.warn)').evaluateAll((els) => els.map((el) => [el.dataset.op, el.getAttribute('aria-label'), el.querySelector('.m').hasAttribute('data-destructive')]));
     expect(bangs.length >= 2 && bangs.every(([, name, flag]) => name.includes('destructive') && flag), `destructive tools ${JSON.stringify(bangs)}`);
     await more.focus();
     await page.keyboard.press('Enter');
@@ -385,25 +452,56 @@ export default {
       expect((await more.getAttribute('aria-expanded')) === 'true', `#op=${hidden} did not open its card`);
     }
 
-    // 8. Narrower than the map: a native, focusable, labelled scroll region; hover links stay inside it.
+    // 8. Narrower than the map: a native, focusable, labelled scroll region inside the frame's ring;
+    // hover links stay inside the frame; the box is no taller or wider than what links reach (D50).
     await page.setViewportSize({ width: 1024, height: 900 });
     await ready(page, `${origin}/?sample=tasks`);
     const region = page.getByRole('region', { name: 'Map, scrolls sideways' });
     const r = await region.evaluate((el) => ({ tab: el.tabIndex, scrolls: el.scrollWidth > el.clientWidth, x: getComputedStyle(el).overflowX }));
     expect(r.tab === 0 && r.scrolls && r.x === 'auto', `scroll region ${JSON.stringify(r)}`);
     expect((await page.getByRole('button', { name: /zoom/i }).count()) === 0, 'zoom controls');
-    for (const id of ['getTask', 'listProjects', 'deleteComment', 'listLabels']) {
-      await region.evaluate((el, op) => el.querySelector(`[data-op="${op}"]`).scrollIntoView({ block: 'nearest', inline: 'nearest' }), id);
-      await page.locator(`.op[data-op="${id}"]`).hover();
-      await page.waitForTimeout(50);
-      const outside = await page.evaluate(() => {
-        const box = document.querySelector('.route').getBoundingClientRect();
-        const scroll = document.querySelector('.map-scroll');
-        const left = box.left;
-        return [...document.querySelectorAll('.ln-hot')].map((p) => p.getBoundingClientRect()).filter((b) => b.left < left - 0.5 || b.right > left + scroll.scrollWidth + 0.5 || b.top < box.top - 0.5 || b.bottom > box.bottom + 0.5).length;
-      });
-      expect(outside === 0, `${id}: ${outside} hover links outside the scroll region`);
+    expect(await page.evaluate(inFrame), `1024 tasks: the scroll region leaves the frame ${JSON.stringify(await page.evaluate(inFrame))}`);
+    const reached = await everyHover(page, true);
+    expect(reached.outside.length === 0, `1024 tasks: hover links outside the frame ${JSON.stringify(reached.outside)}`);
+    const tight = ['left', 'top', 'right', 'bottom'].map((k) => Math.abs(reached.route[k] - reached.drawn[k]));
+    console.log(`  1024 tasks: ${reached.rows} rows hovered, map box off what it draws by ${tight.map((n) => n.toFixed(1)).join('/')} px (left/top/right/bottom)`);
+    expect(tight.every((gap) => gap <= 2), `1024 tasks: the map box is not tight to what it draws ${JSON.stringify(reached)}`);
+    // A plain vertical wheel over the region scrolls the page, not the map.
+    await page.mouse.move(0, 0);
+    await region.evaluate((el) => el.scrollTo(0, 0));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const at = await region.boundingBox();
+    await page.mouse.move(at.x + at.width / 2, at.y + Math.min(at.height, 600) / 2);
+    await page.mouse.wheel(0, 200);
+    await page.waitForFunction(() => window.scrollY > 0, null, { timeout: 2000 }).catch(() => {});
+    const wheeled = await page.evaluate(() => [window.scrollY, document.querySelector('.map-scroll').scrollLeft]);
+    console.log(`  wheel over the region: page scrollY ${wheeled[0]}, region scrollLeft ${wheeled[1]}`);
+    expect(wheeled[0] > 0 && wheeled[1] === 0, `a vertical wheel over the map region did not scroll the page ${JSON.stringify(wheeled)}`);
+    // Loops and hover links stay inside the frame's ring at 1440 for every sample, hovering each row in place.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    for (const id of Object.keys(SAMPLES)) {
+      await ready(page, `${origin}/?sample=${id}`);
+      const each = await everyHover(page, false);
+      console.log(`  1440 ${id}: ${each.rows} rows hovered, ${each.outside.length} hover links outside the frame`);
+      expect(each.rows === SAMPLES[id].rows && each.outside.length === 0, `1440 ${id}: hover links outside the frame ${JSON.stringify(each.outside)} (${each.rows} rows)`);
     }
+    // At 1280x800 and 1440x900 each sample loads at the top with every card and rest link inside the frame.
+    for (const [width, height] of [[1280, 800], [1440, 900]]) {
+      await page.setViewportSize({ width, height });
+      for (const id of Object.keys(SAMPLES)) {
+        await ready(page, `${origin}/?sample=${id}`);
+        const f = await page.evaluate(() => {
+          const frame = document.querySelector('#result').getBoundingClientRect();
+          const out = (b) => b.left < frame.left + 1 - 0.5 || b.right > frame.right - 1 + 0.5 || b.top < frame.top + 1 - 0.5 || b.bottom > frame.bottom - 1 + 0.5;
+          const cards = [...document.querySelectorAll('.rc')].filter((c) => out(c.getBoundingClientRect())).map((c) => c.id || c.className);
+          const links = [...document.querySelectorAll('.links .ln')].filter((l) => out(l.getBoundingClientRect())).map((l) => l.dataset.link);
+          return { y: window.scrollY, cards, links };
+        });
+        expect(f.y === 0 && f.cards.length === 0 && f.links.length === 0, `${width}x${height} ${id}: ${JSON.stringify(f)}`);
+      }
+    }
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await ready(page, `${origin}/?sample=tasks`);
     await page.mouse.move(0, 0);
     await region.focus();
     await page.keyboard.press('ArrowRight'); // native scroll: the region is the focus, not a row
@@ -432,6 +530,11 @@ export default {
     console.log(`  1000-operation paste interactive in ${took} ms`);
     const syn = await page.evaluate(() => ({ cards: document.querySelectorAll('.rc').length, more: document.querySelectorAll('.op.more').length, maxRows: Math.max(...[...document.querySelectorAll('.rc')].map((c) => c.querySelectorAll('.op[data-op]').length)), region: !!document.querySelector('.map-scroll') }));
     expect(syn.cards > 4 && syn.more > 0 && syn.maxRows <= 8 && syn.region, `synthetic map ${JSON.stringify(syn)}`);
+    // No blank band above the first cards: the box pads only to what hover links reach (D50).
+    const above = await page.evaluate(() => Math.min(...[...document.querySelectorAll('.rc')].map((c) => c.getBoundingClientRect().top)) - document.querySelector('.route').getBoundingClientRect().top);
+    console.log(`  synthetic: ${Math.round(above)} px above the first cards`);
+    expect(above < 60, `synthetic: ${Math.round(above)} px blank above the first cards`);
+    expect(await page.evaluate(inFrame), 'synthetic: the scroll region leaves the frame');
     const hoverAt = Date.now();
     await page.locator('.op[data-op]').first().hover();
     await page.locator('[data-testid="op-preview"]').waitFor();

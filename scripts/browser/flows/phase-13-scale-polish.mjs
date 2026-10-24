@@ -53,8 +53,12 @@ export default {
     }
     await page.mouse.move(5, 5);
     // One source feeding four Members operations: one curve to the card's head, not four.
-    const bundles = await bundlesOf(page);
-    expect(bundles.length === 2 && bundles.every(([, to, edges]) => to === 'cluster-members' && edges.length === 4 && edges.every((e) => e.startsWith(`feeds:`))), `bundles: ${JSON.stringify(bundles)}`);
+    // Three feeds from Projects into Tasks (across a column) rest as one card-to-card curve (D54).
+    const all = await bundlesOf(page);
+    const bundles = all.filter(([, to]) => to === 'cluster-members');
+    expect(bundles.length === 2 && bundles.every(([, , edges]) => edges.length === 4 && edges.every((e) => e.startsWith(`feeds:`))), `bundles: ${JSON.stringify(all)}`);
+    const cards = all.filter(([from]) => from.startsWith('cluster-'));
+    expect(all.length === 3 && cards.length === 1 && cards[0][0] === 'cluster-projects' && cards[0][1] === 'cluster-tasks' && cards[0][2].length === 3, `card bundles: ${JSON.stringify(all)}`);
     // Rest links are drawn at full opacity (gray-9 is 3:1 on gray-1); card names are 14 px at every width (no zoom).
     const fades = await page.locator('.route .links .ln, .route .links').evaluateAll((els) => els.map((el) => getComputedStyle(el).opacity));
     expect(fades.every((o) => o === '1'), `rest link opacity: ${fades}`);
@@ -68,6 +72,14 @@ export default {
     const hot = await page.locator('.ln-hot').evaluateAll((els) => els.map((el) => el.dataset.edge));
     expect(members.every((e) => hot.includes(e)), `hover ${source}: ${hot} lacks the bundle's ${members}`);
     expect((await page.locator(`.ln[data-link="bundle"][data-from="${source}"]:not([data-faded])`).count()) === 0, `hover ${source}: its bundle stays drawn over the links`);
+    // Hovering a Projects row that feeds Tasks fades the card bundle and draws that row's own links.
+    const [, , ribbon] = cards[0];
+    const feeder = ribbon[0].slice('feeds:'.length).split('->')[0];
+    await page.locator(`.op[data-op="${feeder}"]`).hover();
+    const own = await page.locator('.ln-hot').evaluateAll((els) => els.map((el) => el.dataset.edge));
+    expect(ribbon.filter((e) => e.startsWith(`feeds:${feeder}->`)).every((e) => own.includes(e)), `hover ${feeder}: ${own} lacks its links into Tasks`);
+    expect((await page.locator('.ln[data-link="bundle"][data-from="cluster-projects"]:not([data-faded])').count()) === 0, `hover ${feeder}: the card bundle stays drawn`);
+    await page.locator(`.op[data-op="${source}"]`).hover();
     await screenshot('bundled-edge');
     await axe('tasks bundles hover');
     await page.mouse.move(5, 5);
