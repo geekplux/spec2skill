@@ -1,6 +1,6 @@
 // Phase 13: edge-noise trims and bundles on the samples' maps, the detail panel overlaying (not
 // shrinking) the map, map focus following back/forward, theme following OS changes (A10), the mobile
-// chip-row hint and header row, two-pointer pinch-zoom (F9), the skill pane's 40/60 split, the list
+// hero (since redesign R2: the field over Generate, the samples on one line), two-pointer pinch-zoom (F9), the skill pane's 40/60 split, the list
 // at 640 px, and the synthetic large-spec fixture staying out of the production bundle (P4).
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -128,34 +128,22 @@ export default {
     expect(!(await page.evaluate(() => document.documentElement.hasAttribute('data-theme'))), 'the theme is pinned on <html>');
     expect((await page.getByRole('button', { name: 'Dark theme' }).count()) === 0, 'a theme toggle is back');
 
-    // 6. Mobile: the header reads in DOM order (phase 15, AC9: wordmark, then the URL field, then the row
-    // with More options under it); "More samples" while the chips overflow.
+    // 6. Mobile (updated in redesign R2): the hero stacks in DOM order (the field, then Generate at full
+    // width under it, then Samples); the three samples fit one line, so nothing scrolls or hides
+    // (replaces the chip row's "More samples" hint and its scroll-into-view helper).
     await page.setViewportSize(viewports.mobile);
-    await page.goto(`${origin}/?sample=tasks`);
+    await page.goto(`${origin}/?sample=filesystem`);
     await paneReady(page);
-    const [logo, more, input] = await Promise.all(['.brand', '.source-row .link', '#source-field'].map((s) => page.locator(s).boundingBox()));
-    expect(input.y >= logo.y + logo.height - 1 && more.y >= input.y + input.height - 1, `header rows: ${JSON.stringify({ logo, more, input })}`);
-    const order = await page.evaluate(() => [...document.querySelectorAll('.header > *')].map((el) => el.className));
-    expect(order.indexOf('brand') < order.indexOf('source') && order.indexOf('source') < order.indexOf('btn generate'), `header DOM order: ${order}`);
-    const hint = page.getByTestId('chips-more');
-    await hint.waitFor();
-    expect((await hint.textContent()).startsWith('More samples'), 'chip hint text');
-    // A focused chip scrolls clear of the hint (scroll-padding), so the hint never covers it.
-    const hintBox = await hint.boundingBox();
-    const chips = page.locator('.chips .chip');
-    for (let i = 0; i < (await chips.count()); i++) {
-      await chips.nth(i).focus();
-      await page.waitForTimeout(50);
-      if (!(await hint.isVisible())) break;
-      const b = await chips.nth(i).boundingBox();
-      expect(b.x + b.width <= hintBox.x + 1, `focused chip ${i} under the hint: ${JSON.stringify([b, hintBox])}`);
-    }
-    await page.locator('.chips').evaluate((row) => row.scrollTo({ left: 0 }));
-    await page.evaluate(() => document.activeElement.blur());
-    await axe('mobile chip hint');
-    await screenshot('mobile-chip-hint');
-    await page.locator('.chips').evaluate((row) => row.scrollTo({ left: row.scrollWidth }));
-    await hint.waitFor({ state: 'detached' });
+    const [logo, input, generate, seg] = await Promise.all(['header .brand', '#source-field', '.hero .generate', '.samples .seg'].map((s) => page.locator(s).boundingBox()));
+    const field = await page.locator('.source-field').boundingBox();
+    expect(input.y >= logo.y + logo.height - 1 && generate.y >= input.y + input.height - 1 && seg.y >= generate.y + generate.height - 1, `hero rows: ${JSON.stringify({ logo, input, generate, seg })}`);
+    expect(Math.abs(generate.width - (field.width - 8)) <= 1, `Generate is not full width: ${generate.width} in a ${field.width} field`);
+    const items = await page.locator('.seg-item').evaluateAll((els) => els.map((el) => { const b = el.getBoundingClientRect(); return { top: b.top, left: b.left, right: b.right, over: el.scrollWidth > el.clientWidth }; }));
+    const row = await page.locator('.samples .seg').evaluate((el) => ({ over: el.scrollWidth > el.clientWidth, right: el.getBoundingClientRect().right }));
+    expect(items.length === 3 && items.every((b) => Math.abs(b.top - items[0].top) < 1 && !b.over && b.right <= row.right + 0.5) && !row.over, `samples do not fit one line at 390 px: ${JSON.stringify({ items, row })}`);
+    expect(await page.locator('.seg-item[data-sample="filesystem"]:has(input:checked)').isVisible(), '?sample=filesystem is not shown selected');
+    await axe('mobile hero');
+    await screenshot('mobile-hero');
 
     // 7. Pinch: two touch pointers spreading apart zoom the map; the page does not scroll.
     await page.locator('#tab-map').click();

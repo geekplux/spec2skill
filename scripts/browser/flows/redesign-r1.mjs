@@ -1,7 +1,8 @@
 // Redesign R1 (docs/redesign/PLAN.md): Radix tokens, IBM Plex, the Overlap logo, the theme following
 // the system. Runs the DESIGN.md section 8 checks 1-4 (scripts/browser/redesign-checks.mjs) on the
 // first view at 1440 and 390 and on the list view, a keyboard-focused map node and the open detail
-// panel at 1440, all in light and dark; check 7 under reduced motion; saves the 1440 light and dark
+// panel at 1440, all in light and dark (sizes 12/14/20/48: the hero h1 is 48 since R2); check 7
+// under reduced motion; saves the 1440 light and dark
 // first view as WebP in docs/screenshots/redesign-r1/.
 //   pnpm build && pnpm check:browser -- --phase 21 --flow redesign-r1
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -68,7 +69,7 @@ export default {
         expect(state.tnum.includes('tnum'), `${label}: no tnum on the root (${state.tnum})`);
         expect(state.logo === 'spec2skill', `${label}: header wordmark is not the Overlap mark + "spec2skill" (${state.logo})`);
 
-        const found = await designChecks(page, { theme: scheme, label, checks: ['type', 'colour', 'lines', 'dot'], sizes: [12, 14, 20] });
+        const found = await designChecks(page, { theme: scheme, label, checks: ['type', 'colour', 'lines', 'dot'] });
         console.log(`  ${label}: ${found.length} problem(s)`);
         problems.push(...found);
         if (viewport.width === 1440) await webp(page, `first-view-1440-${scheme}`);
@@ -96,7 +97,7 @@ export default {
         const label = `${name} 1440 ${scheme}`;
         await ready(page, `${origin}${path}`);
         await open();
-        const found = await designChecks(page, { theme: scheme, label, checks: ['type', 'colour', 'lines', 'dot'], sizes: [12, 14, 20] });
+        const found = await designChecks(page, { theme: scheme, label, checks: ['type', 'colour', 'lines', 'dot'] });
         console.log(`  ${label}: ${found.length} problem(s)`);
         problems.push(...found);
         await axe(label);

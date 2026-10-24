@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHECKS, SIZES, evaluate, parseShadows, radixColours } from './redesign-checks.mjs';
+import { CHECKS, SIZES, evaluate, gridProblems, parseShadows, radixColours } from './redesign-checks.mjs';
 
 const allowed = radixColours().light;
 const GRAY1 = 'rgb(252, 252, 252)';
@@ -73,5 +73,20 @@ describe('redesign checks (DESIGN.md section 8)', () => {
     expect(run([record({ animation: { name: 'rise', duration: '0.25s' } })], { checks: ['motion'] })).toHaveLength(1);
     expect(run([], { running: ['CSSTransition opacity on g.edge'], checks: ['motion'] })).toEqual(['[t] motion: running CSSTransition opacity on g.edge']);
     expect(run([record()], { checks: ['motion'] })).toEqual([]);
+  });
+});
+
+describe('grid check (DESIGN.md 8.6)', () => {
+  const ok = { left: { h1: [184], 'frame contents': [184.4] }, right: { 'hero field': [764] }, end: { 'hero field right': [1256] }, columns: { how: [184, 474, 764, 1054] } };
+  it('passes parts on the column edges, the right column and the four columns (1 px tolerance)', () => {
+    expect(gridProblems(ok)).toEqual([]);
+  });
+  it('reports a part off the grid, a missing part and a missing h1', () => {
+    expect(gridProblems({ ...ok, right: { 'hero field': [770], 'command box': [] } })).toEqual([
+      '[grid] grid: hero field at x=586 from the column edge, expected 580',
+      '[grid] grid: command box not found',
+    ]);
+    expect(gridProblems({ ...ok, columns: { how: [184, 474, 760] } })).toEqual(['[grid] grid: how #3 at x=576 from the column edge, expected 580']);
+    expect(gridProblems({ left: {} })).toEqual(['[grid] grid: no h1 to measure the column from']);
   });
 });

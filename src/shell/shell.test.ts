@@ -14,9 +14,11 @@ import { CLI_COMMANDS } from './Sections';
 
 const noop = () => {};
 const page = () => renderToStaticMarkup(createElement(Layout, {
-  source: createElement(SourceInput, { value: '', onValue: noop, onLoad: noop, onGenerate: noop, field: createRef() }),
+  // oxlint-disable-next-line react/no-children-prop -- createElement's typed props need children here
+  children: createElement('p', null, 'result'),
+  source: createElement(SourceInput, { value: '', onValue: noop, onLoad: noop, onGenerate: noop, field: createRef<HTMLTextAreaElement>() }),
   samples: createElement(Samples, { value: 'tasks', onSelect: noop }),
-  busy: false, onShortcuts: noop, children: createElement('p', null, 'result'),
+  busy: false, onShortcuts: noop,
 }));
 
 describe('page shell', () => {

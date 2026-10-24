@@ -10,7 +10,8 @@ export default {
       await page.goto(`${origin}/?sample=petstore&view=list`, { waitUntil: 'load' });
       const list = page.getByTestId('list-view');
       await list.waitFor({ state: 'attached' });
-      const heading = (await page.getByRole('heading', { level: 1 }).textContent())?.trim();
+      // Since redesign R2 the h1 is the hero's headline; the result title is the frame's h2.
+      const heading = (await page.locator('.title h2').textContent())?.trim();
       if (heading !== 'Swagger Petstore (sample)') throw new Error(`unexpected heading: ${heading}`);
       const items = await list.locator('tbody tr').allTextContents();
       if (!items.some((text) => text.includes('GET') && text.includes('/pet/{petId}'))) {

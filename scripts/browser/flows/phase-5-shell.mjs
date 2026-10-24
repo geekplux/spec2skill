@@ -38,8 +38,10 @@ export default {
 
     // Shell controls are real, labelled controls; there is no theme toggle.
     expect((await page.getByRole('button', { name: 'Dark theme' }).count()) === 0, 'a theme toggle is back');
-    const generate = page.getByRole('button', { name: /Generate skill/ });
-    expect((await generate.getAttribute('aria-disabled')) === null, 'Generate skill is real since phase 11');
+    // Since redesign R2, Generate sits in the hero's source field (no header button).
+    const generate = page.getByRole('button', { name: 'Generate', exact: true });
+    expect((await generate.count()) === 1 && (await generate.getAttribute('aria-disabled')) === null && !(await generate.isDisabled()), 'Generate is not one real button');
+    expect((await page.locator('header button:visible').count()) === 0, 'the header has buttons at desktop width');
     await page.getByRole('tablist', { name: 'View' }).getByRole('tab', { name: 'List' }).waitFor();
     expect((await page.locator('header .wordmark').textContent()) === 'spec2skill', 'header wordmark text');
 

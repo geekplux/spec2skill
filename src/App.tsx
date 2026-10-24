@@ -11,6 +11,7 @@ import { ShortcutHelp } from './map/ShortcutHelp';
 import type { AtlasGraph } from './graph';
 import type { ApiModel, SourceKind } from './model/types';
 import { DEFAULT_SAMPLE_ID, type Sample, getSample, sampleModel } from './samples';
+import { topInFrame } from './shell/frame';
 import { Layout } from './shell/Layout';
 import { type TabDef, Tabs, useWide } from './shell/Tabs';
 import { skillSlug } from './skillgen/slug';
@@ -93,10 +94,10 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
     emptySaid.current = model.hash;
     announce(`${title}: no operations. This spec has no paths, so there is no skill to write.`);
   }, [announce, model.operations.length, model.hash, title]);
-  // Panes fill the first view from their measured page top (app.css reads --panes-top).
+  // Panes fill the window from their top inside the result frame (app.css reads --panes-top).
   useLayoutEffect(() => {
     const el = panes.current!;
-    const measure = () => el.style.setProperty('--panes-top', `${Math.round(el.getBoundingClientRect().top + window.scrollY)}px`);
+    const measure = () => el.style.setProperty('--panes-top', `${Math.round(topInFrame(el))}px`);
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);

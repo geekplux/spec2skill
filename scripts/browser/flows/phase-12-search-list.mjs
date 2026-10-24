@@ -125,7 +125,7 @@ export default {
     await views(page).getByRole('tab', { name: 'List' }).click();
     for (const id of ['petstore', 'filesystem', 'tasks']) {
       await page.locator(`[data-sample="${id}"]`).click();
-      await page.locator(`.chip[aria-pressed="true"][data-sample="${id}"]`).waitFor();
+      await page.locator(`.seg-item[data-sample="${id}"]:has(input:checked)`).waitFor();
       await list(page).waitFor();
       await views(page).getByRole('tab', { name: 'Map' }).click();
       await mapReady(page);
@@ -234,10 +234,14 @@ export default {
     await dialog.getByRole('button', { name: 'Close' }).click();
     await dialog.waitFor({ state: 'detached' });
     expect((await active(page)) === 'SKILL.md' || (await page.evaluate(() => document.activeElement?.getAttribute('data-path'))) === 'SKILL.md', 'focus did not return to the tree');
-    await page.getByRole('button', { name: 'Keyboard shortcuts' }).click();
-    await dialog.waitFor();
-    await page.keyboard.press('Escape');
-    expect((await page.evaluate(() => document.activeElement?.textContent)) === 'Keyboard shortcuts', 'focus did not return to the button');
+    // Both buttons open it: the search row's and (since redesign R2) the footer's.
+    for (const where of ['.search', 'footer']) {
+      await page.locator(where).getByRole('button', { name: 'Keyboard shortcuts' }).click();
+      await dialog.waitFor();
+      await page.keyboard.press('Escape');
+      await dialog.waitFor({ state: 'detached' });
+      expect(await page.evaluate((w) => document.activeElement?.textContent === 'Keyboard shortcuts' && !!document.activeElement.closest(w), where), `focus did not return to the ${where} button`);
+    }
 
     // 5b. Details opened from the list show at once beside a full-width list, desktop and tablet;
     // Close returns focus to the row. Unknown sample/view parameters are rewritten.
@@ -282,7 +286,7 @@ export default {
     await page.goto(`${origin}/?sample=nope&view=bogus&q=task`);
     await paneReady(page);
     await page.waitForFunction(() => new URL(location.href).search === '?sample=tasks&q=task');
-    expect((await page.locator('.chip[aria-pressed="true"]').getAttribute('data-sample')) === 'tasks', 'unknown sample did not fall back to tasks');
+    expect((await page.locator('input[name="sample"]:checked').getAttribute('value')) === 'tasks', 'unknown sample did not fall back to tasks');
 
     // 6. Mobile: `/` from the Skill tab opens the Map tab with search focused; list view at 390 px.
     await page.setViewportSize(viewports.mobile);

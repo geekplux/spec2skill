@@ -9,6 +9,7 @@ import type { AtlasGraph, Edge } from '../graph';
 import { aggregated, startCollapsed } from '../layout/collapse';
 import type { Point, Rect } from '../layout/geometry';
 import { layout } from '../layout/layout';
+import { topInFrame } from '../shell/frame';
 import type { ApiModel } from '../model/types';
 import { type Camera, LABEL_ZOOM, fit, follow, frameRect, pan, pinch, toCss, zoomAt } from './camera';
 import { EdgeLabel, EdgeLine, LinkLine, MapDefs } from './Edge';
@@ -184,11 +185,11 @@ export function AtlasMap({ model, graph, base = graph, skillFile, onSkillFile, s
     }
   }, [selected]);
 
-  // Size the map from its real page top (header, chips and heading above it vary), so the fitted
-  // atlas fills the first view without scrolling; app.css reads --map-top (map and detail panel).
+  // Size the map from its top inside the result frame (the title and tools above it vary), so the
+  // fitted atlas fills the window once the frame is scrolled to the top; app.css reads --map-top.
   useLayoutEffect(() => {
     const el = frame.current!;
-    const measure = () => el.parentElement!.style.setProperty('--map-top', `${Math.round(el.getBoundingClientRect().top + window.scrollY)}px`);
+    const measure = () => el.parentElement!.style.setProperty('--map-top', `${Math.round(topInFrame(el))}px`);
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);

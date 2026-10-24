@@ -9,6 +9,8 @@
 //   4 dot     no middle dot in rendered text, aria-labels, titles, alt or placeholder text
 //   7 motion  under reducedMotion 'reduce': no running animation or transition, and no element
 //             with a non-zero animation or transition duration
+//   6 grid    gridCheck(page): at 1440 the parts that sit on the column's left edge share one x, the
+//             right-column parts start 580 px in, the How it works columns at 0/290/580/870 (1 px)
 //
 //   import { designChecks } from '../redesign-checks.mjs';
 //   const problems = await designChecks(page, { theme: 'light', label: 'home 1440' });
@@ -198,4 +200,83 @@ export async function designChecks(page, { theme, label = page.url(), checks = C
   const allowed = radixColours()[theme];
   const data = await page.evaluate(collect, { ignore });
   return evaluate(data, { theme, allowed, checks, sizes, label });
+}
+
+// ---------- Check 6: the grid ----------
+
+/** The grid of DESIGN.md 2: a 1072 px column, four 202 px columns with 88 px gaps. */
+export const GRID = { width: 1072, col: 202, gap: 88, right: 580 };
+
+/**
+ * What sits on the grid, as CSS selectors (the first match is measured; `content: true` measures the
+ * box inside its padding). Later phases add the map and skill browser columns; parts missing from the
+ * page are reported, so a flow names only what its phase has built.
+ */
+export const GRID_PARTS = {
+  left: {
+    'h1': { sel: '.hero h1' },
+    'frame contents': { sel: '.frame', content: true },
+    'command-line title': { sel: '#cli h2' },
+    'How it works title': { sel: '#how h2' },
+    'Made by title': { sel: '.made h2' },
+  },
+  right: {
+    'hero field': { sel: '.source-field' },
+    'command box': { sel: '.cli' },
+    'Made by rows': { sel: '.projects a', all: true },
+  },
+  /** Each match starts one column further: 0, 290, 580, 870. */
+  columns: { 'How it works columns': { sel: '.how > li', all: true } },
+  /** Right edges at the column's right edge (1072 in). */
+  end: {
+    'hero field right': { sel: '.source-field', edge: 'right' },
+    'frame contents right': { sel: '.frame', content: true, edge: 'right' },
+    'command box right': { sel: '.cli', edge: 'right' },
+  },
+};
+
+/** Runs in the page: the left (or right) x of each part's boxes. */
+function measure(parts) {
+  const out = {};
+  for (const [group, entries] of Object.entries(parts)) {
+    out[group] = {};
+    for (const [name, { sel, all, content, edge = 'left' }] of Object.entries(entries)) {
+      const els = all ? [...document.querySelectorAll(sel)] : [document.querySelector(sel)].filter(Boolean);
+      out[group][name] = els.map((el) => {
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        const inset = content ? parseFloat(edge === 'left' ? s.paddingLeft : s.paddingRight) : 0;
+        return edge === 'left' ? r.left + inset : r.right - inset;
+      });
+    }
+  }
+  return out;
+}
+
+const at = (x) => Math.round(x * 10) / 10;
+
+/** Problems for measured positions: everything relative to the h1's x (the column's left edge). */
+export function gridProblems(measured, { label = 'grid', tolerance = 1, grid = GRID } = {}) {
+  const problems = [];
+  const origin = measured.left?.h1?.[0];
+  if (origin === undefined) return [`[${label}] grid: no h1 to measure the column from`];
+  const want = (name, xs, target) => {
+    if (xs.length === 0) problems.push(`[${label}] grid: ${name} not found`);
+    xs.forEach((x, i) => {
+      if (Math.abs(x - target) > tolerance) problems.push(`[${label}] grid: ${name}${xs.length > 1 ? ` #${i + 1}` : ''} at x=${at(x - origin)} from the column edge, expected ${at(target - origin)}`);
+    });
+  };
+  for (const [name, xs] of Object.entries(measured.left ?? {})) want(name, xs, origin);
+  for (const [name, xs] of Object.entries(measured.right ?? {})) want(name, xs, origin + grid.right);
+  for (const [name, xs] of Object.entries(measured.end ?? {})) want(name, xs, origin + grid.width);
+  for (const [name, xs] of Object.entries(measured.columns ?? {})) {
+    if (xs.length === 0) problems.push(`[${label}] grid: ${name} not found`);
+    xs.forEach((x, i) => want(`${name} #${i + 1}`, [x], origin + i * (grid.col + grid.gap)));
+  }
+  return problems;
+}
+
+/** Check 6 on `page` as it is now (meant for a 1440 px viewport); `parts` defaults to GRID_PARTS. */
+export async function gridCheck(page, { label = 'grid', parts = GRID_PARTS, tolerance = 1 } = {}) {
+  return gridProblems(await page.evaluate(measure, parts), { label, tolerance });
 }

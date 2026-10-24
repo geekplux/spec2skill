@@ -50,7 +50,7 @@ export default {
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
 
     // The first Tab after a fresh load lands on the skip link, whatever sample is preselected
-    // (revealing the selected chip must not move the sequential-focus starting point).
+    // (selecting the sample must not move the sequential-focus starting point).
     for (const id of ['tasks', 'petstore', 'filesystem']) {
       await page.goto(`${origin}/?sample=${id}`);
       await ready(page);
@@ -229,12 +229,13 @@ export default {
     const [scroll, inner] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     expect(scroll <= inner, `390 px: horizontal scroll (${scroll} > ${inner})`);
 
-    // 390 px: the preselected chip is scrolled into view inside the chip row, and Tab still starts at the skip link.
+    // 390 px: the preselected sample is shown selected inside the samples row (all three fit since
+    // redesign R2), and Tab still starts at the skip link.
     for (const id of ['filesystem', 'tasks']) {
       await page.goto(`${origin}/?sample=${id}`);
       await page.locator('.skill-pane[data-ready="true"]').waitFor(); // the Skill tab, no click
-      const [row, chip] = [await page.locator('.chips').boundingBox(), await page.locator(`[data-sample="${id}"]`).boundingBox()];
-      expect(chip.x >= row.x - 1 && chip.x + chip.width <= row.x + row.width + 1, `390 px: ?sample=${id} chip ${JSON.stringify(chip)} outside the row ${JSON.stringify(row)}`);
+      const [row, chip] = [await page.locator('.samples .seg').boundingBox(), await page.locator(`.seg-item[data-sample="${id}"]:has(input:checked)`).boundingBox()];
+      expect(chip.x >= row.x - 1 && chip.x + chip.width <= row.x + row.width + 1, `390 px: ?sample=${id} ${JSON.stringify(chip)} outside the row ${JSON.stringify(row)}`);
       await page.keyboard.press('Tab');
       expect((await active(page)) === 'Skip to content', `390 px ?sample=${id}: first Tab focused "${await active(page)}"`);
     }

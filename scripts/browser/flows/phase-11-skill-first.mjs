@@ -1,5 +1,5 @@
 // Phase 11: the skill pane leads the first view beside the map (D21). Ready times (P3), sample
-// switching, tree keyboard model, "In the skill" from the detail panel, Generate skill, the zip
+// switching, tree keyboard model, "In the skill" from the detail panel, Generate (an empty field), the zip
 // download (unzipped and audited in Node, identical bytes when regenerated offline, O1), mobile tabs.
 import { execFileSync, execSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -92,7 +92,7 @@ export default {
         await cvd(null);
       }
 
-      // 2. Each sample chip updates the skill and the map (AC2).
+      // 2. Each sample (the hero's Samples control since R2) updates the skill and the map (AC2).
       for (const [id, slug] of [['petstore', 'petstore-api'], ['filesystem', 'filesystem-mcp'], ['tasks', 'tasks-api']]) {
         await page.locator(`[data-sample="${id}"]`).click();
         await page.getByRole('heading', { level: 2, name: `${slug} skill` }).waitFor();
@@ -101,7 +101,7 @@ export default {
         expect((await page.getByTestId('atlas').getAttribute('aria-label')).includes(id === 'filesystem' ? 'tools' : 'operations'), `${id}: map not updated`);
       }
 
-      await page.mouse.move(5, 5); // no chip hover in the screenshots below
+      await page.mouse.move(5, 5); // no sample hover in the screenshots below
       await page.waitForTimeout(200);
 
       // 3. Tree keyboard model: arrows to references/, Right opens it, Down to tasks.md, Enter shows it.
@@ -128,8 +128,8 @@ export default {
       expect((await previewOf(page)).startsWith('references/tasks.md, '), 'In the skill did not select the file');
       expect((await page.locator('[data-path="references/tasks.md"]').getAttribute('aria-selected')) === 'true', 'tree selection');
 
-      // 5. Generate skill writes it again, announces the audit and focuses the pane heading.
-      await page.getByRole('button', { name: 'Generate skill' }).click();
+      // 5. Generate with an empty field writes it again, announces the audit and focuses the pane heading.
+      await page.getByRole('button', { name: 'Generate', exact: true }).click();
       await page.getByTestId('announcer').filter({ hasText: /Skill written: audit passed, (\d+) of \1 checks\./ }).waitFor();
       expect((await focused(page)) === 'skill-title', `Generate skill focused ${await focused(page)}`);
 
@@ -145,7 +145,7 @@ export default {
       await downloadAndAudit(page, 'petstore-api', dir);
       await page.locator('[data-sample="tasks"]').click();
       await page.getByRole('heading', { level: 2, name: 'tasks-api skill' }).waitFor();
-      await page.getByRole('button', { name: 'Generate skill' }).click();
+      await page.getByRole('button', { name: 'Generate', exact: true }).click();
       await paneReady(page);
       expect(Buffer.compare(first, await downloadAndAudit(page, 'tasks-api', dir)) === 0, 'zip bytes differ between generations');
       await context.setOffline(false);
@@ -186,7 +186,7 @@ export default {
       await paneReady(page);
       expect(await pane(page).isVisible(), 'Home did not return to the Skill tab');
       await page.locator('#tab-map').click();
-      await page.getByRole('button', { name: 'Generate skill' }).click();
+      await page.getByRole('button', { name: 'Generate', exact: true }).click();
       await paneReady(page);
       expect((await page.locator('#tab-skill').getAttribute('aria-selected')) === 'true', 'Generate skill did not select the Skill tab');
       expect((await focused(page)) === 'skill-title', `mobile Generate skill focused ${await focused(page)}`);

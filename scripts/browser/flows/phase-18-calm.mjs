@@ -1,5 +1,6 @@
 // Phase 18: calm polish, nothing lost (docs/DESIGN.md "Calm polish audit"). On first load nothing that
-// DESIGN.md folds is open, the accent marks one thing, and the focal point is on screen at 1440 and 390.
+// DESIGN.md folds is open, the accent marks the primary buttons, and the focal point (since redesign R2
+// the hero) is on screen at 1440 and 390. More options and the folded sample chips are gone in R2.
 // Then every folded item is reached by keyboard only: Tab to its toggle, Enter or Space opens it,
 // focus moves inside (or, for text-only content, the text is in the accessibility tree); each toggle
 // has a name and an expanded state (read from Chrome's accessibility tree); under reduced motion
@@ -25,7 +26,6 @@ paths:
  * the control Tab reaches inside (null: text only), and what must be on screen first.
  */
 const FOLDED = [
-  { name: /^More options$/, toggle: 'button[aria-controls="source-more"]', content: '#source-more', inside: 'select' },
   { name: /^Options$/, toggle: '.options > summary', content: '#opt-slug', inside: '#opt-slug', pane: true },
   { name: /^Audit passed: 9 of 9 checks$/, toggle: '.audit > summary', content: '.audit ul', inside: null, text: 'Every operation: passed', pane: true },
   { name: /^Install command$/, toggle: '.install > summary', content: '.install pre', inside: '.install button', text: 'unzip tasks-api-skill.zip', pane: true },
@@ -36,7 +36,6 @@ const FOLDED = [
 /** Folded only once a user source is loaded. */
 const LOADED = [
   { name: /^\d+ warnings?$/, toggle: '.warnings > summary', content: '.warnings ul', inside: null, text: 'external' },
-  { name: /^Try a built-in sample$/, toggle: '.samples-fold > summary', content: '.samples-fold .chips', inside: '.samples-fold .chip' },
 ];
 
 export default {
@@ -128,15 +127,15 @@ export default {
       // First load: nothing DESIGN.md folds is open, one accent fill, the focal point on screen.
       const open = await page.evaluate(() => [...document.querySelectorAll('details[open]')].map((d) => d.className));
       expect(open.length === 0, `${width}: disclosures open on first load: ${open}`);
-      expect(await page.locator('#source-more').isHidden(), `${width}: More options open on first load`);
+      // Since redesign R2 the primary buttons share the accent: Generate in the hero, Download .zip.
       const fills = await accentFills();
-      expect(fills.length === 1 && fills[0] === 'Download .zip', `${width}: accent fills ${JSON.stringify(fills)}`);
+      expect(fills.join() === 'Generate,Download .zip', `${width}: accent fills ${JSON.stringify(fills)}`);
+      // The focal point is the hero (R2): headline, field, Generate and the samples on screen; at
+      // desktop width the result frame and the skill's files start on screen too.
       const box = async (selector) => page.locator(selector).first().boundingBox();
-      const [tree, audit, preview, actions] = [await box('[role="tree"]'), await box('.audit > summary'), await box('#skill-preview'), await box('.actions')];
-      const fold = width >= 1024 ? height : actions.y; // phones: above the sticky Download bar
-      expect(tree.y + Math.min(tree.height, 100) <= fold && audit.y + audit.height <= fold && preview.y + 40 <= fold,
-        `${width}: tree, "Audit passed" or the preview start below ${fold}px: ${JSON.stringify({ tree, audit, preview })}`);
-      if (width >= 1024) expect(preview.y + preview.height <= height && actions.y + actions.height <= height, `${width}: preview or Download below the fold`);
+      const [h1, field, samples, frame, tree] = [await box('.hero h1'), await box('.source-field'), await box('.samples'), await box('#result'), await box('[role="tree"]')];
+      expect([h1, field, samples].every((b) => b.y >= 0 && b.y + b.height <= height), `${width}: the hero is not on screen: ${JSON.stringify({ h1, field, samples })}`);
+      if (width >= 1024) expect(frame.y < height && tree.y + Math.min(tree.height, 100) <= height, `${width}: the result starts below the fold: ${JSON.stringify({ frame, tree })}`);
       expect((await page.locator('.audit > summary').textContent()).includes('Audit passed'), `${width}: audit line`);
 
       // The map's screen-reader summary and the list view are still in the accessibility tree.
@@ -155,11 +154,11 @@ export default {
       await walk(FOLDED, width);
       await axe(`folded items ${width}`);
 
-      // A loaded source folds the sample chips; its warnings stay one step away.
+      // A loaded source's warnings stay one step away.
       await tabKey(width < 1024 ? 'skill' : 'map');
       await page.locator('#source-field').fill(WARNED);
       await page.locator('#source-field').press('Enter');
-      await page.locator('.title h1', { hasText: 'Shelf API' }).waitFor();
+      await page.locator('.title h2', { hasText: 'Shelf API' }).waitFor();
       await ready();
       await walk(LOADED, width);
       await screenshot(`folded-items-${width}`);

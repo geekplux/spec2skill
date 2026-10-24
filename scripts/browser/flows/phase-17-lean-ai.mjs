@@ -73,7 +73,7 @@ export default {
     await page.emulateMedia({ colorScheme: 'light' });
     await page.goto(origin);
     await page.evaluate(() => localStorage.clear());
-    for (const chip of await page.locator('.chips .chip').all()) {
+    for (const chip of await page.locator('.samples .seg-item').all()) {
       await chip.click();
       await ready();
       expect((await names.textContent()) === 'Names: deterministic', `sample: ${await names.textContent()}`);
@@ -84,7 +84,7 @@ export default {
     // AC3: a URL spec shows its deterministic skill and map while the one describe call is held.
     await page.locator('#source-field').fill(`${HOST}/notes.json`);
     await page.locator('#source-field').press('Enter');
-    await page.locator('.title h1', { hasText: /^Field Notes API$/ }).waitFor();
+    await page.locator('.title h2', { hasText: /^Field Notes API$/ }).waitFor();
     await ready();
     for (let i = 0; i < 50 && describes() === 0; i++) await page.waitForTimeout(100);
     expect(describes() === 1, `describe calls while held: ${describes()} (${api})`);

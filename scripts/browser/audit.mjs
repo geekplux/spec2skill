@@ -181,7 +181,7 @@ export default {
     await page.evaluate(() => window.scrollTo(0, 0));
     await shot('empty-spec');
     await submit(WARNED);
-    await page.locator('.title h1', { hasText: 'Shelf API' }).waitFor();
+    await page.locator('.title h2', { hasText: 'Shelf API' }).waitFor();
     await ready();
     await disclose('.warnings');
     await page.evaluate(() => window.scrollTo(0, 0));

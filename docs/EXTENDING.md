@@ -57,7 +57,7 @@ To add a reference page, return it from `referenceFiles()` (or a new writer spre
 ## Adding a sample
 
 1. Add the file to `samples/` (small, redistributable, nothing sensitive; nothing finance-related) and document its source, licence and changes in `samples/README.md`.
-2. Register it in `SAMPLES` in `src/samples/index.ts` (`id`, `label`, `kind`, `load`); `sampleModel()` and `getSample()` pick it up, and so do the sample chips and `spec2skill --sample <id>`.
+2. Register it in `SAMPLES` in `src/samples/index.ts` (`id`, `label`, `kind`, `load`); `sampleModel()` and `getSample()` pick it up, and so do the Samples control on the page and `spec2skill --sample <id>`.
 3. Add it to `SAMPLES` in `scripts/build-gallery.mjs` with a one-line "what it shows", run `pnpm gallery`, and commit the new `examples/<slug>/`.
 4. Add golden snapshots: the graph and layout tests iterate over the samples, so `pnpm test -u` writes `src/graph/__snapshots__/<id>.graph.json` and `src/layout/__snapshots__/<id>.layout.json`; review them.
 5. Check the bundle budget with `pnpm build && pnpm check:size`: samples ship in the app.

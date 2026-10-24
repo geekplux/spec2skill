@@ -52,8 +52,10 @@ async function expectAtlas(page, id) {
 }
 
 /** Every cluster card lies inside the visible map. */
-// `inView`: on first load (no scrolling) every card must also end above the window's bottom edge.
+// `inView`: every card must also end above the window's bottom edge once the map is scrolled into view
+// (since redesign R2 the hero comes first and the map sits in the result frame below it).
 async function expectFitted(page, label, { inView = false } = {}) {
+  if (inView) await page.getByTestId('atlas').evaluate((el) => el.scrollIntoView({ block: 'nearest' }));
   const [outside, below] = await page.evaluate(() => {
     const box = document.querySelector('[data-testid="atlas"]').getBoundingClientRect();
     const cards = [...document.querySelectorAll('.cluster .card')].map((card) => card.getBoundingClientRect());
@@ -142,7 +144,7 @@ export default {
     await legend.click();
     expect(await page.getByText('Ctrl + scroll to zoom').isVisible(), 'legend does not explain Ctrl + scroll');
     await legend.click();
-    await page.evaluate(() => window.scrollTo(0, 0));
+    await atlas(page).evaluate((el) => el.scrollIntoView({ block: 'nearest' })); // the map sits below the hero since redesign R2
     box = await atlas(page).boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.keyboard.down('Control');
@@ -170,19 +172,20 @@ export default {
     await expectFitted(page, 'fit button (reduced motion, no wait)');
     await page.emulateMedia({ reducedMotion: 'no-preference' });
 
-    // F2: each chip switches the atlas (click, then Enter).
+    // F2: each sample switches the atlas (click, then the arrow keys of the Samples radio group, R2).
+    const sampleRadio = (id) => page.getByRole('radiogroup', { name: 'Samples' }).getByText(SAMPLES[id].chip, { exact: true });
     for (const id of ['petstore', 'filesystem']) {
-      await page.getByRole('button', { name: SAMPLES[id].chip }).click();
-      await page.getByRole('heading', { level: 1 }).filter({ hasText: id === 'petstore' ? 'Petstore' : 'filesystem' }).waitFor();
+      await sampleRadio(id).click();
+      await page.locator('.title h2').filter({ hasText: id === 'petstore' ? 'Petstore' : 'filesystem' }).waitFor();
       await expectAtlas(page, id);
       await page.evaluate(() => document.fonts.ready);
       await page.mouse.move(5, 5);
-      await page.waitForTimeout(200); // let the chip colour transition settle
+      await page.waitForTimeout(200); // let colour transitions settle
       await screenshot(`atlas-${id}-desktop`);
     }
-    await page.getByRole('button', { name: SAMPLES.tasks.chip }).focus();
-    await page.keyboard.press('Enter');
-    await page.getByRole('heading', { level: 1, name: 'Tasks API (sample)' }).waitFor();
+    await page.locator('input[name="sample"][value="filesystem"]').focus();
+    await page.keyboard.press('ArrowRight'); // wraps to Tasks API
+    await page.getByRole('heading', { level: 2, name: 'Tasks API (sample)' }).waitFor();
     await expectAtlas(page, 'tasks');
 
     // Map | List: List hides the map and keeps the text atlas; Map brings it back.
@@ -216,8 +219,8 @@ export default {
     await page.route('**/favicon.svg', (route) => route.fulfill({ body: icon, contentType: 'image/svg+xml' }));
     await context.setOffline(true);
     for (const id of ['petstore', 'filesystem', 'tasks']) {
-      await page.getByRole('button', { name: SAMPLES[id].chip }).click();
-      await page.locator(`.chip[aria-pressed="true"][data-sample="${id}"]`).waitFor();
+      await sampleRadio(id).click();
+      await page.locator(`.seg-item[data-sample="${id}"]:has(input:checked)`).waitFor();
       await expectAtlas(page, id);
     }
     await context.setOffline(false);

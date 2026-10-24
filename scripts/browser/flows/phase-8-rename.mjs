@@ -1,8 +1,9 @@
-// Phase 8: the rename to spec2skill. Title, meta description, logo names, the pitch line (shown
-// from 1280 px), the wordmark (since redesign R1 the Overlap mark plus live text, readable with the
+// Phase 8: the rename to spec2skill. Title, meta description, logo names, the hero headline (since
+// redesign R2 it replaces the header's pitch line, at every width), the wordmark (since redesign R1 the Overlap mark plus live text, readable with the
 // font blocked), stored theme keys ignored (the theme follows the system), and no old name anywhere
 // a user can read it.
-const PITCH = 'Turn any OpenAPI spec or MCP server into an agent skill in one click.';
+const PITCH = 'Turn any OpenAPI spec or MCP server into an agent skill in one click.'; // the meta description
+const HEADLINE = 'Turn any API into an agent skill';
 const OLD_NAME = /tool[ -]?atlas/i;
 
 const expect = (ok, message) => {
@@ -43,8 +44,10 @@ export default {
     const text = await page.evaluate(() => `${document.title}\n${document.body.innerText}`);
     expect(!OLD_NAME.test(text), 'old name still visible on the page');
 
-    // The pitch line: visible at 1280 px, hidden below.
-    expect(await page.getByText(PITCH).isVisible(), 'pitch line hidden at 1280 px');
+    // The hero headline says what it does at every width; the header has no pitch line.
+    const headline = page.getByRole('heading', { level: 1, name: HEADLINE });
+    expect(await headline.isVisible(), 'hero headline hidden at 1280 px');
+    expect((await page.locator('header').getByText(PITCH).count()) === 0, 'the header still has the pitch line');
     await screenshot('header-light-desktop', await header(page));
     if (cvd) {
       await cvd('deuteranopia');
@@ -52,7 +55,7 @@ export default {
       await cvd(null);
     }
     await page.setViewportSize({ width: 1024, height: 800 });
-    expect(!(await page.getByText(PITCH).isVisible()), 'pitch line visible at 1024 px');
+    expect(await headline.isVisible(), 'hero headline hidden at 1024 px');
     await page.setViewportSize(viewports.desktop);
 
     // With the fonts blocked the wordmark still reads (font-display: swap, a system fallback).
@@ -86,6 +89,7 @@ export default {
 
     await page.setViewportSize(viewports.mobile);
     await load(page, origin);
+    expect(await headline.isVisible(), 'hero headline hidden at 390 px');
     await screenshot('header-mobile', await header(page));
   },
 };
