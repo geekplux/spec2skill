@@ -327,7 +327,7 @@
         "y": 109
       },
       "label": {
-        "x": 332.4,
+        "x": 329.2,
         "y": 109,
         "text": "sub-path",
         "shown": true
@@ -344,7 +344,7 @@
         "y": 133
       },
       "label": {
-        "x": 332.4,
+        "x": 329.2,
         "y": 133,
         "text": "sub-path",
         "shown": false
@@ -361,7 +361,7 @@
         "y": 157
       },
       "label": {
-        "x": 332.4,
+        "x": 329.2,
         "y": 157,
         "text": "sub-path",
         "shown": false
@@ -480,7 +480,7 @@
         "y": 109
       },
       "label": {
-        "x": 696.4,
+        "x": 693.2,
         "y": 85,
         "text": "sub-path",
         "shown": true
@@ -497,7 +497,7 @@
         "y": 133
       },
       "label": {
-        "x": 696.4,
+        "x": 693.2,
         "y": 133,
         "text": "sub-path",
         "shown": false
@@ -548,7 +548,7 @@
         "y": 229
       },
       "label": {
-        "x": -31.6,
+        "x": -34.8,
         "y": 229,
         "text": "sub-path",
         "shown": true
@@ -565,7 +565,7 @@
         "y": 561
       },
       "label": {
-        "x": 699.2,
+        "x": 707.6,
         "y": 551,
         "text": "Comment, CommentInput",
         "shown": true
@@ -582,7 +582,7 @@
         "y": 133
       },
       "label": {
-        "x": 677.3,
+        "x": 680.1,
         "y": 131.5,
         "text": "Project",
         "shown": true
@@ -599,7 +599,7 @@
         "y": 157
       },
       "label": {
-        "x": 684.4,
+        "x": 687.2,
         "y": 147,
         "text": "Project",
         "shown": false
@@ -616,7 +616,7 @@
         "y": 184
       },
       "label": {
-        "x": 690.4,
+        "x": 693.2,
         "y": 174,
         "text": "Project",
         "shown": false
@@ -633,7 +633,7 @@
         "y": 133
       },
       "label": {
-        "x": 1039.2,
+        "x": 1041.6,
         "y": 123,
         "text": "Member",
         "shown": true
@@ -650,7 +650,7 @@
         "y": 133
       },
       "label": {
-        "x": 304.8,
+        "x": 306.4,
         "y": 123,
         "text": "Task",
         "shown": false
@@ -667,7 +667,7 @@
         "y": 157
       },
       "label": {
-        "x": 310.8,
+        "x": 312.4,
         "y": 147,
         "text": "Task",
         "shown": true
@@ -684,7 +684,7 @@
         "y": 205
       },
       "label": {
-        "x": 316.8,
+        "x": 318.4,
         "y": 195,
         "text": "Task",
         "shown": false
@@ -701,7 +701,7 @@
         "y": 184
       },
       "label": {
-        "x": 322.8,
+        "x": 324.4,
         "y": 174,
         "text": "Task",
         "shown": false
@@ -718,7 +718,7 @@
         "y": 235
       },
       "label": {
-        "x": 328.8,
+        "x": 330.4,
         "y": 225,
         "text": "Task",
         "shown": false
@@ -735,7 +735,7 @@
         "y": 256
       },
       "label": {
-        "x": 304.8,
+        "x": 306.4,
         "y": 246,
         "text": "Task",
         "shown": false
@@ -752,7 +752,7 @@
         "y": 115
       },
       "label": {
-        "x": 722,
+        "x": 728,
         "y": 115,
         "text": "id -> projectId",
         "shown": false
@@ -769,7 +769,7 @@
         "y": 139
       },
       "label": {
-        "x": 728,
+        "x": 734,
         "y": 139,
         "text": "id -> projectId",
         "shown": false
@@ -786,10 +786,10 @@
         "y": 163
       },
       "label": {
-        "x": 704,
+        "x": 710,
         "y": 163,
         "text": "id -> projectId",
-        "shown": true
+        "shown": false
       }
     },
     {
@@ -939,7 +939,7 @@
         "y": 139
       },
       "label": {
-        "x": 710,
+        "x": 716,
         "y": 139,
         "text": "id -> projectId",
         "shown": false
@@ -956,7 +956,7 @@
         "y": 163
       },
       "label": {
-        "x": 716,
+        "x": 722,
         "y": 163,
         "text": "id -> projectId",
         "shown": false
@@ -973,7 +973,7 @@
         "y": 184
       },
       "label": {
-        "x": 722,
+        "x": 728,
         "y": 184,
         "text": "id -> projectId",
         "shown": false
@@ -1143,10 +1143,10 @@
         "y": 540
       },
       "label": {
-        "x": 321.6,
+        "x": 326.8,
         "y": 540,
         "text": "id -> labelId",
-        "shown": true
+        "shown": false
       }
     },
     {
@@ -1177,7 +1177,7 @@
         "y": 564
       },
       "label": {
-        "x": 327.6,
+        "x": 332.8,
         "y": 564,
         "text": "id -> labelId",
         "shown": false
@@ -1211,7 +1211,7 @@
         "y": 115
       },
       "label": {
-        "x": 1067.8,
+        "x": 1073.4,
         "y": 98.1,
         "text": "id -> memberId",
         "shown": true
@@ -1228,7 +1228,7 @@
         "y": 139
       },
       "label": {
-        "x": 1076.8,
+        "x": 1082.4,
         "y": 139,
         "text": "id -> memberId",
         "shown": false
@@ -1262,7 +1262,7 @@
         "y": 139
       },
       "label": {
-        "x": 1082.8,
+        "x": 1088.4,
         "y": 139,
         "text": "id -> memberId",
         "shown": false
@@ -1279,7 +1279,7 @@
         "y": 160
       },
       "label": {
-        "x": 1088.8,
+        "x": 1094.4,
         "y": 160,
         "text": "id -> memberId",
         "shown": false
@@ -1296,7 +1296,7 @@
         "y": 109
       },
       "label": {
-        "x": 336.4,
+        "x": 341.2,
         "y": 109,
         "text": "id -> taskId",
         "shown": false
@@ -1313,8 +1313,8 @@
         "y": 136
       },
       "label": {
-        "x": 339.5,
-        "y": 161.4,
+        "x": 337.5,
+        "y": 180.5,
         "text": "id -> taskId",
         "shown": true
       }
@@ -1330,7 +1330,7 @@
         "y": 160
       },
       "label": {
-        "x": 348.4,
+        "x": 353.2,
         "y": 160,
         "text": "id -> taskId",
         "shown": false
@@ -1381,7 +1381,7 @@
         "y": 184
       },
       "label": {
-        "x": 354.4,
+        "x": 359.2,
         "y": 184,
         "text": "id -> taskId",
         "shown": false
@@ -1398,7 +1398,7 @@
         "y": 139
       },
       "label": {
-        "x": 330.4,
+        "x": 335.2,
         "y": 139,
         "text": "id -> taskId",
         "shown": false
@@ -1415,7 +1415,7 @@
         "y": 163
       },
       "label": {
-        "x": 336.4,
+        "x": 341.2,
         "y": 163,
         "text": "id -> taskId",
         "shown": false
@@ -1432,7 +1432,7 @@
         "y": 184
       },
       "label": {
-        "x": 342.4,
+        "x": 347.2,
         "y": 184,
         "text": "id -> taskId",
         "shown": false
@@ -1483,7 +1483,7 @@
         "y": 211
       },
       "label": {
-        "x": 348.4,
+        "x": 353.2,
         "y": 211,
         "text": "id -> taskId",
         "shown": false
@@ -1568,7 +1568,7 @@
         "y": 115
       },
       "label": {
-        "x": 469.6,
+        "x": 488.8,
         "y": 115,
         "text": "projectId -> projectId, assigneeId -> assigneeId",
         "shown": false
@@ -1585,7 +1585,7 @@
         "y": 540
       },
       "label": {
-        "x": 684.2,
+        "x": 690.2,
         "y": 523.1,
         "text": "id -> commentId",
         "shown": true
@@ -1602,7 +1602,7 @@
         "y": 564
       },
       "label": {
-        "x": 692,
+        "x": 698,
         "y": 564,
         "text": "id -> commentId",
         "shown": false
@@ -1619,7 +1619,7 @@
         "y": 567
       },
       "label": {
-        "x": 698,
+        "x": 704,
         "y": 567,
         "text": "id -> commentId",
         "shown": false
@@ -1636,7 +1636,7 @@
         "y": 588
       },
       "label": {
-        "x": 704,
+        "x": 710,
         "y": 588,
         "text": "id -> commentId",
         "shown": false
@@ -1652,7 +1652,7 @@
       "d": "M612 64C670 64 670 18 728 18",
       "label": {
         "x": 670,
-        "y": 32,
+        "y": 31,
         "text": "projectId -> 4 ops"
       }
     },
@@ -1664,7 +1664,7 @@
       "d": "M612 112C670 112 670 18 728 18",
       "label": {
         "x": 670,
-        "y": 56,
+        "y": 55,
         "text": "projectId -> 4 ops"
       }
     }

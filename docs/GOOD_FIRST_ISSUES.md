@@ -28,8 +28,8 @@ Swagger 2 array parameters can be `csv`, `ssv`, `tsv`, `pipes` or `multi`. The g
 
 ## 5. A high-contrast theme
 
-Add a third theme beside "Chart paper" and "Night survey" for `prefers-contrast: more` and as a toggle choice: pure ink on white, thicker edges and focus outlines.
-- Start from: `src/design/tokens.css`, `src/design/tokens.ts`, `src/design/theme.ts`, the header toggle in `src/shell/Header.tsx`.
+Follow `prefers-contrast: more` on top of the light and dark themes (which follow the system): ink text where the UI uses muted text, stronger rules and focus outlines, still from the Radix gray, indigo and amber steps.
+- Start from: `src/design/tokens.css`, `src/design/tokens.ts`.
 - Done when: `src/design/contrast.test.ts` checks every new pair at 7:1 for text, the CVD tests still pass, and the browser check has a screenshot.
 
 ## 6. Export the map as SVG

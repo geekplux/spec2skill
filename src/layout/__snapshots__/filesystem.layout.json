@@ -255,7 +255,7 @@
         "y": 85
       },
       "label": {
-        "x": 667.2,
+        "x": 671.6,
         "y": 85,
         "text": "listed path",
         "shown": true
@@ -272,7 +272,7 @@
         "y": 160
       },
       "label": {
-        "x": 673.2,
+        "x": 677.6,
         "y": 160,
         "text": "listed path",
         "shown": false
@@ -391,7 +391,7 @@
         "y": 91
       },
       "label": {
-        "x": 679.2,
+        "x": 683.6,
         "y": 91,
         "text": "listed path",
         "shown": false
@@ -408,7 +408,7 @@
         "y": 184
       },
       "label": {
-        "x": 685.2,
+        "x": 689.6,
         "y": 184,
         "text": "listed path",
         "shown": false
@@ -459,7 +459,7 @@
         "y": 112
       },
       "label": {
-        "x": 315.2,
+        "x": 319.6,
         "y": 112,
         "text": "listed path",
         "shown": true
@@ -476,7 +476,7 @@
         "y": 136
       },
       "label": {
-        "x": 321.2,
+        "x": 325.6,
         "y": 136,
         "text": "listed path",
         "shown": false
@@ -493,7 +493,7 @@
         "y": 160
       },
       "label": {
-        "x": 327.2,
+        "x": 331.6,
         "y": 160,
         "text": "listed path",
         "shown": false
@@ -510,7 +510,7 @@
         "y": 232
       },
       "label": {
-        "x": 333.2,
+        "x": 337.6,
         "y": 232,
         "text": "listed path",
         "shown": false
@@ -578,7 +578,7 @@
         "y": 208
       },
       "label": {
-        "x": 339.2,
+        "x": 343.6,
         "y": 208,
         "text": "listed path",
         "shown": false
@@ -595,7 +595,7 @@
         "y": 112
       },
       "label": {
-        "x": 691.2,
+        "x": 695.6,
         "y": 112,
         "text": "listed path",
         "shown": false
@@ -612,7 +612,7 @@
         "y": 136
       },
       "label": {
-        "x": 667.2,
+        "x": 671.6,
         "y": 136,
         "text": "listed path",
         "shown": false
@@ -629,7 +629,7 @@
         "y": 208
       },
       "label": {
-        "x": 673.2,
+        "x": 677.6,
         "y": 208,
         "text": "listed path",
         "shown": false
@@ -662,7 +662,7 @@
       "d": "M368 64C316 64 316 18 264 18",
       "label": {
         "x": 316,
-        "y": 32,
+        "y": 31,
         "text": "path -> 6 ops"
       }
     },
@@ -674,7 +674,7 @@
       "d": "M368 112C316 112 316 18 264 18",
       "label": {
         "x": 316,
-        "y": 56,
+        "y": 55,
         "text": "path -> 6 ops"
       }
     }

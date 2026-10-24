@@ -2,10 +2,9 @@
 // The SVG is a named group (aria-roledescription "atlas"); nodes are buttons with a roving tabindex,
 // so the map is one Tab stop. Keys and clicks are handled here (pure logic in keyboard.ts), so the
 // static-element a11y lint rules are disabled on the SVG's opening tag only.
-import { type CSSProperties, type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAnnounce } from '../a11y/Announcer';
 import { DetailPanel } from '../detail/DetailPanel';
-import { WASH } from '../design/tokens';
 import type { AtlasGraph, Edge } from '../graph';
 import { aggregated, startCollapsed } from '../layout/collapse';
 import type { Point, Rect } from '../layout/geometry';
@@ -266,7 +265,6 @@ export function AtlasMap({ model, graph, base = graph, skillFile, onSkillFile, s
         data-ready={cam ? 'true' : 'false'}
         data-far={cam && cam.k < LABEL_ZOOM ? 'true' : undefined}
         data-hot={hot ?? undefined}
-        style={{ '--inv': cam ? 1 / cam.k : 1 } as CSSProperties}
         tabIndex={-1}
         role="group"
         aria-roledescription="atlas"
@@ -335,7 +333,7 @@ export function AtlasMap({ model, graph, base = graph, skillFile, onSkillFile, s
             <rect fill="url(#grid)" x={atlas.bounds.x - 2400} y={atlas.bounds.y - 2400} width={atlas.bounds.w + 4800} height={atlas.bounds.h + 4800} />
             {/* Visible text is hidden from assistive tech: each node's name carries it (A2). */}
             {atlas.clusters.map((c) => (
-              <g key={c.id} className="cluster" aria-hidden="true" transform={`translate(${c.x} ${c.y})`} style={{ '--wash': `var(--${WASH[graph.clusters.findIndex((g) => g.id === c.id) % WASH.length]})` } as CSSProperties}>
+              <g key={c.id} className="cluster" aria-hidden="true" transform={`translate(${c.x} ${c.y})`}>
                 <rect className="card" width={c.w} height={c.h} rx={8} />
                 <path className="card-rule" d={`M0 36H${c.w}`} />
                 <text className="territory-label" x={16} y={23}>{fitName(names.get(c.id) ?? c.name, c.w)}</text>

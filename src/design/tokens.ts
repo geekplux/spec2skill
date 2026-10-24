@@ -1,37 +1,68 @@
-// The "Survey chart" design tokens (docs/PLAN.md 3.2-3.4). tokens.css mirrors these values;
-// tokens.test.ts fails if the two drift, and contrast/cvd tests check every pair below.
+// The "Route map" design tokens (docs/redesign/DESIGN.md section 2). tokens.css mirrors these values;
+// tokens.test.ts fails if the two drift, and contrast/cvd tests check the pairs the UI draws.
 export type Theme = 'light' | 'dark';
 
-export const PALETTE = {
-  paper: { light: '#F7F3EA', dark: '#0E1621' },
-  vellum: { light: '#FFFDF7', dark: '#16212F' },
-  ink: { light: '#1C2430', dark: '#ECE6D8' },
-  graphite: { light: '#59636F', dark: '#A6B0BC' },
-  rule: { light: '#D9D1C0', dark: '#2B3B4F' },
-  meridian: { light: '#1F5FAD', dark: '#7DB0EA' },
-  fir: { light: '#1E7A5A', dark: '#5CC49B' },
-  ochre: { light: '#9A6200', dark: '#E2B455' },
-  brick: { light: '#B23A1E', dark: '#F08A6C' },
-  plum: { light: '#7A3E8F', dark: '#C99BDB' },
-  marker: { light: '#F2C230', dark: '#F2C230' },
+/** Radix Colors 3.0.0 (@radix-ui/colors), steps 1-12, copied rather than installed (docs/DECISIONS.md). */
+export const RADIX = {
+  gray: {
+    light: ['#fcfcfc', '#f9f9f9', '#f0f0f0', '#e8e8e8', '#e0e0e0', '#d9d9d9', '#cecece', '#bbbbbb', '#8d8d8d', '#838383', '#646464', '#202020'],
+    dark: ['#111111', '#191919', '#222222', '#2a2a2a', '#313131', '#3a3a3a', '#484848', '#606060', '#6e6e6e', '#7b7b7b', '#b4b4b4', '#eeeeee'],
+  },
+  indigo: {
+    light: ['#fdfdfe', '#f7f9ff', '#edf2fe', '#e1e9ff', '#d2deff', '#c1d0ff', '#abbdf9', '#8da4ef', '#3e63dd', '#3358d4', '#3a5bc7', '#1f2d5c'],
+    dark: ['#11131f', '#141726', '#182449', '#1d2e62', '#253974', '#304384', '#3a4f97', '#435db1', '#3e63dd', '#5472e4', '#9eb1ff', '#d6e1ff'],
+  },
+  amber: {
+    light: ['#fefdfb', '#fefbe9', '#fff7c2', '#ffee9c', '#fbe577', '#f3d673', '#e9c162', '#e2a336', '#ffc53d', '#ffba18', '#ab6400', '#4f3422'],
+    dark: ['#16120c', '#1d180f', '#302008', '#3f2700', '#4d3000', '#5c3d05', '#714f19', '#8f6424', '#ffc53d', '#ffd60a', '#ffca16', '#ffe7b3'],
+  },
 } as const;
 
-export type ColorToken = keyof typeof PALETTE;
+export type Scale = keyof typeof RADIX;
+export type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+/** `gray-1` ... `amber-12`: the CSS custom property names (without `--`). */
+export type ColorToken = `${Scale}-${Step}`;
 
-/** Which hue marks which method/kind badge (the text label is always shown too). */
-export const METHOD_HUE = { get: 'meridian', post: 'fir', put: 'ochre', patch: 'ochre', delete: 'brick', tool: 'plum' } as const;
-/** Cluster territory washes, cycled in cluster order; decoration only. */
-export const WASH = ['meridian', 'fir', 'ochre', 'plum', 'brick'] as const;
-/** Edge hues; each edge kind also has its own line style, marker and label. */
-export const EDGE_HUE = { feeds: 'meridian', 'sub-path': 'graphite', 'shared-schema': 'plum' } as const;
+export const SCALES = Object.keys(RADIX) as Scale[];
+export const STEPS: readonly Step[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+export const COLOR_TOKENS: ColorToken[] = SCALES.flatMap((s) => STEPS.map((n): ColorToken => `${s}-${n}`));
 
-/** The one spacing scale (docs/DESIGN.md 3): layout CSS uses only these (scripts/check-spacing.mjs). */
+/** The hex value of a Radix step in a theme. */
+export function color(token: ColorToken, theme: Theme): string {
+  const [scale, step] = token.split('-') as [Scale, string];
+  return RADIX[scale][theme][Number(step) - 1]!;
+}
+
+/**
+ * Role tokens beyond the 36 steps. `indigo-contrast` is the text on an `indigo-9` fill (the solid-colour
+ * exception Radix documents). `destructive` is the text of destructive operations and failures:
+ * `amber-11` in dark, but `amber-12` in light, where `amber-11` on `gray-1` is 4.49:1, just under AA.
+ */
+export const ROLE = {
+  'indigo-contrast': { light: '#ffffff', dark: '#ffffff' },
+  destructive: { light: color('amber-12', 'light'), dark: color('amber-11', 'dark') },
+} as const;
+export type RoleToken = keyof typeof ROLE;
+
+/** Every rule and border is this wide (DESIGN.md rule 6), drawn as a box-shadow so it stays 0.5 px. */
+export const LINE = '0.5px';
+
+/** The four font sizes (DESIGN.md rule 8) and their line heights. */
+export const TYPE = {
+  12: { size: '12px', leading: '16px' },
+  14: { size: '14px', leading: '20px' },
+  20: { size: '20px', leading: '28px' },
+  48: { size: '48px', leading: '52px' },
+} as const;
+
+/** The one spacing scale: layout CSS uses only these (scripts/check-spacing.mjs). */
 export const SPACE = { 1: '4px', 2: '8px', 3: '16px', 4: '24px', 5: '40px', 6: '64px' } as const;
 export const RADIUS = { sm: '4px', md: '8px', pill: '999px' } as const;
 export const FONT = {
-  display: "'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif",
-  body: "system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif",
-  mono: "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
+  sans: "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
+  mono: "'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace",
 } as const;
+/** Self-hosted faces, Latin subset only (@fontsource/<family>): the weights loaded. */
+export const FACES = { 'ibm-plex-sans': [400, 500, 600], 'ibm-plex-mono': [400, 500, 600] } as const;
 /** Motion durations; all become 0ms under prefers-reduced-motion: reduce. */
 export const MOTION = { fast: '150ms', camera: '250ms', fade: '120ms' } as const;

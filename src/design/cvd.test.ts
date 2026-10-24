@@ -1,34 +1,27 @@
-// CVD safety of the meaning-carrying hues (docs/PLAN.md 3.2, AC-A5): Machado 2009 simulation,
-// minimum OKLab distance between hues that appear side by side, tolerated pairs listed explicitly.
+// CVD safety of the colours that sit side by side (docs/redesign/DESIGN.md 8.5): Machado 2009
+// simulation, minimum OKLab distance under protanopia, deuteranopia and tritanopia, both themes.
 import { describe, expect, it } from 'vitest';
 import { CVD_TYPES, type CvdType, cvdDistance, oklab, simulate } from './cvd';
-import { EDGE_HUE, METHOD_HUE, PALETTE, type Theme } from './tokens';
+import { type ColorToken, ROLE, type RoleToken, type Theme, color } from './tokens';
 
 /** Distinct enough to tell apart at a glance. */
 const MIN_DISTANCE = 0.06;
-/** Even tolerated pairs must not collapse into one colour (about two OKLab JNDs). */
-const FLOOR = 0.02;
 
-const pairs = (hues: readonly string[]) => {
-  const unique = [...new Set(hues)];
-  return unique.flatMap((a, i) => unique.slice(i + 1).map((b) => `${a}/${b}`));
-};
-const SIDE_BY_SIDE = [...new Set([...pairs(Object.values(METHOD_HUE)), ...pairs(Object.values(EDGE_HUE))])];
+type Token = ColorToken | RoleToken;
+const pairs = (tokens: Token[]) => tokens.flatMap((a, i) => tokens.slice(i + 1).map((b) => `${a}/${b}`));
 
-/**
- * Below MIN_DISTANCE, tolerated because the colour is never the only channel: method badges
- * always show the method text (and DELETE adds a hatched bar and `!`), MCP tools a notched shape
- * and `fn` glyph, and edges differ by line style, marker and label.
- */
-const TOLERATED: Record<Theme, string[]> = {
-  light: ['tritanopia meridian/fir', 'deuteranopia meridian/plum', 'deuteranopia ochre/brick'],
-  dark: [
-    'tritanopia meridian/fir',
-    'protanopia meridian/plum',
-    'deuteranopia meridian/plum',
-    'deuteranopia graphite/plum',
-  ],
+/** Groups of colours that appear next to each other; every pair inside a group must stay apart. */
+const GROUPS: Record<string, Token[]> = {
+  // DESIGN.md 8.5: the accent, the destructive hue and ink.
+  accent: ['indigo-9', 'amber-11', 'gray-12'],
+  // The logo: the spec square, the skill circle and their ink overlap.
+  logo: ['indigo-9', 'amber-9', 'gray-12'],
+  // Text: ink, muted text and method text, accent text, destructive method text.
+  text: ['gray-12', 'gray-11', 'indigo-11', 'destructive'],
+  // The map: the strongest workflow, resting links and highlighted links.
+  map: ['indigo-9', 'gray-9', 'gray-12'],
 };
+const SIDE_BY_SIDE = [...new Set(Object.values(GROUPS).flatMap(pairs))];
 
 describe('cvd helpers', () => {
   it('maps white and black to themselves under every deficiency', () => {
@@ -52,16 +45,11 @@ describe('cvd helpers', () => {
 });
 
 describe.each<Theme>(['light', 'dark'])('%s theme', (theme) => {
-  const hex = (token: string) => PALETTE[token as keyof typeof PALETTE][theme];
+  const hex = (token: string) => (token in ROLE ? ROLE[token as RoleToken][theme] : color(token as ColorToken, theme));
   const cases = (['none', ...CVD_TYPES] as (CvdType | 'none')[]).flatMap((type) => SIDE_BY_SIDE.map((pair) => [type, pair]));
 
   it.each(cases)('%s %s', (type, pair) => {
     const [a, b] = pair!.split('/') as [string, string];
-    const distance = cvdDistance(hex(a), hex(b), type as CvdType | 'none');
-    // Tolerated pairs sit in [FLOOR, MIN_DISTANCE): the list stays exact, so a tolerated pair
-    // that now passes must be removed from it.
-    const [low, high] = TOLERATED[theme].includes(`${type} ${pair}`) ? [FLOOR, MIN_DISTANCE] : [MIN_DISTANCE, Infinity];
-    expect(distance).toBeGreaterThanOrEqual(low);
-    expect(distance).toBeLessThan(high);
+    expect(cvdDistance(hex(a), hex(b), type as CvdType | 'none')).toBeGreaterThanOrEqual(MIN_DISTANCE);
   });
 });

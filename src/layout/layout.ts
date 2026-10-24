@@ -9,7 +9,8 @@ import { type Point, type Rect, bezier, curvePath, elbow, overlaps, pointAt, rou
 export const NODE_W = 232;
 export const NODE_H = 40;
 const GAP = 8, PAD = 16, HEAD = 36, INDENT = 12, MAX_DEPTH = 3, COL_GAP = 16, CARD_GAP = 88, MARGIN = 48;
-const LABEL_H = 14, CHAR_W = 6.4, LABEL_T = [0.5, 0.38, 0.62, 0.28, 0.72];
+// Edge labels are mono 12 px (0.6 em a character, 16 px a line).
+const LABEL_H = 16, CHAR_W = 7.2, LABEL_T = [0.5, 0.38, 0.62, 0.28, 0.72];
 
 export type NodeState = 'read' | 'mutating' | 'destructive';
 export interface LayoutNode extends Rect {
