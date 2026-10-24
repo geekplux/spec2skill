@@ -51,7 +51,7 @@ All three run offline on the built-in samples, with no account and no key. Start
 pnpm install && pnpm build && pnpm preview      # http://127.0.0.1:4173 (or `pnpm dev`)
 ```
 
-`pnpm capture:demo` (after `pnpm build`) records the README's demo in headless Chrome on the Tasks API sample (the load sequence, getTask's operation card, In skill) and writes the frames to `docs/media/demo/` and the GIF to `docs/media/demo.gif`.
+`pnpm capture:demo` (after `pnpm build`) records the README's demo in headless Chrome on the built-in samples (Petstore, the switch to the Tasks API and its load sequence, getTask's operation card, In skill) and writes the frames to `docs/media/demo/` and the GIF to `docs/media/demo.gif`.
 
 ### 1. "Teach my agent this MCP server" (Filesystem MCP)
 

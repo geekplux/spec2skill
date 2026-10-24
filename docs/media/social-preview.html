@@ -30,40 +30,40 @@
     color: var(--gray-12);
     font-family: 'IBM Plex Sans', system-ui, sans-serif;
     font-feature-settings: "tnum";
-    display: grid;
-    grid-template-columns: 440px 1fr;
-    gap: 64px;
-    padding: 72px 0 0 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 48px 72px 0;
   }
-  .words { display: flex; flex-direction: column; gap: 32px; padding-bottom: 72px; }
-  .words img { width: 188px; height: auto; }
-  h1 { font-size: 48px; line-height: 52px; font-weight: 600; letter-spacing: -0.035em; text-wrap: balance; }
-  ul { list-style: none; padding: 0; display: grid; gap: 8px; font-size: 20px; line-height: 28px; color: var(--gray-11); }
-  code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 18px; color: var(--indigo-11); }
-  .foot { margin-top: auto; font-size: 20px; line-height: 28px; color: var(--gray-11); }
-  /* The hero (V2Hover, 1440x1250) at 80 %: Members, Labels and Tasks with getTask hovered, its links in
-     ink and its operation card, from the tools row down. */
+  .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 48px; }
+  h1 { font-size: 48px; line-height: 52px; font-weight: 600; letter-spacing: -0.035em; white-space: nowrap; }
+  .lede { margin-top: 8px; font-size: 20px; line-height: 28px; color: var(--gray-11); }
+  code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 20px; color: var(--indigo-11); }
+  .mark { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+  .mark img { width: 188px; height: auto; }
+  .mark p { font-size: 14px; line-height: 20px; color: var(--gray-11); }
+  /* The hero (V2Hover, 1440x1250) at 100 %: the result frame (152 to 1288, exactly this box's width)
+     from just above the map's cards (y 576) to the blank under the workflow caption (y 1056), so the
+     crop runs along the frame's sides and through empty space, never through a card or a line of text. */
   .shot {
-    align-self: start;
-    height: 568px;
+    flex: 1;
     overflow: hidden;
-    border-radius: 16px 0 0 0;
+    border-radius: 16px 16px 0 0;
     box-shadow: inset 0 0 0 0.5px var(--gray-7);
   }
-  .shot img { display: block; width: 1152px; max-width: none; margin: -400px 0 0 -347px; }
+  .shot img { display: block; width: 1440px; max-width: none; margin: -576px 0 0 -152px; }
 </style>
 </head>
 <body>
-  <div class="words">
-    <img src="wordmark.svg" alt="spec2skill">
-    <h1>Turn any API into an agent skill</h1>
-    <ul>
-      <li>OpenAPI 3.x, Swagger 2.0 and MCP</li>
-      <li>Inferred workflows: outputs feed inputs</li>
-      <li>Tests, evals and <code>audit passed</code> inside</li>
-      <li>A route map to check what it teaches</li>
-    </ul>
-    <p class="foot">Open source, MIT licence, works offline</p>
+  <div class="top">
+    <div>
+      <h1>Turn any API into an agent skill</h1>
+      <p class="lede">OpenAPI, Swagger or MCP in; a tested skill with <code>audit passed</code> and a route map out.</p>
+    </div>
+    <div class="mark">
+      <img src="wordmark.svg" alt="spec2skill">
+      <p>Open source, MIT licence, works offline</p>
+    </div>
   </div>
   <div class="shot"><img src="hero.png" alt=""></div>
 </body>

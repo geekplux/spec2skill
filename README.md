@@ -13,7 +13,7 @@ Paste a spec URL, an MCP server URL or the spec text, or pick a built-in sample.
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="docs/media/hero.png">
-  <img src="docs/media/demo.gif" width="960" alt="A short recording of spec2skill on its built-in Tasks API sample. The route map loads: five resource cards rise column by column (Projects, then Members and Labels, then Tasks, then Comments), the links fade in, and the strongest workflow draws left to right as one indigo line with numbered stops listProjects, listTasks and getTask. The pointer rests on getTask: its feed links turn ink, everything else fades, and its operation card lists input, output, fed by, feeds, shares schema, sub-paths and In skill. The In skill link opens references/tasks.md in the skill browser below the map, beside Audit passed, 9 of 9. A still image is shown instead when reduced motion is preferred.">
+  <img src="docs/media/demo.gif" width="960" alt="A short recording of spec2skill's built-in samples. It opens on the Petstore map; Tasks API is then picked in the samples above it and its route map loads: five resource cards rise column by column (Projects, then Members and Labels, then Tasks, then Comments), the links fade in, and the strongest workflow draws left to right as one indigo line with numbered stops listProjects, listTasks and getTask. The pointer rests on getTask: its feed links turn ink, everything else fades, and its operation card lists input, output, fed by, feeds, shares schema, sub-paths and In skill. The In skill link opens references/tasks.md in the skill browser below the map, beside Audit passed, 9 of 9. A still image is shown instead when reduced motion is preferred.">
 </picture>
 
 ## What you get

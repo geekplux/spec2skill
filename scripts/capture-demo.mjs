@@ -1,8 +1,8 @@
 // The README demo (docs/media/demo.gif), captured from the real app on the built-in samples at 1280x800
 // in the light theme, in three scenes:
-//   1. load    switching from Petstore to the Tasks API sample plays the load sequence (DESIGN.md 7): the
-//              cards rise column by column, the links fade in, the strongest workflow draws left to right
-//              and its stop discs pop. Every animation is paused and sought to each frame's time, so the
+//   1. load    Petstore at rest with the samples above its map, then switching to the Tasks API sample
+//              plays the load sequence (DESIGN.md 7): the cards rise column by column, the links fade
+//              in, the strongest workflow draws left to right and its stop discs pop. Every animation is paused and sought to each frame's time, so the
 //              frames show the real sequence at its real pace, whatever the machine's speed.
 //   2. hover   getTask under the pointer: its feed links in ink, the rest faded, the operation card.
 //   3. skill   the card's In skill link opens references/tasks.md in the skill browser under the map,
@@ -58,19 +58,21 @@ await runSession('capture-demo', async () => {
   /** Scrolls the page so `selector`'s top sits `offset` px below the window's top. */
   const scrollTo = (selector, offset) => page.evaluate(([sel, off]) => window.scrollTo(0, document.querySelector(sel).getBoundingClientRect().top + window.scrollY - off), [selector, offset]);
 
-  // 1. The load sequence: from Petstore at rest, switch to the Tasks API sample.
+  // 1. The load sequence: from Petstore at rest, switch to the Tasks API sample. The window keeps the
+  // samples at its top, so the switch is seen (Petstore selected, then Tasks API) above the map.
   await page.goto(`${ORIGIN}/?sample=petstore`);
   await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
   await page.evaluate(() => document.fonts.ready);
   await settled(page);
-  await scrollTo('#result', 8);
+  await scrollTo('.samples', 24);
   await page.mouse.move(1, 1);
+  await frame('Petstore at rest, before the switch', 1.2);
   // Clicked in the page, so the window stays on the map (the samples sit in the hero above it).
   await page.getByRole('radio', { name: 'Tasks API' }).evaluate((radio) => radio.click());
   await page.locator('#result-title', { hasText: /^Tasks API$/ }).waitFor();
   await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
   await page.evaluate(() => document.getAnimations().forEach((a) => a.pause()));
-  await scrollTo('#result', 8);
+  await scrollTo('.samples', 24);
   for (const [i, ms] of SEQUENCE.entries()) {
     const n = await page.evaluate((time) => {
       const list = document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity);
