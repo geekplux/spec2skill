@@ -34,10 +34,11 @@ function split(css: string): { body: string; rest: string } {
 
 /** Every declaration whose property matches `prop` (a regex source), with its rule's selector (@media wrappers dropped, @keyframes skipped). */
 function declarations(css: string, prop: string): { selector: string; prop: string; value: string }[] {
-  const flat = css.replace(/@(?:-[a-z]+-)?keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '').replace(/@media[^{]*\{/g, '');
+  const flat = css.replace(/@(?:-[a-z]+-)?keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/gi, '').replace(/@media[^{]*\{/gi, '');
   const out: { selector: string; prop: string; value: string }[] = [];
   for (const m of flat.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    for (const d of m[2]!.matchAll(new RegExp(`(?:^|;)\\s*(${prop})\\s*:\\s*([^;]+)`, 'g'))) out.push({ selector: m[1]!.trim(), prop: d[1]!, value: d[2]!.trim() });
+    // CSS property names are case-insensitive (`TRANSITION:` applies too): match any case, report lower case.
+    for (const d of m[2]!.matchAll(new RegExp(`(?:^|;)\\s*(${prop})\\s*:\\s*([^;]+)`, 'gi'))) out.push({ selector: m[1]!.trim(), prop: d[1]!.toLowerCase(), value: d[2]!.trim() });
   }
   return out;
 }
@@ -82,8 +83,8 @@ function cssMotionProblems(source: string): string[] {
       if (one.includes('infinite') !== (name === 's2-spin')) problems.push(`${d.selector}: ${name} loops (only the spinner may)`);
     }
   }
-  if (/scroll-behavior\s*:\s*smooth/.test(css)) problems.push('scroll-behavior: smooth');
-  const defined = [...css.matchAll(/@(?:-[a-z]+-)?keyframes ([\w-]+)/g)].map((m) => m[1]!);
+  if (/scroll-behavior\s*:\s*smooth/i.test(css)) problems.push('scroll-behavior: smooth');
+  const defined = [...css.matchAll(/@(?:-[a-z]+-)?keyframes ([\w-]+)/gi)].map((m) => m[1]!);
   const used = new Set([...body.matchAll(/\b(s2-[\w-]+)/g)].map((m) => m[1]!));
   for (const k of defined) if (!used.has(k)) problems.push(`unused keyframes ${k}`);
   for (const k of used) if (!defined.includes(k)) problems.push(`undefined keyframes ${k}`);
@@ -100,6 +101,7 @@ function scriptMotionProblems(files: Record<string, string>): string[] {
     [/[bB]ehavior\s*:\s*['"]smooth/, 'smooth scrolling'],
     [/setProperty\(\s*['"](?:-(?:webkit|moz|ms|o)-)?(?:transition|animation)/, 'a transition or animation set with setProperty'],
     [/\.style\.(?:webkit|Webkit|moz|Moz|ms)?(?:[tT]ransition|[aA]nimation)\w*\s*=(?!=)/, 'a transition or animation assigned to .style'],
+    [/\.style\s*\[\s*(['"`])(?:-(?:webkit|moz|ms|o)-)?(?:webkit|Webkit|moz|Moz|ms)?(?:[tT]ransition|[aA]nimation)[\w-]*\1\s*\]\s*=(?!=)/, 'a transition or animation assigned to .style'],
     [/(?:cssText\s*=|setAttribute\(\s*['"]style['"]).*(?:transition|animation)/, 'a transition or animation in a style string'],
     [/(?:^|[{,\s])['"]?(?:(?:-(?:webkit|moz|ms|o)-)?(?:transition|animation)|(?:Webkit|Moz|ms|O|webkit)(?:Transition|Animation))(?:[A-Z]\w*|-[\w-]+)?['"]?\s*:/m, 'a transition or animation style key'],
   ];
@@ -136,6 +138,12 @@ describe('the motion guard catches what DESIGN.md 7 does not list', () => {
     ['a loop', `${NO_PREFERENCE} { .swap { animation: s2-fade var(--motion-map) ease-out infinite; } }`, /loops/],
     ['a linear easing', `${NO_PREFERENCE} { .swap { animation: s2-fade var(--motion-map) linear both; } }`, /want var\(--motion-map\) ease-out/],
     ['an unused keyframe', '@keyframes s2-wobble { to { opacity: 0; } }', /unused keyframes s2-wobble/],
+    ['an upper-case transition', '.btn { TRANSITION: color 250ms ease-out; }', /transition not in the table: \.btn \| transition: color/],
+    ['a mixed-case transition longhand', '.btn { Transition-Duration: 250ms; }', /transition not in the table: \.btn \| transition-duration/],
+    ['an upper-case animation outside the no-preference block', '.swap { ANIMATION: s2-fade var(--motion-map) ease-out both; }', /animation outside/],
+    ['an upper-case animation longhand', `${NO_PREFERENCE} { .swap { Animation-Delay: 1s; } }`, /animation longhand: \.swap \| animation-delay/],
+    ['upper-case smooth scrolling', 'html { SCROLL-BEHAVIOR: Smooth; }', /scroll-behavior: smooth/],
+    ['an unused upper-case keyframe', '@KEYFRAMES s2-wobble { to { opacity: 0; } }', /unused keyframes s2-wobble/],
   ])('fails %s', (_label, extra, problem) => {
     expect(cssMotionProblems(`${ok}\n${extra}`).join('\n')).toMatch(problem);
   });
@@ -148,6 +156,9 @@ describe('the motion guard catches what DESIGN.md 7 does not list', () => {
     ['a vendor-prefixed style key', "<div style={{ WebkitTransition: 'opacity 1s' }} />", /style key/],
     ['.style.transition assigned', "el.style.transition = 'opacity 1s';", /assigned to \.style/],
     ['.style.animationName assigned', "el.style.animationName = 'x';", /assigned to \.style/],
+    ["el.style['transition'] assigned", "el.style['transition'] = 'opacity 1s';", /assigned to \.style/],
+    ['el.style["animation-duration"] assigned', 'el.style["animation-duration"] = "1s";', /assigned to \.style/],
+    ['el.style[`WebkitTransition`] assigned', 'el.style[`WebkitTransition`] = "opacity 1s";', /assigned to \.style/],
     ['cssText with a transition', "el.style.cssText = 'transition: opacity 1s';", /style string/],
     ['an SVG <animate>', '<circle><animate attributeName="r" dur="1s" /></circle>', /SVG <animate>/],
     ['new Animation(new KeyframeEffect(...))', 'new Animation(new KeyframeEffect(el, [{ opacity: 0 }], 250)).play();', /Web Animation/],
@@ -164,6 +175,7 @@ describe('the motion guard catches what DESIGN.md 7 does not list', () => {
     expect(sheetProblems(sheets, html).join('\n')).toMatch(problem);
   });
   it('ignores the words in comments', () => expect(scriptMotionProblems({ 'x.ts': '// transition: none\n/* animation: x */ const a = 1;' })).toEqual([]));
+  it("passes reading a transition by bracket and comparing it", () => expect(scriptMotionProblems({ 'x.ts': "const t = el.style['transition'];\nif (el.style['transition'] === 'none') f();" })).toEqual([]));
 });
 
 describe('motion (DESIGN.md 7)', () => {
