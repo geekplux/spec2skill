@@ -16,11 +16,11 @@ import { edgeText, edgesOf, nodeName } from '../map/keyboard';
 import { OpCard } from '../map/OpCard';
 import type { ApiModel } from '../model/types';
 import type { Chain } from '../skillgen/types';
+import { Breakable } from '../design/breaks';
 
 const rowButton = (id: string) => document.querySelector<HTMLElement>(`.list [data-op="${CSS.escape(id)}"]`);
 
 /** A path that may wrap after each `/`, never inside a segment. */
-const breakable = (s: string) => s.split(/(?<=\/)/).flatMap((part, i) => (i ? [<wbr key={i} />, part] : [part]));
 
 /** Every relationship of a row as a sentence with its kind and label ("feeds getMember via assigneeId -> memberId"). */
 function Relationships({ edges, id }: { edges: Edge[]; id: string }) {
@@ -133,7 +133,7 @@ export function ListView({ model, graph, match, edges, workflow, selected, onSel
                         aria-label={nodeName(o, row, c.name, edgesOf(edges, id).length)} onClick={() => open(id)}>
                         <span className="m" data-destructive={row.destructive || undefined}>{row.method}</span>
                         {' '}
-                        <span className="lid"><span className="id">{id}</span>{o.kind !== 'tool' && <span className="path">{breakable(o.path!)}</span>}</span>
+                        <span className="lid"><span className="id"><Breakable text={id} /></span>{o.kind !== 'tool' && <span className="path"><Breakable text={o.path!} /></span>}</span>
                         {row.destructive && <svg className="warn" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path className="warn-bg" d="M6 .9 11.6 10.9H.4Z" /><path className="warn-x" d="M6 4.6v2.9M6 9.1v.05" /></svg>}
                       </button>
                       {/* The row's relationships in words, for screen readers (the card lists them on screen). */}

@@ -13,6 +13,7 @@ import type { AuditCheck, AuditResult } from '../skillgen/audit-core';
 import type { FileTree as Files } from '../skillgen/types';
 import { FileTree } from './FileTree';
 import type { Skill } from './useSkill';
+import { Breakable } from '../design/breaks';
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const OUTLINE = ['SKILL.md', 'kit', 'references', 'examples', 'scripts', 'evals', 'ci'];
@@ -161,7 +162,7 @@ export function SkillBrowser({ skill, error, ready, empty, options, onOptions, f
       {skill && !empty && showPreview && (
         <div className="sb-preview" data-stale={!ready || undefined}>
           <div className="sb-head">
-            <h3 id="file-head"><span className="fname">{path}</span><span className="visually-hidden">, </span><span className="lines">{lines.length} {lines.length === 1 ? 'line' : 'lines'}</span>{!ready && <><span className="visually-hidden">, </span><span className="lines">Updating…</span></>}</h3>
+            <h3 id="file-head"><span className="fname"><Breakable text={path} /></span><span className="visually-hidden">, </span><span className="lines">{lines.length} {lines.length === 1 ? 'line' : 'lines'}</span>{!ready && <><span className="visually-hidden">, </span><span className="lines">Updating…</span></>}</h3>
             <span className="sb-tools">
               <button type="button" className="icon-btn" aria-label={copied ? `${path} copied` : `Copy ${path}`} onClick={copy}><Swap id={String(copied)}>{copied ? checkIcon(16) : COPY_ICON}</Swap></button>
               {phone && <button type="button" className="sb-close" onClick={close}>Close<span className="visually-hidden"> {path}</span></button>}

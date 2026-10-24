@@ -3,6 +3,7 @@
 import { type CSSProperties, type KeyboardEvent, useRef, useState } from 'react';
 import { CHEVRON_ICON, FILE_ICON, FOLDER_ICON } from '../design/icons';
 import { ancestors, treeKey, treeRows } from './tree';
+import { Breakable } from '../design/breaks';
 
 /** `phone`: 44 px rows, a file's row ends in a chevron (it opens the preview). */
 interface FileTreeProps { paths: string[]; selected: string; onSelect: (path: string) => void; phone?: boolean }
@@ -43,7 +44,7 @@ export function FileTree({ paths, selected, onSelect, phone = false }: FileTreeP
           tabIndex={i === at ? 0 : -1} style={{ '--level': r.level } as CSSProperties}
           onFocus={() => setFocus(r.path)} onClick={() => (r.folder ? toggle(r.path, !r.open) : onSelect(r.path))}>
           {r.folder ? FOLDER_ICON : FILE_ICON}
-          <span className="n">{r.folder ? r.name.slice(0, -1) : r.name}</span>
+          <span className="n"><Breakable text={r.folder ? r.name.slice(0, -1) : r.name} /></span>
           {r.folder ? <span className="count"><span className="visually-hidden">, </span>{r.files}<span className="visually-hidden"> {r.files === 1 ? 'file' : 'files'}</span></span> : phone && CHEVRON_ICON}
         </div>
       ))}

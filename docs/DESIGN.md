@@ -53,7 +53,7 @@ IBM Plex Sans and IBM Plex Mono, 400, 500 and 600, Latin subset, self-hosted wof
 | 14 / 20 | body, controls, operation ids (mono), file names on phones |
 | 12 / 16 | meta, methods, paths, code, counts, captions, the operation card's list |
 
-No other sizes, no uppercase or letter-spaced labels.
+No other sizes, no uppercase or letter-spaced labels. Identifiers (operation ids, paths, schema and field names, file names) wrap only at their word boundaries: `<Breakable>` (`src/design/breaks.tsx`) puts a `<wbr>` before each camelCase hump, after `_`, `-`, `/` and `.` and before `{`, so "createUsersWithArrayInput" wraps as "createUsersWithArray" over "Input"; copied text and accessible names stay the plain id, and `overflow-wrap: anywhere` is only the last resort for one word wider than its box (D79).
 
 ### Lines, shape and space
 

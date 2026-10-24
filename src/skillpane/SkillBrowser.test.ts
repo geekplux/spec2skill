@@ -14,7 +14,7 @@ const render = (props: Partial<Parameters<typeof SkillBrowser>[0]> = {}) =>
   renderToStaticMarkup(createElement(SkillBrowser, {
     skill, ready: true, empty: false, options: { key: 'h', slug: 'tasks-api', license: 'MIT' }, onOptions: () => {},
     file: 'SKILL.md', open: false, onFile: () => {}, onClose: () => {}, run: 0, phone: false, ...props,
-  }));
+  })).replaceAll('<wbr/>', ''); // file names wrap at word boundaries (src/design/breaks.tsx)
 
 describe('SkillBrowser', () => {
   it('previews the selected file as literal text with generated line numbers, never markup (S3)', () => {

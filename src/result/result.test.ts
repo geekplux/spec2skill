@@ -65,7 +65,8 @@ describe('WorkflowCaption', () => {
     const { model, workflow } = await tasks();
     const required = (id: string) => new Set(model.operations.find((o) => o.id === id)!.inputs.filter((p) => p.required).map((p) => p.name));
     const html = renderToStaticMarkup(createElement(WorkflowCaption, { chain: workflow!, required }));
-    expect(html.replace(/<[^>]+>/g, '|').split('|').filter(Boolean)).toEqual([
+    expect(html).toContain('<span class="mono">list<wbr/>Projects</span>'); // ids wrap at word boundaries only
+    expect(html.replaceAll('<wbr/>', '').replace(/<[^>]+>/g, '|').split('|').filter(Boolean)).toEqual([
       'Strongest workflow', '1', 'listProjects', ', passing ', 'id → projectId', '2', 'listTasks', ', passing ', 'id → taskId', '3', 'getTask',
     ]);
     const compact = renderToStaticMarkup(createElement(WorkflowCaption, { chain: workflow!, required, compact: true }));
@@ -87,7 +88,7 @@ describe('ListView', () => {
     const html = await renderList(false);
     expect([...html.matchAll(/<span class="lname">([^<]+)</g)].map((m) => m[1])).toEqual(['Projects', 'Members', 'Labels', 'Tasks', 'Comments']);
     expect(html).not.toContain('hidden=""'); // every group open on desktop
-    expect(html).toMatch(/<button type="button" class="lrow" data-op="getTask" data-route="3" aria-haspopup="dialog" aria-expanded="false" aria-label="GET getTask, \/tasks\/\{taskId\}, Get a task, workflow step 3, cluster Tasks, \d+ relationships"><span class="m">GET<\/span> <span class="lid"><span class="id">getTask<\/span><span class="path">\/<wbr\/>tasks\/<wbr\/>\{taskId\}<\/span><\/span><\/button>/);
+    expect(html).toMatch(/<button type="button" class="lrow" data-op="getTask" data-route="3" aria-haspopup="dialog" aria-expanded="false" aria-label="GET getTask, \/tasks\/\{taskId\}, Get a task, workflow step 3, cluster Tasks, \d+ relationships"><span class="m">GET<\/span> <span class="lid"><span class="id">get<wbr\/>Task<\/span><span class="path">\/tasks\/<wbr\/>\{task<wbr\/>Id\}<\/span><\/span><\/button>/);
     expect(html).toMatch(/data-op="deleteTask"[^>]*><span class="m" data-destructive="true">DELETE<\/span>[\s\S]*?<svg class="warn"/);
     expect(html).toContain('<span class="lname">Tasks</span><span class="lcount"><span class="visually-hidden">, </span>6<span class="visually-hidden"> operations: L list, C create, R read, U update, D delete, A action</span>');
   });

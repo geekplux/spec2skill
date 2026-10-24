@@ -11,6 +11,7 @@ import { example, outputFields, typeLabel } from '../model/examples';
 import type { ApiModel, Operation } from '../model/types';
 import { useFlash } from '../result/useFlash';
 import { edgesOf, relation } from './keyboard';
+import { Breakable } from '../design/breaks';
 
 /** Items separated by commas. */
 const list = (items: ReactNode[]) => items.map((item, i) => <Fragment key={i}>{i > 0 && ', '}{item}</Fragment>);
@@ -86,14 +87,14 @@ export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onC
       () => announce?.('Copy failed: select the example text and copy it.'),
     );
   // A related operation: a button in the pinned card, plain text in the preview (nothing in it takes focus).
-  const other = (id: string): ReactNode => (pinned && onGo ? <button type="button" className="oc-link mono" onClick={() => onGo(id)}>{id}</button> : <span className="mono">{id}</span>);
+  const other = (id: string): ReactNode => (pinned && onGo ? <button type="button" className="oc-link mono" onClick={() => onGo(id)}><Breakable text={id} /></button> : <span className="mono"><Breakable text={id} /></span>);
 
   return (
     <div ref={root} className={`op-card${className ? ` ${className}` : ''}`} style={style} data-testid={pinned ? 'op-card' : 'op-preview'}
       role={pinned ? 'dialog' : undefined} aria-labelledby={pinned ? titleId : undefined} aria-hidden={pinned ? undefined : true}
       onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
       <div className="oc-head">
-        <p className="oc-path mono">{opName(op)}</p>
+        <p className="oc-path mono"><Breakable text={opName(op)} /></p>
         {pinned && onClose && <button type="button" className="oc-close" onClick={onClose}>Close<span className="visually-hidden"> details</span></button>}
       </div>
       <h3 className="oc-title" id={titleId}><span className="visually-hidden">{opName(op)}, </span>{op.title}{op.deprecated && <span className="oc-flag">deprecated</span>}</h3>
@@ -102,24 +103,24 @@ export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onC
         <dt>Input</dt>
         <dd>
           {op.inputs.length === 0 ? 'None' : op.inputs.map((p, i) => (
-            <span className="oc-input" key={`${p.in} ${p.name}`}>{i > 0 && <br />}<span className="mono">{p.name}</span> <span className="muted">{[p.in, typeLabel(p.schema), p.required && 'required'].filter(Boolean).join(', ')}</span></span>
+            <span className="oc-input" key={`${p.in} ${p.name}`}>{i > 0 && <br />}<span className="mono"><Breakable text={p.name} /></span> <span className="muted">{[p.in, typeLabel(p.schema), p.required && 'required'].filter(Boolean).join(', ')}</span></span>
           ))}
         </dd>
         <dt>Output</dt>
         <dd>
-          {op.output ? <span className="mono">{typeLabel(op.output.schema)}</span> : 'None described'}
-          {output.length > 0 && <span className="oc-fields muted"> with {list(output.map((f) => <span className="mono" key={f.name}>{f.name}</span>))}</span>}
+          {op.output ? <span className="mono"><Breakable text={typeLabel(op.output.schema)} /></span> : 'None described'}
+          {output.length > 0 && <span className="oc-fields muted"> with {list(output.map((f) => <span className="mono" key={f.name}><Breakable text={f.name} /></span>))}</span>}
         </dd>
         {schemes.length > 0 && <>
           <dt>Auth</dt>
-          <dd>{list(schemes.map((a) => <span key={a.id}><span className="mono">{a.id}</span> <span className="muted">{[a.type, a.scheme, a.bearerFormat, a.in && `in ${a.in}`, a.name].filter(Boolean).join(' ')}</span></span>))}</dd>
+          <dd>{list(schemes.map((a) => <span key={a.id}><span className="mono"><Breakable text={a.id} /></span> <span className="muted">{[a.type, a.scheme, a.bearerFormat, a.in && `in ${a.in}`, a.name].filter(Boolean).join(' ')}</span></span>))}</dd>
         </>}
         {links.map(({ group, items }) => (
           <Fragment key={group}>
             <dt>{group}</dt>
             <dd>
               {group === 'Shares schema'
-                ? list([...new Set(items.map((x) => x.via ?? ''))].map((schema) => <span key={schema}><span className="mono">{schema}</span> <span className="muted">with</span> {list(items.filter((x) => (x.via ?? '') === schema).map((x) => other(x.id)))}</span>))
+                ? list([...new Set(items.map((x) => x.via ?? ''))].map((schema) => <span key={schema}><span className="mono"><Breakable text={schema} /></span> <span className="muted">with</span> {list(items.filter((x) => (x.via ?? '') === schema).map((x) => other(x.id)))}</span>))
                 : pinned && (group === 'Fed by' || group === 'Feeds')
                   // Pinned, a feed says which field fills which parameter, under the operation: "listTasks" / "id → taskId".
                   ? items.map((x) => <span className="oc-feed" key={x.id}>{other(x.id)}{x.via && <span className="oc-via">{arrow(x.via)}</span>}</span>)
@@ -130,7 +131,7 @@ export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onC
         {inSkill && <>
           <dt>In skill</dt>
           {/* In the preview the link is for the pointer only (tabIndex -1): the preview is hidden from assistive tech. */}
-          <dd><button type="button" className="oc-ref mono" tabIndex={pinned ? undefined : -1} onClick={() => onInSkill(inSkill)} aria-label={`Show ${inSkill} in the skill`}>{inSkill}</button></dd>
+          <dd><button type="button" className="oc-ref mono" tabIndex={pinned ? undefined : -1} onClick={() => onInSkill(inSkill)} aria-label={`Show ${inSkill} in the skill`}><Breakable text={inSkill} /></button></dd>
         </>}
       </dl>
       {pinned && <>

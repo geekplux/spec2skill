@@ -344,6 +344,41 @@ export default {
       }
     }
     console.log(`  hover previews taller than the map and its caption (D70): ${tall.join(', ') || 'none'}`);
+
+    // Long ids wrap only at their word boundaries (src/design/breaks.tsx): in Petstore's
+    // createUsersWithArrayInput card and createUser's (which lists it), no line ends inside a hump.
+    // Each piece between two <wbr>s is its own text node, so a line may change only at a node's start
+    // or after a space.
+    await ready(page, `${origin}/?sample=petstore`);
+    for (const [id, path] of [['createUsersWithArrayInput', 'POST /user/createWithArray'], ['createUser', 'POST /user']]) {
+      await page.mouse.move(0, 0);
+      await page.locator('[data-testid="op-preview"]').waitFor({ state: 'detached' });
+      await page.locator(`.op[data-op="${id}"]`).hover();
+      await page.locator('[data-testid="op-preview"]').waitFor();
+      await settled(page);
+      const split = await page.evaluate(() => {
+        const out = [];
+        const card = document.querySelector('[data-testid="op-preview"]');
+        const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (!node.parentElement.closest('.mono')) continue;
+          const text = node.textContent;
+          const range = document.createRange();
+          let line = null;
+          for (let i = 0; i < text.length; i += 1) {
+            range.setStart(node, i);
+            range.setEnd(node, i + 1);
+            const top = Math.round(range.getBoundingClientRect().top);
+            if (line !== null && top > line + 2 && text[i - 1] !== ' ') out.push(`${text.slice(0, i)} / ${text.slice(i)}`);
+            line = top;
+          }
+        }
+        return out;
+      });
+      const words = await page.locator('[data-testid="op-preview"]').evaluate((c) => c.querySelectorAll('wbr').length);
+      expect((await page.locator('[data-testid="op-preview"] .oc-path').textContent()) === path, `${id}: the preview is not ${path}'s`);
+      expect(split.length === 0 && words > 0, `${id}: ids break inside a word in the preview: ${split.join('; ')} (${words} <wbr>)`);
+    }
     expect(bad.length === 0, `hover previews cut, off their row or over the skill browser: ${bad.join('; ')}`);
     await ready(page, `${origin}/?sample=tasks`);
     await toMap(page);

@@ -10,11 +10,13 @@ import hostile from './__fixtures__/hostile-strings.json';
 import { OpCard, opLinks } from './OpCard';
 
 type Model = Awaited<ReturnType<typeof normalise>>;
-const render = (model: Model, id: string, pinned: boolean, inSkill?: string) =>
+const markup = (model: Model, id: string, pinned: boolean, inSkill?: string) =>
   renderToStaticMarkup(createElement(OpCard, {
     model, graph: buildGraph(model), op: model.operations.find((o) => o.id === id)!, pinned, inSkill, onInSkill: () => {},
     onGo: () => {}, onClose: () => {}, announce: () => {},
   }));
+/** The markup without the word-boundary <wbr>s (src/design/breaks.tsx), so assertions read the plain ids. */
+const render = (...args: Parameters<typeof markup>) => markup(...args).replaceAll('<wbr/>', '');
 
 describe('OpCard', () => {
   it('previews getTask as V2Hover draws it: method and path, title, Input, Output, Fed by, Feeds, In skill', async () => {
@@ -31,6 +33,11 @@ describe('OpCard', () => {
     // The preview takes no focus and leaves the pinned card's extras out.
     expect(html).toContain('<button type="button" class="oc-ref mono" tabindex="-1" aria-label="Show references/tasks.md in the skill">references/tasks.md</button>');
     expect(html).not.toMatch(/Close|Copy example|bearerAuth|role="dialog"|<button type="button" class="oc-link/);
+    // Ids, paths and file names wrap only at their word boundaries.
+    const raw = markup(await sampleModel(getSample('tasks')!), 'getTask', false, 'references/tasks.md');
+    expect(raw).toContain('<p class="oc-path mono">GET /<wbr/>tasks/<wbr/>{task<wbr/>Id}</p>');
+    expect(raw).toContain('<span class="mono">list<wbr/>Tasks</span>');
+    expect(raw).toContain('aria-label="Show references/tasks.md in the skill">references/<wbr/>tasks.md</button>');
   });
 
   it('pinned: a dialog with Close, output fields, auth, related operations as buttons and the example', async () => {
