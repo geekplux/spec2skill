@@ -1,0 +1,253 @@
+{
+  "cards": [
+    {
+      "id": "cluster-pet",
+      "name": "Pet",
+      "column": 0,
+      "x": 0,
+      "y": 0,
+      "w": 202,
+      "h": 296,
+      "main": true,
+      "count": 8,
+      "rows": [
+        {
+          "op": "findPetsByStatus",
+          "x": 4,
+          "y": 36,
+          "w": 194,
+          "h": 32,
+          "cy": 52,
+          "method": "GET",
+          "destructive": false,
+          "stop": 1
+        },
+        {
+          "op": "findPetsByTags",
+          "x": 4,
+          "y": 68,
+          "w": 194,
+          "h": 32,
+          "cy": 84,
+          "method": "GET",
+          "destructive": false
+        },
+        {
+          "op": "addPet",
+          "x": 4,
+          "y": 100,
+          "w": 194,
+          "h": 32,
+          "cy": 116,
+          "method": "POST",
+          "destructive": false
+        },
+        {
+          "op": "getPetById",
+          "x": 4,
+          "y": 132,
+          "w": 194,
+          "h": 32,
+          "cy": 148,
+          "method": "GET",
+          "destructive": false,
+          "stop": 2
+        },
+        {
+          "op": "updatePet",
+          "x": 4,
+          "y": 164,
+          "w": 194,
+          "h": 32,
+          "cy": 180,
+          "method": "PUT",
+          "destructive": false
+        },
+        {
+          "op": "deletePet",
+          "x": 4,
+          "y": 196,
+          "w": 194,
+          "h": 32,
+          "cy": 212,
+          "method": "DELETE",
+          "destructive": true
+        },
+        {
+          "op": "updatePetWithForm",
+          "x": 4,
+          "y": 228,
+          "w": 194,
+          "h": 32,
+          "cy": 244,
+          "method": "POST",
+          "destructive": false
+        },
+        {
+          "op": "uploadFile",
+          "x": 4,
+          "y": 260,
+          "w": 194,
+          "h": 32,
+          "cy": 276,
+          "method": "POST",
+          "destructive": false
+        }
+      ]
+    },
+    {
+      "id": "cluster-user",
+      "name": "User",
+      "column": 1,
+      "x": 290,
+      "y": 0,
+      "w": 202,
+      "h": 296,
+      "main": false,
+      "count": 8,
+      "rows": [
+        {
+          "op": "createUser",
+          "x": 294,
+          "y": 36,
+          "w": 194,
+          "h": 32,
+          "cy": 52,
+          "method": "POST",
+          "destructive": false
+        },
+        {
+          "op": "createUsersWithArrayInput",
+          "x": 294,
+          "y": 68,
+          "w": 194,
+          "h": 32,
+          "cy": 84,
+          "method": "POST",
+          "destructive": false
+        },
+        {
+          "op": "createUsersWithListInput",
+          "x": 294,
+          "y": 100,
+          "w": 194,
+          "h": 32,
+          "cy": 116,
+          "method": "POST",
+          "destructive": false
+        },
+        {
+          "op": "getUserByName",
+          "x": 294,
+          "y": 132,
+          "w": 194,
+          "h": 32,
+          "cy": 148,
+          "method": "GET",
+          "destructive": false
+        },
+        {
+          "op": "updateUser",
+          "x": 294,
+          "y": 164,
+          "w": 194,
+          "h": 32,
+          "cy": 180,
+          "method": "PUT",
+          "destructive": false
+        },
+        {
+          "op": "deleteUser",
+          "x": 294,
+          "y": 196,
+          "w": 194,
+          "h": 32,
+          "cy": 212,
+          "method": "DELETE",
+          "destructive": true
+        },
+        {
+          "op": "loginUser",
+          "x": 294,
+          "y": 228,
+          "w": 194,
+          "h": 32,
+          "cy": 244,
+          "method": "GET",
+          "destructive": false
+        },
+        {
+          "op": "logoutUser",
+          "x": 294,
+          "y": 260,
+          "w": 194,
+          "h": 32,
+          "cy": 276,
+          "method": "GET",
+          "destructive": false
+        }
+      ]
+    }
+  ],
+  "links": [],
+  "workflow": {
+    "ops": [
+      "findPetsByStatus",
+      "getPetById"
+    ],
+    "via": [
+      "id -> petId"
+    ],
+    "inferred": [
+      false
+    ],
+    "stops": [
+      {
+        "op": "findPetsByStatus",
+        "n": 1,
+        "cx": 183,
+        "cy": 52
+      },
+      {
+        "op": "getPetById",
+        "n": 2,
+        "cx": 183,
+        "cy": 148
+      }
+    ],
+    "steps": [
+      {
+        "from": "findPetsByStatus",
+        "to": "getPetById",
+        "shape": "loop",
+        "d": "M0 52C-32 52 -32 148 0 148"
+      }
+    ],
+    "y": 52
+  },
+  "columns": [
+    {
+      "index": 0,
+      "x": 0,
+      "cards": [
+        "cluster-pet"
+      ]
+    },
+    {
+      "index": 1,
+      "x": 290,
+      "cards": [
+        "cluster-user"
+      ]
+    }
+  ],
+  "width": 492,
+  "height": 296,
+  "bounds": {
+    "x": -24,
+    "y": 0,
+    "w": 516,
+    "h": 296
+  },
+  "scrolls": false
+}

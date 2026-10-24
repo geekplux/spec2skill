@@ -1,0 +1,577 @@
+{
+  "cards": [
+    {
+      "id": "cluster-projects",
+      "name": "Projects",
+      "column": 0,
+      "x": 0,
+      "y": 164,
+      "w": 202,
+      "h": 200,
+      "main": true,
+      "count": 5,
+      "rows": [
+        {
+          "op": "listProjects",
+          "x": 4,
+          "y": 200,
+          "w": 194,
+          "h": 32,
+          "cy": 216,
+          "method": "GET",
+          "destructive": false,
+          "stop": 1
+        },
+        {
+          "op": "createProject",
+          "x": 4,
+          "y": 232,
+          "w": 194,
+          "h": 32,
+          "cy": 248,
+          "method": "POST",
+          "destructive": false
+        },
+        {
+          "op": "getProject",
+          "x": 4,
+          "y": 264,
+          "w": 194,
+          "h": 32,
+          "cy": 280,
+          "method": "GET",
+          "destructive": false
+        },
+        {
+          "op": "updateProject",
+          "x": 4,
+          "y": 296,
+          "w": 194,
+          "h": 32,
+          "cy": 312,
+          "method": "PATCH",
+          "destructive": false
+        },
+        {
+          "op": "deleteProject",
+          "x": 4,
+          "y": 328,
+          "w": 194,
+          "h": 32,
+          "cy": 344,
+          "method": "DELETE",
+          "destructive": true
+        }
+      ]
+    },
+    {
+      "id": "cluster-members",
+      "name": "Members",
+      "column": 1,
+      "x": 290,
+      "y": 0,
+      "w": 202,
+      "h": 168,
+      "main": false,
+      "count": 4,
+      "rows": [
+        {
+          "op": "listMembers",
+          "x": 294,
+          "y": 36,
+          "w": 194,
+          "h": 32,
+          "cy": 52,
+          "method": "GET",
+          "destructive": false
+        },
+        {
+          "op": "addMember",
+          "x": 294,
+          "y": 68,
+          "w": 194,
+          "h": 32,
+          "cy": 84,
+          "method": "POST",
+          "destructive": false
+        },
+        {
+          "op": "getMember",
+          "x": 294,
+          "y": 100,
+          "w": 194,
+          "h": 32,
+          "cy": 116,
+          "method": "GET",
+          "destructive": false
+        },
+        {
+          "op": "removeMember",
+          "x": 294,
+          "y": 132,
+          "w": 194,
+          "h": 32,
+          "cy": 148,
+          "method": "DELETE",
+          "destructive": true
+        }
+      ]
+    },
+    {
+      "id": "cluster-labels",
+      "name": "Labels",
+      "column": 1,
+      "x": 290,
+      "y": 264,
+      "w": 202,
+      "h": 136,
+      "main": false,
+      "count": 3,
+      "rows": [
+        {
+          "op": "listLabels",
+          "x": 294,
+          "y": 300,
+          "w": 194,
+          "h": 32,
+          "cy": 316,
+          "method": "GET",
+          "destructive": false
+        },
+        {
+          "op": "createLabel",
+          "x": 294,
+          "y": 332,
+          "w": 194,
+          "h": 32,
+          "cy": 348,
+          "method": "POST",
+          "destructive": false
+        },
+        {
+          "op": "deleteLabel",
+          "x": 294,
+          "y": 364,
+          "w": 194,
+          "h": 32,
+          "cy": 380,
+          "method": "DELETE",
+          "destructive": true
+        }
+      ]
+    },
+    {
+      "id": "cluster-tasks",
+      "name": "Tasks",
+      "column": 2,
+      "x": 580,
+      "y": 164,
+      "w": 202,
+      "h": 232,
+      "main": true,
+      "count": 6,
+      "rows": [
+        {
+          "op": "listTasks",
+          "x": 584,
+          "y": 200,
+          "w": 194,
+          "h": 32,
+          "cy": 216,
+          "method": "GET",
+          "destructive": false,
+          "stop": 2
+        },
+        {
+          "op": "createTask",
+          "x": 584,
+          "y": 232,
+          "w": 194,
+          "h": 32,
+          "cy": 248,
+          "method": "POST",
+          "destructive": false
+        },
+        {
+          "op": "getTask",
+          "x": 584,
+          "y": 264,
+          "w": 194,
+          "h": 32,
+          "cy": 280,
+          "method": "GET",
+          "destructive": false,
+          "stop": 3
+        },
+        {
+          "op": "updateTask",
+          "x": 584,
+          "y": 296,
+          "w": 194,
+          "h": 32,
+          "cy": 312,
+          "method": "PATCH",
+          "destructive": false
+        },
+        {
+          "op": "deleteTask",
+          "x": 584,
+          "y": 328,
+          "w": 194,
+          "h": 32,
+          "cy": 344,
+          "method": "DELETE",
+          "destructive": true
+        },
+        {
+          "op": "completeTask",
+          "x": 584,
+          "y": 360,
+          "w": 194,
+          "h": 32,
+          "cy": 376,
+          "method": "POST",
+          "destructive": false
+        }
+      ]
+    },
+    {
+      "id": "cluster-comments",
+      "name": "Comments",
+      "column": 3,
+      "x": 870,
+      "y": 164,
+      "w": 202,
+      "h": 168,
+      "main": false,
+      "count": 4,
+      "rows": [
+        {
+          "op": "listComments",
+          "x": 874,
+          "y": 200,
+          "w": 194,
+          "h": 32,
+          "cy": 216,
+          "method": "GET",
+          "destructive": false
+        },
+        {
+          "op": "createComment",
+          "x": 874,
+          "y": 232,
+          "w": 194,
+          "h": 32,
+          "cy": 248,
+          "method": "POST",
+          "destructive": false
+        },
+        {
+          "op": "updateComment",
+          "x": 874,
+          "y": 264,
+          "w": 194,
+          "h": 32,
+          "cy": 280,
+          "method": "PATCH",
+          "destructive": false
+        },
+        {
+          "op": "deleteComment",
+          "x": 874,
+          "y": 296,
+          "w": 194,
+          "h": 32,
+          "cy": 312,
+          "method": "DELETE",
+          "destructive": true
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "id": "feed:listProjects->listLabels",
+      "kind": "feed",
+      "from": "listProjects",
+      "to": "listLabels",
+      "edges": [
+        "feeds:listProjects->listLabels"
+      ],
+      "inferred": false,
+      "d": "M202 216C246 216 246 316 290 316"
+    },
+    {
+      "id": "feed:listProjects->createLabel",
+      "kind": "feed",
+      "from": "listProjects",
+      "to": "createLabel",
+      "edges": [
+        "feeds:listProjects->createLabel"
+      ],
+      "inferred": false,
+      "d": "M202 216C246 216 246 348 290 348"
+    },
+    {
+      "id": "bundle:listProjects->cluster-members:projectId",
+      "kind": "bundle",
+      "from": "listProjects",
+      "to": "cluster-members",
+      "edges": [
+        "feeds:listProjects->listMembers",
+        "feeds:listProjects->addMember",
+        "feeds:listProjects->getMember",
+        "feeds:listProjects->removeMember"
+      ],
+      "inferred": false,
+      "d": "M202 216C246 216 246 18 290 18"
+    },
+    {
+      "id": "feed:listProjects->createTask",
+      "kind": "feed",
+      "from": "listProjects",
+      "to": "createTask",
+      "edges": [
+        "feeds:listProjects->createTask"
+      ],
+      "inferred": false,
+      "d": "M202 216C246 216 246 232 290 232H492C536 232 536 248 580 248"
+    },
+    {
+      "id": "feed:createProject->listLabels",
+      "kind": "feed",
+      "from": "createProject",
+      "to": "listLabels",
+      "edges": [
+        "feeds:createProject->listLabels"
+      ],
+      "inferred": false,
+      "d": "M202 248C246 248 246 316 290 316"
+    },
+    {
+      "id": "feed:createProject->createLabel",
+      "kind": "feed",
+      "from": "createProject",
+      "to": "createLabel",
+      "edges": [
+        "feeds:createProject->createLabel"
+      ],
+      "inferred": false,
+      "d": "M202 248C246 248 246 348 290 348"
+    },
+    {
+      "id": "bundle:createProject->cluster-members:projectId",
+      "kind": "bundle",
+      "from": "createProject",
+      "to": "cluster-members",
+      "edges": [
+        "feeds:createProject->listMembers",
+        "feeds:createProject->addMember",
+        "feeds:createProject->getMember",
+        "feeds:createProject->removeMember"
+      ],
+      "inferred": false,
+      "d": "M202 248C246 248 246 18 290 18"
+    },
+    {
+      "id": "feed:createProject->listTasks",
+      "kind": "feed",
+      "from": "createProject",
+      "to": "listTasks",
+      "edges": [
+        "feeds:createProject->listTasks"
+      ],
+      "inferred": false,
+      "d": "M202 248C246 248 246 232 290 232H492C536 232 536 216 580 216"
+    },
+    {
+      "id": "feed:createProject->createTask",
+      "kind": "feed",
+      "from": "createProject",
+      "to": "createTask",
+      "edges": [
+        "feeds:createProject->createTask"
+      ],
+      "inferred": false,
+      "d": "M202 248H580"
+    },
+    {
+      "id": "feed:getProject->getMember",
+      "kind": "feed",
+      "from": "getProject",
+      "to": "getMember",
+      "edges": [
+        "feeds:getProject->getMember"
+      ],
+      "inferred": true,
+      "d": "M202 280C246 280 246 116 290 116"
+    },
+    {
+      "id": "feed:listLabels->listTasks",
+      "kind": "feed",
+      "from": "listLabels",
+      "to": "listTasks",
+      "edges": [
+        "feeds:listLabels->listTasks"
+      ],
+      "inferred": false,
+      "d": "M492 316C536 316 536 216 580 216"
+    },
+    {
+      "id": "feed:createLabel->listTasks",
+      "kind": "feed",
+      "from": "createLabel",
+      "to": "listTasks",
+      "edges": [
+        "feeds:createLabel->listTasks"
+      ],
+      "inferred": false,
+      "d": "M492 348C536 348 536 216 580 216"
+    },
+    {
+      "id": "feed:listMembers->listTasks",
+      "kind": "feed",
+      "from": "listMembers",
+      "to": "listTasks",
+      "edges": [
+        "feeds:listMembers->listTasks"
+      ],
+      "inferred": true,
+      "d": "M492 52C536 52 536 216 580 216"
+    },
+    {
+      "id": "feed:listTasks->listComments",
+      "kind": "feed",
+      "from": "listTasks",
+      "to": "listComments",
+      "edges": [
+        "feeds:listTasks->listComments"
+      ],
+      "inferred": false,
+      "d": "M782 216H870"
+    },
+    {
+      "id": "feed:listTasks->createComment",
+      "kind": "feed",
+      "from": "listTasks",
+      "to": "createComment",
+      "edges": [
+        "feeds:listTasks->createComment"
+      ],
+      "inferred": false,
+      "d": "M782 216C826 216 826 248 870 248"
+    },
+    {
+      "id": "feed:createTask->listComments",
+      "kind": "feed",
+      "from": "createTask",
+      "to": "listComments",
+      "edges": [
+        "feeds:createTask->listComments"
+      ],
+      "inferred": false,
+      "d": "M782 248C826 248 826 216 870 216"
+    },
+    {
+      "id": "feed:createTask->createComment",
+      "kind": "feed",
+      "from": "createTask",
+      "to": "createComment",
+      "edges": [
+        "feeds:createTask->createComment"
+      ],
+      "inferred": false,
+      "d": "M782 248H870"
+    }
+  ],
+  "workflow": {
+    "ops": [
+      "listProjects",
+      "listTasks",
+      "getTask"
+    ],
+    "via": [
+      "id -> projectId, ownerId -> assigneeId",
+      "id -> taskId"
+    ],
+    "inferred": [
+      false,
+      false
+    ],
+    "stops": [
+      {
+        "op": "listProjects",
+        "n": 1,
+        "cx": 183,
+        "cy": 216
+      },
+      {
+        "op": "listTasks",
+        "n": 2,
+        "cx": 763,
+        "cy": 216
+      },
+      {
+        "op": "getTask",
+        "n": 3,
+        "cx": 763,
+        "cy": 280
+      }
+    ],
+    "steps": [
+      {
+        "from": "listProjects",
+        "to": "listTasks",
+        "shape": "line",
+        "d": "M202 216H580"
+      },
+      {
+        "from": "listTasks",
+        "to": "getTask",
+        "shape": "loop",
+        "d": "M580 216C548 216 548 280 580 280"
+      }
+    ],
+    "y": 216
+  },
+  "columns": [
+    {
+      "index": 0,
+      "x": 0,
+      "cards": [
+        "cluster-projects"
+      ]
+    },
+    {
+      "index": 1,
+      "x": 290,
+      "cards": [
+        "cluster-members",
+        "cluster-labels"
+      ]
+    },
+    {
+      "index": 2,
+      "x": 580,
+      "cards": [
+        "cluster-tasks"
+      ]
+    },
+    {
+      "index": 3,
+      "x": 870,
+      "cards": [
+        "cluster-comments"
+      ]
+    }
+  ],
+  "width": 1072,
+  "height": 400,
+  "bounds": {
+    "x": 0,
+    "y": 0,
+    "w": 1072,
+    "h": 400
+  },
+  "scrolls": false
+}
