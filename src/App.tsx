@@ -23,6 +23,7 @@ import { topChains } from './skillgen/graph-chains';
 import { skillSlug } from './skillgen/slug';
 import { type Explained, explain } from './source/errors';
 import { type Input, loadSource } from './source/fetchSource';
+import { type StageTimer, stageTimer } from './source/stages';
 import { Samples } from './source/Samples';
 import { SourceInput } from './source/SourceInput';
 import { EmptyChart, ErrorPanel, LoadingSteps, type Progress, stageWord } from './source/Status';
@@ -186,8 +187,8 @@ export function App() {
   // A load: its real progress, and the stage the Generate button names and the steps show (`shown`).
   const [job, setJob] = useState<{ ctl: AbortController; progress: Progress; shown: Progress['at'] }>();
   const shown = job && { at: job.shown, labels: job.progress.labels };
-  /** When the shown stage appeared, and the timer that shows a stage that had to wait. */
-  const hold = useRef<{ since: number; timer?: ReturnType<typeof setTimeout> }>({ since: 0 });
+  /** When a stage label may replace the one shown (src/source/stages.ts). */
+  const hold = useRef<StageTimer>(undefined);
   const [failure, setFailure] = useState<Explained>();
   const field = useRef<HTMLTextAreaElement>(null);
   const [draft, setDraft] = useState('');
@@ -228,30 +229,23 @@ export function App() {
     job?.ctl.abort();
     const ctl = new AbortController();
     setFailure(undefined);
-    clearTimeout(hold.current.timer);
-    hold.current = { since: performance.now() };
+    hold.current?.stop();
+    const stages = stageTimer(TIMING.stage, () => setJob((j) => j?.ctl === ctl ? { ...j, shown: j.progress.at } : j));
+    hold.current = stages;
     setJob({ ctl, progress: { at: 'fetch', labels: {} }, shown: 'fetch' });
     // Each stage shows when it starts, painted before its synchronous work, once the one before has been
     // up at least 100 ms; a stage that starts sooner shows when that time is up if the thread is free,
     // else it is skipped (the next one replaces it). Nothing waits for a label: the result is never held
     // back, and a load that ends within 100 ms shows one stage only (D65).
     const step = (at: Progress['at'], label: string) => {
-      const now = performance.now();
-      const show = now - hold.current.since >= TIMING.stage;
-      clearTimeout(hold.current.timer);
-      if (show) hold.current.since = now;
-      else {
-        hold.current.timer = setTimeout(() => {
-          hold.current.since = performance.now();
-          setJob((j) => j?.ctl === ctl ? { ...j, shown: j.progress.at } : j);
-        }, hold.current.since + TIMING.stage - now);
-      }
+      const show = stages.step();
       const update = () => setJob((j) => j?.ctl === ctl ? { ctl, progress: { at, labels: { ...j.progress.labels, [at]: label } }, shown: show ? at : j.shown } : j);
       // After the first step (which load() and an effect call synchronously), commit at once so the
       // label is on screen when the frame paints, before the step's work blocks the thread.
       if (at === 'fetch') update();
       else flushSync(update);
-      return painted();
+      // Wait for the paint only when the label changed; a skipped stage costs nothing.
+      return show ? painted() : undefined;
     };
     // The kind of source is detected (D37): a URL is tried as a spec, then as an MCP server.
     loadSource(input, 'auto', { fetch: (i, init) => fetch(i, init), signal: ctl.signal, step, write }).then(({ model }) => {
@@ -259,6 +253,7 @@ export function App() {
       const at = 'url' in input ? input.url.trim() : undefined;
       setUser({ url: at, model });
       setDraft(at ?? ''); // pasted text has become the skill; a URL stays to say what is shown
+      stages.stop();
       setJob(undefined);
       setFind('');
       if (opened) return;
@@ -267,6 +262,7 @@ export function App() {
       go({ sample: undefined, url: at, op: undefined, q: '' }, true);
     }, (error: unknown) => {
       if (ctl.signal.aborted) return;
+      stages.stop();
       setJob(undefined);
       setFailure(explain(error));
     });
@@ -277,7 +273,7 @@ export function App() {
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- only a new ?url= starts a load
   }, [url.url]);
   const stop = () => {
-    clearTimeout(hold.current.timer);
+    hold.current?.stop();
     job?.ctl.abort();
     setJob(undefined);
     setFailure(undefined);

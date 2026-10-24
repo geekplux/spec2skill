@@ -15,7 +15,7 @@ const STATE = [['✓', 'done'], ['▸', 'in progress'], ['○', 'waiting']] as c
 
 /**
  * The ordered steps with static glyphs; the Generate button names the stage with its spinner (R6). The
- * stage shown here and announced is the one the button shows (held at least 250 ms, App.tsx).
+ * stage shown here and announced is the one the button shows (up at least 100 ms, src/source/stages.ts).
  */
 export function LoadingSteps({ progress, onCancel }: { progress: Progress; onCancel: () => void }) {
   const at = STEPS.indexOf(progress.at);

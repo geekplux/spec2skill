@@ -69,8 +69,9 @@ code { font-family: var(--font-mono); font-size: inherit; }
 /* The placeholder stays on one line (cut with an ellipsis) instead of wrapping out of the 40 px box. */
 .source .input:placeholder-shown { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .source-field .icon-btn { margin: 0 var(--space-4) var(--space-4) 0; } /* its focus ring stays clear of Generate */
+/* Generate keeps one width through its stages (the widest, "Fetching" with the spinner, is 111 px), so the field holds still. */
 .generate {
-  flex: none; height: var(--field-h); padding: 0 var(--space-16); border: 0; border-radius: var(--radius-row);
+  flex: none; min-width: 112px; height: var(--field-h); padding: 0 var(--space-16); border: 0; border-radius: var(--radius-row);
   background: var(--indigo-9); color: var(--indigo-contrast); font: 500 var(--text-14)/var(--leading-14) var(--font-sans); white-space: nowrap; cursor: pointer;
 }
 /* "Samples" and the segmented control filling the rest of the row. */
