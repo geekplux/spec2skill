@@ -252,7 +252,7 @@ h3, h4 { font-weight: 600; }
 .op:focus-visible { outline-offset: -2px; }
 .op .m { flex: none; width: 44px; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); white-space: nowrap; }
 .op .m[data-destructive] { display: flex; align-items: center; gap: var(--space-4); width: auto; min-width: 44px; color: var(--destructive); }
-/* D53: the destructive mark, a 12 px amber-11 warning triangle (a graphic: 3:1 is enough, it has 4.5:1). */
+/* D53: the destructive mark, a 12 px amber-11 warning triangle (a graphic: 3:1 is enough, it has 4.49:1 in light). */
 .warn { flex: none; }
 .warn-bg { fill: var(--amber-11); }
 .warn-x { fill: none; stroke: var(--gray-1); stroke-width: 1.5px; stroke-linecap: round; }
