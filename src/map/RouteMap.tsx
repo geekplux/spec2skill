@@ -226,24 +226,29 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
     let left = ox + to.card.x + CARD_W + CARD.gap;
     const flip = left + CARD.w > right;
     if (flip) left = Math.max(frame.left - w.left, ox + to.card.x - CARD.gap - CARD.w);
-    // A tall card scrolls inside itself rather than covering the skill browser under the map: it may
-    // pass the map's bottom by the caption's height at most; near the bottom the pinned card rises
-    // (still beside its row) to keep at least CARD.minH. The short hover preview keeps its place.
+    // A tall pinned card scrolls inside itself rather than covering the skill browser under the map: it
+    // may pass the map's bottom by the caption's height at most (the limit); near the bottom it rises,
+    // still beside its row, to keep at least CARD.minH. The hover preview has no floor: the next effect
+    // fits it to its own height.
     const limit = el.offsetHeight + CARD.below;
     const y = oy + to.row.cy - CARD.lift;
     const cardTop = cardOp === pinned ? Math.min(y, limit - CARD.minH) : y;
-    setPlace({ left, top: cardTop, flip, maxHeight: Math.max(CARD.minH, limit - cardTop) });
+    setPlace({ left, top: cardTop, flip, maxHeight: Math.max(cardOp === pinned ? CARD.minH : 0, limit - cardTop) });
   }, [cardOp, pinned, rowOf, ox, oy, avail]);
-  // The hover preview never scrolls (see app.css), so it must never be cut: a preview taller than its
-  // room rises, still beside its row, until it ends at the limit; one taller than the map and caption
-  // together keeps its full height and passes the limit.
+  // The hover preview never scrolls (see app.css), so it is never cut and never reaches the skill
+  // browser: any preview whose bottom would pass the limit rises, still beside its row, until it ends
+  // at the limit; only one taller than the map and caption together keeps its full height from the
+  // map's top and passes the limit (D70, D76).
   useLayoutEffect(() => {
     const el = wrap.current;
     const preview = el?.querySelector<HTMLElement>('.op-card[aria-hidden="true"]');
-    if (!el || !preview || !place || preview.scrollHeight <= preview.clientHeight + 1) return;
+    if (!el || !preview || !place) return;
     const limit = el.offsetHeight + CARD.below;
-    const risen = Math.max(0, Math.min(place.top, limit - preview.scrollHeight));
-    setPlace({ ...place, top: risen, maxHeight: Math.max(limit - risen, preview.scrollHeight) });
+    const height = preview.scrollHeight;
+    const risen = Math.max(0, Math.min(place.top, limit - height));
+    const maxHeight = Math.max(limit - risen, height);
+    if (risen === place.top && maxHeight === place.maxHeight) return;
+    setPlace({ ...place, top: risen, maxHeight });
   }, [place]);
 
   const routeShown = !hot; // the workflow's colour and discs rest while a row is hot (V2Hover)

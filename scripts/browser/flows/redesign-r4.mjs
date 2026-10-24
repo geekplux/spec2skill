@@ -310,24 +310,43 @@ export default {
     expect(flip.flip && close(flip.gap, 16, 1) && flip.right <= flip.frame, `the card does not flip at the right edge ${JSON.stringify(flip)}`);
     await page.mouse.move(0, 0);
 
-    // No row's preview is cut: each shows its last line (In skill) beside its row, 40 px above the
-    // row's centre where it fits, else risen to end where the room ends.
-    const cut = [];
-    for (const id of await page.locator('.op[data-op]').evaluateAll((els) => els.map((el) => el.dataset.op))) {
-      await page.mouse.move(0, 0);
-      await page.locator('[data-testid="op-preview"]').waitFor({ state: 'detached' });
-      await page.locator(`.op[data-op="${id}"]`).hover();
-      await page.locator('[data-testid="op-preview"]').waitFor();
-      await settled(page); // the card rises 4 px as it fades in
-      const p = await page.evaluate((op) => {
-        const c = document.querySelector('[data-testid="op-preview"]');
-        const r = document.querySelector(`.op[data-op="${op}"]`).getBoundingClientRect();
-        const b = c.getBoundingClientRect();
-        return { cut: c.scrollHeight - c.clientHeight, top: b.top - (r.top + r.height / 2), below: b.bottom - r.bottom, last: c.querySelector('dl > :last-child')?.getBoundingClientRect().bottom <= b.bottom };
-      }, id);
-      if (p.cut > 1 || p.top > -39 || p.below < 0 || !p.last) cut.push(`${id} ${JSON.stringify(p)}`);
+    // No row's preview is cut or reaches the skill browser, on every sample: each shows its last line
+    // (In skill) beside its row, 40 px above the row's centre where it fits, else risen to end at most
+    // 64 px under the map (D76); only a preview taller than the map and its caption together may pass
+    // that line, starting at the map's top (D70).
+    const bad = [];
+    const tall = [];
+    for (const sample of ['tasks', 'petstore', 'filesystem']) {
+      if (sample !== 'tasks') await ready(page, `${origin}/?sample=${sample}`);
+      for (const id of await page.locator('.op[data-op]').evaluateAll((els) => els.map((el) => el.dataset.op))) {
+        await page.mouse.move(0, 0);
+        await page.locator('[data-testid="op-preview"]').waitFor({ state: 'detached' });
+        await page.locator(`.op[data-op="${id}"]`).hover();
+        await page.locator('[data-testid="op-preview"]').waitFor();
+        await settled(page); // the card rises 4 px as it fades in
+        const p = await page.evaluate((op) => {
+          const c = document.querySelector('[data-testid="op-preview"]');
+          const r = document.querySelector(`.op[data-op="${op}"]`).getBoundingClientRect();
+          const b = c.getBoundingClientRect();
+          const wrap = document.querySelector('.map-wrap');
+          const w = wrap.getBoundingClientRect();
+          const limit = w.top + wrap.offsetHeight + 64;
+          return {
+            cut: c.scrollHeight - c.clientHeight, top: b.top - (r.top + r.height / 2), below: b.bottom - r.bottom,
+            last: c.querySelector('dl > :last-child')?.getBoundingClientRect().bottom <= b.bottom,
+            past: Math.round(b.bottom - limit), tall: b.height > wrap.offsetHeight + 64, fromTop: Math.round(b.top - w.top),
+            browser: Math.round(document.querySelector('.skill-browser').getBoundingClientRect().top - b.bottom),
+          };
+        }, id);
+        const room = p.tall ? p.fromTop <= 1 : p.past <= 1 && p.browser >= 0;
+        if (p.cut > 1 || p.top > -39 || p.below < 0 || !p.last || !room) bad.push(`${sample} ${id} ${JSON.stringify(p)}`);
+        if (p.tall) tall.push(`${sample} ${id}`);
+      }
     }
-    expect(cut.length === 0, `hover previews cut or off their row: ${cut.join('; ')}`);
+    console.log(`  hover previews taller than the map and its caption (D70): ${tall.join(', ') || 'none'}`);
+    expect(bad.length === 0, `hover previews cut, off their row or over the skill browser: ${bad.join('; ')}`);
+    await ready(page, `${origin}/?sample=tasks`);
+    await toMap(page);
     await page.mouse.move(0, 0);
 
     // 3. Pinned: click pins (#op=, Close, the extra contents); Escape closes and returns focus to the row.
