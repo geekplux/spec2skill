@@ -163,6 +163,20 @@ export default {
     expect((await said(page)) === `Install command copied: ${COMMANDS}`, `Install command: announced "${await said(page)}"`);
     await page.waitForTimeout(2300);
     expect((await install.textContent()) === 'Install command', 'Install command: Copied did not return after 2 s');
+    // Without the clipboard the commands show under the head to select by hand, with Close.
+    await page.evaluate(() => {
+      window.realWrite = navigator.clipboard.writeText.bind(navigator.clipboard);
+      navigator.clipboard.writeText = () => Promise.reject(new Error('denied'));
+    });
+    await install.click();
+    const fallback = page.locator('.install-cmds');
+    await fallback.waitFor();
+    expect((await fallback.locator('code').textContent()) === COMMANDS, 'clipboard fallback: commands');
+    await fallback.getByRole('button', { name: 'Close install command' }).click();
+    await fallback.waitFor({ state: 'detached' });
+    await page.evaluate(() => {
+      navigator.clipboard.writeText = window.realWrite;
+    });
 
     // Download .zip, then Downloaded for 2 s; the copied Install command, run as is in a fresh empty
     // folder holding only the zip, installs the skill and prints "audit passed".
@@ -330,6 +344,8 @@ export default {
     await page.locator('#result-title', { hasText: /^Ping API$/ }).waitFor();
     await ready(page);
     expect((await page.getByTestId('workflow-caption').count()) === 0, 'a spec without a workflow shows a caption');
+    const legend = await page.getByRole('list', { name: 'Legend' }).textContent();
+    expect(!legend.includes('Strongest workflow'), `the legend names a workflow the map does not draw: ${legend}`);
     const meta = await page.locator('.fhead .meta').textContent();
     expect(/^OpenAPI 3\.0, 1 operation, 1 resource, 0 links\b/.test(meta) && !meta.includes('Sample'), `single-operation meta "${meta}"`);
     const warn = page.locator('.meta .tag-btn');
@@ -373,6 +389,13 @@ export default {
     expect(phone.caption && phone.caption.compact === 'true' && phone.caption.h <= 28 && phone.caption.above && phone.caption.hidden === 0, `390 caption ${JSON.stringify(phone.caption)}`);
     expect(phone.meta <= 0 && phone.scroll <= 0, `390: meta or page scrolls sideways (${phone.meta}, ${phone.scroll})`);
     expect(phone.rows.length > 0 && phone.rows.every((h) => h >= 44) && phone.preview === 0, `390 file rows ${phone.rows}, preview ${phone.preview}`);
+    // List rows: the grey and the focus ring bleed 8 px past the column; the rule stays on it.
+    const bleed = await page.evaluate(() => {
+      const row = document.querySelector('.lrow[data-op="listProjects"]');
+      const [r, method, li, head] = [row, row.querySelector('.m'), row.parentElement, document.querySelector('.lhead button')].map((el) => el.getBoundingClientRect());
+      return [method.left - r.left, head.left - r.left, li.left - head.left, getComputedStyle(row.parentElement).boxShadow];
+    });
+    expect(bleed[0] === 8 && bleed[1] === 8 && bleed[2] === 0 && bleed[3].includes('0.5px'), `390 list row bleed ${bleed}`);
     await checks('home 390 light', 'light');
     await axe('home 390 light');
     await webp(page, 'phone-390-light', dir, { fullPage: true });
@@ -417,6 +440,36 @@ export default {
       return out;
     });
     expect(broken.length === 0, `390: the command line breaks inside ${broken.join(', ')}`);
+    // A wrapped command hangs under its text (after "$ "), so it never reads as a new command.
+    const hang = await page.evaluate(() => [...document.querySelectorAll('.cli-line')].flatMap((line) => {
+      const r = document.createRange();
+      r.selectNodeContents(line);
+      const rects = [...r.getClientRects()].filter((c) => c.width > 0);
+      const first = rects[0];
+      const text = line.querySelector('.cli-p').nextSibling;
+      const start = document.createRange();
+      start.setStart(text, 0);
+      start.setEnd(text, 1);
+      const indent = start.getBoundingClientRect().left;
+      return rects.filter((c) => Math.round(c.top) > Math.round(first.top) + 2).map((c) => Math.round(c.left - indent));
+    }));
+    expect(hang.length > 0 && hang.every((d) => Math.abs(d) <= 1), `390: wrapped command lines do not hang under their text (${hang})`);
+
+    // 320 px: no sideways page scroll in the List, the Map or an open preview.
+    await page.setViewportSize({ width: 320, height: 720 });
+    await ready(page, `${origin}/?sample=tasks`);
+    const sideways = async (label) => {
+      const [w, inner] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+      expect(w <= inner, `320 ${label}: horizontal page scroll (${w} > ${inner})`);
+    };
+    await sideways('list');
+    await page.locator('[role="treeitem"][data-path="SKILL.md"]').click();
+    await page.locator('.sb-preview').waitFor();
+    await sideways('preview');
+    await page.getByRole('tab', { name: 'Map' }).click();
+    await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
+    await sideways('map');
+    await axe('map 320 light');
 
     // Check 7: under reduced motion nothing runs.
     await page.setViewportSize({ width: 1440, height: 900 });

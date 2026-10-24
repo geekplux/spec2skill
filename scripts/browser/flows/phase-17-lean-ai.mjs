@@ -144,8 +144,21 @@ export default {
     await prose.waitFor({ state: 'detached' });
     expect((await labels()).join() === 'Folders,Notes', `toggle: labels ${await labels()}`);
     expect((await preview()).includes('  prose: deterministic\n'), 'toggle: SKILL.md says prose: deterministic');
+    // The downloaded zip follows the toggle: deterministic prose while it is on, AI prose again after.
+    const zippedSkillMd = async () => {
+      const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.fhead-actions .btn.primary').click()]); // may still say Downloaded
+      const files = unzipSync(readFileSync(await download.path()));
+      return Buffer.from(files['field-notes/SKILL.md']).toString('utf8');
+    };
+    const plainMd = await zippedSkillMd();
+    expect(plainMd.includes('  prose: deterministic\n') && !plainMd.includes(IDEA.slice(0, 40)), 'toggle on: the zip still carries AI prose');
     await toggle.uncheck();
     await names.filter({ hasText: 'Names: AI-drafted' }).waitFor();
+    await prose.filter({ hasText: 'AI-drafted prose' }).waitFor();
+    await page.locator('.skill-browser[data-ready="true"]').waitFor();
+    const aiMd = await zippedSkillMd();
+    expect(aiMd.includes('  prose: ai\n') && aiMd.includes(IDEA.slice(0, 40)), 'toggle off: the zip lost the AI prose');
+    console.log('  zip follows "Use deterministic text": prose: deterministic, then prose: ai');
     expect(describes() === 1, `slug/toggle made more describe calls: ${describes()}`);
 
     // A reload answers from localStorage: zero new describe calls.
