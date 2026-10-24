@@ -29,8 +29,10 @@ export const VISIBLE_COLUMNS = 4;
 const STOP_R = 9;
 /** Half the workflow halo (6 px): the main line's band is its row plus this, each side. */
 const HALO = 3;
-/** The farthest a hover loop bulges out of a card's side (0.75 of its 48 px handle). */
-export const HOVER_REACH = 36;
+/** The longest handle of a hover loop; it bulges 0.75 of that out of the card's side. */
+const LOOP_HANDLE = 40;
+/** The farthest a hover loop bulges out of a card's side (30 px): inside the frame's 32 px padding with its stroke. */
+export const HOVER_REACH = (LOOP_HANDLE * 3) / 4;
 
 export interface RouteRow extends Rect {
   op: string;
@@ -66,6 +68,7 @@ export interface RouteCard extends Rect {
 export interface RouteLink {
   id: string;
   kind: 'feed' | 'bundle';
+  /** Operation id; for a card bundle (D54), the source cluster id. */
   from: string;
   /** Operation id (feed) or cluster id (bundle). */
   to: string;
@@ -376,10 +379,10 @@ function draw(index: Index, pairs: readonly (readonly [Anchor, Anchor])[]): stri
   return pairs.map(([a, b], i) => {
     if (wires[i]) return across[k++]!;
     if (a.card === b.card) {
-      return new Pen({ x: a.card.x, y: a.y }).loop({ x: a.card.x, y: b.y }, -Math.min(48, 20 + Math.abs(a.y - b.y) / 6)).d;
+      return new Pen({ x: a.card.x, y: a.y }).loop({ x: a.card.x, y: b.y }, -Math.min(LOOP_HANDLE, 20 + Math.abs(a.y - b.y) / 6)).d;
     }
     const right = a.card.x + CARD_W;
-    return new Pen({ x: right, y: a.y }).loop({ x: right, y: b.y }, Math.min(48, 24 + Math.abs(a.y - b.y) / 8)).d;
+    return new Pen({ x: right, y: a.y }).loop({ x: right, y: b.y }, Math.min(LOOP_HANDLE, 24 + Math.abs(a.y - b.y) / 8)).d;
   });
 }
 
@@ -412,9 +415,51 @@ function restLinks(graph: AtlasGraph, index: Index, route: string[]): RouteLink[
       ends: [a, bundle ? { card: b.card, y: b.card.y + HEAD / 2 } : b],
     });
   }
-  const list = [...links.values()];
+  const list = cardBundles([...links.values()]);
   const paths = draw(index, list.map((l) => l.ends));
   return list.map((l, i) => ({ id: l.id, kind: l.kind, from: l.from, to: l.to, edges: l.edges, inferred: l.inferred, d: paths[i]! }));
+}
+
+/** Links between two cards at least one column apart that become one card bundle at rest (D54). */
+export const CARD_BUNDLE = 3;
+
+/**
+ * At rest, CARD_BUNDLE or more row-to-row feed links from one card to a card at least one column
+ * away become one bundle from head to head: crossing a column they would share one corridor on
+ * tracks 6 px apart and read as one thick band with no telling ends (D54). Hover still draws each.
+ */
+function cardBundles<L extends RouteLink & { ends: readonly [Anchor, Anchor] }>(list: L[]): L[] {
+  const groups = new Map<string, L[]>();
+  for (const l of list) {
+    const [a, b] = l.ends;
+    if (l.kind !== 'feed' || b.card.column - a.card.column < 2) continue;
+    const key = `${a.card.id} ${b.card.id}`;
+    groups.set(key, [...(groups.get(key) ?? []), l]);
+  }
+  const out: L[] = [];
+  const done = new Set<string>();
+  for (const l of list) {
+    const [a, b] = l.ends;
+    const key = `${a.card.id} ${b.card.id}`;
+    const group = groups.get(key);
+    if (!group || group.length < CARD_BUNDLE || !group.includes(l)) {
+      out.push(l);
+      continue;
+    }
+    if (done.has(key)) continue;
+    done.add(key);
+    out.push({
+      ...l,
+      id: `cards:${a.card.id}->${b.card.id}`,
+      kind: 'bundle',
+      from: a.card.id,
+      to: b.card.id,
+      edges: group.flatMap((g) => g.edges),
+      inferred: group.every((g) => g.inferred),
+      ends: [{ card: a.card, y: a.card.y + HEAD / 2 }, { card: b.card, y: b.card.y + HEAD / 2 }],
+    });
+  }
+  return out;
 }
 
 function workflowOf(chain: Chain, route: string[], index: Index): RouteWorkflow {
@@ -463,5 +508,27 @@ export function hoverBounds(layout: RouteLayout, graph: AtlasGraph): Rect {
   const b = layout.bounds;
   const [x0, y0] = [Math.min(b.x, -HOVER_REACH), Math.min(b.y, -reach)];
   const [x1, y1] = [Math.max(b.x + b.w, layout.width + HOVER_REACH), Math.max(b.y + b.h, layout.height + reach)];
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+/**
+ * The box the hover links of every operation actually reach (with `bounds`): tighter than
+ * `hoverBounds`, which allows for the deepest corridor fill any operation could need. The map's
+ * scroll region is padded by this, so nothing is clipped and no blank band is reserved.
+ */
+export function hoverExtent(layout: RouteLayout, graph: AtlasGraph): Rect {
+  const b = layout.bounds;
+  let [x0, y0, x1, y1] = [Math.min(b.x, 0), Math.min(b.y, 0), Math.max(b.x + b.w, layout.width), Math.max(b.y + b.h, layout.height)];
+  const ops = new Set(graph.edges.flatMap((e) => [e.from, e.to]));
+  for (const op of ops) {
+    for (const l of hoverLinks(layout, graph, op)) {
+      for (const p of samplePath(l.d, 8)) {
+        if (p.x < x0) x0 = p.x;
+        if (p.x > x1) x1 = p.x;
+        if (p.y < y0) y0 = p.y;
+        if (p.y > y1) y1 = p.y;
+      }
+    }
+  }
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }

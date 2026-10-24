@@ -9,7 +9,7 @@ import { generateSkill } from '../skillgen';
 import { topChains } from '../skillgen/graph-chains';
 import type { Point } from './geometry';
 import {
-  CARD_W, CLEARANCE, COLUMN_STEP, HEAD, HOVER_REACH, MAX_ROWS, ROW, type RouteCard, type RouteLayout, hoverBounds, hoverLinks, methodOf, routeLayout,
+  CARD_W, CLEARANCE, COLUMN_STEP, HEAD, HOVER_REACH, MAX_ROWS, ROW, type RouteCard, type RouteLayout, hoverBounds, hoverExtent, hoverLinks, methodOf, routeLayout,
 } from './route';
 import { columnsOf, feedbackOrder } from './route-columns';
 import { OPEN_REACH, TRACK, corridorY, openReach, routeAcross, routeWires, samplePath } from './route-path';
@@ -157,10 +157,10 @@ describe('route map: Tasks API (the V2Home target)', () => {
     const { layout } = await routeOf('tasks');
     const bundles = layout.links.filter((l) => l.kind === 'bundle');
     expect(bundles.map((b) => [b.from, b.to, b.edges.length])).toEqual([
-      ['listProjects', 'cluster-members', 4], ['createProject', 'cluster-members', 4],
+      ['listProjects', 'cluster-members', 4], ['cluster-projects', 'cluster-tasks', 3], ['createProject', 'cluster-members', 4],
     ]);
     const members = card(layout, 'Members');
-    for (const b of bundles) expect(b.d.endsWith(` ${members.x} ${members.y + HEAD / 2}`)).toBe(true);
+    for (const b of bundles.filter((x) => x.to === 'cluster-members')) expect(b.d.endsWith(` ${members.x} ${members.y + HEAD / 2}`)).toBe(true);
     const feed = layout.links.find((l) => l.id === 'feed:listTasks->listComments')!;
     expect(feed.d).toBe(`M${580 + CARD_W} ${row(layout, 'listTasks').cy}H870`);
     // Only forward links rest on the map; backward ones (Tasks -> Projects) wait for hover.
@@ -170,14 +170,26 @@ describe('route map: Tasks API (the V2Home target)', () => {
   });
 
   it('gives each link its own run and keeps them off the main line between Projects and Tasks', async () => {
-    const { layout } = await routeOf('tasks');
+    const { graph, layout } = await routeOf('tasks');
     expectNoSharedRuns(layout);
     expectOffTheLine(layout);
-    // The three Projects -> Tasks links on tracks 6 px apart under the line's band (not one shared y).
-    const ys = ['feed:listProjects->createTask', 'feed:createProject->listTasks', 'feed:createProject->createTask'].map(
-      (id) => runs(layout.links.find((l) => l.id === id)!.d)[0]!.y,
-    );
-    expect(ys.map((y) => y - layout.workflow!.y)).toEqual([27, 33, 39]);
+    // D54: the three Projects -> Tasks links cross Members/Labels in one 13 px corridor; at rest they
+    // are one card bundle, head to head, straight above the line's band (not three runs 6 px apart).
+    const [projects, tasks] = [card(layout, 'Projects'), card(layout, 'Tasks')];
+    const bundle = layout.links.find((l) => l.id === 'cards:cluster-projects->cluster-tasks')!;
+    expect(bundle.edges.toSorted()).toEqual(['feeds:createProject->createTask', 'feeds:createProject->listTasks', 'feeds:listProjects->createTask']);
+    expect(bundle.d).toBe(`M${CARD_W} ${projects.y + HEAD / 2}H${tasks.x}`);
+    expect(layout.links.some((l) => l.kind === 'feed' && l.id.startsWith('feed:') && ['feed:listProjects->createTask', 'feed:createProject->listTasks', 'feed:createProject->createTask'].includes(l.id))).toBe(false);
+    // Adjacent cards keep their links row to row (Projects -> Labels, Tasks -> Comments: 4 each, as in V2Home).
+    const nameOf = (op: string) => layout.cards.find((c) => c.rows.some((r) => r.op === op))?.name;
+    expect(layout.links.filter((l) => l.kind === 'feed' && nameOf(l.from) === 'Projects' && nameOf(l.to) === 'Labels')).toHaveLength(4);
+    expect(layout.links.filter((l) => l.kind === 'feed' && nameOf(l.from) === 'Tasks' && nameOf(l.to) === 'Comments')).toHaveLength(4);
+    // On hover each link is drawn on its own track, TRACK px apart under the band.
+    const hover = hoverLinks(layout, graph, 'createProject').filter((l) => l.kind === 'feeds');
+    const ys = ['feeds:createProject->listTasks', 'feeds:createProject->createTask'].map((id) => runs(hover.find((l) => l.edge === id)!.d)[0]!.y);
+    expect(Math.abs(ys[1]! - ys[0]!)).toBe(TRACK);
+    expect(ys.every((y) => y - layout.workflow!.y >= 19 + 8)).toBe(true);
+    expectApart(hover.map((l) => ({ id: l.edge, d: l.d })));
   });
 
   it('gives every link of an operation on hover, backward and same-card included, clear of cards', async () => {
@@ -382,6 +394,25 @@ describe('route map: parts', () => {
       for (const op of model.operations) {
         for (const p of hoverLinks(layout, graph, op.id).flatMap((l) => samplePath(l.d))) {
           expect(p.x >= box.x - 0.1 && p.x <= box.x + box.w + 0.1 && p.y >= box.y - 0.1 && p.y <= box.y + box.h + 0.1).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('hoverExtent holds every hover link, inside hoverBounds, and loops stay inside the frame padding', async () => {
+    expect(HOVER_REACH).toBeLessThanOrEqual(32 - 1.25); // the frame's padding, less the hover stroke
+    for (const sample of SAMPLES) {
+      const { model, graph, layout } = await routeOf(sample.id);
+      const [box, outer] = [hoverExtent(layout, graph), hoverBounds(layout, graph)];
+      expect(box.x).toBeGreaterThanOrEqual(outer.x);
+      expect(box.y).toBeGreaterThanOrEqual(outer.y);
+      expect(box.x + box.w).toBeLessThanOrEqual(outer.x + outer.w);
+      expect(box.y + box.h).toBeLessThanOrEqual(outer.y + outer.h);
+      expect(box.x).toBeGreaterThanOrEqual(-HOVER_REACH - 0.1);
+      expect(box.x + box.w).toBeLessThanOrEqual(layout.width + HOVER_REACH + 0.1);
+      for (const op of model.operations) {
+        for (const p of hoverLinks(layout, graph, op.id).flatMap((l) => samplePath(l.d))) {
+          expect(p.x >= box.x - 0.6 && p.x <= box.x + box.w + 0.6 && p.y >= box.y - 0.6 && p.y <= box.y + box.h + 0.6).toBe(true);
         }
       }
     }

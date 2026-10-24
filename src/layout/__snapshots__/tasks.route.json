@@ -327,15 +327,17 @@
       "d": "M202 216C246 216 246 18 290 18"
     },
     {
-      "id": "feed:listProjects->createTask",
-      "kind": "feed",
-      "from": "listProjects",
-      "to": "createTask",
+      "id": "cards:cluster-projects->cluster-tasks",
+      "kind": "bundle",
+      "from": "cluster-projects",
+      "to": "cluster-tasks",
       "edges": [
-        "feeds:listProjects->createTask"
+        "feeds:listProjects->createTask",
+        "feeds:createProject->listTasks",
+        "feeds:createProject->createTask"
       ],
       "inferred": false,
-      "d": "M202 216C246 216 246 243 290 243H492C536 243 536 248 580 248"
+      "d": "M202 182H580"
     },
     {
       "id": "feed:createProject->listLabels",
@@ -372,28 +374,6 @@
       ],
       "inferred": false,
       "d": "M202 248C246 248 246 18 290 18"
-    },
-    {
-      "id": "feed:createProject->listTasks",
-      "kind": "feed",
-      "from": "createProject",
-      "to": "listTasks",
-      "edges": [
-        "feeds:createProject->listTasks"
-      ],
-      "inferred": false,
-      "d": "M202 248C246 248 246 249 290 249H492C536 249 536 216 580 216"
-    },
-    {
-      "id": "feed:createProject->createTask",
-      "kind": "feed",
-      "from": "createProject",
-      "to": "createTask",
-      "edges": [
-        "feeds:createProject->createTask"
-      ],
-      "inferred": false,
-      "d": "M202 248C246 248 246 255 290 255H492C536 255 536 248 580 248"
     },
     {
       "id": "feed:getProject->getMember",
