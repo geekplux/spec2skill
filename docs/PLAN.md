@@ -88,6 +88,7 @@ Each criterion is testable; the phase that first satisfies it is in brackets (ph
 - **F9** The map shows every operation as a node in its cluster, every edge with its style and label, a legend, pan/zoom (pointer, wheel, buttons, keyboard; pinch on touch [P13]), and fit-to-screen. [P6]
 - **F10** Selecting a node opens a detail panel with inputs (name, location, type, required), output fields, auth, related operations grouped by edge type (each a button that moves focus), and a "Copy example" (curl for HTTP, JSON-RPC `tools/call` body for MCP) [P7]; plus "In the skill: `references/<cluster>.md`", which selects that file in the skill pane [P11].
 - **F11** Search (by name, path, summary, param) filters the map (non-matches dimmed and skipped by keyboard nav) and the list view; filters by edge type, method/kind and cluster. [P12]
+  *Superseded in part by the redesign (D49, D55), kept here as the record: F9's pan, zoom, pinch and fit-to-screen gave way to a route map read at 1:1 that scrolls sideways (browser zoom still works); F10's detail panel to the operation card, previewed on hover and pinned on click; F11's filters by edge type, method and cluster to search alone; the skill pane beside the map to the skill browser under it in one scroll. The current behaviour is in [DESIGN.md](DESIGN.md) sections 4 to 6.*
 - **F12** List view: a table of all operations grouped by cluster, with edges as text ("feeds `getMember` via `assigneeId -> memberId`"). [P12]
 - **F13** URL state: `?sample=`, `?view=`, `?q=`, `?url=`, `#op=` open the right skill, map and node; back/forward works. [P12, P15]
 - **F14** For any loaded model the skill pane shows the generated skill directory meeting the anatomy bar (section 5.7): its file tree, a preview of any file (SKILL.md by default), the in-browser audit result, and **Download .zip** producing `<slug>-skill.zip`; the header's **Generate skill** button regenerates with the pane's options and brings the pane into view. [P9-P11]
@@ -107,6 +108,7 @@ Each criterion is testable; the phase that first satisfies it is in brackets (ph
 - **A7** `prefers-reduced-motion: reduce` disables all transitions and animated camera moves (verified by emulation in the browser check). [P6]
 - **A8** axe-core reports zero serious or critical violations on the landing view (skill pane + map), detail panel open, list view, the Skill/Map/List tabs on mobile, the shortcut help dialog and an error state. [P5 onward]
 - **A9** Layout works at 390 px width and 200 % zoom without horizontal page scroll (the map itself pans; the skill preview scrolls inside its box). [P6, P11]
+  *Superseded in part by the redesign (D49, D55), kept here as the record: A1's `+`, `-` and `0` zoom keys and A8's detail panel and Skill/Map/List tabs are gone (the operation card and one scroll with a Map | List switch replaced them), and in A9 the map scrolls sideways rather than panning. The current keyboard model and checks are in [DESIGN.md](DESIGN.md) sections 5 and 8.*
 - **A10** The theme follows OS changes live while the user has not chosen a theme explicitly. [P13]
 
 ### Performance and footprint (P)
