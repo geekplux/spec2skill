@@ -7,7 +7,7 @@
 import { type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAnnounce } from '../a11y/Announcer';
 import type { AtlasGraph, Edge } from '../graph';
-import { CARD_W, MAX_ROWS, type RouteCard, type RouteRow, hoverBounds, hoverLinks, routeLayout } from '../layout/route';
+import { CARD_W, MAX_ROWS, type RouteCard, type RouteRow, hoverExtent, hoverLinks, routeLayout } from '../layout/route';
 import type { ApiModel } from '../model/types';
 import type { Chain } from '../skillgen/types';
 import { describeEdge, edgesOf, keyAction, mapName, moreId, navOf, nodeName, otherEnd } from './keyboard';
@@ -57,7 +57,8 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
   if (selected && !rowOf.has(selected) && home.has(selected) && !expanded.has(home.get(selected)!.id)) {
     setExpanded(new Set([...expanded, home.get(selected)!.id]));
   }
-  const reach = useMemo(() => hoverBounds(layout, feeds), [layout, feeds]);
+  // What hover links actually reach (not the deepest any operation could): the scroll region's box.
+  const reach = useMemo(() => hoverExtent(layout, feeds), [layout, feeds]);
   const nav = useMemo(() => navOf(layout, match), [layout, match]);
   const shown = useMemo(() => new Set(shownEdges.map((e) => e.id)), [shownEdges]);
   const degree = useMemo(() => {
@@ -101,14 +102,15 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
     return () => observer.disconnect();
   }, []);
   const scrolls = layout.scrolls || layout.width > avail + 0.5;
-  // The map's box and where the layout's (0, 0) sits in it. At rest everything drawn fits the cards'
-  // box plus what the links need above and below (loops may reach into the frame's padding). Scrolling,
-  // the region holds the hover bounds, so hover links and loops are never clipped, and is pulled left
-  // by as much (marginLeft), so the first column stays on the grid.
-  const b = layout.bounds;
+  // The map's box and where the layout's (0, 0) sits in it: the cards plus what any link reaches
+  // above and below them (rest and hover, `hoverExtent`), so nothing draws into the tools row or is
+  // clipped. Scrolling, the region also holds the hover loops left of the first column and right of
+  // the last (30 px at most, inside the frame's 32 px padding) and is pulled left by as much
+  // (marginLeft), so the first column stays on the grid.
+  const top = Math.max(0, -reach.y);
   const pad = scrolls
-    ? { left: -reach.x, top: -reach.y, w: reach.w, h: reach.h }
-    : { left: 0, top: Math.max(0, -b.y), w: layout.width, h: layout.height + Math.max(0, -b.y) + Math.max(0, b.y + b.h - layout.height) };
+    ? { left: -reach.x, top, w: reach.w, h: reach.h }
+    : { left: 0, top, w: layout.width, h: top + Math.max(layout.height, reach.y + reach.h) };
   /** The layout's origin relative to the wrapper (the card is placed outside the scroller). */
   const ox = scrolls ? -scrollX : 0;
   const oy = pad.top;
@@ -224,11 +226,11 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
   const marker = (name: string) => `url(#${CSS.escape(`${uid}${name}`)})`;
   const linkFaded = (ids: string[]) => !!hot || !ids.some((id) => shown.has(id));
   const target = cycled && opAt ? otherEnd(cycled, opAt) : undefined;
-  const rowAttrs = (r: RouteRow) => {
-    const dim = (hot && !near.has(r.op)) || (match && !match.has(r.op));
-    // A search match also turns its id 600, so matches differ by more than lightness (never colour alone).
-    return { 'data-hot': r.op === hot || undefined, 'data-dim': dim || undefined, 'data-match': (match && match.has(r.op)) || undefined, 'data-target': r.op === target || undefined };
-  };
+  // Lit: related to the hot row, or a search match; dim: the rest while something is hot or searched (D47).
+  const isDim = (op: string) => (!!hot && !near.has(op)) || (!!match && !match.has(op));
+  const isLit = (op: string) => (!!hot || !!match) && !isDim(op);
+  const rowAttrs = (r: RouteRow) => ({ 'data-hot': r.op === hot || undefined, 'data-dim': isDim(r.op) || undefined, 'data-lit': isLit(r.op) || undefined, 'data-target': r.op === target || undefined });
+  const cardDim = (c: RouteCard) => (!!hot || !!match) && !c.rows.some((r) => isLit(r.op)) && !(c.more?.hidden.some(isLit) ?? false);
   const card = cardOp && place ? ops.get(cardOp) : undefined;
 
   const map = (
@@ -256,7 +258,7 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
         </svg>
         {layout.cards.map((c) => (
           // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a labelled group of rows
-          <div key={c.id} className="rc" role="group" aria-labelledby={`${uid}c-${c.id}`} data-column={c.column} style={{ left: c.x, top: c.y, height: c.h }}>
+          <div key={c.id} className="rc" role="group" aria-labelledby={`${uid}c-${c.id}`} data-column={c.column} data-dim={cardDim(c) || undefined} style={{ left: c.x, top: c.y, height: c.h }}>
             <h3 className="rc-head" id={`${uid}c-${c.id}`}>
               <span className="rc-name">{names.get(c.id) ?? c.name}</span>
               <span className="rc-count"><span className="visually-hidden">, </span>{c.count}<span className="visually-hidden"> {noun}</span></span>
@@ -273,8 +275,8 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
                   onClick={() => pin(r.op)} onPointerEnter={() => enter(r.op)} onPointerLeave={leave}>
                   <span className="m" data-destructive={r.destructive || undefined}>
                     {r.method}
-                    {/* D41: a destructive tool's method word is not DELETE, so a glyph says it besides the colour. */}
-                    {r.destructive && r.method !== 'DELETE' && <span className="bang" title="Destructive" aria-hidden="true">!</span>}
+                    {/* D41/D53: every destructive row (DELETE too) carries an amber warning mark besides the word; the name says "destructive". */}
+                    {r.destructive && <svg className="warn" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path className="warn-bg" d="M6 .9 11.6 10.9H.4Z" /><path className="warn-x" d="M6 4.6v2.9M6 9.1v.05" /></svg>}
                   </span>
                   {/* A space between method and id for the text alternative (flex drops it visually). */}
                   {' '}
@@ -284,7 +286,7 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
             })}
             {c.more && (
               <button type="button" className="op more" data-nav={moreId(c.id)} aria-expanded={c.more.expanded}
-                data-dim={(hot || match) && !c.more.hidden.some((id) => near.has(id) || match?.has(id)) ? true : undefined}
+                data-dim={c.more.hidden.some(isLit) ? undefined : (hot || match) ? true : undefined}
                 tabIndex={moreId(c.id) === stop ? 0 : -1} aria-label={`${c.more.count} more ${noun} in ${names.get(c.id) ?? c.name}`}
                 onKeyDown={onKeyDown} onFocus={() => onRowFocus(moreId(c.id))} onBlur={() => setFocusIn(false)} onClick={() => toggle(c)}>
                 <span className="m"><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></span>

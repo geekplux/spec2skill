@@ -12,9 +12,9 @@ const pairs = (tokens: Token[]) => tokens.flatMap((a, i) => tokens.slice(i + 1).
 
 /** Groups of colours that appear next to each other; every pair inside a group must stay apart. */
 const GROUPS: Record<string, Token[]> = {
-  // DESIGN.md 8.5: the accent, the destructive hue (the hatch, amber-11) and ink.
+  // DESIGN.md 8.5: the accent, the destructive hue (the warning mark, amber-11) and ink.
   accent: ['indigo-9', 'amber-11', 'gray-12'],
-  // The same with the destructive role (method text and `!`: amber-12 in light, amber-11 in dark).
+  // The same with the destructive role (method text: amber-12 in light, amber-11 in dark).
   destructive: ['indigo-9', 'destructive', 'gray-12'],
   // The logo: the spec square, the skill circle and their ink overlap.
   logo: ['indigo-9', 'amber-9', 'gray-12'],

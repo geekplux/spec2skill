@@ -223,9 +223,9 @@ h3, h4 { font-weight: 600; }
 .route-origin { position: absolute; }
 .links { position: absolute; overflow: visible; pointer-events: none; fill: none; }
 /* Feed links 1 px gray-9 with open arrowheads, inferred ones dashed; while a row is hot the rest turn
-   gray-6 and its own links are drawn 1.25 px in ink. The workflow: a 6 px gray-1 halo under a 2.5 px indigo line. */
+   gray-5 and its own links are drawn 1.25 px in ink. The workflow: a 6 px gray-1 halo under a 2.5 px indigo line. */
 .ln { stroke: var(--gray-9); stroke-width: 1px; transition: stroke var(--motion-map) ease-out; }
-.ln[data-faded] { stroke: var(--gray-6); }
+.ln[data-faded] { stroke: var(--gray-5); }
 .ln[data-inferred], .ln-hot[data-inferred] { stroke-dasharray: 3 3; }
 .ln-hot { stroke: var(--gray-12); stroke-width: 1.25px; }
 .halo { stroke: var(--gray-1); stroke-width: 6px; stroke-linecap: round; }
@@ -248,20 +248,26 @@ h3, h4 { font-weight: 600; }
   border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-12); font: inherit; text-align: left; cursor: pointer;
   transition: background-color var(--motion-map) ease-out;
 }
-.op .m, .op .id { transition: color var(--motion-map) ease-out; }
+.op .m, .op .id, .rc-name { transition: color var(--motion-map) ease-out; }
 .op:focus-visible { outline-offset: -2px; }
 .op .m { flex: none; width: 44px; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); white-space: nowrap; }
-.op .m[data-destructive] { color: var(--destructive); }
-.op .bang { font-weight: 600; } /* D41: a destructive tool's cue besides the colour */
+.op .m[data-destructive] { display: flex; align-items: center; gap: var(--space-4); width: auto; min-width: 44px; color: var(--destructive); }
+/* D53: the destructive mark, a 12 px amber-11 warning triangle (a graphic: 3:1 is enough, it has 4.5:1). */
+.warn { flex: none; }
+.warn-bg { fill: var(--amber-11); }
+.warn-x { fill: none; stroke: var(--gray-1); stroke-width: 1.5px; stroke-linecap: round; }
 .op .id { flex: 1; min-width: 0; overflow: hidden; font: var(--text-14)/var(--leading-14) var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
+/* While a row is hot (hover, focus, pinned) or a search narrows the map, related rows and matches
+   are lit: ink, id 600, method 500; the rest fade to the lightest ink that keeps AA text contrast
+   (gray-11, weight 400), and a card with nothing lit fades its name. Weight as well as lightness,
+   never lightness alone, and no opacity: 0.38 would put live buttons at 2.3:1 (D47). */
+.op[data-lit] .m { color: var(--gray-12); font-weight: 500; }
+.op[data-lit] .m[data-destructive] { color: var(--destructive); }
+.op[data-lit] .id { color: var(--gray-12); font-weight: 600; }
 .op[data-route] .id { color: var(--indigo-11); font-weight: 600; }
 .op:hover, .op[data-hot] { background: var(--gray-3); }
-/* Unrelated rows (hover, focus, search) fade to the lightest ink that keeps AA text contrast, not to
-   opacity 0.38, which would put live buttons at 2.3:1 (D47). The method's amber and the workflow's
-   indigo fade with them; the hot links carry the emphasis. */
-.op[data-dim] .m, .op[data-dim] .id { color: var(--gray-11); }
-.op[data-dim][data-route] .id { font-weight: 400; }
-.op[data-match] .id { font-weight: 600; } /* a search match differs by weight too, not lightness alone */
+.op[data-dim] .m, .op[data-dim] .id { color: var(--gray-11); font-weight: 400; }
+.rc[data-dim] .rc-name { color: var(--gray-11); font-weight: 500; }
 .op[data-target] { outline: 2px dashed var(--gray-12); outline-offset: -2px; } /* the far end of the link E highlights */
 /* The stop disc: generated from data-route, so it is not part of the row's text (the name says the step). */
 .op[data-route]::after { content: attr(data-route); flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--indigo-9); color: var(--indigo-contrast); font: 600 var(--text-12)/18px var(--font-sans); text-align: center; }
