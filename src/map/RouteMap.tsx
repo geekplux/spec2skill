@@ -226,7 +226,8 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
   const target = cycled && opAt ? otherEnd(cycled, opAt) : undefined;
   const rowAttrs = (r: RouteRow) => {
     const dim = (hot && !near.has(r.op)) || (match && !match.has(r.op));
-    return { 'data-hot': r.op === hot || undefined, 'data-dim': dim || undefined, 'data-target': r.op === target || undefined };
+    // A search match also turns its id 600, so matches differ by more than lightness (never colour alone).
+    return { 'data-hot': r.op === hot || undefined, 'data-dim': dim || undefined, 'data-match': (match && match.has(r.op)) || undefined, 'data-target': r.op === target || undefined };
   };
   const card = cardOp && place ? ops.get(cardOp) : undefined;
 
