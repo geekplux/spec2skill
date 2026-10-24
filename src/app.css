@@ -74,9 +74,11 @@ code { font-family: var(--font-mono); font-size: inherit; }
   background: var(--indigo-9); color: var(--indigo-contrast); font: 500 var(--text-14)/var(--leading-14) var(--font-sans); white-space: nowrap; cursor: pointer;
 }
 /* Generate keeps one width through its stages (the widest, "Fetching" with the spinner, is 111 px), so the
-   field holds still. Only in a field narrower than 416 px (D39's grid gives it 395 px at 960, up to about
-   1000 px; on phones Generate has its own line) does it grow with its label, so the URL keeps 240 px (D65). */
-@container (width >= 416px) { .generate { min-width: 112px; } }
+   field holds still. Where the field's content box is under 396 px (D39's grid: 960 to about 1007 px) a
+   112 px Generate at rest would leave the URL under 240 px, so there it widens once when a load starts and
+   narrows once when it ends (D65). On phones Generate has its own line. */
+.generate[data-stage] { min-width: 112px; }
+@container (width >= 396px) { .generate { min-width: 112px; } }
 /* "Samples" and the segmented control filling the rest of the row. */
 /* When "Samples" and the control no longer fit one line, the control wraps under the label. */
 .samples { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16); }
