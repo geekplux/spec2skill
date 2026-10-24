@@ -1,14 +1,16 @@
 // Redesign R6 (docs/redesign/PLAN.md): motion and button states, DESIGN.md section 7 (V2Motion).
 // Checks the load sequence on a sample switch in real time (cards hidden or rising at t = 0, the
-// workflow's dash offset running from 1 to 0, the end state by about 2 s: nothing running, every card,
-// link, segment, arrowhead and stop disc in place) and records it as three frames (the animations
-// paused and sought to 150 and 700 ms, then the end); that it plays again for Generate and a sample
-// switch but not for a hover, a search, a view toggle, "N more" or a resize; the hover timing (rows and
-// links fade, the hot links and the card fade in, the card rising 4 px, 250 ms); Generate on a slow URL
-// (the synthetic 1000-operation spec behind an 800 ms answer): the button names the real stages in
-// order with a spinner, each announced, the previous result greyscale meanwhile, then the new result
-// with the load sequence; no stage label on sample switches; Copied and Downloaded fading in and back
-// after 2 s; the list on phones (groups rise, the audit row fades in); the synthetic map's sequence
+// workflow's dash offset running from 1 to 0, the end state by 2 s after the map's mount: nothing
+// running, every card, link, segment, arrowhead and stop disc in place) and records it as three frames
+// (the animations paused and sought to 150 and 600 ms, then the end); that it plays again for Generate
+// and a sample switch but not for a hover, a search, a view toggle, "N more" or a resize; the hover
+// timing (rows and links fade, the hot links and the card fade in, the card rising 4 px, 250 ms) and
+// that a theme change or a search alone snaps; Generate on a slow URL (the synthetic 1000-operation
+// spec behind an 800 ms answer, the CPU throttled 4x): the button names Fetching, Parsing and then the
+// later stages it shows, in pipeline order, with a spinner, at one width, each announced, the previous
+// result greyscale meanwhile, then the new result with the load sequence; no stage label on sample
+// switches; Copied (Install command, the command-line box) and Downloaded fading in and back after
+// 2 s; the list on phones (groups rise, the audit row fades in); the synthetic map's sequence
 // (one animation per card, links as one layer); and under reducedMotion 'reduce' nothing at all
 // (no running animation or transition at t = 0, the end state at once, a still spinner), with the
 // DESIGN.md section 8 motion check. Saves WebP shots in docs/screenshots/redesign-r6/.
@@ -133,10 +135,23 @@ export default {
     expect(values.every((v, i) => i === 0 || v <= values[i - 1] + 1e-9), `the dash offset goes back: ${JSON.stringify(drawn)}`);
     const startAt = drawn.find(([, v]) => v < 0.99)?.[0];
     console.log(`  first segment starts drawing at ${startAt} ms, done at ${drawn.find(([, v]) => v === 0)?.[0]} ms`);
-    // By 1.6 s (the last disc pops by 1.3 s, the last audit row by 1.4 s) everything is in place.
-    await page.waitForTimeout(100);
+    // Timed from the map's mount (when the first column's rise starts on document.timeline): every one-shot
+    // animation is planned to end by 2 s (the last disc pops by 1.3 s, the last audit row by 1.4 s) and has finished by then.
+    const timing = await page.evaluate(async () => {
+      const mount = document.querySelector('.rc[data-column="0"]').getAnimations()[0].startTime;
+      const list = document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity);
+      const planned = Math.max(...list.map((a) => a.startTime + a.effect.getComputedTiming().endTime)) - mount;
+      const left = Math.max(0, mount + 2000 - document.timeline.currentTime);
+      const done = await Promise.race([
+        Promise.all(list.map((a) => a.finished.catch(() => {}))).then(() => true),
+        new Promise((resolve) => setTimeout(() => resolve(false), left + 50)),
+      ]);
+      return { planned: Math.round(planned), done, at: Math.round(document.timeline.currentTime - mount) };
+    });
+    console.log(`  the sequence is planned to end ${timing.planned} ms after mount; all finished by ${timing.at} ms`);
+    expect(timing.planned <= 2000 && timing.done, `the sequence does not end by 2 s after mount: ${JSON.stringify(timing)}`);
     const end = await page.evaluate(snapshot);
-    expect(running(end).length === 0, `end (1.6 s): still running ${JSON.stringify(running(end))}`);
+    expect(running(end).length === 0, `end: still running ${JSON.stringify(running(end))}`);
     expect(end.cards.every((c) => c.opacity === 1 && flat(c.transform)) && end.links === 1, `end: cards or links not in place ${JSON.stringify(end.cards)}`);
     expect(end.wf.every((w) => w.offset === 0 && w.opacity === 1 && w.marker.startsWith('url(')) && end.discs.length === 3 && end.discs.every((d) => d.opacity === 1 && flat(d.transform)), `end: workflow ${JSON.stringify(end.wf)} ${JSON.stringify(end.discs)}`);
     expect(end.checks.length === 9 && end.checks.every((o) => o === 1), `end: audit rows ${JSON.stringify(end.checks)}`);
@@ -191,8 +206,20 @@ export default {
     expect(fades.every((t) => /0\.25s ease-out/.test(t)), `hover fades: ${fades}`);
     await page.mouse.move(0, 0);
     await rest(page);
+    // The hover has ended (it lingers 150 ms) and its fade back is over.
+    await page.waitForFunction(() => !document.querySelector('.route:is([data-hot], [data-fading])'), null, { timeout: 1000 });
+    await settled(page);
+    // Only the hover moment fades (D67): a theme change and a search's dimming snap.
+    const transitions = () => page.evaluate(() => document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => `${a.transitionProperty} on ${a.effect?.target?.tagName.toLowerCase()}.${a.effect?.target?.getAttribute('class') ?? ''}`));
+    await page.emulateMedia({ colorScheme: 'dark' });
+    const themed = await transitions();
+    await page.emulateMedia({ colorScheme: 'light' });
+    expect(themed.length === 0 && (await transitions()).length === 0, `a theme change fades: ${themed}`);
     await replayed('search', async () => {
       await page.locator('#search-q').fill('task');
+      await page.locator('.op[data-dim]').first().waitFor({ state: 'attached' });
+      const dimmed = await transitions();
+      expect(dimmed.length === 0, `the search's dimming fades: ${dimmed}`);
       await page.waitForTimeout(500);
     });
     await page.locator('#search-q').fill('');
@@ -215,12 +242,16 @@ export default {
       await new Promise((done) => setTimeout(done, 800));
       await route.fulfill({ body: big, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' } }).catch(() => {});
     });
+    // A machine 4x slower, so the stages that take a while on a slow laptop show here too.
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+    const restWidth = await page.locator('.generate').evaluate((el) => el.getBoundingClientRect().width);
     await page.evaluate(() => {
       window.r6log = [];
       const start = performance.now();
-      const log = (kind, text) => window.r6log.push({ t: Math.round(performance.now() - start), kind, text });
+      const log = (kind, text, width) => window.r6log.push({ t: Math.round(performance.now() - start), kind, text, width });
       const btn = document.querySelector('.generate');
-      new MutationObserver(() => log('label', btn.textContent)).observe(btn, { subtree: true, childList: true, characterData: true });
+      new MutationObserver(() => log('label', btn.textContent, btn.getBoundingClientRect().width)).observe(btn, { subtree: true, childList: true, characterData: true });
       const say = document.querySelector('[data-testid="announcer"]');
       new MutationObserver(() => say.textContent && log('said', say.textContent)).observe(say, { subtree: true, childList: true, characterData: true });
     });
@@ -238,15 +269,22 @@ export default {
       const b = document.querySelector('.load').getBoundingClientRect();
       return { x: b.left - 24, y: b.top - 24, width: b.width + 48, height: b.height + 48 };
     }) });
-    await title.filter({ hasText: /^Synthetic/ }).waitFor({ timeout: 20_000 });
+    await title.filter({ hasText: /^Synthetic/ }).waitFor({ timeout: 40_000 });
     expect(await page.evaluate(() => !!document.querySelector('.sheet[data-enter]')), 'the new result does not play the load sequence');
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    await cdp.detach();
     await rest(page);
     const log = await page.evaluate(() => window.r6log);
-    const labels = log.filter((e) => e.kind === 'label').map((e) => e.text).filter((t, i, all) => t !== all[i - 1]);
-    console.log(`  Generate labels: ${log.filter((e) => e.kind === 'label').map((e) => `${e.text}@${e.t}`).join(', ')}`);
-    expect(labels[0] === 'Fetching' && labels.at(-1) === 'Generate', `labels ${labels}`);
+    const changes = log.filter((e) => e.kind === 'label');
+    const labels = changes.map((e) => e.text).filter((t, i, all) => t !== all[i - 1]);
+    console.log(`  Generate labels (CPU 4x slower): ${changes.map((e) => `${e.text}@${e.t}`).join(', ')}`);
+    // Fetching, then Parsing (the parse of 1000 operations always takes over 100 ms), then whichever later
+    // stages lasted past the 100 ms floor, in pipeline order, and back to Generate.
+    expect(labels[0] === 'Fetching' && labels[1] === 'Parsing' && labels.at(-1) === 'Generate', `labels ${labels}`);
     const stages = labels.slice(0, -1);
-    expect(stages.length >= 3 && stages.every((s, i) => STAGES.includes(s) && (i === 0 || STAGES.indexOf(s) > STAGES.indexOf(stages[i - 1]))), `stages not in order: ${stages}`);
+    expect(stages.every((s, i) => STAGES.includes(s) && (i === 0 || STAGES.indexOf(s) > STAGES.indexOf(stages[i - 1]))), `stages not in order: ${stages}`);
+    // The button keeps its resting width through every stage, so the field beside it holds still.
+    expect(changes.every((e) => Math.abs(e.width - restWidth) < 0.5), `Generate changes width: rest ${restWidth}, ${changes.map((e) => `${e.text} ${e.width}`).join(', ')}`);
     for (const s of stages) expect(log.some((e) => e.kind === 'said' && e.text.startsWith(s) && e.text.endsWith('…')), `stage ${s} not announced: ${JSON.stringify(log.filter((e) => e.kind === 'said'))}`);
     // No stage label for a sample switch.
     await page.evaluate(() => (window.r6log = []));
@@ -280,6 +318,20 @@ export default {
     const back = Date.now();
     await page.locator('.fhead-actions .btn.primary', { hasText: /^Download \.zip$/ }).waitFor({ timeout: 2600 });
     expect(Date.now() - back > 1500, 'Downloaded went back too soon');
+    await rest(page);
+    // The command-line box's copy button: a check for 2 s, named "Commands copied", fading in.
+    const cli = page.locator('#cli .cli .icon-btn');
+    await cli.scrollIntoViewIfNeeded();
+    await cli.click();
+    await page.locator('#cli .icon-btn[aria-label="Commands copied"]').waitFor({ timeout: 1500 });
+    swap = await swapOf(cli);
+    const pasted = await page.evaluate(() => navigator.clipboard.readText());
+    expect(swap.check && swap.swap && swap.name === 's2-fade' && swap.duration === 250 && pasted.split('\n').length === 3, `Commands copied: ${JSON.stringify(swap)} ${JSON.stringify(pasted)}`);
+    const cliBack = Date.now();
+    await page.locator('#cli .icon-btn[aria-label="Copy commands"]').waitFor({ timeout: 2600 });
+    swap = await swapOf(cli);
+    expect(Date.now() - cliBack > 1500 && !swap.check && swap.name === 's2-fade', `back to Copy commands: ${JSON.stringify(swap)}`);
+    await page.evaluate(() => window.scrollTo(0, 0));
     await rest(page);
 
     // 7. Phones open on the list: its groups rise, 40 ms apart, and the audit row fades in.
