@@ -242,8 +242,8 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
     const preview = el?.querySelector<HTMLElement>('.op-card[aria-hidden="true"]');
     if (!el || !preview || !place || preview.scrollHeight <= preview.clientHeight + 1) return;
     const limit = el.offsetHeight + CARD.below;
-    const top = Math.max(0, Math.min(place.top, limit - preview.scrollHeight));
-    setPlace({ ...place, top, maxHeight: Math.max(limit - top, preview.scrollHeight) });
+    const risen = Math.max(0, Math.min(place.top, limit - preview.scrollHeight));
+    setPlace({ ...place, top: risen, maxHeight: Math.max(limit - risen, preview.scrollHeight) });
   }, [place]);
 
   const routeShown = !hot; // the workflow's colour and discs rest while a row is hot (V2Hover)
