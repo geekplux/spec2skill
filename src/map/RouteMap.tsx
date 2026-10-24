@@ -237,8 +237,9 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
   }, [cardOp, pinned, rowOf, ox, oy, avail]);
   // The hover preview never scrolls (see app.css), so it is never cut and never reaches the skill
   // browser: any preview whose bottom would pass the limit rises, still beside its row, until it ends
-  // at the limit; only one taller than the map and caption together keeps its full height from the
-  // map's top and passes the limit (D70, D76).
+  // at the limit. A preview is kept short (D80), so on the samples none is taller than the map and
+  // caption together; should a pasted spec make one (a long title, a very short map), it keeps its full
+  // height from the map's top and passes the limit rather than being cut (D70, D76).
   useLayoutEffect(() => {
     const el = wrap.current;
     const preview = el?.querySelector<HTMLElement>('.op-card[aria-hidden="true"]');

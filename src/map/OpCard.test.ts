@@ -40,6 +40,18 @@ describe('OpCard', () => {
     expect(raw).toContain('aria-label="Show references/tasks.md in the skill">references/<wbr/>tasks.md</button>');
   });
 
+  it('preview: at most four inputs and four related operations per group, then "and N more"; pinned lists them all', async () => {
+    const tasks = await sampleModel(getSample('tasks')!);
+    const preview = render(tasks, 'getTask', false);
+    expect(preview).toMatch(/<dt>Feeds<\/dt><dd>(<span class="mono">\w+<\/span>, ){4}<span class="muted">and 1 more<\/span><\/dd>/);
+    expect(render(tasks, 'getTask', true)).not.toContain('more</span>');
+    const petstore = await sampleModel(getSample('petstore')!);
+    const user = render(petstore, 'createUser', false);
+    expect(user.match(/class="oc-input"/g)).toHaveLength(4);
+    expect(user).toContain('<span class="oc-more muted"><br/>and 4 more</span>');
+    expect(render(petstore, 'createUser', true).match(/class="oc-input"/g)).toHaveLength(8);
+  });
+
   it('pinned: a dialog with Close, output fields, auth, related operations as buttons and the example', async () => {
     const html = render(await sampleModel(getSample('tasks')!), 'getTask', true, 'references/tasks.md');
     expect(html).toMatch(/^<div class="op-card" data-testid="op-card" role="dialog" aria-labelledby="([^"]+)">[\s\S]*<h3 class="oc-title" id="\1">/);

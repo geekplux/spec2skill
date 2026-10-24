@@ -312,10 +312,10 @@ export default {
 
     // No row's preview is cut or reaches the skill browser, on every sample: each shows its last line
     // (In skill) beside its row, 40 px above the row's centre where it fits, else risen to end at most
-    // 64 px under the map (D76); only a preview taller than the map and its caption together may pass
-    // that line, starting at the map's top (D70).
+    // 64 px under the map (D76). No preview is taller than the map and its caption any more (the
+    // preview lists at most four inputs and four related operations per group, D80), so D70's
+    // exception is gone and none may pass that line.
     const bad = [];
-    const tall = [];
     for (const sample of ['tasks', 'petstore', 'filesystem']) {
       if (sample !== 'tasks') await ready(page, `${origin}/?sample=${sample}`);
       for (const id of await page.locator('.op[data-op]').evaluateAll((els) => els.map((el) => el.dataset.op))) {
@@ -334,16 +334,14 @@ export default {
           return {
             cut: c.scrollHeight - c.clientHeight, top: b.top - (r.top + r.height / 2), below: b.bottom - r.bottom,
             last: c.querySelector('dl > :last-child')?.getBoundingClientRect().bottom <= b.bottom,
-            past: Math.round(b.bottom - limit), tall: b.height > wrap.offsetHeight + 64, fromTop: Math.round(b.top - w.top),
+            past: Math.round(b.bottom - limit),
             browser: Math.round(document.querySelector('.skill-browser').getBoundingClientRect().top - b.bottom),
           };
         }, id);
-        const room = p.tall ? p.fromTop <= 1 : p.past <= 1 && p.browser >= 0;
+        const room = p.past <= 1 && p.browser >= 0; // no exception left: every preview fits (D80)
         if (p.cut > 1 || p.top > -39 || p.below < 0 || !p.last || !room) bad.push(`${sample} ${id} ${JSON.stringify(p)}`);
-        if (p.tall) tall.push(`${sample} ${id}`);
       }
     }
-    console.log(`  hover previews taller than the map and its caption (D70): ${tall.join(', ') || 'none'}`);
 
     // Long ids wrap only at their word boundaries (src/design/breaks.tsx): in Petstore's
     // createUsersWithArrayInput card and createUser's (which lists it), no line ends inside a hump.

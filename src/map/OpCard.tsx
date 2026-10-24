@@ -19,6 +19,12 @@ const list = (items: ReactNode[]) => items.map((item, i) => <Fragment key={i}>{i
 /** A feed's label as the map writes it, one mapping per unbreakable piece: "id -> taskId" becomes "id → taskId". */
 const arrow = (via: string) => list(via.split(', ').map((m) => <span className="nowrap" key={m}>{m.replaceAll(' -> ', ' → ')}</span>));
 
+/**
+ * The hover preview lists at most this many inputs, and of each group of related operations, then
+ * "and N more" (the pinned card lists them all), so every preview fits above the skill browser (D80).
+ */
+const PREVIEW_MAX = 4;
+
 export const opName = (op: Operation): string => (op.kind === 'tool' ? op.id : `${op.method!.toUpperCase()} ${op.path}`);
 
 /** The card's link groups (DESIGN.md 5), in display order, with the relations each one lists. */
@@ -86,6 +92,9 @@ export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onC
       },
       () => announce?.('Copy failed: select the example text and copy it.'),
     );
+  // In the preview a long list of related operations stops at PREVIEW_MAX: "a, b, c, d, and 3 more".
+  const few = (items: ReactNode[]): ReactNode[] => (pinned || items.length <= PREVIEW_MAX ? items
+    : [...items.slice(0, PREVIEW_MAX), <span className="muted" key="more">and {items.length - PREVIEW_MAX} more</span>]);
   // A related operation: a button in the pinned card, plain text in the preview (nothing in it takes focus).
   const other = (id: string): ReactNode => (pinned && onGo ? <button type="button" className="oc-link mono" onClick={() => onGo(id)}><Breakable text={id} /></button> : <span className="mono"><Breakable text={id} /></span>);
 
@@ -102,9 +111,10 @@ export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onC
       <dl>
         <dt>Input</dt>
         <dd>
-          {op.inputs.length === 0 ? 'None' : op.inputs.map((p, i) => (
+          {op.inputs.length === 0 ? 'None' : (pinned ? op.inputs : op.inputs.slice(0, PREVIEW_MAX)).map((p, i) => (
             <span className="oc-input" key={`${p.in} ${p.name}`}>{i > 0 && <br />}<span className="mono"><Breakable text={p.name} /></span> <span className="muted">{[p.in, typeLabel(p.schema), p.required && 'required'].filter(Boolean).join(', ')}</span></span>
           ))}
+          {!pinned && op.inputs.length > PREVIEW_MAX && <span className="oc-more muted"><br />and {op.inputs.length - PREVIEW_MAX} more</span>}
         </dd>
         <dt>Output</dt>
         <dd>
@@ -120,11 +130,11 @@ export function OpCard({ model, graph, op, pinned, inSkill, onInSkill, onGo, onC
             <dt>{group}</dt>
             <dd>
               {group === 'Shares schema'
-                ? list([...new Set(items.map((x) => x.via ?? ''))].map((schema) => <span key={schema}><span className="mono"><Breakable text={schema} /></span> <span className="muted">with</span> {list(items.filter((x) => (x.via ?? '') === schema).map((x) => other(x.id)))}</span>))
+                ? list([...new Set(items.map((x) => x.via ?? ''))].map((schema) => <span key={schema}><span className="mono"><Breakable text={schema} /></span> <span className="muted">with</span> {list(few(items.filter((x) => (x.via ?? '') === schema).map((x) => other(x.id))))}</span>))
                 : pinned && (group === 'Fed by' || group === 'Feeds')
                   // Pinned, a feed says which field fills which parameter, under the operation: "listTasks" / "id → taskId".
                   ? items.map((x) => <span className="oc-feed" key={x.id}>{other(x.id)}{x.via && <span className="oc-via">{arrow(x.via)}</span>}</span>)
-                  : list(items.map((x) => other(x.id)))}
+                  : list(few(items.map((x) => other(x.id))))}
             </dd>
           </Fragment>
         ))}
