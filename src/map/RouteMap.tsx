@@ -246,13 +246,13 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
           {/* Links, then the workflow's halo, then its line: the halo masks feeds at the line's end rows. */}
           {layout.links.map((l) => {
             const faded = linkFaded(l.edges);
-            return <path key={l.id} className="ln" data-link={l.kind} data-inferred={l.inferred || undefined} data-faded={faded || undefined} d={l.d} markerEnd={faded ? undefined : marker('ah')} />;
+            return <path key={l.id} className="ln" data-link={l.kind} data-from={l.from} data-to={l.to} data-edges={l.edges.join(' ')} data-inferred={l.inferred || undefined} data-faded={faded || undefined} d={l.d} markerEnd={faded ? undefined : marker('ah')} />;
           })}
           {layout.workflow?.steps.map((s) => routeShown
             ? <path key={`h${s.from}`} className="halo" d={s.d} />
             : <path key={`f${s.from}`} className="ln" data-faded d={s.d} />)}
           {routeShown && layout.workflow?.steps.map((s) => <path key={`r${s.from}`} className="wf" data-shape={s.shape} d={s.d} markerEnd={marker('ahr')} />)}
-          {lit.map((l) => <path key={l.edge} className="ln-hot" data-inferred={l.inferred || undefined} d={l.d} markerEnd={marker('ahk')} />)}
+          {lit.map((l) => <path key={l.edge} className="ln-hot" data-edge={l.edge} data-inferred={l.inferred || undefined} d={l.d} markerEnd={marker('ahk')} />)}
         </svg>
         {layout.cards.map((c) => (
           // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a labelled group of rows
