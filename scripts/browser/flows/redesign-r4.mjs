@@ -14,7 +14,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { designChecks, gridCheck } from '../redesign-checks.mjs';
+import { designChecks, gridCheck, settled } from '../redesign-checks.mjs';
 import { ROOT } from '../session.mjs';
 
 const OUT = join(ROOT, 'docs', 'screenshots', 'redesign-r4');
@@ -37,6 +37,7 @@ async function ready(page, url) {
   if (url) await page.goto(url, { waitUntil: 'load' });
   await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
   await page.evaluate(() => document.fonts.ready);
+  await settled(page); // the load sequence (DESIGN.md 7) moves the cards for up to 2 s
 }
 
 /** The result frame at the top of the window (the hero comes first since R2). */
@@ -250,7 +251,7 @@ export default {
     // name, links go gray-5; the workflow rests; the card previews beside the row (V2Hover).
     const getTask = page.locator('.op[data-op="getTask"]');
     await getTask.hover();
-    await page.locator('[data-testid="op-preview"]').waitFor();
+    await page.locator('[data-testid="op-preview"]').waitFor(); await settled(page);
     await page.waitForTimeout(300); // the 250 ms fade
     const h = await page.evaluate(() => {
       // oxlint-disable-next-line unicorn/consistent-function-scoping
@@ -303,7 +304,7 @@ export default {
     // The card flips to the left of the row at the frame's right edge (Comments, the last column).
     const comment = page.locator('.op[data-op="listComments"]');
     await comment.hover();
-    await page.locator('[data-testid="op-preview"]').waitFor();
+    await page.locator('[data-testid="op-preview"]').waitFor(); await settled(page);
     const flip = await page.evaluate(() => {
       const c = document.querySelector('[data-testid="op-preview"]');
       const rc = document.querySelector('.op[data-op="listComments"]').closest('.rc').getBoundingClientRect();
@@ -315,7 +316,7 @@ export default {
     // 3. Pinned: click pins (#op=, Close, the extra contents); Escape closes and returns focus to the row.
     await getTask.click();
     const pinned = page.getByTestId('op-card');
-    await pinned.waitFor();
+    await pinned.waitFor(); await settled(page);
     expect(new URL(page.url()).hash === '#op=getTask', `hash after a click: ${page.url()}`);
     expect((await said(page)) === 'Operation card open after the map; Tab to read it.', `announcer after pin: ${await said(page)}`);
     expect((await getTask.getAttribute('aria-expanded')) === 'true' && (await getTask.getAttribute('aria-haspopup')) === 'dialog', 'pinned row state');
@@ -334,7 +335,7 @@ export default {
     expect((await active(page)) === 'getTask' && new URL(page.url()).hash === '', `Escape: focus on ${await active(page)}, hash ${new URL(page.url()).hash}`);
     // Enter pins from the keyboard; Close closes and returns focus too; a related operation moves the pin.
     await page.keyboard.press('Enter');
-    await pinned.waitFor();
+    await pinned.waitFor(); await settled(page);
     await pinned.getByRole('button', { name: 'listTasks' }).first().click();
     await page.waitForFunction(() => location.hash === '#op=listTasks');
     expect((await active(page)) === 'listTasks' && (await pinned.locator('.oc-path').textContent()) === 'GET /projects/{projectId}/tasks', 'a related operation did not move the pin and focus');
@@ -343,7 +344,7 @@ export default {
     await page.waitForFunction(() => document.activeElement?.getAttribute('data-nav') === 'listTasks');
     // Copy example still writes the request (the detail panel's test, moved here and to phase 7).
     await page.goto(`${origin}/?sample=tasks#op=getTask`);
-    await pinned.waitFor();
+    await pinned.waitFor(); await settled(page);
     await pinned.getByRole('button', { name: 'Copy example' }).click();
     await page.getByTestId('announcer').filter({ hasText: 'Example copied' }).waitFor();
     expect((await page.evaluate(() => navigator.clipboard.readText())).startsWith("curl 'https://tasks.example.com/v1/tasks/<taskId>'"), 'Copy example');
@@ -398,7 +399,7 @@ export default {
     expect((await page.locator('#search-q').inputValue()) === '' && (await page.locator('.op[data-dim]').count()) === 0, 'Escape did not clear the search');
     // q= and #op= survive a reload, and the view= List.
     await ready(page, `${origin}/?sample=tasks&q=task#op=getTask`);
-    await pinned.waitFor();
+    await pinned.waitFor(); await settled(page);
     expect((await page.locator('#search-q').inputValue()) === 'task', 'q= on load');
 
     // Map | List: List hides the map and keeps the text alternative; Map brings it back.
@@ -421,13 +422,13 @@ export default {
     await toMap(page);
     await webp(page, 'rest-1440-dark', dir);
     await getTask.hover();
-    await page.locator('[data-testid="op-preview"]').waitFor();
+    await page.locator('[data-testid="op-preview"]').waitFor(); await settled(page);
     await page.waitForTimeout(300);
     await checks('hover getTask 1440 dark', 'dark');
     await axe('hover getTask 1440 dark');
     await screenshot('r4-hover-dark');
     await getTask.click();
-    await pinned.waitFor();
+    await pinned.waitFor(); await settled(page);
     await page.mouse.move(0, 0);
     await page.waitForTimeout(300);
     await checks('pinned getTask 1440 dark', 'dark');
@@ -455,7 +456,7 @@ export default {
     });
     if (hidden) {
       await ready(page, `${origin}/?sample=filesystem#op=${hidden}`);
-      await pinned.waitFor();
+      await pinned.waitFor(); await settled(page);
       expect((await more.getAttribute('aria-expanded')) === 'true', `#op=${hidden} did not open its card`);
     }
 
@@ -580,7 +581,7 @@ export default {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await ready(page, `${origin}/?sample=tasks`);
     await getTask.hover();
-    await page.locator('[data-testid="op-preview"]').waitFor();
+    await page.locator('[data-testid="op-preview"]').waitFor(); await settled(page);
     await checks('reduced motion hover', 'light', ['motion']);
     await page.mouse.move(0, 0);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
@@ -600,7 +601,7 @@ export default {
     await toMap(page);
     await webp(page, 'rest-390-light', dir);
     await getTask.click();
-    await pinned.waitFor();
+    await pinned.waitFor(); await settled(page);
     const sheet = await pinned.evaluate((el) => ({ position: getComputedStyle(el).position, bottom: Math.round(el.getBoundingClientRect().bottom) }));
     expect(sheet.position === 'fixed' && sheet.bottom === 844, `390 px: the pinned card is not a bottom sheet ${JSON.stringify(sheet)}`);
     expect((await page.locator('[data-testid="op-preview"]').count()) === 0, '390 px: a preview shows beside the sheet');
@@ -621,7 +622,7 @@ export default {
       await ready(page, `${origin}/?sample=tasks`);
       await toMap(page);
       await getTask.hover();
-      await page.locator('[data-testid="op-preview"]').waitFor();
+      await page.locator('[data-testid="op-preview"]').waitFor(); await settled(page);
       for (const type of ['protanopia', 'deuteranopia', 'tritanopia']) {
         await cvd(type);
         await screenshot(`r4-hover-${type}`);

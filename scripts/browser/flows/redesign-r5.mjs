@@ -17,7 +17,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { unzipSync } from 'fflate';
-import { designChecks, gridCheck } from '../redesign-checks.mjs';
+import { designChecks, gridCheck, settled } from '../redesign-checks.mjs';
 import { ROOT } from '../session.mjs';
 
 const OUT = join(ROOT, 'docs', 'screenshots', 'redesign-r5');
@@ -44,8 +44,8 @@ async function ready(page, url) {
   await settle(page);
 }
 
-/** Lets running CSS transitions (Download .zip enabling as the skill lands) finish before measuring. */
-const settle = (page) => page.evaluate(() => Promise.all(document.getAnimations().filter((x) => x instanceof CSSTransition).map((x) => x.finished.catch(() => {}))));
+/** Lets running transitions (Download .zip enabling as the skill lands) and the load sequence (R6) finish before measuring. */
+const settle = (page) => settled(page);
 
 /** A WebP (quality 0.82) encoded by the browser from a PNG screenshot; `options` go to page.screenshot. */
 async function webp(page, name, dir, options = {}) {
@@ -255,7 +255,7 @@ export default {
     const getTask = page.locator('.op[data-op="getTask"]');
     await getTask.click();
     const pinned = page.getByTestId('op-card');
-    await pinned.waitFor();
+    await pinned.waitFor(); await settled(page);
     const inSkill = await pinned.locator('.oc-ref').textContent();
     await pinned.locator('.oc-ref').click();
     await frames(page);
@@ -271,7 +271,7 @@ export default {
       // From the keyboard, so no hover preview from the last row stands in the way.
       await page.locator(`.op[data-op="${id}"]`).focus();
       await page.keyboard.press('Enter');
-      await pinned.waitFor();
+      await pinned.waitFor(); await settled(page);
       const [card, browser] = await page.evaluate(() => [document.querySelector('[data-testid="op-card"]').getBoundingClientRect().bottom, document.querySelector('.skill-browser').getBoundingClientRect().top]);
       if (card > browser) covered.push(`${id} (${Math.round(card - browser)} px)`);
       await page.keyboard.press('Escape');
@@ -330,7 +330,7 @@ export default {
     await axe('list 1440 light');
     await webp(page, 'list-1440-light', dir, { fullPage: true, clip: await frameClip(page) });
     await page.locator('.lrow[data-op="getTask"]').click();
-    await pinned.waitFor();
+    await pinned.waitFor(); await settled(page);
     expect(await pinned.evaluate((el) => el.classList.contains('docked')), 'the list opens the docked card');
     await axe('list docked card 1440 light');
     await page.keyboard.press('Escape');

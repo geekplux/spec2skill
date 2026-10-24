@@ -194,6 +194,15 @@ export function evaluate({ records, dots, running }, { theme, allowed, checks, s
 }
 
 /**
+ * Waits (at most `ms`) until every running CSS transition and one-shot animation has finished: the
+ * page at rest, as the checks and axe read it (the load sequence of DESIGN.md 7 takes up to about 2 s).
+ */
+export const settled = (page, ms = 4000) => page.evaluate((limit) => Promise.race([
+  Promise.all(document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {}))),
+  new Promise((done) => setTimeout(done, limit)),
+]), ms);
+
+/**
  * Runs the checks on `page` as it is now. theme: 'light' | 'dark' (the emulated colour scheme);
  * the motion check needs the page in reducedMotion 'reduce'. Returns a list of problems.
  */
@@ -202,12 +211,10 @@ export async function designChecks(page, { theme, label = page.url(), checks = C
   const unknown = checks.filter((c) => !CHECKS.includes(c));
   if (unknown.length) throw new Error(`designChecks: unknown checks ${unknown.join(', ')}`);
   const allowed = radixColours()[theme];
-  // Colours are read at rest: let transitions under way finish (a button enabling as the skill
-  // lands would otherwise be read between two Radix values). Endless animations are left running.
-  await page.evaluate(() => Promise.race([
-    Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished.catch(() => {}))),
-    new Promise((done) => setTimeout(done, 1000)),
-  ]));
+  // Colours are read at rest: let transitions and one-shot animations under way finish (a button
+  // enabling as the skill lands, the load sequence, a label swap would otherwise be read between two
+  // values). Endless animations (the Generate spinner) are left running.
+  await settled(page);
   const data = await page.evaluate(collect, { ignore });
   return evaluate(data, { theme, allowed, checks, sizes, label });
 }

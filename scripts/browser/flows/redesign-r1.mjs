@@ -7,7 +7,7 @@
 //   pnpm build && pnpm check:browser -- --phase 21 --flow redesign-r1 --capture redesign-r1
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { designChecks, radixColours } from '../redesign-checks.mjs';
+import { designChecks, radixColours, settled } from '../redesign-checks.mjs';
 import { ROOT } from '../session.mjs';
 
 const OUT = join(ROOT, 'docs', 'screenshots', 'redesign-r1');
@@ -95,7 +95,7 @@ export default {
           await page.waitForTimeout(300); // the fade
         }],
         ['operation card', '/?sample=tasks#op=deleteTask', async () => {
-          await page.getByTestId('op-card').waitFor();
+          await page.getByTestId('op-card').waitFor(); await settled(page);
           await page.mouse.move(0, 0);
           await page.waitForTimeout(300); // the fade
         }],

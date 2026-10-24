@@ -2,6 +2,8 @@
 // and live announcements (A2), the pinned operation card (F10, which replaced the detail panel) with
 // Copy example, #op=<id> on load, the bottom sheet at 390 px, focus never hidden by the card (2.4.11)
 // (the shortcut help dialog is checked in phase 12).
+import { settled } from '../redesign-checks.mjs';
+
 const GET_TASK = 'GET getTask, /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 13 relationships';
 const CURL = `curl 'https://tasks.example.com/v1/tasks/<taskId>' \\\n  -H "Authorization: Bearer $TASKS_API_TOKEN"`;
 
@@ -14,6 +16,7 @@ const ready = async (page) => {
   await tab.waitFor();
   if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.click();
   await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
+  await settled(page); // the load sequence (DESIGN.md 7) moves the cards for up to 2 s
 };
 const active = (page) => page.evaluate(() => document.activeElement?.getAttribute('data-op') ?? document.activeElement?.textContent?.trim() ?? null);
 // The announcer clears, then sets the message on the next frame: read it two frames later.
@@ -35,6 +38,7 @@ async function clipboard(page) {
 /** The focused row lies fully outside the pinned card and inside the window (WCAG 2.4.11). */
 async function clearOfCard(page, label) {
   await frames(page);
+  await settled(page); // the card rises 4 px as it appears
   const [n, p] = [await page.locator('.op:focus').boundingBox(), await page.getByTestId('op-card').boundingBox()];
   const overlap = n.x < p.x + p.width && p.x < n.x + n.width && n.y < p.y + p.height && p.y < n.y + n.height;
   const inView = n.y >= 0 && n.y + n.height <= page.viewportSize().height;
@@ -196,6 +200,7 @@ export default {
     await page.goto(`${origin}/?sample=tasks#op=getTask`);
     await ready(page);
     await card.waitFor();
+    await settled(page);
     const sheet = await card.evaluate((el) => ({ position: getComputedStyle(el).position, bottom: Math.round(el.getBoundingClientRect().bottom) }));
     expect(sheet.position === 'fixed' && sheet.bottom === 844, `mobile card is not a bottom sheet: ${JSON.stringify(sheet)}`);
     await screenshot('op-card-sheet-mobile');

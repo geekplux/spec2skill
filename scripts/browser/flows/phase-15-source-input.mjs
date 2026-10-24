@@ -120,6 +120,9 @@ export default {
     /** Loads `value` and waits for the new title, the skill (audit passed) and the map. */
     const loadOk = async (value, heading, label) => {
       await submit(value);
+      // The load ends (R6: the Generate button names its stages until then); the title may already be
+      // the same as before (tasks.yaml over the Tasks API sample).
+      await page.locator('.generate[data-stage]').waitFor({ state: 'detached', timeout: 15_000 });
       await title.filter({ hasText: new RegExp(`^${heading}$`) }).waitFor();
       await ready();
       await auditPassed(label);

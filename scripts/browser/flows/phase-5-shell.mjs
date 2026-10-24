@@ -59,8 +59,8 @@ export default {
 
     // Reduced motion zeroes the motion tokens.
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    const motion = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--motion-fast'));
-    expect(/^0m?s$/.test(motion.trim()), `reduced motion: --motion-fast is ${motion}`);
+    const motion = await page.evaluate(() => ['--motion-map', '--motion-draw'].map((t) => `${t}: ${getComputedStyle(document.documentElement).getPropertyValue(t).trim()}`));
+    expect(motion.every((m) => /: 0m?s$/.test(m)), `reduced motion: ${motion.join(', ')}`);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
 
     await axe('light desktop');

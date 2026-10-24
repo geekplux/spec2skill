@@ -4,6 +4,7 @@
 // per sample), URL state with back/forward, and the `?` shortcut help dialog (focus kept inside, Esc
 // closes, focus returns). Since R5 the list is grouped rows (buttons named as on the map, each with its
 // relationships in words for screen readers) and phones open on it.
+import { settled } from '../redesign-checks.mjs';
 const expect = (ok, message) => {
   if (!ok) throw new Error(message);
 };
@@ -28,7 +29,7 @@ const cardFor = (page, path) => page.getByTestId('op-card').locator('.oc-path').
  * screen (the row not under the card), and the list keeps at least its tables' minimum width.
  */
 async function listDetailInView(page, op, where) {
-  await page.getByTestId('op-card').waitFor();
+  await page.getByTestId('op-card').waitFor(); await settled(page);
   await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
   const r = await page.evaluate((id) => {
     const [vw, vh] = [innerWidth, innerHeight];
@@ -198,7 +199,7 @@ export default {
     expect(await rowButton('getTask'), `focus after back: ${await active(page)}`);
     await page.evaluate(() => document.activeElement.blur());
     await page.evaluate(() => history.forward());
-    await page.getByTestId('op-card').waitFor();
+    await page.getByTestId('op-card').waitFor(); await settled(page);
     await page.waitForFunction(() => document.activeElement?.closest('[data-op]')?.getAttribute('data-op') === 'getTask');
     expect(await rowButton('getTask'), `focus after forward: ${await active(page)}`);
     await page.goBack();
@@ -208,7 +209,7 @@ export default {
     await mapReady(page);
     await page.locator('.op[data-op="getTask"]').focus();
     await page.keyboard.press('Enter');
-    await page.getByTestId('op-card').waitFor();
+    await page.getByTestId('op-card').waitFor(); await settled(page);
     await page.keyboard.press('Escape');
     expect((await page.getByTestId('op-card').count()) === 0, 'Esc did not close details');
     await page.goBack();

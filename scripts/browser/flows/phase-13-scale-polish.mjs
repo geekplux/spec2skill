@@ -5,6 +5,7 @@
 // pinch-zoom, F9, went with zoom in R4), the skill browser's preview taking the wide column (R5; was the
 // pane's 40/60 split), the list at 640 px, and the
 // synthetic large-spec fixture staying out of the production bundle (P4).
+import { settled } from '../redesign-checks.mjs';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -89,7 +90,7 @@ export default {
     const before = await atlas(page).boundingBox();
     await page.locator('.op[data-op="getTask"]').focus();
     await page.keyboard.press('Enter');
-    await page.getByTestId('op-card').waitFor();
+    await page.getByTestId('op-card').waitFor(); await settled(page);
     const after = await atlas(page).boundingBox();
     expect(Math.abs(after.width - before.width) < 1 && Math.abs(after.height - before.height) < 1, `map resized with the card: ${JSON.stringify([before, after])}`);
     await page.getByTestId('op-card').getByRole('button', { name: 'Close details' }).focus();
@@ -98,7 +99,7 @@ export default {
     await page.waitForFunction(() => document.activeElement?.getAttribute('data-op') === 'getTask');
     await page.evaluate(() => document.activeElement.blur());
     await page.evaluate(() => history.forward());
-    await page.getByTestId('op-card').waitFor();
+    await page.getByTestId('op-card').waitFor(); await settled(page);
     await page.waitForFunction(() => document.activeElement?.getAttribute('data-op') === 'getTask').catch(async () => expect(false, `focus after forward: ${await activeOp(page)}`));
     await page.keyboard.press('Escape');
 
