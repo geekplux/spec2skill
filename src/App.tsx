@@ -136,7 +136,8 @@ function Workspace({ source, tab, onTab, wide, run, op, onOp, q, onQ, hidden, on
     <>
       <div className="title">
         <h1>{model.source.title}{isSample && <span className="h1-note"> (sample)</span>}</h1>
-        <p className="lede"><span>{KIND_LABEL[model.source.kind]} {model.source.specVersion}</span> <span>{summary}.</span></p>
+        {/* Spacing separates the parts on screen; a hidden comma separates them for screen readers and copy. */}
+        <p className="lede"><span>{KIND_LABEL[model.source.kind]} {model.source.specVersion}</span><span className="visually-hidden">, </span><span>{summary}.</span></p>
         {model.warnings.length > 0 && (
           <details className="warnings">
             <summary>{model.warnings.length} {model.warnings.length === 1 ? 'warning' : 'warnings'}</summary>

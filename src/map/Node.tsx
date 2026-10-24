@@ -43,9 +43,9 @@ export function Node({ node, op, crud, label, tabbable, hot, dim, target, onHove
           </g>
         )}
       </g>
-      {/* The button is a transparent hit area on top (its ring is the focus halo), so its name never
-          competes with the truncated visible text. Roving tabindex: one node is the map's Tab stop. */}
-      {/* Focus ring: 2 px ink outside the marker halo, so focus never relies on colour alone (A1). */}
+      {/* The button is a transparent hit area on top, so its name never competes with the truncated
+          visible text. Roving tabindex: one node is the map's Tab stop. */}
+      {/* Focus ring: 2 px gray-12 around the node, a shape as well as a colour (A1). */}
       <rect className="ring" aria-hidden="true" x={-8} y={-8} width={W + 16} height={H + 16} rx={12} />
       {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG cannot contain a <button> */}
       <rect className="hit" role="button" tabIndex={tabbable ? 0 : -1} aria-label={dim ? `${label}, filtered out` : label} data-op={op.id} x={-5} y={-5} width={W + 10} height={H + 10} rx={10} />

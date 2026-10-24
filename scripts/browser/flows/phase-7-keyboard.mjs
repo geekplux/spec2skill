@@ -72,10 +72,16 @@ export default {
     }
     expect((await active(page)) === 'listTasks', `Tab did not reach the map (stops: ${stops.join(' | ')})`);
     expect(stops.at(-2) === 'Fit to screen', `the toolbar should precede the map, got ${stops.at(-2)}`);
+    // Focus (redesign R1): no halo on the hit area; a 2 px gray-12 ring around the node, in both themes.
     const halo = await page.locator('.hit[data-op="listTasks"]').evaluate((r) => getComputedStyle(r).stroke);
-    expect(halo === 'rgb(242, 194, 48)', `focused node has no marker halo (${halo})`);
-    const ring = await page.locator('.node[data-op="listTasks"] .ring').evaluate((r) => [getComputedStyle(r).stroke, getComputedStyle(r).strokeWidth]);
-    expect(ring[0] === 'rgb(28, 36, 48)' && ring[1] === '2px', `focused node has no ink ring (${ring})`);
+    expect(halo === 'none', `focused hit area draws a stroke (${halo})`);
+    const ringOf = () => page.locator('.node[data-op="listTasks"] .ring').evaluate((r) => [getComputedStyle(r).stroke, getComputedStyle(r).strokeWidth]);
+    const ring = await ringOf();
+    expect(ring[0] === 'rgb(32, 32, 32)' && ring[1] === '2px', `focused node has no gray-12 ring in light (${ring})`);
+    await page.emulateMedia({ colorScheme: 'dark' });
+    const dark = await ringOf();
+    expect(dark[0] === 'rgb(238, 238, 238)' && dark[1] === '2px', `focused node has no gray-12 ring in dark (${dark})`);
+    await page.emulateMedia({ colorScheme: 'light' });
     const unfocused = await page.locator('.node[data-op="createTask"] .ring').evaluate((r) => getComputedStyle(r).stroke);
     expect(unfocused === 'none', `unfocused node draws a ring (${unfocused})`);
     await page.keyboard.press('Tab');

@@ -112,7 +112,7 @@ export function SkillPane({ skill, error, ready, empty, options, onOptions, file
     <section className="skill-pane" id="panel-skill" role={tabpanel ? 'tabpanel' : undefined} aria-labelledby={tabpanel ? 'tab-skill' : 'skill-title'}
       hidden={tabpanel?.hidden} data-ready={ready} aria-busy={!ready && !empty}>
       <div className="pane-head">
-        <p className="kicker"><span>Agent skill</span> <span>Prose: {skill?.prose === 'ai' ? 'AI-drafted' : 'deterministic'}</span></p>
+        <p className="kicker"><span>Agent skill</span><span className="visually-hidden">, </span><span>Prose: {skill?.prose === 'ai' ? 'AI-drafted' : 'deterministic'}</span></p>
         <h2 id="skill-title" tabIndex={-1} ref={heading}><code>{slug}</code> skill</h2>
         <Options key={options.key} value={options} onChange={onOptions} plainText={plainText} />
       </div>
@@ -126,7 +126,7 @@ export function SkillPane({ skill, error, ready, empty, options, onOptions, file
           <div className="skill-body" data-stale={!ready || undefined}>
             <FileTree paths={Object.keys(skill.tree)} selected={path} onSelect={onFile} />
             <Checklist audit={skill.audit} />
-            <p className="file-head" id="file-head"><code>{path}</code> <span>{lines} lines</span>{!ready && <> <span>Updating…</span></>}</p>
+            <p className="file-head" id="file-head"><code>{path}</code><span className="visually-hidden">, </span><span>{lines} lines</span>{!ready && <><span className="visually-hidden">, </span><span>Updating…</span></>}</p>
             {/* A Tab stop so keyboard users can scroll it; text only, never HTML. */}
             {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role -- a labelled scroller, named by the file line above */}
             <pre id="skill-preview" className="preview" tabIndex={0} role="region" aria-labelledby="file-head">{text}</pre>

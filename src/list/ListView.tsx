@@ -96,7 +96,7 @@ export function ListView({ model, graph, match, edges, selected, onSelect, skill
         {groups.map(({ c, ids }) => (
           <table key={c.id} data-cluster={c.id}>
             <caption>
-              {c.name} <span className="crud-summary">{ids.length < c.operationIds.length && `${ids.length} of `}{c.operationIds.length} {noun}: {CRUD_ORDER.filter((k) => ids.some((id) => graph.crud[id] === k)).map((k) => `${CRUD_LETTER[k]} ${k}`).join(', ')}</span>
+              {c.name}<span className="visually-hidden">, </span><span className="crud-summary">{ids.length < c.operationIds.length && `${ids.length} of `}{c.operationIds.length} {noun}: {CRUD_ORDER.filter((k) => ids.some((id) => graph.crud[id] === k)).map((k) => `${CRUD_LETTER[k]} ${k}`).join(', ')}</span>
             </caption>
             <thead>
               <tr><th scope="col">Operation</th><th scope="col">Method</th><th scope="col">{model.source.kind === 'mcp' ? 'Tool' : 'Path'}</th><th scope="col">Summary</th><th scope="col">Relationships</th><th scope="col">In the skill</th></tr>

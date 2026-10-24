@@ -1,7 +1,8 @@
 // Redesign R1 (docs/redesign/PLAN.md): Radix tokens, IBM Plex, the Overlap logo, the theme following
-// the system. Runs the DESIGN.md section 8 checks 1-4 on the first view at 1440 and 390 in light and
-// dark (scripts/browser/redesign-checks.mjs), check 7 under reduced motion, and saves the 1440 light
-// and dark first view as WebP in docs/screenshots/redesign-r1/.
+// the system. Runs the DESIGN.md section 8 checks 1-4 (scripts/browser/redesign-checks.mjs) on the
+// first view at 1440 and 390 and on the list view, a keyboard-focused map node and the open detail
+// panel at 1440, all in light and dark; check 7 under reduced motion; saves the 1440 light and dark
+// first view as WebP in docs/screenshots/redesign-r1/.
 //   pnpm build && pnpm check:browser -- --phase 21 --flow redesign-r1
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,8 +16,8 @@ const expect = (ok, message) => {
   if (!ok) throw new Error(message);
 };
 
-async function ready(page, origin) {
-  await page.goto(origin, { waitUntil: 'load' });
+async function ready(page, url) {
+  await page.goto(url, { waitUntil: 'load' });
   await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
   await page.evaluate(() => document.fonts.ready);
 }
@@ -71,6 +72,33 @@ export default {
         console.log(`  ${label}: ${found.length} problem(s)`);
         problems.push(...found);
         if (viewport.width === 1440) await webp(page, `first-view-1440-${scheme}`);
+        await axe(label);
+      }
+    }
+
+    // The other states of the current UI at 1440, light and dark: the list view, a keyboard-focused
+    // map node (its edges highlighted) and the open detail panel.
+    await page.setViewportSize(VIEWPORTS[0]);
+    for (const scheme of ['light', 'dark']) {
+      await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'no-preference' });
+      const states = [
+        ['list view', '/?sample=tasks&view=list', () => page.getByTestId('list-view').waitFor()],
+        ['focused map node', '/?sample=tasks', async () => {
+          await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' });
+          await page.locator('.hit[data-op="listTasks"]').focus();
+          await page.keyboard.press('ArrowDown');
+          await page.locator('.atlas[data-hot]').waitFor({ state: 'attached' });
+          expect(await page.evaluate(() => document.activeElement?.matches('.hit:focus-visible')), 'no keyboard-focused map node');
+        }],
+        ['detail panel', '/?sample=tasks#op=deleteTask', () => page.getByTestId('detail').waitFor()],
+      ];
+      for (const [name, path, open] of states) {
+        const label = `${name} 1440 ${scheme}`;
+        await ready(page, `${origin}${path}`);
+        await open();
+        const found = await designChecks(page, { theme: scheme, label, checks: ['type', 'colour', 'lines', 'dot'], sizes: [12, 14, 20] });
+        console.log(`  ${label}: ${found.length} problem(s)`);
+        problems.push(...found);
         await axe(label);
       }
     }

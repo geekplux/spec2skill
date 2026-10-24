@@ -13,7 +13,7 @@ const expect = (ok, message) => {
 const pane = (page) => page.locator('.skill-pane');
 const paneReady = (page) => page.locator('.skill-pane[data-ready="true"]').waitFor();
 const mapReady = (page) => page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
-// The preview is a region named by the file line above it ("SKILL.md 42 lines").
+// The preview is a region named by the file line above it ("SKILL.md, 42 lines").
 const previewOf = (page) => page.locator('#skill-preview').evaluate((el) => document.getElementById(el.getAttribute('aria-labelledby'))?.textContent ?? '');
 const focused = (page) => page.evaluate(() => document.activeElement?.getAttribute('data-path') ?? document.activeElement?.id ?? '');
 const box = (page, selector) => page.locator(selector).first().boundingBox();
@@ -74,7 +74,7 @@ export default {
       expect((await pane(page).getByRole('heading', { level: 2 }).textContent()) === 'tasks-api skill', 'pane heading');
       const checks = await pane(page).locator('.audit li .status').allTextContents();
       expect(checks.length >= 9 && checks.every((c) => c === 'passed'), `audit checks: ${checks}`);
-      expect((await previewOf(page)).startsWith('SKILL.md '), 'SKILL.md is not previewed by default');
+      expect((await previewOf(page)).startsWith('SKILL.md, '), 'SKILL.md is not previewed by default');
       await page.evaluate(() => document.fonts.ready);
       await axe('desktop two panes');
       await screenshot('first-view-desktop');
@@ -112,7 +112,7 @@ export default {
       expect((await page.locator('[data-path="references/"]').getAttribute('aria-expanded')) === 'true', 'ArrowRight did not open references/');
       for (let i = 0; i < 12 && (await focused(page)) !== 'references/tasks.md'; i++) await page.keyboard.press('ArrowDown');
       await page.keyboard.press('Enter');
-      expect((await previewOf(page)).startsWith('references/tasks.md '), `Enter showed ${await previewOf(page)}`);
+      expect((await previewOf(page)).startsWith('references/tasks.md, '), `Enter showed ${await previewOf(page)}`);
       await screenshot('skill-references-file');
       await page.keyboard.press('Home');
       expect((await focused(page)) === 'SKILL.md', 'Home did not focus the first item');
@@ -125,7 +125,7 @@ export default {
       expect((await link.textContent()) === 'references/tasks.md', `In the skill: ${await link.textContent()}`);
       await screenshot('detail-in-the-skill');
       await link.click();
-      expect((await previewOf(page)).startsWith('references/tasks.md '), 'In the skill did not select the file');
+      expect((await previewOf(page)).startsWith('references/tasks.md, '), 'In the skill did not select the file');
       expect((await page.locator('[data-path="references/tasks.md"]').getAttribute('aria-selected')) === 'true', 'tree selection');
 
       // 5. Generate skill writes it again, announces the audit and focuses the pane heading.

@@ -22,7 +22,7 @@ export function EdgeLine({ edge, hot, cycled, bundled }: { edge: LayoutEdge; hot
   );
 }
 
-/** Drawn above the nodes with a paper halo; hidden when zoomed out, crowded or repeated, unless highlighted. */
+/** Drawn above the nodes with a gray-1 halo; hidden when zoomed out, crowded or repeated, unless highlighted. */
 export const EdgeLabel = ({ edge, hot }: { edge: LayoutEdge; hot: boolean }) => (
   <text className="edge-label" data-kind={edge.kind} data-shown={edge.label.shown} data-hot={hot || undefined}
     x={edge.label.x} y={edge.label.y} textAnchor="middle" dominantBaseline="central">

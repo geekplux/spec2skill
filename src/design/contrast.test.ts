@@ -17,9 +17,10 @@ const ON_COMPONENT: Token[] = ['gray-12', 'gray-11'];
 const ON_SOLID: [Token, Token][] = [['indigo-contrast', 'indigo-9']];
 /**
  * Graphics that carry meaning (WCAG 1.4.11, 3:1): map links and arrowheads (gray-9), the write bar
- * (gray-11), focus rings and highlighted nodes (gray-12), accent fills (indigo-9), destructive hatch.
+ * (gray-11), focus rings and highlighted nodes (gray-12), accent fills (indigo-9), the destructive
+ * hatch (amber-11, both themes) and the `!` glyph (destructive).
  */
-const GRAPHICS: Token[] = ['gray-9', 'gray-11', 'gray-12', 'indigo-9', 'destructive'];
+const GRAPHICS: Token[] = ['gray-9', 'gray-11', 'gray-12', 'indigo-9', 'amber-11', 'destructive'];
 /**
  * Exempt, documented: rules, rings and component fills (gray-3 to gray-8) are decoration, since every
  * control is named by its text; amber-8 rings an invalid field whose help line says "Not used:";
