@@ -461,7 +461,7 @@ html:has(.list-wrap[data-panel]) { scroll-padding-bottom: calc(var(--list-detail
 
 /* Shortcut help: a native modal dialog. */
 .help-dialog { max-width: min(40rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: var(--space-16); color: var(--gray-12); background: var(--gray-1); border: 0; box-shadow: 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm); }
-.help-dialog::backdrop { background: var(--gray-1); opacity: 0.8; }
+.help-dialog::backdrop { background: var(--gray-1); } /* opaque: a faded page mixes colours that are not Radix steps (D77) */
 .help-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-16); box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6); }
 .help-head h2 { margin: 0; }
 .help-head form { margin: 0; }

@@ -59,6 +59,16 @@ describe('redesign checks (DESIGN.md section 8)', () => {
     expect(run([record(icon)], { checks: ['colour'] })).toHaveLength(1);
   });
 
+  it('2: flags an element or generated box at an opacity between 0 and 1', () => {
+    expect(run([record({ el: 'dialog::backdrop', text: false, opacity: 0.8 })], { checks: ['colour'] }))
+      .toEqual(['[t] colour: opacity 0.8 on dialog::backdrop (a faded colour is not a Radix light value)']);
+    expect(run([record({ opacity: 1 }), record({ el: 'p.gone', opacity: 0 })], { checks: ['colour'] })).toEqual([]);
+    // A stop disc (::after): #fff text on its own indigo-9 passes, a stray colour does not.
+    const disc = { el: 'button.op::after', background: INDIGO9, under: INDIGO9, fontSize: '12px', opacity: 1 };
+    expect(run([record({ ...disc, color: 'rgb(255, 255, 255)' })], { checks: ['type', 'colour'] })).toEqual([]);
+    expect(run([record({ ...disc, color: 'rgb(1, 2, 3)', fontSize: '13px' })], { checks: ['type', 'colour'] })).toHaveLength(2);
+  });
+
   it('3: flags CSS borders, thick rings and rules, stray shadows and outlines without focus', () => {
     const border = record({ sides: [{ side: 'top', width: '1px', style: 'solid', color: GRAY12 }, ...record().sides.slice(1)] });
     expect(run([border], { checks: ['lines'] })).toEqual(['[t] lines: border-top 1px solid on p.x (draw lines as 0.5 px box-shadows)']);

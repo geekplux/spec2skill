@@ -146,7 +146,7 @@ The sequence plays while the result carries `data-enter` (`useEnter`), cleared w
 `pnpm build && pnpm check:browser -- --phase 21 --flow redesign-acceptance` runs all of them and prints each check's result for each state:
 
 1. **Type**: the computed `font-size` of every element with text is 12, 14, 20 or 48.
-2. **Colours**: every computed colour, background, border, outline, fill, stroke, decoration and placeholder colour is a Radix value of the page's theme, `#fff` on `indigo-9`, transparent, or the 8 % black float shadow.
+2. **Colours**: every computed colour, background, border, outline, fill, stroke, decoration and placeholder colour is a Radix value of the page's theme, `#fff` on `indigo-9`, transparent, or the 8 % black float shadow; nothing sits at an opacity between 0 and 1 at rest (a faded colour is not a Radix step, so the shortcuts dialog's backdrop is opaque `gray-1`, D77). `::before` and `::after` with content (the workflow's stop discs, the line numbers) and an open modal dialog's `::backdrop` are read like elements.
 3. **Lines**: no CSS border; every ring and rule is 0.5 px; an outline only on focus; the only blur is the operation card's float.
 4. **Middle dot**: none in rendered text, names or titles, nor in `src` or `index.html` (also `src/design/copy.test.ts`).
 5. **CVD and contrast**: `src/design/cvd.test.ts` and `contrast.test.ts` (text at AA, `indigo-9`, `amber-11` and `gray-12` distinguishable under the three simulations, `gray-9` links at 3:1).

@@ -2,7 +2,9 @@
 // open (reused by every redesign phase):
 //   1 type    every element with direct text uses one of the allowed font sizes (default 12/14/20/48)
 //   2 colour  every computed colour is a Radix step of the page's theme (src/design/tokens.css),
-//             #fff only as text or icons on indigo-9, transparent, or the operation card's 8 % black shadow
+//             #fff only as text or icons on indigo-9, transparent, or the operation card's 8 % black shadow;
+//             no element at an opacity between 0 and 1 at rest; ::before and ::after with content and
+//             an open modal dialog's ::backdrop are read like elements
 //   3 lines   no CSS border on a visible element (a 0.5 px border computes to 1 px in Chrome, so
 //             lines are box-shadows); every box-shadow ring or one-side rule is 0.5 px; an outline
 //             only on the focused element (focus outlines are allowed)
@@ -55,6 +57,8 @@ function collect({ ignore }) {
     return `${el.tagName.toLowerCase()}${id}${cls}${text ? ` "${text}"` : ''}`;
   };
   const ignored = (el) => ignore.some((sel) => el.closest(sel));
+  // oxlint-disable-next-line unicorn/consistent-function-scoping
+  const transparentBg = (bg) => bg === 'transparent' || /rgba\(.*,\s*0\)$/.test(bg);
   const focused = document.activeElement;
   const records = [];
   for (const el of document.querySelectorAll('body, body *')) {
@@ -92,7 +96,30 @@ function collect({ ignore }) {
       decoration: ownText && s.textDecorationLine !== 'none' ? s.textDecorationColor : null,
       placeholder: control && el.placeholder ? getComputedStyle(el, '::placeholder').color : null,
       animation: { name: s.animationName, duration: s.animationDuration }, transition: s.transitionDuration,
+      opacity: parseFloat(s.opacity),
     });
+    // Generated boxes: ::before and ::after with content (the workflow's stop discs, the line numbers),
+    // and the backdrop of an open modal dialog.
+    const pseudos = ['::before', '::after', ...(el.matches('dialog:modal') ? ['::backdrop'] : [])];
+    for (const pseudo of pseudos) {
+      const p = getComputedStyle(el, pseudo);
+      if (pseudo !== '::backdrop' && (p.content === 'none' || p.content === 'normal')) continue;
+      if (p.display === 'none' || p.visibility !== 'visible') continue;
+      // Text when the content is not an empty string (attr(), a counter or a quoted string).
+      const generated = pseudo !== '::backdrop' && !/^(""|'')(\s*\/.*)?$/.test(p.content.trim());
+      const bg = p.backgroundColor;
+      records.push({
+        el: `${describe(el)}${pseudo}`, svg: false, shape: false, text: generated,
+        fontSize: p.fontSize, color: p.color, background: bg, under: transparentBg(bg) ? under : bg,
+        sides: ['top', 'right', 'bottom', 'left'].map((side) => ({
+          side, width: p.getPropertyValue(`border-${side}-width`), style: p.getPropertyValue(`border-${side}-style`), color: p.getPropertyValue(`border-${side}-color`),
+        })),
+        outline: { width: p.outlineWidth, style: p.outlineStyle, color: p.outlineColor }, focus: false,
+        shadow: p.boxShadow, fill: p.fill, stroke: p.stroke, decoration: null, placeholder: null,
+        animation: { name: p.animationName, duration: p.animationDuration }, transition: p.transitionDuration,
+        opacity: parseFloat(p.opacity),
+      });
+    }
   }
   // Middle dots: rendered text (any text node in the body) and the names and hints assistive tech reads.
   const DOT = '·';
@@ -161,6 +188,9 @@ export function evaluate({ records, dots, running }, { theme, allowed, checks, s
         for (const [prop, value] of [['fill', r.fill], ['stroke', r.stroke]]) if (value !== 'none' && !value.startsWith('url(')) colours.push([prop, value]);
       }
       for (const s of parseShadows(r.shadow)) if (s.color !== SHADOW) colours.push(['box-shadow', s.color]);
+      // A part-transparent element mixes its colours with what is under it: not a Radix step (at rest;
+      // the motion of DESIGN.md 7 fades through opacity and has finished when the checks read the page).
+      if (r.opacity > 0 && r.opacity < 1) add('colour', `opacity|${r.el}`, `opacity ${r.opacity} on ${r.el} (a faded colour is not a Radix ${theme} value)`);
       for (const [prop, value] of colours) {
         if (transparent(value) || radix(value)) continue;
         if (value === WHITE && (prop === 'color' || (r.shape && (prop === 'fill' || prop === 'stroke'))) && r.under === indigo9) continue; // #fff on indigo-9 (text and icons)

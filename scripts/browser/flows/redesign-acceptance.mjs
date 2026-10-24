@@ -2,7 +2,7 @@
 // On every sample (Tasks API, Petstore, Filesystem MCP), light and dark, it runs on each state at rest
 // (after the load sequence, `settled`):
 //   1440  home at rest, hover (the workflow's last stop, its preview card), pinned card, the next row
-//         focused from the keyboard, a card pinned from the address (#op=), list view
+//         focused from the keyboard, a card pinned from the address (#op=), the shortcuts dialog, list view
 //   390   phone (List, the default), phone map, phone pinned card (the bottom sheet)
 //   check 1 type sizes, 2 colours, 3 lines, 4 middle dot in the rendered page (redesign-checks.mjs) and
 //   axe (check 8); check 6, the grid, on home at 1440 (h1, frame contents, first map column, files
@@ -166,6 +166,16 @@ export default {
         await settled(page);
         expect((await page.locator(`.op[data-op="${hash}"]`).getAttribute('aria-expanded')) === 'true', `${id}: #op=${hash} did not pin ${hash}`);
         await pageChecks(`${id} pinned #op=${hash} 1440 ${theme}`, theme);
+        await page.getByTestId('op-card').locator('.oc-close').click();
+        await page.getByTestId('op-card').waitFor({ state: 'detached' });
+
+        // The shortcuts dialog (`?`), a native modal over an opaque backdrop (D77).
+        await page.keyboard.press('?');
+        await page.getByRole('dialog', { name: 'Keyboard shortcuts' }).waitFor();
+        await settled(page);
+        await pageChecks(`${id} shortcuts 1440 ${theme}`, theme);
+        await page.keyboard.press('Escape');
+        await page.getByRole('dialog', { name: 'Keyboard shortcuts' }).waitFor({ state: 'detached' });
 
         // The list view.
         await page.getByRole('tablist', { name: 'View' }).getByRole('tab', { name: 'List' }).click();
