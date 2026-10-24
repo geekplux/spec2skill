@@ -281,8 +281,11 @@ h3, h4 { font-weight: 600; }
 /* The operation card (the one element with a shadow: it floats): 300 wide, radius 10, padding 16. */
 .op-card {
   position: absolute; z-index: 3; width: 300px; padding: var(--space-16); border-radius: var(--radius-box); background: var(--gray-1);
-  box-shadow: 0 0 0 var(--line) var(--gray-7), var(--shadow-float); overflow-wrap: anywhere; overflow-y: auto;
+  box-shadow: 0 0 0 var(--line) var(--gray-7), var(--shadow-float); overflow-wrap: anywhere; overflow-y: hidden;
 }
+/* Only the pinned card scrolls (capped above the skill browser): a scrolling preview would be a
+   keyboard-focusable scroller that vanishes on blur, dropping focus to the body. */
+.op-card[role='dialog'] { overflow-y: auto; }
 .oc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-8); }
 .oc-path { margin: 0; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); }
 .oc-close {

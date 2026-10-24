@@ -169,6 +169,9 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
   };
   const pin = (id: string) => {
     focusNode(id, true);
+    // The row already has focus, so focus() does not scroll: once the card (on phones the bottom
+    // sheet, with its scroll padding) is drawn, bring the row clear of it (2.4.11).
+    requestAnimationFrame(() => rowEl(id)?.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
     announce('Operation card open after the map; Tab to read it.');
   };
 

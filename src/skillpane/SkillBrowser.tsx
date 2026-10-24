@@ -90,7 +90,8 @@ function Audit({ audit, tree, phone }: { audit: AuditResult; tree: Files; phone:
         {audit.checks.map((c, i) => (
           <li key={c.id} data-ok={c.ok} style={{ '--i': i } as CSSProperties}>
             {c.ok ? checkIcon() : FAIL_ICON}
-            <span>{checkText(c, tree)}{c.ok ? <span className="visually-hidden">: passed</span> : <>: <strong>Failed</strong>, {c.reason}</>}</span>
+            {/* The status leads in words for screen readers (a hidden suffix is read with a space before its colon). */}
+            <span>{c.ok && <span className="visually-hidden">Passed: </span>}{checkText(c, tree)}{!c.ok && <>: <strong>Failed</strong>, {c.reason}</>}</span>
           </li>
         ))}
       </ul>

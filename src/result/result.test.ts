@@ -89,7 +89,7 @@ describe('ListView', () => {
     expect(html).not.toContain('hidden=""'); // every group open on desktop
     expect(html).toMatch(/<button type="button" class="lrow" data-op="getTask" data-route="3" aria-haspopup="dialog" aria-expanded="false" aria-label="GET getTask, \/tasks\/\{taskId\}, Get a task, workflow step 3, cluster Tasks, \d+ relationships"><span class="m">GET<\/span> <span class="lid"><span class="id">getTask<\/span><span class="path">\/<wbr\/>tasks\/<wbr\/>\{taskId\}<\/span><\/span><\/button>/);
     expect(html).toMatch(/data-op="deleteTask"[^>]*><span class="m" data-destructive="true">DELETE<\/span>[\s\S]*?<svg class="warn"/);
-    expect(html).toContain('<span class="lcount"><span class="visually-hidden">, </span>6<span class="visually-hidden"> operations: L list, C create, R read, U update, D delete, A action</span>');
+    expect(html).toContain('<span class="lname">Tasks</span><span class="lcount"><span class="visually-hidden">, </span>6<span class="visually-hidden"> operations: L list, C create, R read, U update, D delete, A action</span>');
   });
 
   it('on phones opens the workflow groups first and folds the rest; the pinned row opens its group', async () => {

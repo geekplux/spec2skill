@@ -2,15 +2,16 @@
 // resource. Each group is a 14/600 heading with its count (a disclosure: on phones only the groups on
 // the strongest workflow start open, V2Phone); each operation a 44 px row with its method, id and
 // path, the stop disc and the destructive mark as on the map. A row opens the same operation card,
-// pinned and docked under the list; it lists every relationship in words, and the row's name counts
-// them ("13 relationships"). Obeys search. Spec strings are React text only (S3).
+// pinned and docked under the list. Each row keeps its relationships in words for screen readers
+// (a list named "13 relationships"; the card lists them on screen). Obeys search. Spec strings are
+// React text only (S3).
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CHEVRON_ICON } from '../design/icons';
 import { CRUD_LETTER, CRUD_ORDER, type AtlasGraph, type Edge } from '../graph';
 import { counted } from '../graph/words';
 import { methodOf } from '../layout/route';
 import { columnsOf } from '../layout/route-columns';
-import { edgesOf, nodeName } from '../map/keyboard';
+import { edgeText, edgesOf, nodeName } from '../map/keyboard';
 import { OpCard } from '../map/OpCard';
 import type { ApiModel } from '../model/types';
 import type { Chain } from '../skillgen/types';
@@ -19,6 +20,12 @@ const rowButton = (id: string) => document.querySelector<HTMLElement>(`.list [da
 
 /** A path that may wrap after each `/`, never inside a segment. */
 const breakable = (s: string) => s.split(/(?<=\/)/).flatMap((part, i) => (i ? [<wbr key={i} />, part] : [part]));
+
+/** Every relationship of a row as a sentence with its kind and label ("feeds getMember via assigneeId -> memberId"). */
+function Relationships({ edges, id }: { edges: Edge[]; id: string }) {
+  if (edges.length === 0) return null;
+  return <ul className="visually-hidden" aria-label={counted(edges.length, 'relationship')}>{edges.map((e) => <li key={e.id} data-edge={e.id}>{edgeText(e, id)}</li>)}</ul>;
+}
 
 interface ListViewProps {
   model: ApiModel;
@@ -99,12 +106,13 @@ export function ListView({ model, graph, match, edges, workflow, selected, onSel
         {groups.length === 0 && <p className="list-empty">No {noun} match. Clear the search.</p>}
         {groups.map((g, i) => ({ ...g, shown: isOpen(g.c.operationIds, g.c.id, i) })).toSorted((a, b) => (phone ? Number(b.shown) - Number(a.shown) : 0)).map(({ c, ids, shown }) => {
           const crud = CRUD_ORDER.filter((k) => ids.some((id) => graph.crud[id] === k)).map((k) => `${CRUD_LETTER[k]} ${k}`).join(', ');
+          const shownCount = `${ids.length < c.operationIds.length ? `${ids.length} of ` : ''}${c.operationIds.length}`;
           return (
             <section key={c.id} className="lgroup" data-cluster={c.id} data-open={shown || undefined}>
               <h3 className="lhead">
                 <button type="button" aria-expanded={shown} aria-controls={`lg-${c.id}`} onClick={() => setToggled((t) => new Map(t).set(c.id, !shown))}>
                   <span className="lname">{c.name}</span>
-                  <span className="lcount"><span className="visually-hidden">, </span>{ids.length < c.operationIds.length && `${ids.length} of `}{c.operationIds.length}<span className="visually-hidden"> {noun}: {crud}</span>{CHEVRON_ICON}</span>
+                  <span className="lcount"><span className="visually-hidden">, </span>{shownCount}<span className="visually-hidden"> {noun}: {crud}</span>{CHEVRON_ICON}</span>
                 </button>
               </h3>
               <ul className="lrows" id={`lg-${c.id}`} hidden={!shown}>
@@ -122,6 +130,8 @@ export function ListView({ model, graph, match, edges, workflow, selected, onSel
                         <span className="lid"><span className="id">{id}</span>{o.kind !== 'tool' && <span className="path">{breakable(o.path!)}</span>}</span>
                         {row.destructive && <svg className="warn" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path className="warn-bg" d="M6 .9 11.6 10.9H.4Z" /><path className="warn-x" d="M6 4.6v2.9M6 9.1v.05" /></svg>}
                       </button>
+                      {/* The row's relationships in words, for screen readers (the card lists them on screen). */}
+                      <Relationships edges={edgesOf(edges, id)} id={id} />
                     </li>
                   );
                 })}

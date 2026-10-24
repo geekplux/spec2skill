@@ -35,7 +35,7 @@ describe('SkillBrowser', () => {
     const html = render();
     expect(html).toContain('<span class="verdict">');
     expect(html).toContain('Audit failed</span><span class="visually-hidden">, </span><span class="tally">1 of 2</span>');
-    expect(html).toMatch(/<li data-ok="true"[^>]*><svg class="i-check"[\s\S]*?Frontmatter has name, description, license and compatibility<span class="visually-hidden">: passed<\/span>/);
+    expect(html).toMatch(/<li data-ok="true"[^>]*><svg class="i-check"[\s\S]*?<span class="visually-hidden">Passed: <\/span>Frontmatter has name, description, license and compatibility<\/span>/);
     expect(html).toMatch(/<li data-ok="false"[^>]*><svg class="i-fail"[\s\S]*?E: <strong>Failed<\/strong>, only 4 evals \(need at least 5\)/);
     expect(html).not.toContain('<details');
     expect(html).not.toContain('hidden=""'); // nothing collapsed on desktop
