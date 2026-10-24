@@ -52,8 +52,8 @@ async function listDetailInView(page, op, where) {
   const say = `${where} ${op}: ${JSON.stringify(r)}`;
   expect(r.panel && r.heading && r.close, `details not on screen: ${say}`);
   expect(r.row && r.rowShown, `open row off screen or under the details: ${say}`);
-  // The row bleeds 8 px each side of the list column since R5 (D64): its grey and focus ring clear the text.
-  expect(Math.abs(r.list + 16 - r.min) <= 1, `the open row is not as wide as the list plus its bleed: ${say}`);
+  // Since R5 the list's box and its rows bleed 8 px each side of the column (D64).
+  expect(Math.abs(r.list - r.min) <= 1, `the open row is not as wide as the list: ${say}`);
   console.log(`  ${where}: ${op} row ${r.rowHeight} px tall, details from y=${r.panelTop}, list ${r.list} px`);
 }
 
