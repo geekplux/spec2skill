@@ -174,6 +174,7 @@ export default {
     expect((await fallback.locator('code').textContent()) === COMMANDS, 'clipboard fallback: commands');
     await fallback.getByRole('button', { name: 'Close install command' }).click();
     await fallback.waitFor({ state: 'detached' });
+    expect(await install.evaluate((el) => el === document.activeElement), 'Close did not return focus to Install command');
     await page.evaluate(() => {
       navigator.clipboard.writeText = window.realWrite;
     });
@@ -230,7 +231,9 @@ export default {
     const code = page.locator('#skill-preview');
     await code.focus();
     await page.keyboard.press('PageDown');
-    expect((await code.evaluate((el) => el.scrollTop)) > 0, 'the preview does not scroll from the keyboard');
+    // Keyboard scrolling may animate: wait up to 1 s for it to move.
+    const moved = await page.waitForFunction(() => document.querySelector('#skill-preview').scrollTop > 0, null, { timeout: 1000 }).then(() => true, () => false);
+    expect(moved, 'the preview does not scroll from the keyboard');
     await page.getByRole('button', { name: 'Copy SKILL.md' }).click();
     const copied = await page.evaluate(() => navigator.clipboard.readText());
     expect(copied.startsWith('---\nname: tasks-api\n') && !/^\d/.test(copied), 'Copy SKILL.md: the clipboard holds the file without line numbers');
@@ -463,6 +466,14 @@ export default {
       expect(w <= inner, `320 ${label}: horizontal page scroll (${w} > ${inner})`);
     };
     await sideways('list');
+    // The phone's workflow line wraps whole stops rather than clipping one.
+    const clipped = await page.evaluate(() => {
+      const cap = document.querySelector('[data-testid="workflow-caption"]').getBoundingClientRect();
+      const cut = [...document.querySelectorAll('[data-testid="workflow-caption"] .chain li')].filter((li) => li.getBoundingClientRect().right > cap.right + 0.5);
+      const scrolls = [...document.querySelectorAll('[data-testid="workflow-caption"], [data-testid="workflow-caption"] *')].filter((el) => el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflowX !== 'visible' && !el.closest('.visually-hidden'));
+      return [...cut, ...scrolls].map((el) => el.textContent);
+    });
+    expect(clipped.length === 0, `320: the workflow line clips ${clipped.join(', ')}`);
     await page.locator('[role="treeitem"][data-path="SKILL.md"]').click();
     await page.locator('.sb-preview').waitFor();
     await sideways('preview');
