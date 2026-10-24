@@ -30,10 +30,13 @@ export function LoadingSteps({ progress, onCancel }: { progress: Progress; onCan
   );
 }
 
-interface ErrorPanelProps { error: Explained; onPaste: () => void; onSample: () => void; onMcp?: () => void }
+interface ErrorPanelProps { error: Explained; onPaste: () => void; onSample: () => void }
 
-/** Title, reason and the two ways on; focus moves to the title so the error is read first. */
-export function ErrorPanel({ error, onPaste, onSample, onMcp }: ErrorPanelProps) {
+/**
+ * Title, reason and the two ways on; focus moves to the title so the error is read first. There is no
+ * "load it as" choice: a URL is already tried as a spec and then as an MCP server (D37).
+ */
+export function ErrorPanel({ error, onPaste, onSample }: ErrorPanelProps) {
   const title = useRef<HTMLHeadingElement>(null);
   const announce = useAnnounce();
   useEffect(() => {
@@ -51,7 +54,6 @@ export function ErrorPanel({ error, onPaste, onSample, onMcp }: ErrorPanelProps)
       <p className="status-actions">
         <button type="button" className="btn" onClick={onPaste}>Paste spec text instead</button>
         <button type="button" className="btn" onClick={onSample}>Try a sample</button>
-        {onMcp && <button type="button" className="link" onClick={onMcp}>Load it as an MCP server</button>}
       </p>
     </section>
   );

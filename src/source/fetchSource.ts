@@ -35,8 +35,12 @@ export function toUrl(value: string): URL {
   return url;
 }
 
-/** Errors that mean "not a spec": in Auto mode the URL is then tried as an MCP server. */
-export const notSpec = (e: unknown) => e instanceof SourceError && (e.code === 'not-a-spec' || e.code === 'unsupported' || (e.code === 'http-error' && /\b40[56]\b/.test(e.message)));
+/**
+ * Errors that mean "not a spec": in Auto mode the URL is then tried as an MCP server (the web app has
+ * no source selector, D37). A page (HTML) or a GET answered 400/404/405/406 may be an MCP endpoint that
+ * only takes POST; if the MCP try fails too, the spec error is reported.
+ */
+export const notSpec = (e: unknown) => e instanceof SourceError && (['not-a-spec', 'unsupported', 'html-page'].includes(e.code) || (e.code === 'http-error' && /\b40[0456]\b/.test(e.message)));
 
 /** Reads a direct or proxied answer: 405/406 or an event stream means an MCP endpoint. */
 async function read(res: Response, type = res.headers.get('content-type') ?? ''): Promise<Got | 'mcp'> {

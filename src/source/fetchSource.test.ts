@@ -118,9 +118,9 @@ describe('loadSource: URLs', () => {
     expect(codeOf(auth.error)).toBe('needs-auth');
   });
 
-  it('in Auto mode retries as MCP when the URL is not a spec (405, an event stream, or another document)', async () => {
+  it('in Auto mode retries as MCP when the URL is not a spec (400/404/405, an event stream, a page, or another document)', async () => {
     const url = 'https://tools.example.test/rpc';
-    for (const answer of [() => text('', {}, 405), () => text('', { 'content-type': 'text/event-stream' }), () => json({ hello: 1 })]) {
+    for (const answer of [() => text('', {}, 405), () => text('', {}, 404), () => text('', {}, 400), () => text('', { 'content-type': 'text/event-stream' }), () => json({ hello: 1 }), () => html(200)]) {
       const r = await run({ url }, { [url]: answer, '/api/mcp/tools': () => json(TOOLS) });
       expect([r.error, r.urls]).toEqual([undefined, [url, '/api/mcp/tools']]);
     }
@@ -134,6 +134,11 @@ describe('loadSource: URLs', () => {
     const both = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': () => json({ error: { code: 'legacy-transport', message: '' } }, 502) });
     expect(codeOf(both.error)).toBe('unsupported');
     expect((both.error as Error).message).toContain('"hello"');
+    const page = await run({ url }, { [url]: () => html(200), '/api/mcp/tools': () => json({ error: { code: 'http-error', message: 'The server answered 404.' } }, 502) });
+    expect([codeOf(page.error), page.urls]).toEqual(['html-page', [url, '/api/mcp/tools']]);
+    const missing = await run({ url }, { [url]: () => text('', {}, 404), '/api/mcp/tools': () => json({ error: { code: 'http-error', message: 'The server answered 404.' } }, 502) });
+    expect(codeOf(missing.error)).toBe('http-error');
+    expect((missing.error as Error).message).toContain('404');
     const strict = await run({ url }, { [url]: () => json({ hello: 1 }) }, 'openapi');
     expect([codeOf(strict.error), strict.urls]).toEqual(['unsupported', [url]]);
     const mcpOnly = await run({ url }, { [url]: () => text('', {}, 405) }, 'openapi');

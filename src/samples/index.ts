@@ -9,7 +9,7 @@ import { parseText } from '../parse/text';
 
 export interface Sample {
   id: string;
-  /** Short name for the sample picker. */
+  /** The name on the sample picker (docs/redesign/DESIGN.md 4.2). */
   label: string;
   kind: SourceKind;
   /** The raw document. */
@@ -23,7 +23,7 @@ export const SAMPLES: readonly Sample[] = [
   { id: 'petstore', label: 'Petstore', kind: 'swagger2', load: () => petstore },
   {
     id: 'filesystem',
-    label: 'Filesystem', // the chip appends the kind tag, so it reads "Filesystem MCP"
+    label: 'Filesystem MCP',
     kind: 'mcp',
     load: () => filesystem,
     options: { serverInfo: { name: 'secure-filesystem-server', version: '2.0.0' }, protocolVersion: '2025-06-18' },

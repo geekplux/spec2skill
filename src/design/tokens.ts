@@ -55,9 +55,9 @@ export const TYPE = {
   48: { size: '48px', leading: '52px' },
 } as const;
 
-/** The one spacing scale: layout CSS uses only these (scripts/check-spacing.mjs). */
-export const SPACE = { 1: '4px', 2: '8px', 3: '16px', 4: '24px', 5: '40px', 6: '64px' } as const;
-export const RADIUS = { sm: '4px', md: '8px', pill: '999px' } as const;
+/** The one spacing scale, named by value (`--space-16` is 16px): layout CSS uses only these (scripts/check-spacing.mjs). */
+export const SPACE = { 2: '2px', 4: '4px', 8: '8px', 12: '12px', 14: '14px', 16: '16px', 20: '20px', 24: '24px', 32: '32px', 40: '40px', 48: '48px', 64: '64px', 88: '88px', 96: '96px', 104: '104px' } as const;
+export const RADIUS = { sm: '4px', row: '6px', md: '8px', box: '10px', frame: '16px', pill: '999px' } as const;
 export const FONT = {
   sans: "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
   mono: "'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace",

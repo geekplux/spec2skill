@@ -50,8 +50,10 @@ describe('tokens.css mirrors tokens.ts', () => {
     expect(LINE).toBe('0.5px');
   });
 
-  it('has the one spacing scale 4/8/16/24/40/64 (docs/DESIGN.md 3)', () => {
-    expect(Object.values(SPACE)).toEqual(['4px', '8px', '16px', '24px', '40px', '64px']);
+  it('has the one spacing scale, each token named by its value, with the grid gap 88 and the section steps (docs/redesign/DESIGN.md 2)', () => {
+    expect(Object.entries(SPACE).map(([k, v]) => `${k}=${v}`)).toEqual(Object.keys(SPACE).map((k) => `${k}=${k}px`));
+    expect(Object.keys(SPACE).map(Number)).toEqual([2, 4, 8, 12, 14, 16, 20, 24, 32, 40, 48, 64, 88, 96, 104]);
+    expect(RADIUS).toMatchObject({ sm: '4px', row: '6px', md: '8px', box: '10px', frame: '16px' });
   });
 
   it('sets every motion duration to 0ms under prefers-reduced-motion', () => {

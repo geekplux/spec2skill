@@ -1,38 +1,59 @@
 import type { ReactNode } from 'react';
 import { Announcer } from '../a11y/Announcer';
 import { Header } from './Header';
+import { CommandLine, Footer, HowItWorks, MadeBy } from './Sections';
 
 interface LayoutProps {
-  /** The sample chip row (and, later, the loaded-source summary). */
-  samples: ReactNode;
-  /** The skill pane and the map pane (two panes, or tabs below 1024 px). */
-  children: ReactNode;
-  onGenerate: () => void;
+  /** The source field (paste, open or drop a spec; Generate). */
   source: ReactNode;
-  /** The loading or error state, above the (greyscale while busy) skill and map. */
+  /** "Samples" and its segmented control, under the field. */
+  samples: ReactNode;
+  /** The result: today's skill pane and map, inside the frame. */
+  children: ReactNode;
+  /** The loading or error state, above the (greyscale while busy) result. */
   status?: ReactNode;
-  /** A load is in progress (the content below the steps is busy; Generate skill waits). */
+  /** A load is in progress (the result below the steps is busy). */
   busy: boolean;
+  /** Open the keyboard shortcuts dialog (the footer link). */
+  onShortcuts: () => void;
 }
 
-export function Layout({ samples, children, onGenerate, source, status, busy }: LayoutProps) {
+/** The page shell (docs/redesign/DESIGN.md 4): header, hero, the result frame, the sections and the footer. */
+export function Layout({ source, samples, children, status, busy, onShortcuts }: LayoutProps) {
   return (
     <div className="shell">
       <Announcer>
       <a className="skip" href="#main">
         Skip to content
       </a>
-      <Header onGenerate={onGenerate} source={source} disabled={busy} />
-      <section className="samples" aria-label="Built-in samples">
-        {samples}
-      </section>
-      {/* While a status is shown, the previous skill and map below it are greyscale (app.css). */}
-      <main id="main" className="stage" tabIndex={-1} data-status={status ? (busy ? 'loading' : 'error') : undefined}>
-        {status}
-        <div className="stage-content" aria-busy={busy}>
-          {children}
+      <Header />
+      <main id="main" tabIndex={-1}>
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="wrap two hero-in">
+            <div>
+              <h1 id="hero-title">Turn any API into an agent skill</h1>
+              <p className="hero-lede">Paste an OpenAPI spec or an MCP server. Get a tested skill, and a map to check what it teaches.</p>
+            </div>
+            <div className="load">
+              {source}
+              {samples}
+            </div>
+          </div>
+        </section>
+        <div className="wrap">
+          {/* While a status is shown, the previous result below it is greyscale (app.css). */}
+          <section id="result" className="frame stage" tabIndex={-1} aria-label="Result" data-status={status ? (busy ? 'loading' : 'error') : undefined}>
+            {status}
+            <div className="stage-content" aria-busy={busy}>
+              {children}
+            </div>
+          </section>
         </div>
+        <CommandLine />
+        <HowItWorks />
+        <MadeBy />
       </main>
+      <Footer onShortcuts={onShortcuts} />
       </Announcer>
     </div>
   );
