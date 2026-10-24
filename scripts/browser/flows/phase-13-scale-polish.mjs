@@ -61,7 +61,7 @@ export default {
     expect(fades.length > 0 && fades.every((o) => o === '1'), `link label opacity: ${fades}`);
     const band = await page.evaluate(() => {
       for (const sheet of document.styleSheets) {
-        for (const rule of sheet.cssRules) if (rule.selectorText?.replace(/["']/g, '') === '.map-link[data-link=clusters] .line') return Number(rule.style.strokeOpacity);
+        for (const rule of sheet.cssRules) if (rule.selectorText?.replace(/["']/g, '') === '.map-link[data-link=clusters] .line') return Number(rule.style.strokeOpacity || 1);
       }
       return null;
     });
@@ -118,32 +118,25 @@ export default {
     expect(preview.height >= 180 && preview.height > tree.height, `preview ${preview.height} px, files ${tree.height} px`);
     await screenshot('skill-pane-split');
 
-    // 5. Theme follows the OS while nothing is stored (A10), and stops once the user chooses.
-    const theme = () => page.evaluate(() => document.documentElement.dataset.theme ?? null);
-    const toggle = page.getByRole('button', { name: 'Dark theme' });
+    // 5. The theme follows the OS live (A10); since redesign R1 there is no toggle and nothing pins it.
+    const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
-    expect((await toggle.getAttribute('aria-pressed')) === 'true', 'toggle does not follow the OS');
+    expect((await background()) === 'rgb(17, 17, 17)', `dark OS: background ${await background()}`);
     await screenshot('theme-follows-os');
     await page.emulateMedia({ colorScheme: 'light' });
-    await page.waitForFunction(() => document.documentElement.dataset.theme === 'light');
-    await toggle.click(); // explicit: dark, stored
-    await page.emulateMedia({ colorScheme: 'light' });
-    await page.emulateMedia({ colorScheme: 'dark' });
-    await page.emulateMedia({ colorScheme: 'light' });
-    await page.waitForTimeout(100);
-    expect((await theme()) === 'dark', `stored choice overridden by the OS: ${await theme()}`);
-    await page.evaluate(() => localStorage.clear());
+    expect((await background()) === 'rgb(252, 252, 252)', `light OS: background ${await background()}`);
+    expect(!(await page.evaluate(() => document.documentElement.hasAttribute('data-theme'))), 'the theme is pinned on <html>');
+    expect((await page.getByRole('button', { name: 'Dark theme' }).count()) === 0, 'a theme toggle is back');
 
-    // 6. Mobile: the header reads in DOM order (phase 15, AC9: the theme toggle sits on the row under
-    // the URL field, after it, instead of on the wordmark row); "More samples" while the chips overflow.
+    // 6. Mobile: the header reads in DOM order (phase 15, AC9: wordmark, then the URL field, then the row
+    // with More options under it); "More samples" while the chips overflow.
     await page.setViewportSize(viewports.mobile);
     await page.goto(`${origin}/?sample=tasks`);
     await paneReady(page);
-    const [logo, themeBtn, input] = await Promise.all(['.brand', '.theme', '#source-field'].map((s) => page.locator(s).boundingBox()));
-    expect(input.y >= logo.y + logo.height - 1 && themeBtn.y >= input.y + input.height - 1, `header rows: ${JSON.stringify({ logo, themeBtn, input })}`);
+    const [logo, more, input] = await Promise.all(['.brand', '.source-row .link', '#source-field'].map((s) => page.locator(s).boundingBox()));
+    expect(input.y >= logo.y + logo.height - 1 && more.y >= input.y + input.height - 1, `header rows: ${JSON.stringify({ logo, more, input })}`);
     const order = await page.evaluate(() => [...document.querySelectorAll('.header > *')].map((el) => el.className));
-    expect(order.indexOf('source') < order.indexOf('btn theme'), `header DOM order: ${order}`);
+    expect(order.indexOf('brand') < order.indexOf('source') && order.indexOf('source') < order.indexOf('btn generate'), `header DOM order: ${order}`);
     const hint = page.getByTestId('chips-more');
     await hint.waitFor();
     expect((await hint.textContent()).startsWith('More samples'), 'chip hint text');

@@ -1,6 +1,6 @@
 // Phase 20: the leftover polish, checked in the real app. The skill pane's Options lay out as
 // label | field rows with a gap; the audit verdict "Audit passed:" stays on one line at 390 px; map
-// edges are quiet at rest and come up to full strength (style, marker and label kept) for the focused
+// edges rest in quiet gray-9 at full opacity (redesign R1) and get bolder (style, marker and label kept) for the focused
 // node. Key shots (1440, light): the first view and the map with getTask focused.
 const expect = (ok, message) => {
   if (!ok) throw new Error(message);
@@ -33,10 +33,10 @@ export default {
     await axe('options open');
     await page.locator('.options > summary').click();
 
-    // Quiet edges at rest; the focused node's edges at full strength with their labels, the rest fainter.
+    // Edges at rest: quiet gray-9 at full opacity (3:1, redesign R1); the focused node's edges bolder with their labels, the rest fainter.
     await page.mouse.move(1, 1);
     const rest = await opacity(page, '.atlas .edge');
-    expect(rest.length === 1 && Number(rest[0]) === 0.75, `edges at rest: opacity ${rest}`);
+    expect(rest.length === 1 && Number(rest[0]) === 1, `edges at rest: opacity ${rest}`);
     await screenshot('first-view-1440');
     await page.locator('.hit[data-op="getTask"]').focus();
     await page.locator('.atlas[data-hot]').waitFor({ state: 'attached' });

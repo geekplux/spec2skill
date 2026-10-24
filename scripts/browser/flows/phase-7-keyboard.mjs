@@ -197,7 +197,7 @@ export default {
     await page.evaluate(() => document.fonts.ready);
     await screenshot('detail-panel-dark');
     await page.emulateMedia({ colorScheme: 'light' });
-    await page.reload(); // the theme toggle reads the system scheme on load
+    await page.reload();
     await ready(page);
     await panel.waitFor();
     if (cvd) {

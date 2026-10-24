@@ -277,8 +277,8 @@ export default {
     expect(sizes[0] >= sizes[1], `error title ${sizes[0]}px is smaller than the page title ${sizes[1]}px`);
     expect(await generate.isEnabled(), 'Generate skill enabled under an error');
     const fill = await generate.evaluate((el) => getComputedStyle(el).backgroundColor);
-    const meridian = await page.evaluate(() => { const b = document.createElement('i'); b.style.color = 'var(--meridian)'; document.body.append(b); const c = getComputedStyle(b).color; b.remove(); return c; });
-    expect(fill !== meridian, `Generate skill keeps the meridian fill under an error (${fill})`);
+    const accent = await page.evaluate(() => { const b = document.createElement('i'); b.style.color = 'var(--indigo-9)'; document.body.append(b); const c = getComputedStyle(b).color; b.remove(); return c; });
+    expect(fill !== accent, `Generate skill keeps the accent fill under an error (${fill})`);
     proxyDown = true;
     await submit(`${HOST}/petstore.json`);
     await page.locator('.source-status.error[data-code="proxy-unavailable"]').filter({ hasText: 'pnpm dev:worker' }).waitFor();

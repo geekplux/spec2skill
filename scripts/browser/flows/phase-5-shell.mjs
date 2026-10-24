@@ -1,8 +1,9 @@
-// Phase 5: Survey design system and app shell. Themes (toggle, persistence, system default),
-// self-hosted display font, favicon and logo, reduced motion, focus style, axe in both
-// themes, CVD screenshots, and no horizontal scroll at 390 px and at 200 % zoom.
-const DARK_PAPER = 'rgb(14, 22, 33)';
-const LIGHT_PAPER = 'rgb(247, 243, 234)';
+// Phase 5: design system and app shell (Route map tokens since redesign R1). The theme follows the
+// system (no toggle, nothing stored or pinned), self-hosted IBM Plex, favicon and logo, reduced
+// motion, focus style, axe in both themes, CVD screenshots, and no horizontal scroll at 390 px and
+// at 200 % zoom.
+const DARK_PAGE = 'rgb(17, 17, 17)'; // gray-1 dark
+const LIGHT_PAGE = 'rgb(252, 252, 252)'; // gray-1 light
 
 const bodyBg = (page) => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
 const expect = (ok, message) => {
@@ -35,18 +36,17 @@ export default {
     await page.evaluate(() => localStorage.clear());
     await load(page, origin);
 
-    // Shell controls are real, labelled controls.
-    const toggle = page.getByRole('button', { name: 'Dark theme' });
-    expect((await toggle.getAttribute('aria-pressed')) === 'false', 'light system: toggle should not be pressed');
+    // Shell controls are real, labelled controls; there is no theme toggle.
+    expect((await page.getByRole('button', { name: 'Dark theme' }).count()) === 0, 'a theme toggle is back');
     const generate = page.getByRole('button', { name: /Generate skill/ });
     expect((await generate.getAttribute('aria-disabled')) === null, 'Generate skill is real since phase 11');
     await page.getByRole('tablist', { name: 'View' }).getByRole('tab', { name: 'List' }).waitFor();
-    await page.getByRole('img', { name: 'spec2skill' }).first().waitFor();
+    expect((await page.locator('header .wordmark').textContent()) === 'spec2skill', 'header wordmark text');
 
-    // Display font from our own origin, used by the headings.
+    // IBM Plex from our own origin, used by the headings and the body.
     const h1Font = await page.evaluate(() => getComputedStyle(document.querySelector('h1')).fontFamily);
-    expect(h1Font.includes('Bricolage Grotesque'), `h1 font is ${h1Font}`);
-    expect(await page.evaluate(() => document.fonts.check('700 36px "Bricolage Grotesque Variable"')), 'font not loaded');
+    expect(h1Font.startsWith('"IBM Plex Sans"'), `h1 font is ${h1Font}`);
+    expect(await page.evaluate(() => document.fonts.check('600 20px "IBM Plex Sans"')), 'font not loaded');
     expect(fonts.length > 0 && fonts.every((f) => f.startsWith(`200 ${origin}/assets/`)), `font responses: ${fonts}`);
 
     // Favicon and logo are served and small.
@@ -71,33 +71,26 @@ export default {
       await cvd(null);
     }
 
-    // Focus style: 2 px ink outline (with the marker halo).
+    // Focus style: 2 px ink (gray-12) outline, no halo.
     await page.keyboard.press('Tab');
     const outline = await page.evaluate(() => {
       const s = getComputedStyle(document.activeElement);
       return `${s.outlineStyle} ${s.outlineWidth} ${s.boxShadow}`;
     });
     await page.evaluate(() => document.activeElement.blur());
-    expect(outline.startsWith('solid 2px') && outline.includes('rgb(242, 194, 48)'), `focus style: ${outline}`);
+    expect(outline.startsWith('solid 2px') && outline.endsWith('none'), `focus style: ${outline}`);
+    expect((await bodyBg(page)) === LIGHT_PAGE, `light background is ${await bodyBg(page)}`);
 
-    // Toggle to dark; the choice persists across reloads.
-    await toggle.click();
-    expect((await toggle.getAttribute('aria-pressed')) === 'true', 'toggle not pressed after click');
-    expect((await bodyBg(page)) === DARK_PAPER, `dark background is ${await bodyBg(page)}`);
+    // The theme follows prefers-color-scheme, live and on load; a choice stored by the old toggle is ignored.
+    await page.evaluate(() => localStorage.setItem('spec2skill:theme', 'light'));
+    await page.emulateMedia({ colorScheme: 'dark' });
+    expect((await bodyBg(page)) === DARK_PAGE, `dark system preference not followed live: ${await bodyBg(page)}`);
     await load(page, origin);
-    expect((await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark', 'dark theme not persisted');
+    expect((await bodyBg(page)) === DARK_PAGE, 'dark system preference not followed on load');
+    expect(!(await page.evaluate(() => document.documentElement.hasAttribute('data-theme'))), 'the theme is pinned on <html>');
     await axe('dark desktop');
     await screenshot('shell-dark-desktop');
-    await toggle.click();
-    await load(page, origin);
-    expect((await bodyBg(page)) === LIGHT_PAPER, 'light theme not persisted');
-
-    // With no stored choice, the theme follows prefers-color-scheme.
     await page.evaluate(() => localStorage.clear());
-    await page.emulateMedia({ colorScheme: 'dark' });
-    await load(page, origin);
-    expect((await bodyBg(page)) === DARK_PAPER, 'dark system preference not followed');
-    expect((await toggle.getAttribute('aria-pressed')) === 'true', 'toggle should reflect the dark system theme');
     await page.emulateMedia({ colorScheme: 'light' });
 
     // Mobile, then 200 % zoom (640 px CSS viewport at device scale factor 2).
@@ -113,10 +106,10 @@ export default {
     await cdp.send('Emulation.clearDeviceMetricsOverride');
     await cdp.detach();
 
-    // The mark alone, rendered at 96 px on chart paper.
+    // The mark alone, rendered at 96 px on the light page colour.
     await page.setViewportSize({ width: 160, height: 160 });
     await page.setContent(
-      `<html lang="en"><title>spec2skill logo</title><body style="margin:0;display:grid;place-items:center;height:100vh;background:#F7F3EA"><img src="${origin}/logo.svg" width="96" height="96" alt="spec2skill"></body>`,
+      `<html lang="en"><title>spec2skill logo</title><body style="margin:0;display:grid;place-items:center;height:100vh;background:#fcfcfc"><img src="${origin}/logo.svg" width="96" height="96" alt="spec2skill"></body>`,
     );
     await page.locator('img').evaluate((img) => img.decode());
     await screenshot('logo');

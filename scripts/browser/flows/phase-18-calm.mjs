@@ -107,9 +107,9 @@ export default {
         console.log(`  ${label}: reached, named, opened, closed`);
       }
     };
-    const meridianFills = () => page.evaluate(() => {
+    const accentFills = () => page.evaluate(() => {
       const probe = document.createElement('i');
-      probe.style.color = 'var(--meridian)';
+      probe.style.color = 'var(--indigo-9)';
       document.body.append(probe);
       const accent = getComputedStyle(probe).color;
       probe.remove();
@@ -129,7 +129,7 @@ export default {
       const open = await page.evaluate(() => [...document.querySelectorAll('details[open]')].map((d) => d.className));
       expect(open.length === 0, `${width}: disclosures open on first load: ${open}`);
       expect(await page.locator('#source-more').isHidden(), `${width}: More options open on first load`);
-      const fills = await meridianFills();
+      const fills = await accentFills();
       expect(fills.length === 1 && fills[0] === 'Download .zip', `${width}: accent fills ${JSON.stringify(fills)}`);
       const box = async (selector) => page.locator(selector).first().boundingBox();
       const [tree, audit, preview, actions] = [await box('[role="tree"]'), await box('.audit > summary'), await box('#skill-preview'), await box('.actions')];

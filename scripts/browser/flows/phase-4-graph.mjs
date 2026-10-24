@@ -9,7 +9,7 @@ const EXPECTED = {
 async function expectGraph(page, id) {
   const summary = page.getByTestId('list-view');
   await summary.waitFor();
-  const names = (await summary.locator('table caption').allTextContents()).map((c) => c.split(' · ')[0].trim());
+  const names = await summary.locator('table caption').evaluateAll((els) => els.map((c) => c.firstChild.textContent.trim()));
   if (names.join() !== EXPECTED[id].clusters.join()) throw new Error(`${id}: clusters ${names.join()}`);
   const text = await summary.locator('.list-summary').innerText();
   if (!/\d+ relationships shown: \d+ feeds, \d+ sub-path, \d+ shared schema\./.test(text)) {
