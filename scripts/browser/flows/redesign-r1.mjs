@@ -1,7 +1,7 @@
 // Redesign R1 (docs/redesign/PLAN.md): Radix tokens, IBM Plex, the Overlap logo, the theme following
 // the system. Runs the DESIGN.md section 8 checks 1-4 (scripts/browser/redesign-checks.mjs) on the
-// first view at 1440 and 390 and on the list view, a keyboard-focused map node and the open detail
-// panel at 1440, all in light and dark (sizes 12/14/20/48: the hero h1 is 48 since R2); check 7
+// first view at 1440 and 390 and on the list view, a keyboard-focused map row and the pinned
+// operation card at 1440, all in light and dark (sizes 12/14/20/48: the hero h1 is 48 since R2); check 7
 // under reduced motion; saves the 1440 light and dark
 // first view as WebP in docs/screenshots/redesign-r1/.
 //   pnpm build && pnpm check:browser -- --phase 21 --flow redesign-r1 --capture redesign-r1
@@ -80,20 +80,25 @@ export default {
     }
 
     // The other states of the current UI at 1440, light and dark: the list view, a keyboard-focused
-    // map node (its edges highlighted) and the open detail panel.
+    // map row (its links highlighted) and the pinned operation card (the detail panel until R4).
     await page.setViewportSize(VIEWPORTS[0]);
     for (const scheme of ['light', 'dark']) {
       await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'no-preference' });
       const states = [
         ['list view', '/?sample=tasks&view=list', () => page.getByTestId('list-view').waitFor()],
-        ['focused map node', '/?sample=tasks', async () => {
+        ['focused map row', '/?sample=tasks', async () => {
           await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' });
-          await page.locator('.hit[data-op="listTasks"]').focus();
+          await page.locator('.op[data-op="listTasks"]').focus();
           await page.keyboard.press('ArrowDown');
-          await page.locator('.atlas[data-hot]').waitFor({ state: 'attached' });
-          expect(await page.evaluate(() => document.activeElement?.matches('.hit:focus-visible')), 'no keyboard-focused map node');
+          await page.locator('.route[data-hot]').waitFor({ state: 'attached' });
+          expect(await page.evaluate(() => document.activeElement?.matches('.op:focus-visible')), 'no keyboard-focused map row');
+          await page.waitForTimeout(300); // the fade
         }],
-        ['detail panel', '/?sample=tasks#op=deleteTask', () => page.getByTestId('detail').waitFor()],
+        ['operation card', '/?sample=tasks#op=deleteTask', async () => {
+          await page.getByTestId('op-card').waitFor();
+          await page.mouse.move(0, 0);
+          await page.waitForTimeout(300); // the fade
+        }],
       ];
       for (const [name, path, open] of states) {
         const label = `${name} 1440 ${scheme}`;

@@ -1,5 +1,5 @@
 // Phase 11: the skill pane leads the first view beside the map (D21). Ready times (P3), sample
-// switching, tree keyboard model, "In the skill" from the detail panel, Generate (an empty field), the zip
+// switching, tree keyboard model, "In skill" from the operation card (the detail panel until R4), Generate (an empty field), the zip
 // download (unzipped and audited in Node, identical bytes when regenerated offline, O1), mobile tabs.
 import { execFileSync, execSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -69,8 +69,9 @@ export default {
       }, null, { polling: 'raf' }).then((h) => h.jsonValue());
       console.log(`  skill pane ready after ${Math.round(at.pane)} ms, map after ${Math.round(at.map)} ms`);
       expect(at.pane < 2000 && at.map < 1500, `ready too late: pane ${at.pane} ms, map ${at.map} ms`);
-      const [p, m] = [await box(page, '.skill-pane'), await box(page, '.map')];
-      expect(p.x + p.width <= m.x && p.y < 800 && m.y < 800, `panes overlap or are off screen: ${JSON.stringify({ p, m })}`);
+      // Since R4 the skill browser sits under the map in the result frame (DESIGN.md 4.3), which starts on the first screen.
+      const [p, m] = [await box(page, '.skill-pane'), await box(page, '.map-pane')];
+      expect(m.y + m.height <= p.y && m.y < 800, `panes overlap or the map starts off screen: ${JSON.stringify({ p, m })}`);
       expect((await pane(page).getByRole('heading', { level: 2 }).textContent()) === 'tasks-api skill', 'pane heading');
       const checks = await pane(page).locator('.audit li .status').allTextContents();
       expect(checks.length >= 9 && checks.every((c) => c === 'passed'), `audit checks: ${checks}`);
@@ -83,6 +84,7 @@ export default {
       expect(await page.locator('.skill-body').evaluate((el) => getComputedStyle(el).opacity === '1' && getComputedStyle(el).boxShadow.includes('0.5px')), 'stale skill is faded or unframed');
       await axe('stale skill');
       await page.locator('.skill-body').evaluate((el) => el.removeAttribute('data-stale'));
+      await page.locator('.audit').scrollIntoViewIfNeeded(); // under the map since R4
       await screenshot('audit-checklist', { clip: await box(page, '.audit') });
       if (cvd) {
         for (const type of ['protanopia', 'deuteranopia', 'tritanopia']) {
@@ -118,12 +120,12 @@ export default {
       expect((await focused(page)) === 'SKILL.md', 'Home did not focus the first item');
       await page.keyboard.press('Enter');
 
-      // 4. "In the skill" in the detail panel selects the operation's reference page.
-      await page.locator('.hit[data-op="getTask"]').focus();
+      // 4. "In skill" in the pinned operation card selects the operation's reference page.
+      await page.locator('.op[data-op="getTask"]').focus();
       await page.keyboard.press('Enter');
       const link = page.getByRole('button', { name: 'Show references/tasks.md in the skill' });
       expect((await link.textContent()) === 'references/tasks.md', `In the skill: ${await link.textContent()}`);
-      await screenshot('detail-in-the-skill');
+      await screenshot('op-card-in-the-skill');
       await link.click();
       expect((await previewOf(page)).startsWith('references/tasks.md, '), 'In the skill did not select the file');
       expect((await page.locator('[data-path="references/tasks.md"]').getAttribute('aria-selected')) === 'true', 'tree selection');

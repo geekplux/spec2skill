@@ -1,7 +1,9 @@
-// Phase 13: edge-noise trims and bundles on the samples' maps, the detail panel overlaying (not
-// shrinking) the map, map focus following back/forward, theme following OS changes (A10), the mobile
-// hero (since redesign R2: the field over Generate, the samples on one line), two-pointer pinch-zoom (F9), the skill pane's 40/60 split, the list
-// at 640 px, and the synthetic large-spec fixture staying out of the production bundle (P4).
+// Phase 13 (map parts rewritten for the route map in redesign R4): edge-noise trims and bundles on
+// the samples' maps, the pinned operation card floating over (not shrinking) the map, map focus
+// following back/forward, theme following OS changes (A10), the mobile hero (since redesign R2: the
+// field over Generate, the samples on one line), the map scrolling natively on phones (two-pointer
+// pinch-zoom, F9, went with zoom in R4), the skill pane's 40/60 split, the list at 640 px, and the
+// synthetic large-spec fixture staying out of the production bundle (P4).
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,18 +19,14 @@ const mapReady = async (page) => {
   await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
 };
 const paneReady = (page) => page.locator('.skill-pane[data-ready="true"]').waitFor();
-const scale = (page) => page.locator('.camera').evaluate((g) => new DOMMatrix(getComputedStyle(g).transform).a);
 const activeOp = (page) => page.evaluate(() => document.activeElement?.getAttribute('data-op') ?? document.activeElement?.tagName);
-
-/** Zoom (Ctrl + wheel) about the centre of an element on the map. */
-async function zoomOn(page, locator, steps) {
-  const b = await locator.boundingBox();
-  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
-  await page.keyboard.down('Control');
-  for (let i = 0; i < steps; i++) await page.mouse.wheel(0, -200);
-  await page.keyboard.up('Control');
-  await page.waitForTimeout(100);
-}
+/** The rest links' bundles: [from, to card, edges]. */
+const bundlesOf = (page) => page.locator('.route .links .ln[data-link="bundle"]').evaluateAll((els) => els.map((el) => [el.dataset.from, el.dataset.to, el.dataset.edges.split(' ')]));
+/** The graph edges drawn at rest (links and bundles) and, while a row is hot, its links. */
+const drawnEdges = (page) => page.evaluate(() => [
+  ...[...document.querySelectorAll('.route .links .ln[data-edges]')].flatMap((el) => el.dataset.edges.split(' ')),
+  ...[...document.querySelectorAll('.route .links .ln-hot')].map((el) => el.dataset.edge),
+]);
 
 export default {
   name: 'phase-13-scale-polish',
@@ -46,67 +44,59 @@ export default {
     await page.evaluate(() => document.fonts.ready);
     const label = await atlas(page).getAttribute('aria-label');
     expect(label === 'Tasks API: 22 operations in 5 clusters, 78 relationships', `map name: ${label}`);
-    for (const id of ['feeds:getTask->createTask', 'feeds:getTask->updateProject', 'feeds:getProject->removeMember']) {
-      expect((await page.locator(`.edge[data-edge="${id}"]`).count()) === 0, `trimmed edge ${id} still drawn`);
+    const trimmed = ['feeds:getTask->createTask', 'feeds:getTask->updateProject', 'feeds:getProject->removeMember'];
+    for (const op of [null, 'getTask', 'getProject']) {
+      if (op) await page.locator(`.op[data-op="${op}"]`).hover();
+      const drawn = await drawnEdges(page);
+      const back = trimmed.filter((id) => drawn.includes(id));
+      expect(back.length === 0, `trimmed edges drawn${op ? ` on hover of ${op}` : ''}: ${back}`);
     }
-    const bundles = await atlas(page).locator('.labels .map-link[data-link="bundle"]').evaluateAll((els) => els.map((el) => el.textContent));
-    expect(bundles.length === 2 && bundles.every((t) => t === 'projectId -> 4 ops'), `bundles: ${bundles}`);
-    const hidden = await page.locator('.edge[data-bundled]').evaluateAll((els) => els.filter((el) => getComputedStyle(el).display === 'none').length);
-    expect(hidden === 8, `${hidden} of 8 bundled edges hidden until highlighted`);
-    const territory = await page.locator('.territory-label').first().evaluate((t) => t.getBoundingClientRect().height);
-    console.log(`  fit: cluster names ${territory.toFixed(1)} px tall on screen`);
-    expect(territory >= 9, `cluster names ${territory} px tall at fit`);
-    // Link labels keep full opacity (4.5:1 text); the large-spec cluster band is drawn at >= 0.9 (3:1).
-    const fades = await atlas(page).locator('.labels .map-link').evaluateAll((els) => els.map((el) => getComputedStyle(el).opacity));
-    expect(fades.length > 0 && fades.every((o) => o === '1'), `link label opacity: ${fades}`);
-    const band = await page.evaluate(() => {
-      for (const sheet of document.styleSheets) {
-        for (const rule of sheet.cssRules) if (rule.selectorText?.replace(/["']/g, '') === '.map-link[data-link=clusters] .line') return Number(rule.style.strokeOpacity || 1);
-      }
-      return null;
-    });
-    expect(band !== null && band >= 0.9, `cluster band stroke-opacity: ${band}`);
     await page.mouse.move(5, 5);
+    // One source feeding four Members operations: one curve to the card's head, not four.
+    const bundles = await bundlesOf(page);
+    expect(bundles.length === 2 && bundles.every(([, to, edges]) => to === 'cluster-members' && edges.length === 4 && edges.every((e) => e.startsWith(`feeds:`))), `bundles: ${JSON.stringify(bundles)}`);
+    // Rest links are drawn at full opacity (gray-9 is 3:1 on gray-1); card names are 14 px at every width (no zoom).
+    const fades = await page.locator('.route .links .ln, .route .links').evaluateAll((els) => els.map((el) => getComputedStyle(el).opacity));
+    expect(fades.every((o) => o === '1'), `rest link opacity: ${fades}`);
+    const names = await page.locator('.rc-name').evaluateAll((els) => [...new Set(els.map((el) => getComputedStyle(el).fontSize))]);
+    expect(names.join() === '14px', `card names ${names}`);
     await screenshot('trimmed-tasks-map');
 
-    // Hovering the source swaps its bundle for the four edges it stands for, labels included.
-    await page.locator('.node[data-op="listProjects"]').hover();
-    const hot = await page.locator('.edge[data-hot][data-bundled]').evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== 'none').length);
-    expect(hot === 4, `hover listProjects: ${hot} bundled edges shown`);
-    const faded = await atlas(page).locator('.labels .map-link:not([data-hot]) .edge-label').evaluateAll((els) => els.filter((el) => getComputedStyle(el).visibility !== 'hidden').length);
-    expect(faded === 0, `${faded} labels of links not highlighted still shown while a node is hot`);
-    await page.mouse.move(5, 5);
-    await zoomOn(page, atlas(page).locator('.map-link[data-link="bundle"] .edge-label').first(), 3);
-    await page.mouse.move(5, 5);
+    // Hovering the source swaps its bundle for the four links it stands for.
+    const [source, , members] = bundles[0];
+    await page.locator(`.op[data-op="${source}"]`).hover();
+    const hot = await page.locator('.ln-hot').evaluateAll((els) => els.map((el) => el.dataset.edge));
+    expect(members.every((e) => hot.includes(e)), `hover ${source}: ${hot} lacks the bundle's ${members}`);
+    expect((await page.locator(`.ln[data-link="bundle"][data-from="${source}"]:not([data-faded])`).count()) === 0, `hover ${source}: its bundle stays drawn over the links`);
     await screenshot('bundled-edge');
-    await axe('tasks bundles');
+    await axe('tasks bundles hover');
+    await page.mouse.move(5, 5);
 
-    // 2. The detail panel overlays the map, so the map keeps its size; Back/Forward move focus with #op.
-    await page.getByRole('button', { name: 'Fit to screen' }).click();
+    // 2. The pinned operation card floats over the map, so the map keeps its size; Back/Forward move focus with #op.
     const before = await atlas(page).boundingBox();
-    await page.locator('.hit[data-op="getTask"]').focus();
+    await page.locator('.op[data-op="getTask"]').focus();
     await page.keyboard.press('Enter');
-    await page.getByTestId('detail').waitFor();
+    await page.getByTestId('op-card').waitFor();
     const after = await atlas(page).boundingBox();
-    expect(Math.abs(after.width - before.width) < 1 && Math.abs(after.height - before.height) < 1, `map resized with the panel: ${JSON.stringify([before, after])}`);
-    await page.getByTestId('detail').getByRole('button', { name: 'Close details' }).focus();
+    expect(Math.abs(after.width - before.width) < 1 && Math.abs(after.height - before.height) < 1, `map resized with the card: ${JSON.stringify([before, after])}`);
+    await page.getByTestId('op-card').getByRole('button', { name: 'Close details' }).focus();
     await page.evaluate(() => history.back());
-    await page.getByTestId('detail').waitFor({ state: 'detached' });
+    await page.getByTestId('op-card').waitFor({ state: 'detached' });
     await page.waitForFunction(() => document.activeElement?.getAttribute('data-op') === 'getTask');
     await page.evaluate(() => document.activeElement.blur());
     await page.evaluate(() => history.forward());
-    await page.getByTestId('detail').waitFor();
+    await page.getByTestId('op-card').waitFor();
     await page.waitForFunction(() => document.activeElement?.getAttribute('data-op') === 'getTask').catch(async () => expect(false, `focus after forward: ${await activeOp(page)}`));
     await page.keyboard.press('Escape');
 
     // 3. Filesystem: list_allowed_directories feeds directory tools and search only; two path bundles.
     await page.goto(`${origin}/?sample=filesystem&view=map`);
     await mapReady(page);
-    const fed = await page.locator('.edge[data-edge^="feeds:list_allowed_directories->"]').evaluateAll((els) => els.map((el) => el.dataset.edge.split('->')[1]));
+    const paths = await bundlesOf(page);
+    expect(paths.length === 2 && paths.every(([, to, edges]) => to === 'cluster-file' && edges.length === 6), `filesystem bundles: ${JSON.stringify(paths)}`);
+    await page.locator('.op[data-op="list_allowed_directories"]').hover();
+    const fed = await page.locator('.ln-hot[data-edge^="feeds:list_allowed_directories->"]').evaluateAll((els) => els.map((el) => el.dataset.edge.split('->')[1]));
     expect(fed.join() === 'list_directory,list_directory_with_sizes,directory_tree,search_files', `list_allowed_directories feeds ${fed}`);
-    const paths = await atlas(page).locator('.labels .map-link[data-link="bundle"]').evaluateAll((els) => els.map((el) => el.textContent));
-    expect(paths.join() === 'path -> 6 ops,path -> 6 ops', `filesystem bundles: ${paths}`);
-    await page.locator('.node[data-op="list_allowed_directories"]').hover();
     await screenshot('filesystem-trimmed');
     await page.mouse.move(5, 5);
 
@@ -145,32 +135,18 @@ export default {
     await axe('mobile hero');
     await screenshot('mobile-hero');
 
-    // 7. Pinch: two touch pointers spreading apart zoom the map; the page does not scroll.
+    // 7. Phones: no zoom and no pinch (F9 went with zoom in R4); the map scrolls sideways natively in
+    // its region (touch panning left to the browser) and the page itself never does.
     await page.locator('#tab-map').click();
     await mapReady(page);
-    const k0 = await scale(page);
-    const scrollY = await page.evaluate(() => window.scrollY);
-    await atlas(page).evaluate((svg) => {
-      const r = svg.getBoundingClientRect();
-      const [cx, cy] = [r.left + r.width / 2, r.top + r.height / 2];
-      const fire = (type, pointerId, x) =>
-        svg.dispatchEvent(new PointerEvent(type, { pointerId, pointerType: 'touch', isPrimary: pointerId === 1, clientX: x, clientY: cy, bubbles: true, cancelable: true }));
-      fire('pointerdown', 1, cx - 30);
-      fire('pointerdown', 2, cx + 30);
-      for (let i = 1; i <= 5; i++) {
-        fire('pointermove', 1, cx - 30 - 12 * i);
-        fire('pointermove', 2, cx + 30 + 12 * i);
-      }
-      fire('pointerup', 1, cx - 90);
-      fire('pointerup', 2, cx + 90);
-    });
-    await page.waitForTimeout(100);
-    const k1 = await scale(page);
-    console.log(`  pinch: zoom ${k0.toFixed(2)} -> ${k1.toFixed(2)}`);
-    expect(k1 > k0 * 2.5, `pinch did not zoom: ${k0} -> ${k1}`);
-    expect((await page.evaluate(() => window.scrollY)) === scrollY, 'pinch scrolled the page');
-    expect((await page.getByTestId('detail').count()) === 0, 'pinch opened details');
-    await screenshot('pinch-zoomed-mobile');
+    const region = page.getByRole('region', { name: 'Map, scrolls sideways' });
+    const native = await region.evaluate((el) => ({ x: getComputedStyle(el).overflowX, touch: getComputedStyle(el).touchAction, wider: el.scrollWidth > el.clientWidth }));
+    expect(native.x === 'auto' && native.touch === 'auto' && native.wider, `phone map scroll region ${JSON.stringify(native)}`);
+    await region.evaluate((el) => el.scrollTo({ left: el.scrollWidth }));
+    const moved = await page.evaluate(() => [document.querySelector('.map-scroll').scrollLeft, window.scrollX, document.documentElement.scrollWidth <= innerWidth]);
+    expect(moved[0] > 0 && moved[1] === 0 && moved[2], `the map did not scroll on its own: ${moved}`);
+    expect((await page.locator('.camera, [aria-label="Zoom in"]').count()) === 0, 'zoom is back');
+    await screenshot('map-scrolled-mobile');
 
     // 8. List at 640 px: tables fit without sideways scrolling; long relationship lists fold.
     await page.setViewportSize({ width: 640, height: 800 });

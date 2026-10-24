@@ -28,9 +28,9 @@ await runSession('capture-readme', async () => {
   await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
   await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' });
   await page.getByText(/Audit passed/).first().waitFor();
-  await page.locator('.hit[data-op="getTask"]').focus();
+  await page.locator('.op[data-op="getTask"]').focus();
   await page.keyboard.press('Enter');
-  await page.getByTestId('detail').waitFor();
+  await page.getByTestId('op-card').waitFor();
   await page.mouse.move(1, 1);
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(300);

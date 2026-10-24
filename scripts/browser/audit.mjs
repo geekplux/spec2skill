@@ -43,7 +43,7 @@ const blocked = JSON.stringify({ error: { code: 'blocked-host', message: 'Privat
 
 /** Every audited view, in order (docs/DESIGN.md "Calm polish audit" has one row per view). */
 export const VIEWS = [
-  'first-view', 'skill-file', 'audit-expanded', 'options', 'download-done', 'map-focus', 'detail', 'search', 'list-filter',
+  'first-view', 'skill-file', 'audit-expanded', 'options', 'download-done', 'map-focus', 'op-card', 'search', 'list-search',
   'shortcut-help', 'first-view-dark', 'loading', 'error', 'empty-spec', 'warnings', 'ai-labels',
 ];
 
@@ -129,28 +129,24 @@ export default {
     expect(download.suggestedFilename() === 'tasks-api-skill.zip', `download ${download.suggestedFilename()}`);
     await shot('download-done');
 
-    // The map: a focused node and its edges, its details, search results, the list with a filter.
+    // The map: a focused row and its links, its pinned operation card, search results, the list with a search.
     await tab('map');
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.locator('.hit[data-op="getTask"]').focus();
-    await page.waitForTimeout(300); // the camera follows focus
+    await page.locator('.op[data-op="getTask"]').focus();
+    await page.waitForTimeout(300); // the fade
     await shot('map-focus');
     await page.keyboard.press('Enter');
-    await page.getByTestId('detail').waitFor();
-    await shot('detail');
+    await page.getByTestId('op-card').waitFor();
+    await shot('op-card');
     await page.keyboard.press('Escape');
-    await page.getByTestId('detail').waitFor({ state: 'detached' });
+    await page.getByTestId('op-card').waitFor({ state: 'detached' });
     await page.locator('#search-q').fill('member');
     await page.waitForTimeout(600);
     await page.evaluate(() => window.scrollTo(0, 0));
     await shot('search');
-    await page.locator('#search-q').fill('');
     await view('list');
-    await disclose('.filters');
-    await page.locator('.filters label', { hasText: /^\s*DELETE$/ }).locator('input').uncheck();
-    await shot('list-filter');
-    await page.getByRole('button', { name: 'Show all' }).click();
-    await page.locator('.filters > summary').click();
+    await shot('list-search');
+    await page.locator('#search-q').fill('');
     await view('map');
     await page.locator('main').focus();
     await page.keyboard.press('?');

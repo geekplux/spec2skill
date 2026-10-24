@@ -22,15 +22,14 @@ paths:
 `;
 
 /**
- * The folded items (DESIGN.md audit table): the toggle, its expected name, the content it reveals,
+ * The folded items (DESIGN.md audit table; the Filters and Legend disclosures went in redesign R4:
+ * search replaces the filters, and the legend is always shown in the tools row, checked below): the toggle, its expected name, the content it reveals,
  * the control Tab reaches inside (null: text only), and what must be on screen first.
  */
 const FOLDED = [
   { name: /^Options$/, toggle: '.options > summary', content: '#opt-slug', inside: '#opt-slug', pane: true },
   { name: /^Audit passed: 9 of 9 checks$/, toggle: '.audit > summary', content: '.audit ul', inside: null, text: 'Every operation: passed', pane: true },
   { name: /^Install command$/, toggle: '.install > summary', content: '.install pre', inside: '.install button', text: 'unzip tasks-api-skill.zip', pane: true },
-  { name: /^Filters$/, toggle: '.filters > summary', content: '.filters fieldset', inside: '.filters input[type="checkbox"]', tab: 'map' },
-  { name: /^Legend$/, toggle: '.legend > summary', content: '.legend p', inside: null, text: 'Ctrl + scroll to zoom', tab: 'map' },
   { name: /^\d+ relationships: /, toggle: '.rels > summary', content: '.rels ul', inside: null, text: 'feeds', tab: 'list' },
 ];
 /** Folded only once a user source is loaded. */
@@ -131,11 +130,12 @@ export default {
       const fills = await accentFills();
       expect(fills.join() === 'Generate,Download .zip', `${width}: accent fills ${JSON.stringify(fills)}`);
       // The focal point is the hero (R2): headline, field, Generate and the samples on screen; at
-      // desktop width the result frame and the skill's files start on screen too.
+      // desktop width the result frame and its first view start on screen too (since R4 the map,
+      // with the skill browser under it).
       const box = async (selector) => page.locator(selector).first().boundingBox();
-      const [h1, field, samples, frame, tree] = [await box('.hero h1'), await box('.source-field'), await box('.samples'), await box('#result'), await box('[role="tree"]')];
+      const [h1, field, samples, frame, map] = [await box('.hero h1'), await box('.source-field'), await box('.samples'), await box('#result'), await box('.tools')];
       expect([h1, field, samples].every((b) => b.y >= 0 && b.y + b.height <= height), `${width}: the hero is not on screen: ${JSON.stringify({ h1, field, samples })}`);
-      if (width >= 1024) expect(frame.y < height && tree.y + Math.min(tree.height, 100) <= height, `${width}: the result starts below the fold: ${JSON.stringify({ frame, tree })}`);
+      if (width >= 1024) expect(frame.y < height && map.y + map.height <= height, `${width}: the result starts below the fold: ${JSON.stringify({ frame, map })}`);
       expect((await page.locator('.audit > summary').textContent()).includes('Audit passed'), `${width}: audit line`);
 
       // The map's screen-reader summary and the list view are still in the accessibility tree.
@@ -144,6 +144,10 @@ export default {
       expect(!atlas.ignored && /22 operations in 5 clusters/.test(atlas.name), `${width}: map summary ${JSON.stringify(atlas)}`);
       const help = await page.getByTestId('atlas').getAttribute('aria-describedby');
       expect((await page.locator(`[id="${help}"]`).textContent()).includes('The List view shows the same map as text'), `${width}: map description`);
+      // The legend is not folded any more (R4): a list of the three line styles, in the tree, no disclosures.
+      const legend = await page.getByRole('list', { name: 'Legend' }).ariaSnapshot();
+      expect(['Output feeds input', 'Inferred', 'Strongest workflow'].every((t) => legend.includes(t)), `${width}: legend ${legend}`);
+      expect((await page.locator('.filters, details.legend').count()) === 0, `${width}: a Filters or Legend disclosure is back`);
       const listTab = await ax('#tab-list');
       expect(listTab.role === 'tab' && listTab.name === 'List' && !listTab.ignored, `${width}: list tab ${JSON.stringify(listTab)}`);
       await tabKey('list');

@@ -363,7 +363,7 @@ export default {
       await title.filter({ hasText: 'Synthetic' }).waitFor();
       await ready();
       console.log(`  1000-operation paste interactive in ${Date.now() - started} ms`);
-      expect((await page.locator('.node[data-summary]').count()) > 0, 'large spec clusters are not collapsed');
+      expect((await page.locator('.op.more').count()) > 0, 'large spec cards do not cap their rows ("N more")');
       await page.mouse.move(5, 5);
       await screenshot('collapsed-clusters');
     } finally {

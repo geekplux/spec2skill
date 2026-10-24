@@ -61,7 +61,9 @@ export default {
     };
     const names = page.getByTestId('names-provenance');
     const prose = page.locator('.pane-head .kicker');
-    const labels = async () => (await page.locator('.territory-label').allTextContents()).toSorted();
+    const labels = async () => (await page.locator('.rc-name').allTextContents()).toSorted();
+    // The map credits AI-drafted names only (since R4); deterministic names carry no credit line.
+    const deterministicNames = async () => (await names.count()) === 0;
     const preview = () => page.locator('#skill-preview').textContent();
     const auditPassed = async (label) => {
       const text = await page.locator('.audit summary').textContent();
@@ -76,7 +78,7 @@ export default {
     for (const chip of await page.locator('.samples .seg-item').all()) {
       await chip.click();
       await ready();
-      expect((await names.textContent()) === 'Names: deterministic', `sample: ${await names.textContent()}`);
+      expect(await deterministicNames(), `sample: ${await names.textContent().catch(() => '')}`);
     }
     await page.waitForTimeout(300);
     expect(api.length === 0, `samples made /api requests: ${api}`);
@@ -88,10 +90,10 @@ export default {
     await ready();
     for (let i = 0; i < 50 && describes() === 0; i++) await page.waitForTimeout(100);
     expect(describes() === 1, `describe calls while held: ${describes()} (${api})`);
-    expect((await prose.textContent()).includes('Prose: deterministic') && (await names.textContent()) === 'Names: deterministic', 'deterministic labels before the answer');
+    expect((await prose.textContent()).includes('Prose: deterministic') && (await deterministicNames()), 'deterministic labels before the answer');
     expect((await labels()).join() === 'Folders,Notes', `deterministic cluster labels: ${await labels()}`);
     await auditPassed('deterministic');
-    const before = await page.locator('[data-testid="atlas"] .cluster').evaluateAll((els) => els.map((el) => el.getAttribute('transform')));
+    const before = await page.locator('[data-testid="atlas"] .rc').evaluateAll((els) => els.map((el) => el.getAttribute('style')));
 
     // The answer swaps in names and prose in place: same layout, audit re-run and announced once.
     release();
@@ -99,7 +101,7 @@ export default {
     await prose.filter({ hasText: 'Prose: AI-drafted' }).waitFor();
     await page.getByTestId('announcer').filter({ hasText: /^Skill updated with AI-drafted names and prose: audit passed, \d+ of \d+ checks\.$/ }).waitFor();
     expect((await labels()).join() === 'Jotted Notes,Notebooks', `AI cluster labels: ${await labels()}`);
-    const after = await page.locator('[data-testid="atlas"] .cluster').evaluateAll((els) => els.map((el) => el.getAttribute('transform')));
+    const after = await page.locator('[data-testid="atlas"] .rc').evaluateAll((els) => els.map((el) => el.getAttribute('style')));
     expect(JSON.stringify(before) === JSON.stringify(after), `layout moved: ${before} -> ${after}`);
     const md = await preview();
     expect(md.includes('  prose: ai\n') && md.includes(IDEA.slice(0, 40)) && md.includes('Keeps field notes in folders'), 'SKILL.md carries the AI prose and metadata.prose: ai');
@@ -135,7 +137,7 @@ export default {
     await ready();
     const toggle = page.getByRole('checkbox', { name: /Use deterministic text/ });
     await toggle.check();
-    await names.filter({ hasText: 'Names: deterministic' }).waitFor();
+    await names.waitFor({ state: 'detached' });
     await prose.filter({ hasText: 'Prose: deterministic' }).waitFor();
     expect((await labels()).join() === 'Folders,Notes', `toggle: labels ${await labels()}`);
     expect((await preview()).includes('  prose: deterministic\n'), 'toggle: SKILL.md says prose: deterministic');
@@ -156,7 +158,7 @@ export default {
     await page.reload();
     await ready();
     await page.waitForTimeout(500);
-    expect((await names.textContent()) === 'Names: deterministic' && (await prose.textContent()).includes('Prose: deterministic'), 'ai: false keeps deterministic labels');
+    expect((await deterministicNames()) && (await prose.textContent()).includes('Prose: deterministic'), 'ai: false keeps deterministic labels');
     expect(describes() === 1, `ai: false still asked: ${describes()}`);
     expect(!(await page.getByRole('checkbox', { name: /Use deterministic text/ }).count()), 'no toggle without AI text');
     await auditPassed('no AI');
