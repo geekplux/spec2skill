@@ -1,4 +1,4 @@
-// The README demo (docs/media/demo.gif), captured from the real app on the built-in samples at 1280x800
+// The README demo (docs/media/demo.gif), captured from the real app on the built-in samples at 1280x960
 // in the light theme, in three scenes:
 //   1. load    Petstore at rest with the samples above its map, then switching to the Tasks API sample
 //              plays the load sequence (DESIGN.md 7): the cards rise column by column, the links fade
@@ -21,7 +21,7 @@ import { launchChrome, ORIGIN, ROOT, runSession, startPreview } from './browser/
 
 const OUT = join(ROOT, 'docs', 'media', 'demo');
 const GIF = join(ROOT, 'docs', 'media', 'demo.gif');
-const VIEWPORT = { width: 1280, height: 800 };
+const VIEWPORT = { width: 1280, height: 960 }; // tall enough for the whole hero above the map, the card and the caption
 const GIF_MAX = 1024 * 1024; // small for the README (docs.test.mjs holds every demo.gif under 4 MB)
 /** The load sequence's frames, in ms after the switch (the last stop disc has popped by about 1.3 s). */
 const SEQUENCE = [0, 60, 120, 180, 260, 340, 450, 550, 650, 750, 850, 950, 1050, 1150, 1300];
@@ -58,13 +58,15 @@ await runSession('capture-demo', async () => {
   /** Scrolls the page so `selector`'s top sits `offset` px below the window's top. */
   const scrollTo = (selector, offset) => page.evaluate(([sel, off]) => window.scrollTo(0, document.querySelector(sel).getBoundingClientRect().top + window.scrollY - off), [selector, offset]);
 
-  // 1. The load sequence: from Petstore at rest, switch to the Tasks API sample. The window keeps the
-  // samples at its top, so the switch is seen (Petstore selected, then Tasks API) above the map.
+  // 1. The load sequence: from Petstore at rest, switch to the Tasks API sample. The window starts 32 px
+  // above the headline, so the whole hero is in view (no edge of the field or the lede is cut: in the
+  // two-column hero only a cut above the headline or under the samples misses them all) and the switch
+  // is seen (Petstore selected, then Tasks API) above the map.
   await page.goto(`${ORIGIN}/?sample=petstore`);
   await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
   await page.evaluate(() => document.fonts.ready);
   await settled(page);
-  await scrollTo('.samples', 24);
+  await scrollTo('.hero h1', 32);
   await page.mouse.move(1, 1);
   await frame('Petstore at rest, before the switch', 1.2);
   // Clicked in the page, so the window stays on the map (the samples sit in the hero above it).
@@ -72,7 +74,7 @@ await runSession('capture-demo', async () => {
   await page.locator('#result-title', { hasText: /^Tasks API$/ }).waitFor();
   await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
   await page.evaluate(() => document.getAnimations().forEach((a) => a.pause()));
-  await scrollTo('.samples', 24);
+  await scrollTo('.hero h1', 32);
   for (const [i, ms] of SEQUENCE.entries()) {
     const n = await page.evaluate((time) => {
       const list = document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity);
