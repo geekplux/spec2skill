@@ -271,7 +271,7 @@ export default {
         names: [...document.querySelectorAll('.rc')].map((el) => [el.querySelector('.rc-name').textContent, el.hasAttribute('data-dim'), s(el.querySelector('.rc-name')).color, s(el.querySelector('.rc-name')).fontWeight, [...el.querySelectorAll('.op[data-op]')].some((r) => !r.hasAttribute('data-dim'))]),
         faded: [...document.querySelectorAll('.ln[data-faded]')].map((p) => [s(p).stroke, !!p.getAttribute('marker-end')]),
         wf: document.querySelectorAll('.wf, .halo, .op[data-route]').length,
-        card: { left: c.left - rc.right, top: c.top - (row.top + row.height / 2), w: c.width, radius: s(card).borderRadius, bg: s(card).backgroundColor, shadow: s(card).boxShadow, pad: s(card).paddingTop, inFrame: c.right <= frame.right, hidden: card.getAttribute('aria-hidden') },
+        card: { left: c.left - rc.right, top: c.top - (row.top + row.height / 2), below: c.bottom - row.bottom, cut: card.scrollHeight - card.clientHeight, w: c.width, radius: s(card).borderRadius, bg: s(card).backgroundColor, shadow: s(card).boxShadow, pad: s(card).paddingTop, inFrame: c.right <= frame.right, hidden: card.getAttribute('aria-hidden') },
         dl: [...card.querySelectorAll('dt')].map((dt) => dt.textContent),
         text: card.textContent,
       };
@@ -287,7 +287,9 @@ export default {
     expect(h.names.every(([, dim, color, weight, related]) => (related ? !dim && color === g12 && weight === '600' : dim && color === g11 && weight === '500')) && h.names.some(([, dim]) => dim), `card names ${JSON.stringify(h.names)}`);
     expect(h.faded.length > 0 && h.faded.every(([stroke, marker]) => stroke === tl['--gray-5'] && !marker), `faded links ${JSON.stringify(h.faded)}`);
     expect(h.wf === 0, 'the workflow line and its discs stay drawn while a row is hot');
-    expect(close(h.card.left, 16, 1) && close(h.card.top, -40, 1) && close(h.card.w, 300) && h.card.radius === '10px' && h.card.bg === tl['--gray-1'] && h.card.shadow.includes(tl['--gray-7']) && h.card.shadow.includes('0px 8px 24px') && h.card.pad === '16px' && h.card.inFrame && h.card.hidden === 'true', `operation card ${JSON.stringify(h.card)}`);
+    // 40 px above the row's centre, or higher when the whole preview would not fit above the skill
+    // browser there (getTask's has seven rows): it rises beside its row rather than being cut (R7).
+    expect(close(h.card.left, 16, 1) && h.card.top <= -39 && h.card.below >= 0 && h.card.cut <= 1 && close(h.card.w, 300) && h.card.radius === '10px' && h.card.bg === tl['--gray-1'] && h.card.shadow.includes(tl['--gray-7']) && h.card.shadow.includes('0px 8px 24px') && h.card.pad === '16px' && h.card.inFrame && h.card.hidden === 'true', `operation card ${JSON.stringify(h.card)}`);
     expect(h.text.startsWith('GET /tasks/{taskId}') && h.text.includes('Get a task') && h.dl.join('|') === 'Input|Output|Fed by|Feeds|Shares schema|Sub-paths|In skill', `card contents ${h.dl} ${h.text.slice(0, 60)}`);
     await checks('hover getTask 1440 light', 'light');
     await axe('hover getTask 1440 light');
@@ -311,6 +313,26 @@ export default {
       return { flip: c.classList.contains('flip'), gap: rc.left - c.getBoundingClientRect().right, right: c.getBoundingClientRect().right, frame: document.querySelector('#result').getBoundingClientRect().right };
     });
     expect(flip.flip && close(flip.gap, 16, 1) && flip.right <= flip.frame, `the card does not flip at the right edge ${JSON.stringify(flip)}`);
+    await page.mouse.move(0, 0);
+
+    // No row's preview is cut: each shows its last line (In skill) beside its row, 40 px above the
+    // row's centre where it fits, else risen to end where the room ends.
+    const cut = [];
+    for (const id of await page.locator('.op[data-op]').evaluateAll((els) => els.map((el) => el.dataset.op))) {
+      await page.mouse.move(0, 0);
+      await page.locator('[data-testid="op-preview"]').waitFor({ state: 'detached' });
+      await page.locator(`.op[data-op="${id}"]`).hover();
+      await page.locator('[data-testid="op-preview"]').waitFor();
+      await settled(page); // the card rises 4 px as it fades in
+      const p = await page.evaluate((op) => {
+        const c = document.querySelector('[data-testid="op-preview"]');
+        const r = document.querySelector(`.op[data-op="${op}"]`).getBoundingClientRect();
+        const b = c.getBoundingClientRect();
+        return { cut: c.scrollHeight - c.clientHeight, top: b.top - (r.top + r.height / 2), below: b.bottom - r.bottom, last: c.querySelector('dl > :last-child')?.getBoundingClientRect().bottom <= b.bottom };
+      }, id);
+      if (p.cut > 1 || p.top > -39 || p.below < 0 || !p.last) cut.push(`${id} ${JSON.stringify(p)}`);
+    }
+    expect(cut.length === 0, `hover previews cut or off their row: ${cut.join('; ')}`);
     await page.mouse.move(0, 0);
 
     // 3. Pinned: click pins (#op=, Close, the extra contents); Escape closes and returns focus to the row.

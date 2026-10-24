@@ -234,6 +234,17 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
     const cardTop = cardOp === pinned ? Math.min(y, limit - CARD.minH) : y;
     setPlace({ left, top: cardTop, flip, maxHeight: Math.max(CARD.minH, limit - cardTop) });
   }, [cardOp, pinned, rowOf, ox, oy, avail]);
+  // The hover preview never scrolls (see app.css), so it must never be cut: a preview taller than its
+  // room rises, still beside its row, until it ends at the limit; one taller than the map and caption
+  // together keeps its full height and passes the limit.
+  useLayoutEffect(() => {
+    const el = wrap.current;
+    const preview = el?.querySelector<HTMLElement>('.op-card[aria-hidden="true"]');
+    if (!el || !preview || !place || preview.scrollHeight <= preview.clientHeight + 1) return;
+    const limit = el.offsetHeight + CARD.below;
+    const top = Math.max(0, Math.min(place.top, limit - preview.scrollHeight));
+    setPlace({ ...place, top, maxHeight: Math.max(limit - top, preview.scrollHeight) });
+  }, [place]);
 
   const routeShown = !hot; // the workflow's colour and discs rest while a row is hot (V2Hover)
   const marker = (name: string) => `url(#${CSS.escape(`${uid}${name}`)})`;
