@@ -109,7 +109,12 @@ export function ResultHead({ model, sample, resources, links, skill, ready, slug
           {model.warnings.slice(0, 100).map((w, i) => <li key={i}>{w.message}</li>)}
         </ul>
       )}
-      {failed && <pre className="install-cmds"><code>{failed}</code></pre>}
+      {failed && (
+        <div className="install-cmds">
+          <pre><code>{failed}</code></pre>
+          <button type="button" className="sb-close" onClick={() => setFailed('')}>Close<span className="visually-hidden"> install command</span></button>
+        </div>
+      )}
     </div>
   );
 }
