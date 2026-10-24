@@ -6,7 +6,7 @@
 // (keyboard.ts). Wider than the frame, it scrolls sideways in a focusable region: no zoom.
 import { type CSSProperties, type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAnnounce } from '../a11y/Announcer';
-import { TIMING } from '../design/motion';
+import { useFadeOut } from '../design/motion';
 import type { AtlasGraph, Edge } from '../graph';
 import { CARD_W, MAX_ROWS, type RouteCard, type RouteRow, hoverExtent, hoverLinks, routeLayout } from '../layout/route';
 import type { ApiModel } from '../model/types';
@@ -94,17 +94,7 @@ export function RouteMap({ model, graph, base = graph, chain, skillFile, onSkill
   const focused = focusIn && opAt ? opAt : null;
   const hot = pinned ?? hover ?? focused;
   // For 250 ms after the last hot row, the rows and links keep their transitions so they fade back (app.css).
-  const [wasHot, setWasHot] = useState(hot);
-  const [fading, setFading] = useState(false);
-  if (wasHot !== hot) {
-    setWasHot(hot);
-    setFading(!hot);
-  }
-  useEffect(() => {
-    if (!fading) return;
-    const t = setTimeout(() => setFading(false), TIMING.base);
-    return () => clearTimeout(t);
-  }, [fading]);
+  const fading = useFadeOut(!!hot);
   const lit = hot ? hoverLinks(layout, feeds, hot) : [];
   const near = new Set(hot ? [hot, ...lit.flatMap((l) => [l.from, l.to])] : []);
 

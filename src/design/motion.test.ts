@@ -41,12 +41,12 @@ function declarations(css: string, prop: string): { selector: string; prop: stri
   return out;
 }
 
-/** The hover-or-focus moment (D67): rows and links fade while a map row is hot and 250 ms after; a list row's grey on hover. */
+/** The hover-or-focus moment (D67): rows and links fade while a map row (or the pointer on a list row) is hot and 250 ms after. */
 const TRANSITIONS = [
   '.route:is([data-hot], [data-fading]) .ln | transition: stroke var(--motion-map) ease-out',
   '.route:is([data-hot], [data-fading]) .op | transition: background-color var(--motion-map) ease-out',
   '.route:is([data-hot], [data-fading]) :is(.op .m, .op .id, .rc-name) | transition: color var(--motion-map) ease-out',
-  '.lrow:hover | transition: background-color var(--motion-map) ease-out',
+  '.lrow:hover, .list:is([data-hover], [data-fading]) .lrow | transition: background-color var(--motion-map) ease-out',
 ];
 /** The table's moments: the load sequence (map and list), the hover's links and card, the label swaps, the spinner. */
 const ANIMATIONS = [

@@ -434,7 +434,9 @@ kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-
   display: flex; align-items: center; gap: var(--space-8); width: calc(100% + 2 * var(--space-8)); min-height: 44px; margin: 0 calc(-1 * var(--space-8)); padding: var(--space-4) var(--space-8);
   border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-12); font: inherit; text-align: left; cursor: pointer; outline-offset: -2px;
 }
-.lrow:hover { transition: background-color var(--motion-map) ease-out; } /* fades in on hover only: an open row and a theme change snap */
+/* A row's grey fades in and out on hover (D67): declared on the hovered row (so it fades in at once)
+   and while the pointer is on a row and 250 ms after (so it fades back), and so a theme change at rest snaps. */
+.lrow:hover, .list:is([data-hover], [data-fading]) .lrow { transition: background-color var(--motion-map) ease-out; }
 .lrow:hover, .lrow[data-open] { background: var(--gray-3); }
 .lrow .m { flex: none; width: 48px; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); }
 .lrow .m[data-destructive] { color: var(--destructive); }

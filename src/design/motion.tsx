@@ -38,6 +38,25 @@ export function useEnter(deps: readonly unknown[], ms: number): boolean {
 }
 
 /**
+ * True for 250 ms after `active` turns off: a hover's colour transitions stay declared while the row
+ * fades back, and are gone otherwise, so a theme change or a search snaps (D67).
+ */
+export function useFadeOut(active: boolean): boolean {
+  const [was, setWas] = useState(active);
+  const [fading, setFading] = useState(false);
+  if (was !== active) {
+    setWas(active);
+    setFading(!active);
+  }
+  useEffect(() => {
+    if (!fading) return;
+    const t = setTimeout(() => setFading(false), TIMING.base);
+    return () => clearTimeout(t);
+  }, [fading]);
+  return fading;
+}
+
+/**
  * A button's label (icon and words) that fades in over 250 ms each time `id` changes ("Copied",
  * "Downloaded", a Generate stage), but not when first shown.
  */

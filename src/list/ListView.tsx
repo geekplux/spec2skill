@@ -7,6 +7,7 @@
 // React text only (S3).
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import { CHEVRON_ICON } from '../design/icons';
+import { useFadeOut } from '../design/motion';
 import { CRUD_LETTER, CRUD_ORDER, type AtlasGraph, type Edge } from '../graph';
 import { counted } from '../graph/words';
 import { methodOf } from '../layout/route';
@@ -59,6 +60,8 @@ export function ListView({ model, graph, match, edges, workflow, selected, onSel
   // Open groups: all on desktop; on phones the workflow's (the first two without one). A search or the
   // pinned operation opens its group; a toggle holds while the list is shown.
   const [toggled, setToggled] = useState<ReadonlyMap<string, boolean>>(() => new Map());
+  const [hover, setHover] = useState(false);
+  const fading = useFadeOut(hover);
   const isOpen = (ids: string[], id: string, i: number) =>
     !!match || ids.includes(selected ?? '') || (toggled.get(id) ?? (!phone || (stopOf.size > 0 ? ids.some((o) => stopOf.has(o)) : i < 2)));
   const open = (id: string) => {
@@ -97,7 +100,9 @@ export function ListView({ model, graph, match, edges, workflow, selected, onSel
   };
   return (
     <div className="list-wrap" data-panel={op ? 'open' : undefined}>
-      <div className="list" data-testid="list-view">
+      {/* While the pointer is on a row, and 250 ms after, the rows' grey fades (app.css, D67). */}
+      <div className="list" data-testid="list-view" data-hover={hover || undefined} data-fading={fading || undefined}
+        onPointerOver={(e) => setHover(e.target instanceof Element && !!e.target.closest('.lrow'))} onPointerLeave={() => setHover(false)}>
         {/* What the map's name says, for screen readers (the frame head shows the counts). */}
         <p className="visually-hidden list-summary">
           {match ? `${match.size} of ${model.operations.length}` : model.operations.length} {noun} in {counted(groups.length, 'resource')}; {counted(edges.length, 'relationship')} shown: {count('feeds')} feeds, {count('sub-path')} sub-path, {count('shared-schema')} shared schema.
