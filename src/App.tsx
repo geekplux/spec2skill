@@ -78,7 +78,6 @@ function Workspace({ source, view, onView, phone, run, op, onOp, q, onQ, onHelp 
   const ready = skill?.hash === model.hash;
   // The file shown in the skill browser; on phones whether its full-width preview is open.
   const [file, setFile] = useState({ path: 'SKILL.md', open: false });
-  const title = isSample ? `${model.source.title} (sample)` : model.source.title;
   const noun = model.source.kind === 'mcp' ? 'tools' : 'operations';
   const summary = `${model.operations.length} ${noun} in ${counted(graph.clusters.length, 'resource')}, ${counted(graph.edges.length, 'link')}`;
   const announce = useAnnounce();
@@ -101,8 +100,8 @@ function Workspace({ source, view, onView, phone, run, op, onOp, q, onQ, onHelp 
   useEffect(() => {
     if (!empty || emptySaid.current === model.hash) return;
     emptySaid.current = model.hash;
-    announce(`${title}: no operations. This spec has no paths, so there is no skill to write.`);
-  }, [announce, empty, model.hash, title]);
+    announce(`${model.source.title}: no operations. This spec has no paths, so there is no skill to write.`);
+  }, [announce, empty, model.hash, model.source.title]);
   // `/` focuses search and `?` opens the shortcut help, from anywhere but a text field or the dialog itself (A1).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -137,7 +136,7 @@ function Workspace({ source, view, onView, phone, run, op, onOp, q, onQ, onHelp 
             <Tabs label="View" tabs={VIEW_TABS} value={view} onChange={onView} />
             <Search q={q} onQ={onQ} count={match && match.size} total={model.operations.length} noun={noun} input={search} />
           </div>
-          {view === 'map' && <Legend />}
+          {view === 'map' && <Legend workflow={!!workflow} />}
         </div>
       )}
       {view === 'list' && caption}
