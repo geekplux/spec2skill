@@ -1,7 +1,8 @@
 // No motion outside DESIGN.md 7's table (redesign R6, D67): every transition and animation in the app's
 // CSS is one of the listed moments, ease-out at 250 ms (a workflow segment 300), every animation is
 // declared only under prefers-reduced-motion: no-preference, nothing scrolls smoothly, and no script
-// animates or sets a transition. The checks are functions, proven on fixture strings, then run on the app.
+// animates or sets a transition. The checks are functions, proven on fixture strings, then run on every
+// CSS file under src, index.html's <style> and style attributes, and every .ts and .tsx under src.
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -33,7 +34,7 @@ function split(css: string): { body: string; rest: string } {
 
 /** Every declaration whose property matches `prop` (a regex source), with its rule's selector (@media wrappers dropped, @keyframes skipped). */
 function declarations(css: string, prop: string): { selector: string; prop: string; value: string }[] {
-  const flat = css.replace(/@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '').replace(/@media[^{]*\{/g, '');
+  const flat = css.replace(/@(?:-[a-z]+-)?keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '').replace(/@media[^{]*\{/g, '');
   const out: { selector: string; prop: string; value: string }[] = [];
   for (const m of flat.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     for (const d of m[2]!.matchAll(new RegExp(`(?:^|;)\\s*(${prop})\\s*:\\s*([^;]+)`, 'g'))) out.push({ selector: m[1]!.trim(), prop: d[1]!, value: d[2]!.trim() });
@@ -54,18 +55,21 @@ const ANIMATIONS = [
   '[data-enter] .checks li', '[data-enter] .lgroup', '[data-enter] .audit-row', '.ln-hot', '.op-card', '.swap', '.spinner',
 ];
 
+/** An optional vendor prefix on a property (`-webkit-transition`). */
+const PREFIX = '(?:-(?:webkit|moz|ms|o)-)?';
+
 /** Everything in `css` that moves outside DESIGN.md 7's table, as readable problems. */
 function cssMotionProblems(source: string): string[] {
   const css = strip(source);
   const { body, rest } = split(css);
   const problems: string[] = [];
-  for (const d of declarations(rest, 'transition(?:-[\\w-]+)?')) {
+  for (const d of declarations(rest, `${PREFIX}transition(?:-[\\w-]+)?`)) {
     const line = `${d.selector} | ${d.prop}: ${d.value}`;
     if (!TRANSITIONS.includes(line)) problems.push(`transition not in the table: ${line}`);
   }
-  for (const d of declarations(rest, 'animation(?:-[\\w-]+)?')) problems.push(`animation outside ${NO_PREFERENCE}: ${d.selector} | ${d.prop}`);
-  for (const d of declarations(body, 'transition(?:-[\\w-]+)?')) problems.push(`transition not in the table: ${d.selector} | ${d.prop}: ${d.value}`);
-  for (const d of declarations(body, 'animation(?:-[\\w-]+)?')) {
+  for (const d of declarations(rest, `${PREFIX}animation(?:-[\\w-]+)?`)) problems.push(`animation outside ${NO_PREFERENCE}: ${d.selector} | ${d.prop}`);
+  for (const d of declarations(body, `${PREFIX}transition(?:-[\\w-]+)?`)) problems.push(`transition not in the table: ${d.selector} | ${d.prop}: ${d.value}`);
+  for (const d of declarations(body, `${PREFIX}animation(?:-[\\w-]+)?`)) {
     if (d.prop !== 'animation') {
       problems.push(`animation longhand: ${d.selector} | ${d.prop}`);
       continue;
@@ -79,7 +83,7 @@ function cssMotionProblems(source: string): string[] {
     }
   }
   if (/scroll-behavior\s*:\s*smooth/.test(css)) problems.push('scroll-behavior: smooth');
-  const defined = [...css.matchAll(/@keyframes ([\w-]+)/g)].map((m) => m[1]!);
+  const defined = [...css.matchAll(/@(?:-[a-z]+-)?keyframes ([\w-]+)/g)].map((m) => m[1]!);
   const used = new Set([...body.matchAll(/\b(s2-[\w-]+)/g)].map((m) => m[1]!));
   for (const k of defined) if (!used.has(k)) problems.push(`unused keyframes ${k}`);
   for (const k of used) if (!defined.includes(k)) problems.push(`undefined keyframes ${k}`);
@@ -91,9 +95,13 @@ function scriptMotionProblems(files: Record<string, string>): string[] {
   const problems: string[] = [];
   const rules: [RegExp, string][] = [
     [/\.animate\(/, 'element.animate()'],
-    [/behavior\s*:\s*['"]smooth/, 'smooth scrolling'],
-    [/setProperty\(\s*['"](?:transition|animation)/, 'a transition or animation set with setProperty'],
-    [/(?:^|[{,\s])['"]?(?:transition|animation)(?:[A-Z]\w*|-[\w-]+)?['"]?\s*:/m, 'a transition or animation style key'],
+    [/KeyframeEffect|new Animation\(/, 'a Web Animation built in code'],
+    [/<animate/, 'an SVG <animate>'],
+    [/[bB]ehavior\s*:\s*['"]smooth/, 'smooth scrolling'],
+    [/setProperty\(\s*['"](?:-(?:webkit|moz|ms|o)-)?(?:transition|animation)/, 'a transition or animation set with setProperty'],
+    [/\.style\.(?:webkit|Webkit|moz|Moz|ms)?(?:[tT]ransition|[aA]nimation)\w*\s*=(?!=)/, 'a transition or animation assigned to .style'],
+    [/(?:cssText\s*=|setAttribute\(\s*['"]style['"]).*(?:transition|animation)/, 'a transition or animation in a style string'],
+    [/(?:^|[{,\s])['"]?(?:(?:-(?:webkit|moz|ms|o)-)?(?:transition|animation)|(?:Webkit|Moz|ms|O|webkit)(?:Transition|Animation))(?:[A-Z]\w*|-[\w-]+)?['"]?\s*:/m, 'a transition or animation style key'],
   ];
   for (const [path, source] of Object.entries(files)) {
     const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
@@ -102,12 +110,24 @@ function scriptMotionProblems(files: Record<string, string>): string[] {
   return problems;
 }
 
+/** Every CSS file (by path) and index.html's <style> blocks and style attributes, each checked on its own. */
+function sheetProblems(sheets: Record<string, string>, html: string): string[] {
+  const inline = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]!).join('\n');
+  const attrs = [...html.matchAll(/\sstyle\s*=\s*(["'])([^"']*)\1/gi)].filter((m) => /(?:transition|animation|scroll-behavior)/.test(m[2]!)).map((m) => `index.html: a style attribute moves: ${m[2]}`);
+  return [
+    ...Object.entries({ ...sheets, 'index.html <style>': inline }).flatMap(([path, css]) => cssMotionProblems(css).map((p) => `${path}: ${p}`)),
+    ...attrs,
+  ];
+}
+
 describe('the motion guard catches what DESIGN.md 7 does not list', () => {
   const ok = `.ln-hot { stroke: red; }\n${NO_PREFERENCE} { .swap { animation: s2-fade var(--motion-map) ease-out both; } }\n@keyframes s2-fade { from { opacity: 0; } }`;
   it('passes a clean fixture', () => expect(cssMotionProblems(ok)).toEqual([]));
   it.each([
     ['a longhand transition', '.btn { transition-property: color; transition-duration: 250ms; }', /transition not in the table: \.btn \| transition-property/],
     ['a transition not in the list', '.btn { transition: color var(--motion-map) ease-out; }', /transition not in the table: \.btn/],
+    ['a vendor-prefixed transition', '.btn { -webkit-transition: color 250ms ease-out; }', /transition not in the table: \.btn \| -webkit-transition/],
+    ['a vendor-prefixed animation', `${NO_PREFERENCE} { .swap { -webkit-animation: s2-fade var(--motion-map) ease-out both; } }`, /animation longhand: \.swap \| -webkit-animation/],
     ['a transition inside the no-preference block', `${NO_PREFERENCE} { .btn { transition: color 250ms ease-out; } }`, /transition not in the table: \.btn/],
     ['smooth scrolling', 'html { scroll-behavior: smooth; }', /scroll-behavior: smooth/],
     ['an animation outside the no-preference block', '.swap { animation: s2-fade var(--motion-map) ease-out both; }', /animation outside/],
@@ -125,14 +145,36 @@ describe('the motion guard catches what DESIGN.md 7 does not list', () => {
     ['setProperty transition', "el.style.setProperty('transition', 'opacity 1s');", /setProperty/],
     ['a transition style key (.tsx)', "<div style={{ transition: 'opacity 1s' }} />", /style key/],
     ['an animation style key (.ts)', "const s = { animationDuration: '1s' };", /style key/],
+    ['a vendor-prefixed style key', "<div style={{ WebkitTransition: 'opacity 1s' }} />", /style key/],
+    ['.style.transition assigned', "el.style.transition = 'opacity 1s';", /assigned to \.style/],
+    ['.style.animationName assigned', "el.style.animationName = 'x';", /assigned to \.style/],
+    ['cssText with a transition', "el.style.cssText = 'transition: opacity 1s';", /style string/],
+    ['an SVG <animate>', '<circle><animate attributeName="r" dur="1s" /></circle>', /SVG <animate>/],
+    ['new Animation(new KeyframeEffect(...))', 'new Animation(new KeyframeEffect(el, [{ opacity: 0 }], 250)).play();', /Web Animation/],
+    ['smooth scrolling as a style key', "<div style={{ scrollBehavior: 'smooth' }} />", /smooth scrolling/],
   ])('fails %s in a script', (_label, code, problem) => {
     expect(scriptMotionProblems({ 'x.tsx': code }).join('\n')).toMatch(problem);
+  });
+  it.each([
+    ['a transition in tokens.css', { 'design/tokens.css': ':root { --x: 1px; }\n.a { transition: color 1s; }' }, '', /design\/tokens\.css: transition not in the table: \.a/],
+    ['a new .css file under src', { 'map/new.css': '.b { animation: s2-x 1s; }\n@keyframes s2-x { to { opacity: 0; } }' }, '', /map\/new\.css: animation outside/],
+    ["a <style> in index.html", {}, '<html><head><style>body { transition: background 1s; }</style></head></html>', /index\.html <style>: transition not in the table: body/],
+    ['a style attribute in index.html', {}, '<body style="animation: x 1s"></body>', /index\.html: a style attribute moves/],
+  ])('fails %s', (_label, sheets, html, problem) => {
+    expect(sheetProblems(sheets, html).join('\n')).toMatch(problem);
   });
   it('ignores the words in comments', () => expect(scriptMotionProblems({ 'x.ts': '// transition: none\n/* animation: x */ const a = 1;' })).toEqual([]));
 });
 
 describe('motion (DESIGN.md 7)', () => {
-  it('app.css moves only as the table says', () => expect(cssMotionProblems(appCss)).toEqual([]));
+  it('every CSS file under src and index.html move only as the table says', () => {
+    const root = join(__dirname, '..');
+    const sheets = readdirSync(root, { recursive: true, encoding: 'utf8' }).filter((f) => f.endsWith('.css'));
+    expect(sheets).toEqual(expect.arrayContaining(['app.css', join('design', 'tokens.css')]));
+    const html = readFileSync(join(root, '..', 'index.html'), 'utf8');
+    expect(sheetProblems(Object.fromEntries(sheets.map((f) => [f, readFileSync(join(root, f), 'utf8')])), html)).toEqual([]);
+    expect(cssMotionProblems(appCss)).toEqual([]);
+  });
 
   it('no script animates, scrolls smoothly or sets a transition', () => {
     const root = join(__dirname, '..');
