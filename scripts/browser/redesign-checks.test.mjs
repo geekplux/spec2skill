@@ -53,6 +53,10 @@ describe('redesign checks (DESIGN.md section 8)', () => {
     expect(run([record({ shadow: 'rgba(0, 0, 0, 0.2) 0px 2px 4px 0px' })], { checks: ['colour'] })).toHaveLength(1);
     expect(run([record({ svg: true, shape: true, text: false, fill: 'rgb(0, 0, 0)' })], { checks: ['colour'] })).toHaveLength(1);
     expect(run([record({ svg: true, shape: true, text: false, fill: 'url("#grid")' })], { checks: ['colour'] })).toEqual([]);
+    // An icon drawn in #fff (Download .zip) passes on indigo-9 only.
+    const icon = { svg: true, shape: true, text: false, fill: 'none', stroke: 'rgb(255, 255, 255)' };
+    expect(run([record({ ...icon, under: 'rgb(62, 99, 221)' })], { checks: ['colour'] })).toEqual([]);
+    expect(run([record(icon)], { checks: ['colour'] })).toHaveLength(1);
   });
 
   it('3: flags CSS borders, thick rings and rules, stray shadows and outlines without focus', () => {

@@ -2,12 +2,13 @@
 // skipped rows), relationship kinds (feed links drawn, sub-path and shared schema as text since the
 // Filters menu went in R4), the list view as a complete text alternative (every operation and edge,
 // per sample), URL state with back/forward, and the `?` shortcut help dialog (focus kept inside, Esc
-// closes, focus returns).
+// closes, focus returns). Since R5 the list is grouped rows (buttons named as on the map, each with its
+// relationships in words for screen readers) and phones open on it.
 const expect = (ok, message) => {
   if (!ok) throw new Error(message);
 };
 const mapReady = (page) => page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
-const paneReady = (page) => page.locator('.skill-pane[data-ready="true"]').waitFor();
+const paneReady = (page) => page.locator('.skill-browser[data-ready="true"]').waitFor();
 const active = (page) => page.evaluate(() => document.activeElement?.getAttribute('data-op') ?? document.activeElement?.id ?? document.activeElement?.tagName);
 const search = (page) => page.getByLabel(/^Search (operations|tools)$/);
 const announced = (page, text) => page.getByTestId('announcer').filter({ hasText: text }).waitFor();
@@ -34,24 +35,24 @@ async function listDetailInView(page, op, where) {
     const meets = (b) => b.bottom > 0 && b.top < vh && b.right > 0 && b.left < vw;
     const within = (b) => b.top >= 0 && b.bottom <= vh && b.left >= 0 && b.right <= vw;
     const panel = document.querySelector('[data-testid="op-card"]');
-    const row = document.querySelector(`tr[data-op="${id}"]`);
-    const button = row.querySelector('th button');
+    const row = document.querySelector(`.lrow[data-op="${id}"]`);
+    const button = row;
     const b = button.getBoundingClientRect();
     const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
     const close = [...panel.querySelectorAll('button')].find((el) => el.textContent.startsWith('Close'));
     const scroller = document.querySelector('[data-testid="list-view"]');
-    const table = scroller.querySelector('table');
+
     return {
       panel: meets(panel.getBoundingClientRect()), row: meets(row.getBoundingClientRect()), rowShown: hit === button || button.contains(hit),
       heading: within(panel.querySelector('.oc-title').getBoundingClientRect()), close: within(close.getBoundingClientRect()),
-      list: scroller.clientWidth, min: parseFloat(getComputedStyle(table).minWidth),
+      list: scroller.clientWidth, min: Math.round(row.getBoundingClientRect().width),
       rowHeight: Math.round(row.getBoundingClientRect().height), panelTop: Math.round(panel.getBoundingClientRect().top),
     };
   }, op);
   const say = `${where} ${op}: ${JSON.stringify(r)}`;
   expect(r.panel && r.heading && r.close, `details not on screen: ${say}`);
   expect(r.row && r.rowShown, `open row off screen or under the details: ${say}`);
-  expect(r.list >= r.min, `list narrower than its tables: ${say}`);
+  expect(Math.abs(r.list - r.min) <= 1, `the open row is not as wide as the list: ${say}`);
   console.log(`  ${where}: ${op} row ${r.rowHeight} px tall, details from y=${r.panelTop}, list ${r.list} px`);
 }
 
@@ -96,17 +97,17 @@ export default {
     expect(skipped.length === 0, `keyboard reached dimmed nodes: ${skipped}`);
     console.log(`  "member": ${matching} of ${total} match; keyboard visited ${[...seen].join(', ')}`);
     expect((await page.locator('#skill-preview').textContent()) === skillBefore, 'search changed the skill');
-    expect((await page.locator('.skill-pane h2').textContent()) === 'tasks-api skill', 'skill pane heading changed');
+    expect((await page.locator('#skill-title').textContent()) === 'tasks-api/ skill', 'skill browser heading changed');
     await page.mouse.move(5, 5);
     await screenshot('search-member');
     await views(page).getByRole('tab', { name: 'List' }).click();
-    expect((await list(page).locator('tbody tr').count()) === matching, 'list view rows differ from the matches');
+    expect((await list(page).locator('.lrow').count()) === matching, 'list view rows differ from the matches');
     // Esc clears.
     await search(page).focus();
     await page.keyboard.press('Escape');
     expect((await search(page).inputValue()) === '', 'Esc did not clear the search');
     await announced(page, 'Showing all 22 operations.');
-    expect((await list(page).locator('tbody tr').count()) === total, 'cleared list');
+    expect((await list(page).locator('.lrow').count()) === total, 'cleared list');
 
     // 2. Relationship kinds (AC2; the Filters menu is gone since R4): the map draws feed links (and
     // bundles of them) at rest; sub-path and shared-schema relations stay as text in the list and in
@@ -136,7 +137,7 @@ export default {
       await mapReady(page);
       const [ops, edges] = await counts(page);
       await views(page).getByRole('tab', { name: 'List' }).click();
-      const rows = await list(page).locator('tbody tr').count();
+      const rows = await list(page).locator('.lrow').count();
       const items = await list(page).locator('li[data-edge]').evaluateAll((els) => els.map((el) => [el.getAttribute('data-edge'), el.textContent]));
       const unique = new Set(items.map(([edge]) => edge));
       expect(rows === ops, `${id}: ${rows} rows for ${ops} operations`);
@@ -162,42 +163,42 @@ export default {
 
     // 4. URL state: a shared link opens sample, view and details; back/forward walk selections and samples (AC4).
     await page.goto(`${origin}/?sample=petstore&view=list#op=getPetById`);
-    await page.getByRole('heading', { level: 2, name: 'petstore-api skill' }).waitFor();
+    await page.getByRole('heading', { level: 3, name: 'petstore-api/ skill' }).waitFor();
     await list(page).waitFor();
     await cardFor(page, 'GET /pet/{petId}');
-    expect((await page.locator('tr[data-open]').getAttribute('data-op')) === 'getPetById', 'open row not marked');
+    expect((await page.locator('.lrow[data-open]').getAttribute('data-op')) === 'getPetById', 'open row not marked');
     await page.evaluate(() => document.fonts.ready);
     await listDetailInView(page, 'getPetById', 'desktop link');
     await axe('list with details');
     await page.mouse.move(5, 5);
     await screenshot('list-detail');
-    await list(page).getByRole('button', { name: 'findPetsByStatus, details' }).click();
+    await list(page).locator('.lrow[data-op="findPetsByStatus"]').click();
     await cardFor(page, 'GET /pet/findByStatus');
     await page.locator('[data-sample="tasks"]').click();
-    await page.getByRole('heading', { level: 2, name: 'tasks-api skill' }).waitFor();
+    await page.getByRole('heading', { level: 3, name: 'tasks-api/ skill' }).waitFor();
     expect(new URL(page.url()).hash === '' && (await page.getByTestId('op-card').count()) === 0, 'sample switch kept the old selection');
     await page.goBack();
     await cardFor(page, 'GET /pet/findByStatus');
-    await page.getByRole('heading', { level: 2, name: 'petstore-api skill' }).waitFor();
+    await page.getByRole('heading', { level: 3, name: 'petstore-api/ skill' }).waitFor();
     await page.goBack();
     await cardFor(page, 'GET /pet/{petId}');
     await page.goForward();
     await cardFor(page, 'GET /pet/findByStatus');
     await page.goForward();
-    await page.getByRole('heading', { level: 2, name: 'tasks-api skill' }).waitFor();
+    await page.getByRole('heading', { level: 3, name: 'tasks-api/ skill' }).waitFor();
     expect((await page.getByTestId('op-card').count()) === 0, 'forward to tasks reopened details');
     // Back/forward never drops focus to the page: it lands on the row of the selection.
-    const rowButton = (op) => page.evaluate((o) => document.activeElement === document.querySelector(`tr[data-op="${o}"] th button`), op);
-    await list(page).getByRole('button', { name: 'getTask, details' }).click();
+    const rowButton = (op) => page.evaluate((o) => document.activeElement === document.querySelector(`.lrow[data-op="${o}"]`), op);
+    await list(page).locator('.lrow[data-op="getTask"]').click();
     await page.getByTestId('op-card').getByRole('button', { name: 'Close details' }).focus();
     await page.evaluate(() => history.back());
     await page.getByTestId('op-card').waitFor({ state: 'detached' });
-    await page.waitForFunction(() => document.activeElement?.closest('tr')?.getAttribute('data-op') === 'getTask');
+    await page.waitForFunction(() => document.activeElement?.closest('[data-op]')?.getAttribute('data-op') === 'getTask');
     expect(await rowButton('getTask'), `focus after back: ${await active(page)}`);
     await page.evaluate(() => document.activeElement.blur());
     await page.evaluate(() => history.forward());
     await page.getByTestId('op-card').waitFor();
-    await page.waitForFunction(() => document.activeElement?.closest('tr')?.getAttribute('data-op') === 'getTask');
+    await page.waitForFunction(() => document.activeElement?.closest('[data-op]')?.getAttribute('data-op') === 'getTask');
     expect(await rowButton('getTask'), `focus after forward: ${await active(page)}`);
     await page.goBack();
     await page.getByTestId('op-card').waitFor({ state: 'detached' });
@@ -221,7 +222,7 @@ export default {
     await dialog.waitFor();
     expect(await dialog.evaluate((d) => d.open && d.matches(':modal')), 'help is not a modal dialog');
     const text = await dialog.innerText();
-    for (const words of ['Page Up', 'Esc', 'Pin the operation card', 'Skill files', 'Switch between Skill, Map and List', 'Search operations']) {
+    for (const words of ['Page Up', 'Esc', 'Pin the operation card', 'Skill files', 'Switch between Map and List', 'Search operations']) {
       expect(text.includes(words), `help dialog lacks "${words}"`);
     }
     for (let i = 0; i < 3; i++) {
@@ -255,18 +256,18 @@ export default {
       await page.setViewportSize(size);
       await page.goto(`${origin}/?sample=tasks&view=list`);
       await list(page).waitFor();
-      await list(page).getByRole('button', { name: 'getMember, details' }).click();
+      await list(page).locator('.lrow[data-op="getMember"]').click();
       await cardFor(page, 'GET /projects/{projectId}/members/{memberId}');
       await listDetailInView(page, 'getMember', `${where} click`);
       await page.getByTestId('op-card').getByRole('button', { name: 'Close details' }).click();
       await page.getByTestId('op-card').waitFor({ state: 'detached' });
-      await page.waitForFunction(() => document.activeElement?.closest('tr')?.getAttribute('data-op') === 'getMember');
+      await page.waitForFunction(() => document.activeElement?.closest('[data-op]')?.getAttribute('data-op') === 'getMember');
       // Back/forward between two rows far apart: the browser's scroll restoration must not win over
       // the reveal, and focus leaves the other row for the selected one.
-      const onRow = (op) => page.waitForFunction((o) => document.activeElement === document.querySelector(`tr[data-op="${o}"] th button`), op, { timeout: 3000 });
-      await list(page).getByRole('button', { name: 'getTask, details' }).click();
+      const onRow = (op) => page.waitForFunction((o) => document.activeElement === document.querySelector(`.lrow[data-op="${o}"]`), op, { timeout: 3000 });
+      await list(page).locator('.lrow[data-op="getTask"]').click();
       await cardFor(page, 'GET /tasks/{taskId}');
-      await list(page).getByRole('button', { name: 'getMember, details' }).click();
+      await list(page).locator('.lrow[data-op="getMember"]').click();
       await cardFor(page, 'GET /projects/{projectId}/members/{memberId}');
       await page.goBack();
       await cardFor(page, 'GET /tasks/{taskId}');
@@ -282,7 +283,7 @@ export default {
       await page.getByTestId('op-card').getByRole('button', { name: 'Close details' }).focus();
       await page.keyboard.press('Escape');
       await page.getByTestId('op-card').waitFor({ state: 'detached' });
-      await page.waitForFunction(() => document.activeElement?.closest('tr')?.getAttribute('data-op') === 'getPetById');
+      await page.waitForFunction(() => document.activeElement?.closest('[data-op]')?.getAttribute('data-op') === 'getPetById');
     }
     await page.goto(`${origin}/?sample=tasks&view=list#op=getMember`);
     await listDetailInView(page, 'getMember', '900 px link');
@@ -294,17 +295,15 @@ export default {
     await page.waitForFunction(() => new URL(location.href).search === '?sample=tasks&q=task');
     expect((await page.locator('input[name="sample"]:checked').getAttribute('value')) === 'tasks', 'unknown sample did not fall back to tasks');
 
-    // 6. Mobile: `/` from the Skill tab opens the Map tab with search focused; list view at 390 px.
+    // 6. Mobile (R5): the list is the default view; `/` focuses search; no sideways scroll at 390 px.
     await page.setViewportSize(viewports.mobile);
     await page.goto(`${origin}/?sample=tasks`);
     await paneReady(page);
+    await list(page).waitFor();
+    expect((await page.locator('#tab-list').getAttribute('aria-selected')) === 'true', 'List is not selected by default on phones');
     await page.locator('body').press('/');
-    // The Map tab mounts first and focuses search a frame later: wait for it rather than read it at once.
     await page.waitForFunction(() => document.activeElement?.id === 'search-q', null, { timeout: 5000 })
       .catch(async () => expect(false, `mobile / focused ${await active(page)}`));
-    expect((await page.locator('#tab-map').getAttribute('aria-selected')) === 'true', '/ did not open the Map tab');
-    await page.locator('#tab-list').click();
-    await list(page).waitFor();
     const [scroll, inner] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     expect(scroll <= inner, `390 px list: horizontal scroll (${scroll} > ${inner})`);
     await axe('mobile list');

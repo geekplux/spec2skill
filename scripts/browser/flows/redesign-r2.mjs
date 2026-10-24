@@ -24,7 +24,7 @@ const expect = (ok, message) => {
 
 async function ready(page, url) {
   await page.goto(url, { waitUntil: 'load' });
-  await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
+  await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
   await page.evaluate(() => document.fonts.ready);
 }
 
@@ -173,7 +173,7 @@ export default {
         input: r('#source-field'), generate: r('.hero .generate'), field: r('.source-field'),
         oneLine: items.every((t) => Math.abs(t - items[0]) < 1), seg: document.querySelector('.samples .seg').scrollWidth <= document.querySelector('.samples .seg').clientWidth,
         frame: getComputedStyle(document.querySelector('#result')).borderRadius, h1: getComputedStyle(document.querySelector('.hero h1')).fontSize,
-        rule: [r('#result').left, r('#result').width], title: r('.title h2').left,
+        rule: [r('#result').left, r('#result').width], title: r('#result-title').left,
       };
     });
     expect(phone.generate.top >= phone.input.bottom - 1 && Math.abs(phone.generate.width - (phone.field.width - 8)) <= 1, `390: Generate is not a full-width row under the input ${JSON.stringify(phone)}`);

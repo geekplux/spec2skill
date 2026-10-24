@@ -2,7 +2,7 @@
 // open (reused by every redesign phase):
 //   1 type    every element with direct text uses one of the allowed font sizes (default 12/14/20/48)
 //   2 colour  every computed colour is a Radix step of the page's theme (src/design/tokens.css),
-//             #fff only as text on indigo-9, transparent, or the operation card's 8 % black shadow
+//             #fff only as text or icons on indigo-9, transparent, or the operation card's 8 % black shadow
 //   3 lines   no CSS border on a visible element (a 0.5 px border computes to 1 px in Chrome, so
 //             lines are box-shadows); every box-shadow ring or one-side rule is 0.5 px; an outline
 //             only on the focused element (focus outlines are allowed)
@@ -72,13 +72,17 @@ function collect({ ignore }) {
     }));
     // The nearest painted background, for the "#fff only on indigo-9" rule.
     let under = 'rgba(0, 0, 0, 0)';
-    for (let at = el; at && at.nodeType === 1; at = at.parentElement) {
+    // In an icon a shape can sit on an earlier filled shape (the audit verdict's tick on its disc).
+    const disc = el instanceof SVGElement && [...el.parentElement.children].slice(0, [...el.parentElement.children].indexOf(el))
+      .map((sib) => getComputedStyle(sib).fill).findLast((f) => f && f !== 'none' && !f.startsWith('url('));
+    for (let at = disc ? null : el; at && at.nodeType === 1; at = at.parentElement) {
       const bg = getComputedStyle(at).backgroundColor;
       if (!/rgba\(.*,\s*0\)$/.test(bg) && bg !== 'transparent') {
         under = bg;
         break;
       }
     }
+    if (disc) under = disc;
     records.push({
       el: describe(el), svg, shape: svg && SHAPES.has(el.tagName.toLowerCase()), text: ownText || control,
       fontSize: s.fontSize, color: s.color, background: s.backgroundColor, under, sides,
@@ -159,7 +163,7 @@ export function evaluate({ records, dots, running }, { theme, allowed, checks, s
       for (const s of parseShadows(r.shadow)) if (s.color !== SHADOW) colours.push(['box-shadow', s.color]);
       for (const [prop, value] of colours) {
         if (transparent(value) || radix(value)) continue;
-        if (value === WHITE && (prop === 'color' || (r.shape && prop === 'fill')) && r.under === indigo9) continue; // #fff on indigo-9
+        if (value === WHITE && (prop === 'color' || (r.shape && (prop === 'fill' || prop === 'stroke'))) && r.under === indigo9) continue; // #fff on indigo-9 (text and icons)
         add('colour', `${prop}|${value}|${r.el}`, `${prop} ${value} is not a Radix ${theme} value, on ${r.el}`);
       }
     }
@@ -198,6 +202,12 @@ export async function designChecks(page, { theme, label = page.url(), checks = C
   const unknown = checks.filter((c) => !CHECKS.includes(c));
   if (unknown.length) throw new Error(`designChecks: unknown checks ${unknown.join(', ')}`);
   const allowed = radixColours()[theme];
+  // Colours are read at rest: let transitions under way finish (a button enabling as the skill
+  // lands would otherwise be read between two Radix values). Endless animations are left running.
+  await page.evaluate(() => Promise.race([
+    Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished.catch(() => {}))),
+    new Promise((done) => setTimeout(done, 1000)),
+  ]));
   const data = await page.evaluate(collect, { ignore });
   return evaluate(data, { theme, allowed, checks, sizes, label });
 }

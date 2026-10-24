@@ -1,4 +1,4 @@
-// The README hero, captured from the real app: the Tasks sample's skill pane ("Audit passed") beside
+// The README hero, captured from the real app: the Tasks sample's skill browser ("Audit passed") under
 // the map with getTask's detail panel open, at 1440x900 in the light theme with reduced motion.
 //   pnpm build && pnpm capture:readme      (also renders the social preview, scripts/social-preview.mjs)
 // Offline: every request outside the preview server is aborted and fails the capture.
@@ -25,7 +25,7 @@ await runSession('capture-readme', async () => {
   page.setDefaultTimeout(Number(process.env.CHECK_TIMEOUT_MS || 30_000));
   await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
   await page.goto(`${ORIGIN}/?sample=tasks`);
-  await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
+  await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
   await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' });
   await page.getByText(/Audit passed/).first().waitFor();
   await page.locator('.op[data-op="getTask"]').focus();

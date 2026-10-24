@@ -19,7 +19,7 @@ const expect = (ok, message) => {
 
 async function ready(page, url) {
   await page.goto(url, { waitUntil: 'load' });
-  await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
+  await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
   await page.evaluate(() => document.fonts.ready);
 }
 

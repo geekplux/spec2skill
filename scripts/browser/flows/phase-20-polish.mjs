@@ -1,5 +1,6 @@
-// Phase 20: the leftover polish, checked in the real app. The skill pane's Options lay out as
-// label | field rows with a gap; the audit verdict "Audit passed:" stays on one line at 390 px; map
+// Phase 20: the leftover polish, checked in the real app. The skill browser's name and licence fields
+// (R5: under "Edit name and licence", each label above its field, the help under it); the audit
+// verdict "Audit passed" stays on one line at 390 px; map
 // links rest in quiet gray-9 at full opacity (redesign R1) and, on the route map (R4), the focused
 // row's links come in gray-12 (style and arrowheads kept) while the rest fade. Key shots (1440,
 // light): the first view and the map with getTask focused.
@@ -7,7 +8,7 @@ const expect = (ok, message) => {
   if (!ok) throw new Error(message);
 };
 const ready = async (page) => {
-  await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
+  await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
   await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' });
 };
 const opacity = (page, selector) => page.locator(selector).evaluateAll((els) => [...new Set(els.map((el) => getComputedStyle(el).opacity))]);
@@ -23,16 +24,18 @@ export default {
     await page.goto(`${origin}/?sample=tasks`);
     await ready(page);
 
-    // Options: a real grid, the label clear of its field by the --space-3 gap, the help under the field.
-    await page.locator('.options > summary').click();
+    // Name and licence: in the 202 px files column, each label above its field, clear of it, and the
+    // help under the field, all inside the column.
+    const edit = page.getByRole('button', { name: 'Edit name and licence' });
+    await edit.click();
     const box = async (sel) => page.locator(sel).evaluate((el) => el.getBoundingClientRect().toJSON());
-    const [label, field, help] = [await box('label[for="opt-slug"]'), await box('#opt-slug'), await box('#opt-slug-help')];
-    const gap = Math.round(field.left - label.right);
-    console.log(`  options: label to field ${gap} px, help at x=${Math.round(help.left)} (field at ${Math.round(field.left)})`);
-    expect(gap >= 16, `Options label touches its field: gap ${gap} px`);
-    expect(Math.abs(help.left - field.left) <= 1, `Options help is not under its field: ${help.left} vs ${field.left}`);
+    const [label, field, help, column] = [await box('label[for="opt-slug"]'), await box('#opt-slug'), await box('#opt-slug-help'), await box('.sb-files')];
+    const gap = Math.round(field.top - label.bottom);
+    console.log(`  options: label to field ${gap} px, help at y=${Math.round(help.top)} (field ends at ${Math.round(field.bottom)})`);
+    expect(gap >= 2 && help.top >= field.bottom && Math.abs(help.left - field.left) <= 1, `name field layout: ${JSON.stringify({ label, field, help })}`);
+    expect(field.left >= column.left - 0.5 && field.right <= column.right + 0.5, `the name field leaves the files column: ${JSON.stringify({ field, column })}`);
     await axe('options open');
-    await page.locator('.options > summary').click();
+    await edit.click();
 
     // Links at rest: quiet gray-9 at full opacity (3:1, redesign R1); on focus (route map, R4) the
     // focused row's links come in gray-12 with arrowheads and a slightly heavier stroke, the rest fade
@@ -53,12 +56,12 @@ export default {
     expect(cold.every(([stroke, marker]) => stroke === faint && !marker), `other links not faded: ${JSON.stringify(cold)}`);
     await screenshot('map-focus-1440');
 
-    // 390 px: "Audit passed:" on one line, nothing scrolls sideways in the audit box.
+    // 390 px: "Audit passed" on one line, nothing scrolls sideways in the audit row.
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${origin}/?sample=tasks`);
-    await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
-    const verdict = await page.locator('.audit .verdict').evaluate((el) => {
-      const audit = el.closest('.audit');
+    await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
+    const verdict = await page.locator('.sb-audit .verdict').evaluate((el) => {
+      const audit = el.closest('.sb-audit');
       // One line = every fragment on the same top (an inline box may report several rects on one line).
       return { lines: new Set([...el.getClientRects()].map((r) => Math.round(r.top))).size, height: Math.round(el.getBoundingClientRect().height), overflow: audit.scrollWidth - audit.clientWidth, text: el.textContent };
     });

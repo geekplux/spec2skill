@@ -19,9 +19,9 @@ import { ROOT } from '../session.mjs';
 
 const OUT = join(ROOT, 'docs', 'screenshots', 'redesign-r4');
 const SAMPLES = {
-  tasks: { chip: 'Tasks API', heading: 'Tasks API (sample)', label: 'Tasks API: 22 operations in 5 clusters, 78 relationships', rows: 22, cards: 5 },
-  petstore: { chip: 'Petstore', heading: 'Swagger Petstore (sample)', label: 'Swagger Petstore: 16 operations in 2 clusters, 41 relationships', rows: 16, cards: 2 },
-  filesystem: { chip: 'Filesystem MCP', heading: 'secure-filesystem-server (sample)', label: 'secure-filesystem-server: 14 tools in 2 clusters, 28 relationships', rows: 13, cards: 2 },
+  tasks: { chip: 'Tasks API', heading: 'Tasks API', label: 'Tasks API: 22 operations in 5 clusters, 78 relationships', rows: 22, cards: 5 },
+  petstore: { chip: 'Petstore', heading: 'Swagger Petstore', label: 'Swagger Petstore: 16 operations in 2 clusters, 41 relationships', rows: 16, cards: 2 },
+  filesystem: { chip: 'Filesystem MCP', heading: 'secure-filesystem-server', label: 'secure-filesystem-server: 14 tools in 2 clusters, 28 relationships', rows: 13, cards: 2 },
 };
 
 const expect = (ok, message) => {
@@ -531,7 +531,7 @@ export default {
     const started = Date.now();
     await page.locator('#source-field').fill(big);
     await page.locator('#source-field').press('Enter');
-    await page.locator('.title h2').filter({ hasText: 'Synthetic' }).waitFor();
+    await page.locator('#result-title').filter({ hasText: 'Synthetic' }).waitFor();
     await ready(page);
     const took = Date.now() - started;
     console.log(`  1000-operation paste interactive in ${took} ms`);
@@ -553,7 +553,7 @@ export default {
     await ready(page, `${origin}/?sample=tasks`);
     const sample = (id) => page.getByRole('radiogroup', { name: 'Samples' }).getByText(SAMPLES[id].chip, { exact: true });
     const expectMap = async (id) => {
-      await page.getByRole('heading', { level: 2, name: SAMPLES[id].heading }).waitFor();
+      await page.getByRole('heading', { level: 2, name: SAMPLES[id].heading, exact: true }).waitFor();
       await ready(page);
       const got = await page.evaluate(() => ({ label: document.querySelector('[data-testid="atlas"]').getAttribute('aria-label'), rows: document.querySelectorAll('.op[data-op]').length, cards: document.querySelectorAll('.rc').length }));
       expect(got.label === SAMPLES[id].label && got.rows === SAMPLES[id].rows && got.cards === SAMPLES[id].cards, `${id}: ${JSON.stringify(got)}`);
@@ -585,10 +585,10 @@ export default {
     await page.mouse.move(0, 0);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
 
-    // 12. Phones and 200 %: no page scroll sideways; the map scrolls in its region (R5 brings the phone list).
+    // 12. Phones and 200 %: no page scroll sideways; the map (one tap from the List, R5) scrolls in its region.
     await page.setViewportSize(viewports.mobile);
     await page.goto(`${origin}/?sample=tasks`);
-    await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' }); // behind the Map tab
+    await page.locator('[data-testid="list-view"]').waitFor(); // phones open on the List (R5)
     const tab = page.locator('#tab-map');
     if ((await tab.count()) && (await tab.getAttribute('aria-selected')) !== 'true') await tab.click();
     await ready(page);
@@ -610,7 +610,7 @@ export default {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: 640, height: 800, deviceScaleFactor: 2, mobile: false });
     await page.goto(`${origin}/?sample=tasks`);
-    await page.locator('.skill-pane[data-ready="true"]').waitFor();
+    await page.locator('.skill-browser[data-ready="true"]').waitFor();
     const [scroll2, inner2] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     expect(scroll2 <= inner2, `200 % zoom: horizontal page scroll (${scroll2} > ${inner2})`);
     await cdp.send('Emulation.clearDeviceMetricsOverride');

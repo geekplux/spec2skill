@@ -2,7 +2,8 @@
 // the samples' maps, the pinned operation card floating over (not shrinking) the map, map focus
 // following back/forward, theme following OS changes (A10), the mobile hero (since redesign R2: the
 // field over Generate, the samples on one line), the map scrolling natively on phones (two-pointer
-// pinch-zoom, F9, went with zoom in R4), the skill pane's 40/60 split, the list at 640 px, and the
+// pinch-zoom, F9, went with zoom in R4), the skill browser's preview taking the wide column (R5; was the
+// pane's 40/60 split), the list at 640 px, and the
 // synthetic large-spec fixture staying out of the production bundle (P4).
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -18,7 +19,7 @@ const mapReady = async (page) => {
   if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.click();
   await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
 };
-const paneReady = (page) => page.locator('.skill-pane[data-ready="true"]').waitFor();
+const paneReady = (page) => page.locator('.skill-browser[data-ready="true"]').waitFor();
 const activeOp = (page) => page.evaluate(() => document.activeElement?.getAttribute('data-op') ?? document.activeElement?.tagName);
 /** The rest links' bundles: [from, to card, edges]. */
 const bundlesOf = (page) => page.locator('.route .links .ln[data-link="bundle"]').evaluateAll((els) => els.map((el) => [el.dataset.from, el.dataset.to, el.dataset.edges.split(' ')]));
@@ -112,12 +113,15 @@ export default {
     await screenshot('filesystem-trimmed');
     await page.mouse.move(5, 5);
 
-    // 4. Skill pane at 1280 x 800: the open file gets the larger share (40/60), long names hang.
+    // 4. Skill browser at 1280 x 800: the open file gets the wide column (492 of 202 / 492 / 202) and at
+    // most 392 px, scrolling inside.
     await page.goto(`${origin}/?sample=tasks`);
     await paneReady(page);
     const [tree, preview] = [await page.locator('.tree').boundingBox(), await page.locator('#skill-preview').boundingBox()];
-    console.log(`  skill pane: files ${Math.round(tree.height)} px, preview ${Math.round(preview.height)} px (${Math.floor(preview.height / 18)} lines)`);
-    expect(preview.height >= 180 && preview.height > tree.height, `preview ${preview.height} px, files ${tree.height} px`);
+    const scrolls = await page.locator('#skill-preview').evaluate((el) => el.scrollHeight > el.clientHeight);
+    console.log(`  skill browser: files ${Math.round(tree.width)} px wide, preview ${Math.round(preview.width)} x ${Math.round(preview.height)} px`);
+    expect(preview.width > 2 * tree.width - 30 && preview.height >= 180 && preview.height <= 392.5 && scrolls, `preview ${JSON.stringify(preview)}, files ${JSON.stringify(tree)}`);
+    await page.locator('#skill-preview').scrollIntoViewIfNeeded();
     await screenshot('skill-pane-split');
 
     // 5. The theme follows the OS live (A10); since redesign R1 there is no toggle and nothing pins it.
@@ -160,16 +164,17 @@ export default {
     expect((await page.locator('.camera, [aria-label="Zoom in"]').count()) === 0, 'zoom is back');
     await screenshot('map-scrolled-mobile');
 
-    // 8. List at 640 px: tables fit without sideways scrolling; long relationship lists fold.
+    // 8. List at 640 px: rows fit without sideways scrolling; each row's relationships are a list named
+    // by their count for screen readers (R5: the folded "13 relationships" disclosure became that list).
     await page.setViewportSize({ width: 640, height: 800 });
     await page.goto(`${origin}/?sample=tasks&view=list`);
     await page.getByTestId('list-view').waitFor();
     const fit = await page.getByTestId('list-view').evaluate((el) => [el.scrollWidth, el.clientWidth]);
     expect(fit[0] <= fit[1], `list scrolls sideways at 640 px: ${fit}`);
-    const tallest = await page.locator('tbody tr').evaluateAll((rows) => Math.max(...rows.map((r) => r.getBoundingClientRect().height)));
+    const tallest = await page.locator('.lrow').evaluateAll((rows) => Math.max(...rows.map((r) => r.getBoundingClientRect().height)));
     console.log(`  list at 640 px: tallest row ${Math.round(tallest)} px`);
-    expect(tallest < 220, `tallest list row ${tallest} px`);
-    expect((await page.locator('tr[data-op="getTask"] details.rels summary').textContent()).startsWith('13 relationships: '), 'getTask relationships not folded');
+    expect(tallest < 80, `tallest list row ${tallest} px`);
+    expect((await page.locator('.lrow[data-op="getTask"] + ul').getAttribute('aria-label')) === '13 relationships', 'getTask relationships not listed');
     await axe('list 640');
     await screenshot('list-compact-640');
     await page.setViewportSize(viewports.desktop);

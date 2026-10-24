@@ -56,17 +56,20 @@ export default {
     });
     const describes = () => api.filter((p) => p.startsWith('/api/ai/')).length;
     const ready = async () => {
-      await page.locator('.skill-pane[data-ready="true"]').waitFor();
+      await page.locator('.skill-browser[data-ready="true"]').waitFor();
       await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
     };
     const names = page.getByTestId('names-provenance');
-    const prose = page.locator('.pane-head .kicker');
+    // Since R5 the frame head tags AI-drafted prose ("AI-drafted prose"); deterministic prose has no tag.
+    const prose = page.getByTestId('prose-ai');
+    const deterministicProse = async () => (await prose.count()) === 0;
     const labels = async () => (await page.locator('.rc-name').allTextContents()).toSorted();
     // The map credits AI-drafted names only (since R4); deterministic names carry no credit line.
     const deterministicNames = async () => (await names.count()) === 0;
-    const preview = () => page.locator('#skill-preview').textContent();
+    // One element per line since R5 (line numbers are generated content): join them back into the file.
+    const preview = () => page.locator('#skill-preview .l').evaluateAll((ls) => `${ls.map((l) => l.textContent).join('\n')}\n`);
     const auditPassed = async (label) => {
-      const text = await page.locator('.audit summary').textContent();
+      const text = await page.locator('.sb-audit .verdict').textContent();
       expect(text.includes('Audit passed'), `${label}: audit says "${text}"`);
     };
 
@@ -86,11 +89,11 @@ export default {
     // AC3: a URL spec shows its deterministic skill and map while the one describe call is held.
     await page.locator('#source-field').fill(`${HOST}/notes.json`);
     await page.locator('#source-field').press('Enter');
-    await page.locator('.title h2', { hasText: /^Field Notes API$/ }).waitFor();
+    await page.locator('#result-title', { hasText: /^Field Notes API$/ }).waitFor();
     await ready();
     for (let i = 0; i < 50 && describes() === 0; i++) await page.waitForTimeout(100);
     expect(describes() === 1, `describe calls while held: ${describes()} (${api})`);
-    expect((await prose.textContent()).includes('Prose: deterministic') && (await deterministicNames()), 'deterministic labels before the answer');
+    expect((await deterministicProse()) && (await deterministicNames()), 'deterministic labels before the answer');
     expect((await labels()).join() === 'Folders,Notes', `deterministic cluster labels: ${await labels()}`);
     await auditPassed('deterministic');
     const before = await page.locator('[data-testid="atlas"] .rc').evaluateAll((els) => els.map((el) => el.getAttribute('style')));
@@ -98,7 +101,7 @@ export default {
     // The answer swaps in names and prose in place: same layout, audit re-run and announced once.
     release();
     await names.filter({ hasText: 'Names: AI-drafted' }).waitFor();
-    await prose.filter({ hasText: 'Prose: AI-drafted' }).waitFor();
+    await prose.filter({ hasText: 'AI-drafted prose' }).waitFor();
     await page.getByTestId('announcer').filter({ hasText: /^Skill updated with AI-drafted names and prose: audit passed, \d+ of \d+ checks\.$/ }).waitFor();
     expect((await labels()).join() === 'Jotted Notes,Notebooks', `AI cluster labels: ${await labels()}`);
     const after = await page.locator('[data-testid="atlas"] .rc').evaluateAll((els) => els.map((el) => el.getAttribute('style')));
@@ -107,7 +110,8 @@ export default {
     expect(md.includes('  prose: ai\n') && md.includes(IDEA.slice(0, 40)) && md.includes('Keeps field notes in folders'), 'SKILL.md carries the AI prose and metadata.prose: ai');
     await auditPassed('AI prose');
     await screenshot('ai-names-on');
-    await screenshot('skill-pane-ai-prose', { clip: await page.locator('.skill-pane').boundingBox() });
+    await page.locator('.skill-browser').evaluate((el) => el.scrollIntoView({ block: 'start' })); // under the map since R5
+    await screenshot('skill-pane-ai-prose', { clip: await page.locator('.skill-browser').boundingBox() });
     await axe('AI names and prose');
 
     // AC5: the downloaded zip with AI prose passes its own audit in Node.
@@ -130,15 +134,14 @@ export default {
     }
 
     // Slug changes and the "Use deterministic text" toggle regenerate without another call.
-    const options = page.locator('.options');
-    await options.locator('summary').click();
+    await page.getByRole('button', { name: 'Edit name and licence' }).click();
     await page.locator('#opt-slug').fill('field-notes');
-    await page.locator('.pane-head h2', { hasText: 'field-notes' }).waitFor();
+    await page.locator('#skill-title', { hasText: 'field-notes/' }).waitFor();
     await ready();
     const toggle = page.getByRole('checkbox', { name: /Use deterministic text/ });
     await toggle.check();
     await names.waitFor({ state: 'detached' });
-    await prose.filter({ hasText: 'Prose: deterministic' }).waitFor();
+    await prose.waitFor({ state: 'detached' });
     expect((await labels()).join() === 'Folders,Notes', `toggle: labels ${await labels()}`);
     expect((await preview()).includes('  prose: deterministic\n'), 'toggle: SKILL.md says prose: deterministic');
     await toggle.uncheck();
@@ -158,7 +161,7 @@ export default {
     await page.reload();
     await ready();
     await page.waitForTimeout(500);
-    expect((await deterministicNames()) && (await prose.textContent()).includes('Prose: deterministic'), 'ai: false keeps deterministic labels');
+    expect((await deterministicNames()) && (await deterministicProse()), 'ai: false keeps deterministic labels');
     expect(describes() === 1, `ai: false still asked: ${describes()}`);
     expect(!(await page.getByRole('checkbox', { name: /Use deterministic text/ }).count()), 'no toggle without AI text');
     await auditPassed('no AI');

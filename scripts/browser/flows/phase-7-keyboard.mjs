@@ -212,7 +212,7 @@ export default {
     // redesign R2), and Tab still starts at the skip link.
     for (const id of ['filesystem', 'tasks']) {
       await page.goto(`${origin}/?sample=${id}`);
-      await page.locator('.skill-pane[data-ready="true"]').waitFor(); // the Skill tab, no click
+      await page.locator('.skill-browser[data-ready="true"]').waitFor(); // in the one scroll since R5
       const [row, chip] = [await page.locator('.samples .seg').boundingBox(), await page.locator(`.seg-item[data-sample="${id}"]:has(input:checked)`).boundingBox()];
       expect(chip.x >= row.x - 1 && chip.x + chip.width <= row.x + row.width + 1, `390 px: ?sample=${id} ${JSON.stringify(chip)} outside the row ${JSON.stringify(row)}`);
       await page.keyboard.press('Tab');
@@ -240,6 +240,6 @@ export default {
     await page.goto(`${origin}/?sample=tasks`);
     await ready(page);
     await page.locator('[data-sample="filesystem"]').click();
-    await page.getByTestId('announcer').filter({ hasText: /: \d+ tools in \d+ clusters, \d+ relationships\. Skill written: audit passed, (\d+) of \1 checks\.$/ }).waitFor();
+    await page.getByTestId('announcer').filter({ hasText: /: \d+ tools in \d+ resources, \d+ links\. Skill written: audit passed, (\d+) of \1 checks\.$/ }).waitFor();
   },
 };

@@ -1,17 +1,18 @@
 // Phase 3 (updated in redesign R2): three samples; each lists its normalised operations; ?sample=
 // preselects. Since R2 the samples are a segmented control of native radios ("Samples"): one Tab stop,
 // arrow keys move and select. Since phase 12 the operations are read from the list view (?view=list),
-// which switching samples keeps.
+// which switching samples keeps. Since R5 the title has no "(sample)" (a Sample tag says it), list rows
+// are buttons, and MCP tools show read or write in the method column (D41).
 const SAMPLES = [
-  { label: 'Tasks API', heading: 'Tasks API (sample)', count: 22, item: ['POST', '/projects/{projectId}/tasks'] },
-  { label: 'Petstore', heading: 'Swagger Petstore (sample)', count: 16, item: ['GET', '/pet/{petId}'] },
-  { label: 'Filesystem MCP', heading: 'secure-filesystem-server (sample)', count: 14, item: ['TOOL', 'read_text_file'] },
+  { label: 'Tasks API', heading: 'Tasks API', count: 22, item: ['POST', '/projects/{projectId}/tasks'] },
+  { label: 'Petstore', heading: 'Swagger Petstore', count: 16, item: ['GET', '/pet/{petId}'] },
+  { label: 'Filesystem MCP', heading: 'secure-filesystem-server', count: 14, item: ['read', 'read_text_file'] },
 ];
 const slug = (label) => label.split(' ')[0].toLowerCase();
 
 async function expectSample(page, { heading, count, item }) {
-  await page.getByRole('heading', { level: 2, name: heading }).waitFor();
-  const items = await page.getByTestId('list-view').locator('tbody tr').allTextContents();
+  await page.getByRole('heading', { level: 2, name: heading, exact: true }).waitFor();
+  const items = await page.getByTestId('list-view').locator('.lrow').allTextContents();
   if (items.length !== count) throw new Error(`${heading}: expected ${count} operations, got ${items.length}`);
   if (!items.some((text) => text.includes(item[0]) && text.includes(item[1]))) {
     throw new Error(`${heading}: missing ${item.join(' ')}`);
@@ -40,7 +41,7 @@ export default {
       if (new URL(page.url()).searchParams.get('sample') !== slug(sample.label)) throw new Error(`URL not updated: ${page.url()}`);
       await screenshot(`sample-${slug(sample.label)}`);
     }
-    if (!(await page.getByTestId('list-view').innerText()).includes('deprecated')) {
+    if (!(await page.locator('.lrow[data-op="read_file"]').getAttribute('aria-label')).includes('deprecated')) {
       throw new Error('read_file is not flagged deprecated');
     }
 

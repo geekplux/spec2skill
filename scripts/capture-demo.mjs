@@ -64,7 +64,7 @@ await runSession('capture-demo', async () => {
   };
   const open = async (sample, hash = '') => {
     await page.goto(`${ORIGIN}/?sample=${sample}${hash}`);
-    await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
+    await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
     await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' }).catch(() => {});
   };
   const file = async (path) => {
@@ -79,7 +79,7 @@ await runSession('capture-demo', async () => {
   console.log(`scenario ${scenario}`);
   await open('filesystem');
   await frame('first view: the filesystem-mcp skill beside the map');
-  await page.locator('.audit > summary').click();
+  await page.locator('.sb-audit').scrollIntoViewIfNeeded(); // always open since R5
   await frame('the audit rows');
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download .zip' }).click()]);
   expect(download.suggestedFilename() === 'filesystem-mcp-skill.zip', `download named ${download.suggestedFilename()}`);
@@ -127,7 +127,7 @@ await runSession('capture-demo', async () => {
   await page.getByTestId('list-view').waitFor();
   await frame('the list view: every operation and relationship in words');
   await page.getByLabel(/^Search operations$/).fill('findPetsByTags');
-  await page.locator('tr[data-op="findPetsByTags"]').waitFor();
+  await page.locator('.lrow[data-op="findPetsByTags"]').waitFor();
   await frame('search: the deprecated findPetsByTags');
   await file('evals/evals.json');
   await frame("the skill's evals");

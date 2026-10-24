@@ -53,7 +53,7 @@ export default {
   allowConsole: [/^Failed to load resource: (the server responded with a status of \d{3}|net::ERR_(ACCESS_DENIED|ABORTED|FAILED))/],
   async run({ page, origin, viewport, screenshot, axe, cvd }) {
     const { width } = viewport;
-    const wide = width >= 1024;
+    const phone = width < 640; // R5: phones open on the List; the skill browser follows it in the one scroll
     let ai = false;
     let hold;
     await page.route(`${HOST}/**`, (route) => {
@@ -79,25 +79,24 @@ export default {
       await axe(`${view} ${width}`);
     };
     const ready = async () => {
-      await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
-      await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' });
+      await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
+      await page.locator('[data-testid="atlas"][data-ready="true"], [data-testid="list-view"]').first().waitFor({ state: 'attached' });
     };
     const openSample = async () => {
       await page.goto(`${origin}/?sample=tasks`);
       await ready();
     };
-    const tab = async (id) => !wide && page.locator(`#tab-${id}`).click();
     const view = (id) => page.locator(`#tab-${id}`).click();
     const field = page.locator('#source-field');
     const submit = async (value) => {
       await field.fill(value);
       await field.press('Enter');
     };
-    /** Opens the native disclosure `selector` if it is closed. */
+    /** Opens the toggle `selector` (aria-expanded) if it is closed. */
     const disclose = async (selector) => {
-      const details = page.locator(selector).first();
-      if (!(await details.evaluate((d) => d.open))) await details.locator(':scope > summary').click();
-      await details.scrollIntoViewIfNeeded();
+      const toggle = page.locator(selector).first();
+      if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+      await toggle.scrollIntoViewIfNeeded();
     };
 
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
@@ -107,7 +106,7 @@ export default {
 
     // The skill: first view, another file, the audit rows, the options, a finished download.
     await shot('first-view');
-    if (cvd && wide) {
+    if (cvd && !phone) {
       for (const type of ['protanopia', 'deuteranopia', 'tritanopia']) {
         await cvd(type);
         await screenshot(`first-view-${type}-${width}`);
@@ -119,18 +118,20 @@ export default {
     await page.locator('#skill-preview').scrollIntoViewIfNeeded();
     await shot('skill-file');
     await page.locator('[role="treeitem"][data-path="SKILL.md"]').click();
-    await disclose('.audit');
+    // The audit is always open on desktop; on phones its row expands the checks.
+    if (phone) await disclose('.audit-row');
+    await page.locator('.sb-audit').scrollIntoViewIfNeeded();
     await shot('audit-expanded');
-    await page.locator('.audit > summary').click(); // as the user found it: close what was opened
-    await disclose('.options');
+    if (phone) await page.locator('.audit-row').click(); // as the user found it: close what was opened
+    await disclose('.skill-browser .edit');
     await shot('options');
-    await page.locator('.options > summary').click();
+    await page.locator('.skill-browser .edit').click();
     const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download .zip' }).click()]);
     expect(download.suggestedFilename() === 'tasks-api-skill.zip', `download ${download.suggestedFilename()}`);
     await shot('download-done');
 
     // The map: a focused row and its links, its pinned operation card, search results, the list with a search.
-    await tab('map');
+    if (phone) await view('map');
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.locator('.op[data-op="getTask"]').focus();
     await page.waitForTimeout(300); // the fade
@@ -177,9 +178,9 @@ export default {
     await page.evaluate(() => window.scrollTo(0, 0));
     await shot('empty-spec');
     await submit(WARNED);
-    await page.locator('.title h2', { hasText: 'Shelf API' }).waitFor();
+    await page.locator('#result-title', { hasText: 'Shelf API' }).waitFor();
     await ready();
-    await disclose('.warnings');
+    await disclose('.meta .tag-btn');
     await page.evaluate(() => window.scrollTo(0, 0));
     await shot('warnings');
 
@@ -188,7 +189,6 @@ export default {
     await openSample();
     await submit(`${HOST}/notes.json`);
     await page.getByTestId('names-provenance').filter({ hasText: 'AI-drafted' }).waitFor({ state: 'attached' });
-    await tab('skill');
     await page.evaluate(() => window.scrollTo(0, 0));
     await shot('ai-labels');
     ai = false;

@@ -102,14 +102,15 @@ export default {
     });
 
     const field = page.locator('#source-field');
-    const title = page.locator('.title h2');
+    const title = page.locator('#result-title'); // R5: the API title alone; a Sample tag marks the samples
     const frame = page.locator('#result');
     const ready = async () => {
-      await page.locator('.skill-pane[data-ready="true"]').waitFor();
-      await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' }); // behind the Map tab on phones
+      await page.locator('.skill-browser[data-ready="true"]').waitFor();
+      // Phones open on the List (R5); elsewhere the map.
+      await page.locator('[data-testid="atlas"][data-ready="true"], [data-testid="list-view"]').first().waitFor({ state: 'attached' });
     };
     const auditPassed = async (label) => {
-      const text = await page.locator('.audit summary').textContent();
+      const text = await page.locator('.sb-audit .verdict').textContent();
       expect(text.includes('Audit passed'), `${label}: audit says "${text}"`);
     };
     const submit = async (value) => {
@@ -122,7 +123,7 @@ export default {
       await title.filter({ hasText: new RegExp(`^${heading}$`) }).waitFor();
       await ready();
       await auditPassed(label);
-      expect(!(await title.textContent()).includes('(sample)'), `${label}: still says sample`);
+      expect((await page.locator('.meta .tag', { hasText: 'Sample' }).count()) === 0, `${label}: still says sample`);
     };
     const openSample = async (id = 'tasks') => {
       await page.goto(`${origin}/?sample=${id}`);
@@ -195,7 +196,7 @@ export default {
     await page.mouse.move(5, 5);
     await screenshot('skill-from-url');
     await page.goBack();
-    await title.filter({ hasText: 'Tasks API (sample)' }).waitFor();
+    await title.filter({ hasText: /^Tasks API$/ }).waitFor();
     await page.goForward();
     await title.filter({ hasText: /^Tasks API$/ }).waitFor();
     await loadOk(`${HOST}/notes.json`, 'Notes API', 'notes.json (OpenAPI 3.0)');
@@ -212,7 +213,7 @@ export default {
     await title.filter({ hasText: /^Tasks API$/ }).waitFor();
     await ready();
     await page.goBack();
-    await title.filter({ hasText: 'Swagger Petstore (sample)' }).waitFor();
+    await title.filter({ hasText: /^Swagger Petstore$/ }).waitFor();
 
     // AC4: loading steps announced, Cancel aborts the request and restores the previous skill and map.
     await openSample('tasks');
@@ -227,7 +228,7 @@ export default {
     const generate = page.locator('.hero .generate');
     await field.fill('');
     await generate.click();
-    expect((await page.getByTestId('loading').count()) === 1 && (await page.locator('.skill-pane[data-ready="true"]').count()) === 1, 'empty Generate while loading changed the state');
+    expect((await page.getByTestId('loading').count()) === 1 && (await page.locator('.skill-browser[data-ready="true"]').count()) === 1, 'empty Generate while loading changed the state');
     await page.mouse.move(5, 5);
     await screenshot('paste-url-loading');
     await axe('loading state');
@@ -236,7 +237,7 @@ export default {
     expect(/ABORTED/i.test(failed.failure()?.errorText ?? ''), `hanging fetch was not aborted: ${failed.failure()?.errorText}`);
     hold?.done();
     expect((await page.getByTestId('loading').count()) === 0, 'loading state stays after Cancel');
-    expect((await title.textContent()) === 'Tasks API (sample)', 'Cancel keeps the previous skill and map');
+    expect((await title.textContent()) === 'Tasks API' && (await page.locator('.meta .tag', { hasText: 'Sample' }).count()) === 1, 'Cancel keeps the previous skill and map');
     expect(await page.evaluate(() => document.activeElement?.id === 'source-field'), 'Cancel returns focus to the field');
     await page.getByTestId('announcer').filter({ hasText: 'Cancelled.' }).waitFor();
 
@@ -268,10 +269,11 @@ export default {
       }
     }
     await axe('error state');
-    // The error state: previous content greyscale, title at least the result title's size, Generate ready.
+    // The error state (R5): it replaces the frame's body (the previous result is kept, not shown, until
+    // a recovery action); the title at least the result title's size; Generate ready.
     expect((await frame.getAttribute('data-status')) === 'error', 'the result frame says error');
-    expect(await page.locator('#result > .stage-content').evaluate((el) => getComputedStyle(el).filter === 'grayscale(1)'), 'previous content not greyscale under the error');
-    const sizes = await page.evaluate(() => [document.querySelector('#status-title'), document.querySelector('.title h2')].map((el) => parseFloat(getComputedStyle(el).fontSize)));
+    expect(await page.locator('#result > .stage-content').evaluate((el) => getComputedStyle(el).display === 'none' && el.childElementCount > 0), 'the previous result shows under the error');
+    const sizes = await page.evaluate(() => [document.querySelector('#status-title'), document.querySelector('#result-title')].map((el) => parseFloat(getComputedStyle(el).fontSize)));
     expect(sizes[0] >= sizes[1], `error title ${sizes[0]}px is smaller than the result title ${sizes[1]}px`);
     expect(await generate.isEnabled(), 'Generate enabled under an error');
     proxyDown = true;
@@ -282,7 +284,7 @@ export default {
     expect(await page.evaluate(() => document.activeElement?.id === 'source-field'), '"Paste spec text instead" focuses the field');
     await submit(`${HOST}/docs`);
     await page.getByRole('button', { name: 'Try a sample' }).click();
-    await title.filter({ hasText: 'Tasks API (sample)' }).waitFor();
+    await title.filter({ hasText: /^Tasks API$/ }).waitFor();
     await ready();
     expect((await page.locator('.source-status').count()) === 0, '"Try a sample" clears the error');
     await page.waitForFunction(() => document.activeElement?.id === 'result', null, { timeout: 2000 }).catch(() => {});
@@ -346,14 +348,14 @@ export default {
       await submit(EMPTY);
       await page.getByTestId('empty-chart').waitFor();
       await page.getByTestId('announcer').filter({ hasText: 'Quiet API: no operations. This spec has no paths, so there is no skill to write.' }).waitFor();
-      expect(await page.getByText('No operations, so no skill to write').isVisible(), 'empty skill pane');
+      expect(await page.getByText('No operations, so no skill to write').isVisible(), 'empty skill browser');
       expect(await page.getByRole('button', { name: 'Download .zip' }).isDisabled(), 'Download enabled for an empty spec');
       await screenshot('empty-spec');
       await submit(WARNED);
       await title.filter({ hasText: 'Shelf API' }).waitFor();
       await ready();
-      await page.locator('.warnings summary').click();
-      expect(/external/i.test(await page.locator('.warnings ul').textContent()), 'warnings list');
+      await page.locator('.meta .tag-btn', { hasText: /^\d+ warnings?$/ }).click();
+      expect(/external/i.test(await page.locator('ul.warnings:not([hidden])').textContent()), 'warnings list');
       await screenshot('warnings-list');
       const big = join(tmp, 'synthetic.json');
       writeFileSync(big, execFileSync(process.execPath, [join(ROOT, 'scripts', 'gen-synthetic-spec.mjs')], { maxBuffer: 16 * 1024 * 1024 }));
