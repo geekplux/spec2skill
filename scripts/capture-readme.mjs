@@ -1,9 +1,11 @@
-// The README hero, captured from the real app: the Tasks sample's skill browser ("Audit passed") under
-// the map with getTask's detail panel open, at 1440x900 in the light theme with reduced motion.
+// The README hero, captured from the real app as the V2Hover board draws it (docs/redesign/target/):
+// the first view of the Tasks API sample at 1440x1250 in the light theme, with getTask hovered (its feed
+// links in ink, the rest faded, the operation card beside the row) above the start of the skill browser.
 //   pnpm build && pnpm capture:readme      (also renders the social preview, scripts/social-preview.mjs)
 // Offline: every request outside the preview server is aborted and fails the capture.
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { settled } from './browser/redesign-checks.mjs';
 import { launchChrome, ORIGIN, ROOT, runSession, startPreview } from './browser/session.mjs';
 
 const HERO = join(ROOT, 'docs', 'media', 'hero.png');
@@ -11,7 +13,7 @@ const HERO = join(ROOT, 'docs', 'media', 'hero.png');
 await runSession('capture-readme', async () => {
   await startPreview();
   const browser = await launchChrome();
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1250 }, serviceWorkers: 'block' });
   const blocked = [];
   await context.route('**/*', (route) => {
     const url = route.request().url();
@@ -28,12 +30,11 @@ await runSession('capture-readme', async () => {
   await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
   await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' });
   await page.getByText(/Audit passed/).first().waitFor();
-  await page.locator('.op[data-op="getTask"]').focus();
-  await page.keyboard.press('Enter');
-  await page.getByTestId('op-card').waitFor();
-  await page.mouse.move(1, 1);
   await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(300);
+  await settled(page);
+  await page.locator('.op[data-op="getTask"]').hover();
+  await page.getByTestId('op-preview').waitFor();
+  await settled(page);
   mkdirSync(join(ROOT, 'docs', 'media'), { recursive: true });
   await page.screenshot({ path: HERO });
   console.log(`wrote ${HERO.slice(ROOT.length + 1)}`);

@@ -13,7 +13,7 @@ Paste a spec URL, an MCP server URL or the spec text, or pick a built-in sample.
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="docs/media/hero.png">
-  <img src="docs/media/demo.gif" width="960" alt="A short recording of spec2skill on its built-in samples. The Filesystem MCP sample opens with its generated filesystem-mcp skill (file tree, SKILL.md preview, Audit passed: 9 of 9 checks) beside a map of 14 tools; the audit rows open; Download .zip; a terminal runs the downloaded skill's own audit, ten ok lines and audit passed. Then the Tasks API skill's references/workflows.md, getTask focused on the map with its details and edges highlighted, and the Petstore list view, a GET filter, the deprecated findPetsByTags and the skill's evals.json. A still image is shown instead when reduced motion is preferred.">
+  <img src="docs/media/demo.gif" width="960" alt="A short recording of spec2skill on its built-in Tasks API sample. The route map loads: five resource cards rise column by column (Projects, then Members and Labels, then Tasks, then Comments), the links fade in, and the strongest workflow draws left to right as one indigo line with numbered stops listProjects, listTasks and getTask. The pointer rests on getTask: its feed links turn ink, everything else fades, and its operation card lists input, output, fed by, feeds, shares schema, sub-paths and In skill. The In skill link opens references/tasks.md in the skill browser below the map, beside Audit passed, 9 of 9. A still image is shown instead when reduced motion is preferred.">
 </picture>
 
 ## What you get
