@@ -9,10 +9,10 @@ import { generateSkill } from '../skillgen';
 import { topChains } from '../skillgen/graph-chains';
 import type { Point } from './geometry';
 import {
-  CARD_W, CLEARANCE, COLUMN_STEP, HEAD, MAX_ROWS, ROW, type RouteCard, type RouteLayout, hoverLinks, methodOf, routeLayout,
+  CARD_W, CLEARANCE, COLUMN_STEP, HEAD, HOVER_REACH, MAX_ROWS, ROW, type RouteCard, type RouteLayout, hoverBounds, hoverLinks, methodOf, routeLayout,
 } from './route';
 import { columnsOf, feedbackOrder } from './route-columns';
-import { corridorY, routeAcross, samplePath } from './route-path';
+import { OPEN_REACH, TRACK, corridorY, routeAcross, routeWires, samplePath } from './route-path';
 
 const routeOf = async (id: string) => {
   const model = await sampleModel(getSample(id)!);
@@ -53,6 +53,46 @@ function expectClearOfCards(layout: RouteLayout, paths: { id: string; d: string 
       const hit = layout.cards.find((c) => inside(p, c));
       expect(hit, `${id} crosses ${hit?.name} at ${p.x},${p.y}`).toBeUndefined();
     }
+  }
+}
+
+/** The straight runs (`H`) of a path: y and x extent. */
+function runs(d: string): { y: number; x0: number; x1: number }[] {
+  const out: { y: number; x0: number; x1: number }[] = [];
+  const tokens = d.match(/[MCH]|-?\d+(?:\.\d+)?/g) ?? [];
+  let [x, y] = [0, 0];
+  for (let i = 0; i < tokens.length; ) {
+    const cmd = tokens[i++];
+    if (cmd === 'M') [x, y] = [Number(tokens[i++]), Number(tokens[i++])];
+    else if (cmd === 'C') [i, x, y] = [i + 6, Number(tokens[i + 4]), Number(tokens[i + 5])];
+    else {
+      const to = Number(tokens[i++]);
+      out.push({ y, x0: Math.min(x, to), x1: Math.max(x, to) });
+      x = to;
+    }
+  }
+  return out;
+}
+
+/** No two rest links share a straight run (same y, overlapping by more than 2 px). */
+function expectNoSharedRuns(layout: RouteLayout) {
+  const all = layout.links.flatMap((l) => runs(l.d).map((r) => ({ ...r, id: l.id })));
+  for (const [i, a] of all.entries()) {
+    for (const b of all.slice(i + 1)) {
+      if (a.id === b.id || Math.abs(a.y - b.y) >= 0.5) continue;
+      expect(Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), `${a.id} / ${b.id} at y ${a.y}`).toBeLessThanOrEqual(2);
+    }
+  }
+}
+
+/** Off the first and last gap of each straight workflow step, no rest link comes within 12 px of the line. */
+function expectOffTheLine(layout: RouteLayout) {
+  for (const step of layout.workflow?.steps.filter((s) => s.shape === 'line') ?? []) {
+    const [x0, x1] = [Number(/^M(-?[\d.]+)/.exec(step.d)![1]) + 88, Number(/H(-?[\d.]+)$/.exec(step.d)![1]) - 88];
+    const near = layout.links.flatMap((l) =>
+      samplePath(l.d).filter((p) => p.x > x0 && p.x < x1 && Math.abs(p.y - layout.workflow!.y) < 12).map((p) => `${l.id} at ${p.x},${p.y}`),
+    );
+    expect(near).toEqual([]);
   }
 }
 
@@ -127,6 +167,17 @@ describe('route map: Tasks API (the V2Home target)', () => {
     expect(layout.links.some((l) => l.inferred)).toBe(true);
   });
 
+  it('gives each link its own run and keeps them off the main line between Projects and Tasks', async () => {
+    const { layout } = await routeOf('tasks');
+    expectNoSharedRuns(layout);
+    expectOffTheLine(layout);
+    // The three Projects -> Tasks links on tracks 6 px apart under the line's band (not one shared y).
+    const ys = ['feed:listProjects->createTask', 'feed:createProject->listTasks', 'feed:createProject->createTask'].map(
+      (id) => runs(layout.links.find((l) => l.id === id)!.d)[0]!.y,
+    );
+    expect(ys.map((y) => y - layout.workflow!.y)).toEqual([27, 33, 39]);
+  });
+
   it('gives every link of an operation on hover, backward and same-card included, clear of cards', async () => {
     const { graph, layout } = await routeOf('tasks');
     const links = hoverLinks(layout, graph, 'getTask');
@@ -159,7 +210,11 @@ describe('route map: Petstore and Filesystem MCP', () => {
     expect(row(layout, 'list_allowed_directories').cy).toBe(row(layout, 'search_files').cy);
     expect(layout.workflow!.steps.map((s) => s.shape)).toEqual(['line', 'loop']);
     const methods = new Set(layout.cards.flatMap((c) => c.rows.map((r) => r.method)));
-    expect([...methods].toSorted()).toEqual(['delete', 'read', 'write']);
+    expect([...methods].toSorted()).toEqual(['read', 'write']);
+    // write_file, edit_file and move_file are writes; the destructive ones are flagged, not renamed (D41).
+    const rows = layout.cards.flatMap((c) => c.rows);
+    expect(rows.filter((r) => r.destructive).map((r) => r.method)).toEqual(rows.filter((r) => r.destructive).map(() => 'write'));
+    expect(rows.find((r) => r.op === 'write_file')).toMatchObject({ method: 'write', destructive: true });
     // File has 9 operations: 8 rows, then "1 more"; the bundles end on its head.
     const file = card(layout, 'File');
     expect([file.rows.length, file.more?.count]).toEqual([MAX_ROWS, 1]);
@@ -234,6 +289,13 @@ describe('route map: the synthetic large spec', () => {
     expect(layout.scrolls).toBe(true);
     expect(layout.width).toBe(layout.columns.length * COLUMN_STEP - 88);
     expect(layout.workflow!.steps.find((s) => s.shape !== 'loop')!.shape).toBe('line');
+    expectNoSharedRuns(layout);
+    expectOffTheLine(layout);
+    // The bundle holding the workflow's own step is not drawn on top of the line.
+    const step = layout.workflow!.steps.find((s) => s.shape === 'line')!;
+    const bundle = graph.bundles.find((b) => b.edges.includes(`feeds:${step.from}->${step.to}`));
+    expect(bundle).toBeDefined();
+    expect(layout.links.some((l) => l.id === bundle!.id)).toBe(false);
     expectNoOverlap(layout);
     expectClearOfCards(layout, restPaths(layout));
     for (const op of model.operations.slice(0, 50)) {
@@ -294,13 +356,56 @@ describe('route map: parts', () => {
     expectClearOfCards(none, restPaths(none));
   });
 
+  it('ends the workflow before a step that does not run right; a one-stop chain is no workflow', async () => {
+    const { model, graph } = await routeOf('tasks');
+    const flat = routeLayout(model, graph, { chain: { ops: ['listMembers', 'listLabels'], via: ['x'], inferred: [false] } });
+    expect(flat.workflow).toBeUndefined();
+    expect(flat.cards.filter((c) => c.main)).toEqual([]);
+    expectNoOverlap(flat);
+    const cut = routeLayout(model, graph, { chain: { ops: ['listProjects', 'listMembers', 'listLabels'], via: ['a', 'b'], inferred: [false, true] } });
+    expect(cut.workflow).toMatchObject({ ops: ['listProjects', 'listMembers'], via: ['a'], inferred: [false] });
+    expect(cut.cards.filter((c) => c.main).map((c) => c.name)).toEqual(['Projects', 'Members']);
+    expectNoOverlap(cut);
+    const one = routeLayout(model, graph, { chain: { ops: ['listTasks'], via: [], inferred: [] } });
+    expect(one.workflow).toBeUndefined();
+    expect(one.cards.some((c) => c.main || c.rows.some((r) => r.stop !== undefined))).toBe(false);
+  });
+
+  it('hoverBounds holds every hover link of every operation', async () => {
+    for (const sample of SAMPLES) {
+      const { model, graph, layout } = await routeOf(sample.id);
+      const box = hoverBounds(layout);
+      expect(box.x).toBeLessThanOrEqual(-HOVER_REACH);
+      expect(box.y + box.h).toBeGreaterThanOrEqual(layout.height + OPEN_REACH);
+      for (const op of model.operations) {
+        for (const p of hoverLinks(layout, graph, op.id).flatMap((l) => samplePath(l.d))) {
+          expect(p.x >= box.x - 0.1 && p.x <= box.x + box.w + 0.1 && p.y >= box.y - 0.1 && p.y <= box.y + box.h + 0.1).toBe(true);
+        }
+      }
+    }
+  });
+
   it('writes the method column: HTTP methods in capitals, MCP tools as read, write or delete (D41)', () => {
     expect(methodOf(tool({ kind: 'endpoint', method: 'patch' }), 'update')).toEqual({ method: 'PATCH', destructive: false });
     expect(methodOf(tool({ kind: 'endpoint', method: 'delete' }), 'delete')).toEqual({ method: 'DELETE', destructive: true });
-    expect(methodOf(tool({ hints: { destructive: true } }), 'update')).toEqual({ method: 'delete', destructive: true });
+    expect(methodOf(tool({ hints: { destructive: true } }), 'update')).toEqual({ method: 'write', destructive: true });
     expect(methodOf(tool({ hints: { readOnly: true } }), 'action')).toEqual({ method: 'read', destructive: false });
     expect(methodOf(tool({}), 'list')).toEqual({ method: 'read', destructive: false });
     expect(methodOf(tool({}), 'create')).toEqual({ method: 'write', destructive: false });
+  });
+
+  it('takes the direct curve when it clears the columns between, else its own track', () => {
+    const lane = { x: 290, w: 202, spans: [{ top: 0, bottom: 100 }, { top: 132, bottom: 232 }] };
+    // From 112 to 120 the direct curve stays in the free stretch 108..124: no straight run at all.
+    expect(routeAcross({ x: 202, y: 112 }, { x: 580, y: 120 }, [lane])).toBe('M202 112C391 112 391 120 580 120');
+    // Two links that want the same corridor get tracks TRACK apart, the upper source on the upper track.
+    const [a, b] = routeWires([
+      { from: { x: 202, y: 40 }, to: { x: 580, y: 180 }, lanes: [lane] },
+      { from: { x: 202, y: 20 }, to: { x: 580, y: 200 }, lanes: [lane] },
+    ]);
+    expect(runs(b!)[0]!.y).toBe(runs(a!)[0]!.y - TRACK);
+    expect(runs(a!)[0]!.y).toBeLessThanOrEqual(124);
+    expect(runs(b!)[0]!.y).toBeGreaterThanOrEqual(108);
   });
 
   it('routes a link through a free corridor of each column it passes', () => {
@@ -309,8 +414,8 @@ describe('route map: parts', () => {
     expect(corridorY(lane, 90)).toBe(108);
     expect(corridorY(lane, 116)).toBe(116);
     expect(corridorY(lane, 300)).toBe(300);
-    const pen = routeAcross({ x: 202, y: 60 }, { x: 580, y: 60 }, [lane]);
-    expect(pen.d).toBe('M202 60C246 60 246 108 290 108H492C536 108 536 60 580 60');
-    expect(samplePath(pen.d).every((p) => !(p.x > 290 && p.x < 492 && ((p.y > 0 && p.y < 100) || (p.y > 132 && p.y < 232))))).toBe(true);
+    const d = routeAcross({ x: 202, y: 60 }, { x: 580, y: 60 }, [lane]);
+    expect(d).toBe('M202 60C246 60 246 108 290 108H492C536 108 536 60 580 60');
+    expect(samplePath(d).every((p) => !(p.x > 290 && p.x < 492 && ((p.y > 0 && p.y < 100) || (p.y > 132 && p.y < 232))))).toBe(true);
   });
 });

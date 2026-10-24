@@ -335,7 +335,7 @@
         "feeds:listProjects->createTask"
       ],
       "inferred": false,
-      "d": "M202 216C246 216 246 232 290 232H492C536 232 536 248 580 248"
+      "d": "M202 216C246 216 246 243 290 243H492C536 243 536 248 580 248"
     },
     {
       "id": "feed:createProject->listLabels",
@@ -382,7 +382,7 @@
         "feeds:createProject->listTasks"
       ],
       "inferred": false,
-      "d": "M202 248C246 248 246 232 290 232H492C536 232 536 216 580 216"
+      "d": "M202 248C246 248 246 249 290 249H492C536 249 536 216 580 216"
     },
     {
       "id": "feed:createProject->createTask",
@@ -393,7 +393,7 @@
         "feeds:createProject->createTask"
       ],
       "inferred": false,
-      "d": "M202 248H580"
+      "d": "M202 248C246 248 246 255 290 255H492C536 255 536 248 580 248"
     },
     {
       "id": "feed:getProject->getMember",

@@ -93,7 +93,7 @@
           "w": 194,
           "h": 32,
           "cy": 148,
-          "method": "delete",
+          "method": "write",
           "destructive": true
         },
         {
@@ -154,7 +154,7 @@
           "w": 194,
           "h": 32,
           "cy": 340,
-          "method": "delete",
+          "method": "write",
           "destructive": true
         }
       ],

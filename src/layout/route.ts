@@ -8,7 +8,7 @@ import type { Chain } from '../skillgen/types';
 import { topChains } from '../skillgen/graph-chains';
 import { type Rect, round } from './geometry';
 import { clusterFeeds, columnsOf } from './route-columns';
-import { type Lane, Pen, routeAcross, samplePath } from './route-path';
+import { type Lane, OPEN_REACH, Pen, type Span, routeWires, samplePath } from './route-path';
 
 export const CARD_W = 202;
 export const COLUMN_GAP = 88;
@@ -27,14 +27,18 @@ export const LOOP_OUT = 32;
 /** Columns the frame shows before the map scrolls sideways. */
 export const VISIBLE_COLUMNS = 4;
 const STOP_R = 9;
+/** Half the workflow halo (6 px): the main line's band is its row plus this, each side. */
+const HALO = 3;
+/** The farthest a hover loop bulges out of a card's side (0.75 of its 48 px handle). */
+export const HOVER_REACH = 36;
 
 export interface RouteRow extends Rect {
   op: string;
   /** Row centre: where links attach. */
   cy: number;
-  /** HTTP method in capitals; MCP tools: `read`, `write` or `delete` (D41). */
+  /** HTTP method in capitals; MCP tools: `read` or `write` (D41). */
   method: string;
-  /** DELETE or a destructive hint: the method text is amber. */
+  /** DELETE or a destructive hint: the method text is amber (and R4 adds a non-colour cue, D41). */
   destructive: boolean;
   /** Its number on the strongest workflow. */
   stop?: number;
@@ -93,7 +97,7 @@ export interface RouteLayout {
   /** Cards' extent from (0, 0); links and loops may reach outside it, see `bounds`. */
   width: number;
   height: number;
-  /** Everything drawn at rest, loops included. */
+  /** Everything drawn at rest, loops included; `hoverBounds` adds what hover links can reach. */
   bounds: Rect;
   /** More than four columns: the frame scrolls sideways. */
   scrolls: boolean;
@@ -117,7 +121,6 @@ export interface RouteOptions {
 export function methodOf(op: Operation, crud: string | undefined): { method: string; destructive: boolean } {
   const destructive = op.method === 'delete' || op.hints.destructive === true;
   if (op.method) return { method: op.method.toUpperCase(), destructive };
-  if (destructive) return { method: 'delete', destructive };
   const reads = op.hints.readOnly ?? (crud === 'list' || crud === 'read');
   return { method: reads ? 'read' : 'write', destructive };
 }
@@ -144,9 +147,19 @@ export function routeLayout(model: ApiModel, graph: AtlasGraph, options: RouteOp
   const order = new Map(graph.clusters.map((c, i) => [c.id, i]));
   const home = new Map(graph.clusters.flatMap((c) => c.operationIds.map((id) => [id, c.id] as const)));
   const chain = options.chain === undefined ? topChains(model, graph, 1)[0] : (options.chain ?? undefined);
-  const route = chain?.ops.filter((id) => home.has(id)) ?? [];
-  const mainOrder = [...new Set(route.map((id) => home.get(id)!))];
+  const asked = chain?.ops.filter((id) => home.has(id)) ?? [];
+  const mainOrder = [...new Set(asked.map((id) => home.get(id)!))];
   const column = columnsOf(graph, mainOrder);
+  // The workflow runs forward only: it ends before a step into a resource that is not further right.
+  let route = asked;
+  for (let i = 1; i < asked.length; i++) {
+    const [a, b] = [home.get(asked[i - 1]!)!, home.get(asked[i]!)!];
+    if (a !== b && column.get(b)! <= column.get(a)!) {
+      route = asked.slice(0, i);
+      break;
+    }
+  }
+  if (route.length < 2) route = [];
   const keep = new Set(route);
 
   const drafts = new Map<string, Draft>(
@@ -170,7 +183,7 @@ export function routeLayout(model: ApiModel, graph: AtlasGraph, options: RouteOp
     if (!lineRow.has(home.get(prev)!)) lineRow.set(home.get(prev)!, prev);
     if (!lineRow.has(home.get(id)!)) lineRow.set(home.get(id)!, id);
   });
-  if (route.length > 0 && lineRow.size === 0) lineRow.set(home.get(route[0]!)!, route[0]!);
+  if (route.length > 0 && lineRow.size === 0) lineRow.set(home.get(route[0]!)!, route[0]!); // one card: its first stop
   for (const [cid, id] of lineRow) {
     const d = drafts.get(cid)!;
     d.main = true;
@@ -248,9 +261,9 @@ export function routeLayout(model: ApiModel, graph: AtlasGraph, options: RouteOp
       return card;
     });
 
-  const index = buildIndex(cards);
-  const links = restLinks(graph, index, route);
-  const workflow = chain && route.length > 1 ? workflowOf(chain, route, index) : undefined;
+  const plain = buildIndex(cards);
+  const workflow = chain && route.length > 1 ? workflowOf(chain, route, plain) : undefined;
+  const links = restLinks(graph, buildIndex(cards, workflow), route);
 
   const width = columns.length === 0 ? 0 : (columns.at(-1)! + 1) * COLUMN_STEP - COLUMN_GAP;
   const height = Math.max(0, ...cards.map((c) => c.y + c.h));
@@ -297,18 +310,37 @@ function spreadUnlinked(graph: AtlasGraph, drafts: Map<string, Draft>, main: Rea
 
 /** Where each operation attaches: its row, or its card's "N more" row while hidden. */
 interface Anchor { card: RouteCard; y: number }
-interface Index { anchor: Map<string, Anchor>; lanes: Map<number, Lane> }
+interface Index {
+  anchor: Map<string, Anchor>;
+  lanes: Map<number, Lane>;
+  /** Columns the main line passes through (between main cards). */
+  banded: Set<number>;
+}
 
-function buildIndex(cards: RouteCard[]): Index {
+/**
+ * Anchors and lanes. With a workflow, every column its straight line passes through also blocks
+ * the line's band (row +- 16 + 3 halo), so links keep off the line between main cards.
+ */
+function buildIndex(cards: readonly RouteCard[], workflow?: RouteWorkflow): Index {
   const anchor = new Map<string, Anchor>();
-  const lanes = new Map<number, Lane>();
+  const spans = new Map<number, Span[]>();
   for (const card of cards) {
     for (const r of card.rows) anchor.set(r.op, { card, y: r.cy });
     if (card.more) for (const id of card.more.hidden) anchor.set(id, { card, y: card.more.cy });
-    const lane = lanes.get(card.column) ?? { x: card.x, w: CARD_W, spans: [] };
-    lanes.set(card.column, { ...lane, spans: [...lane.spans, { top: card.y, bottom: card.y + card.h }] });
+    spans.set(card.column, [...(spans.get(card.column) ?? []), { top: card.y, bottom: card.y + card.h }]);
   }
-  return { anchor, lanes };
+  const banded = new Set<number>();
+  for (const step of workflow?.steps ?? []) {
+    if (step.shape !== 'line') continue;
+    const [a, b] = [anchor.get(step.from)!, anchor.get(step.to)!];
+    for (let col = a.card.column + 1; col < b.card.column; col++) {
+      spans.get(col)?.push({ top: a.y - ROW / 2 - HALO, bottom: a.y + ROW / 2 + HALO });
+      banded.add(col);
+    }
+  }
+  const lanes = new Map<number, Lane>();
+  for (const [col, list] of spans) lanes.set(col, { x: col * COLUMN_STEP, w: CARD_W, spans: list.toSorted((p, q) => p.top - q.top) });
+  return { anchor, lanes, banded };
 }
 
 const lanesBetween = (index: Index, a: number, b: number): Lane[] => {
@@ -318,28 +350,47 @@ const lanesBetween = (index: Index, a: number, b: number): Lane[] => {
   return out.filter(Boolean);
 };
 
-/** Geometry from one anchor to another by their columns: across (forward or back), a right loop, or a left loop. */
-function connect(index: Index, a: Anchor, b: Anchor): string {
-  if (a.card === b.card) {
-    const out = -Math.min(48, 20 + Math.abs(a.y - b.y) / 6);
-    return new Pen({ x: a.card.x, y: a.y }).loop({ x: a.card.x, y: b.y }, out).d;
-  }
-  if (a.card.column === b.card.column) {
+/**
+ * Paths between anchor pairs drawn together: same card, a loop out of the left edge; same column,
+ * out of the right edge; else across the columns between (route-path.ts routeWires), forward from
+ * right edge to left edge, backward from left edge to right edge. A link passing the main line's
+ * columns stays on one side of the line there: the side of its far end when it leaves a main card
+ * (it crosses the line in the gap it leaves by), else the side of its start (it crosses, if at
+ * all, in the gap it arrives by); it never takes the direct curve, which could cross in between.
+ */
+function draw(index: Index, pairs: readonly (readonly [Anchor, Anchor])[]): string[] {
+  const wires = pairs.map(([a, b]) => {
+    if (a.card === b.card || a.card.column === b.card.column) return undefined;
+    const forward = b.card.column > a.card.column;
+    const lanes = lanesBetween(index, a.card.column, b.card.column);
+    const banded = lanes.some((l) => index.banded.has(l.x / COLUMN_STEP));
+    return {
+      from: { x: forward ? a.card.x + CARD_W : a.card.x, y: a.y },
+      to: { x: forward ? b.card.x : b.card.x + CARD_W, y: b.y },
+      lanes,
+      ...(banded ? { ideal: a.card.main ? b.y : a.y, direct: false } : {}),
+    };
+  });
+  const across = routeWires(wires.filter((w) => w !== undefined));
+  let k = 0;
+  return pairs.map(([a, b], i) => {
+    if (wires[i]) return across[k++]!;
+    if (a.card === b.card) {
+      return new Pen({ x: a.card.x, y: a.y }).loop({ x: a.card.x, y: b.y }, -Math.min(48, 20 + Math.abs(a.y - b.y) / 6)).d;
+    }
     const right = a.card.x + CARD_W;
     return new Pen({ x: right, y: a.y }).loop({ x: right, y: b.y }, Math.min(48, 24 + Math.abs(a.y - b.y) / 8)).d;
-  }
-  const forward = b.card.column > a.card.column;
-  const from = { x: forward ? a.card.x + CARD_W : a.card.x, y: a.y };
-  const to = { x: forward ? b.card.x : b.card.x + CARD_W, y: b.y };
-  return routeAcross(from, to, lanesBetween(index, a.card.column, b.card.column)).d;
+  });
 }
 
 function restLinks(graph: AtlasGraph, index: Index, route: string[]): RouteLink[] {
   const onLine = new Set(route.slice(1).map((id, i) => `${route[i]} ${id}`));
-  const links = new Map<string, RouteLink>();
+  // A bundle holding a workflow step would run on top of the line: its edges show on hover only.
+  const covered = new Set(graph.edges.filter((e) => e.bundledInto && onLine.has(`${e.from} ${e.to}`)).map((e) => e.bundledInto));
+  const links = new Map<string, RouteLink & { ends: readonly [Anchor, Anchor] }>();
   const bundles = new Map(graph.bundles.map((b) => [b.id, b]));
   for (const e of graph.edges) {
-    if (e.kind !== 'feeds' || onLine.has(`${e.from} ${e.to}`)) continue;
+    if (e.kind !== 'feeds' || onLine.has(`${e.from} ${e.to}`) || covered.has(e.bundledInto)) continue;
     const [a, b] = [index.anchor.get(e.from), index.anchor.get(e.to)];
     if (!a || !b || b.card.column <= a.card.column) continue; // same column and backward: on hover only
     const bundle = e.bundledInto ? bundles.get(e.bundledInto) : undefined;
@@ -350,7 +401,6 @@ function restLinks(graph: AtlasGraph, index: Index, route: string[]): RouteLink[
       known.inferred &&= e.confidence === 'inferred';
       continue;
     }
-    const target = bundle ? { card: b.card, y: b.card.y + HEAD / 2 } : b;
     links.set(key, {
       id: bundle ? bundle.id : `feed:${e.from}->${e.to}`,
       kind: bundle ? 'bundle' : 'feed',
@@ -358,13 +408,17 @@ function restLinks(graph: AtlasGraph, index: Index, route: string[]): RouteLink[
       to: bundle ? bundle.cluster : e.to,
       edges: [e.id],
       inferred: e.confidence === 'inferred',
-      d: connect(index, a, target),
+      d: '',
+      ends: [a, bundle ? { card: b.card, y: b.card.y + HEAD / 2 } : b],
     });
   }
-  return [...links.values()];
+  const list = [...links.values()];
+  const paths = draw(index, list.map((l) => l.ends));
+  return list.map((l, i) => ({ id: l.id, kind: l.kind, from: l.from, to: l.to, edges: l.edges, inferred: l.inferred, d: paths[i]! }));
 }
 
 function workflowOf(chain: Chain, route: string[], index: Index): RouteWorkflow {
+  const kept = { ops: route, via: chain.via.slice(0, route.length - 1), inferred: chain.inferred.slice(0, route.length - 1) };
   const stops = route.map((op, i): RouteStop => {
     const { card, y } = index.anchor.get(op)!;
     return { op, n: i + 1, cx: card.x + CARD_W - ROW_INSET - 6 - STOP_R, cy: y };
@@ -374,24 +428,36 @@ function workflowOf(chain: Chain, route: string[], index: Index): RouteWorkflow 
     const [a, b] = [index.anchor.get(from)!, index.anchor.get(to)!];
     if (a.card === b.card) return { from, to, shape: 'loop', d: new Pen({ x: a.card.x, y: a.y }).loop({ x: a.card.x, y: b.y }, -LOOP_OUT).d };
     const straight = a.y === b.y && b.card.column > a.card.column;
-    return { from, to, shape: straight ? 'line' : 'curve', d: connect(index, a, b) };
+    return { from, to, shape: straight ? 'line' : 'curve', d: draw(index, [[a, b]])[0]! };
   });
   const first = steps.find((s) => s.shape !== 'loop');
-  return { ...chain, stops, steps, y: first ? index.anchor.get(first.from)!.y : stops[0]!.cy };
+  return { ...kept, stops, steps, y: first ? index.anchor.get(first.from)!.y : stops[0]!.cy };
 }
 
 /**
  * Every link of one operation, for hover and focus: its feeds both ways (same card, same column,
  * backward included), sub-path and shared-schema links. Ends on hidden rows attach to "N more".
+ * The links are routed together, so they do not share a track; `hoverBounds` holds them all.
  */
 export function hoverLinks(layout: RouteLayout, graph: AtlasGraph, op: string): HoverLink[] {
-  const index = buildIndex(layout.cards);
-  const out: HoverLink[] = [];
+  const index = buildIndex(layout.cards, layout.workflow);
+  const found: { e: AtlasGraph['edges'][number]; ends: readonly [Anchor, Anchor] }[] = [];
   for (const e of graph.edges) {
     if (e.from !== op && e.to !== op) continue;
     const [a, b] = [index.anchor.get(e.from), index.anchor.get(e.to)];
-    if (!a || !b || (a.card === b.card && a.y === b.y)) continue;
-    out.push({ edge: e.id, kind: e.kind, from: e.from, to: e.to, inferred: e.confidence === 'inferred', d: connect(index, a, b) });
+    if (a && b && !(a.card === b.card && a.y === b.y)) found.push({ e, ends: [a, b] });
   }
-  return out;
+  const paths = draw(index, found.map((f) => f.ends));
+  return found.map(({ e }, i) => ({ edge: e.id, kind: e.kind, from: e.from, to: e.to, inferred: e.confidence === 'inferred', d: paths[i]! }));
+}
+
+/**
+ * The box every hover link of any operation stays in: `bounds` plus the loops' reach left of the
+ * first column and right of the last, and the open corridors above and below the cards.
+ */
+export function hoverBounds(layout: RouteLayout): Rect {
+  const b = layout.bounds;
+  const [x0, y0] = [Math.min(b.x, -HOVER_REACH), Math.min(b.y, -OPEN_REACH)];
+  const [x1, y1] = [Math.max(b.x + b.w, layout.width + HOVER_REACH), Math.max(b.y + b.h, layout.height + OPEN_REACH)];
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
