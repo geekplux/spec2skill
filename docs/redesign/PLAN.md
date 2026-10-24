@@ -1,5 +1,7 @@
 # spec2skill redesign: plan
 
+> **Historical record.** The redesign is built (R1 to R7); the current design is [docs/DESIGN.md](../DESIGN.md).
+
 Goal: ship the approved "Route map" redesign (`docs/redesign/DESIGN.md`, boards in `docs/redesign/target/`) without losing any function: built-in samples offline, paste URL or spec text, open file, MCP via the Worker, CLI, lean AI, skill generation and audit, zip download, keyboard and screen-reader use, URL state.
 
 ## How we work (Sean's build process)

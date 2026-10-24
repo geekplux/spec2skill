@@ -1,5 +1,7 @@
 # spec2skill redesign: the binding spec ("Route map", v2)
 
+> **Historical spec.** This is the spec the redesign (R1 to R7) was built from, kept as the record. The current design, with every deviation decided during the build folded in, is [docs/DESIGN.md](../DESIGN.md).
+
 Approved by Sean on 2026-10-24 from the design canvas (https://claude.ai/artifact/STmbh9SHwSwrUt1JSgaDBK, row "v2").
 This file replaces the "Survey chart" identity (PLAN.md section 3) and the old rules in `docs/DESIGN.md` wherever they disagree; the final phase rewrites `docs/DESIGN.md` from this file.
 
@@ -12,7 +14,7 @@ The target is drawn in `docs/redesign/target/`:
 | `V2Hover.html` / `.webp` | The map with `getTask` hovered: its links in ink, the rest faded, the operation card |
 | `V2Phone.html` / `.webp` | 390 px, list view selected |
 | `V2System.html` / `.webp` | Colour, type, map encoding, logo |
-| `V2Motion.html` / `.webp` | Motion table and button states (the demo loops in the HTML) |
+| `V2Motion.html` / `.webp` | Motion table and button states (the demo loops in the HTML). The board pops stop disc i at 200 + 300 i ms, before the line reaches it; the product pops disc k at 450 + 300 (k - 1) ms, as the line arrives (section 7, D66) |
 | `gen.mjs` + `tasks.json` | The generator of all boards. **Its `CSS`, `PCSS` and `MCSS` constants are the exact CSS**; copy values from there, not from screenshots. `node docs/redesign/target/gen.mjs` regenerates `preview/` and `project/` beside it (do not commit those). |
 
 Open the HTML files in the headless browser or read their `<style>` block. The boards load IBM Plex from Google Fonts for convenience only; the product self-hosts (section 2).

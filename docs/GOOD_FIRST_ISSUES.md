@@ -44,11 +44,11 @@ MCP tool names use many verbs (`query_`, `lookup_`, `insert_`, `patch_`, `drop_`
 - Start from: `VERB_TABLE` and `VERBS` in `src/graph/words.ts`, `classifyCrud()` in `src/graph/crud.ts`, tests in `src/graph/rules.test.ts`.
 - Done when: the new verbs are classified with tests, and the filesystem sample's snapshots are unchanged or the changes are explained.
 
-## 8. A resizable splitter between the skill pane and the map
+## 8. Keep the open skill file in the URL
 
-The split is fixed at 40/60 on wide screens. Add a splitter the user can drag or move with the arrow keys (`role="separator"` with `aria-valuenow`), kept within the pane's minimum and maximum widths.
-- Start from: `src/shell/Layout.tsx` and the pane widths in `src/app.css`.
-- Done when: it works by pointer and keyboard, respects reduced motion, and the layout stays one focal point per view ([DESIGN.md](DESIGN.md)).
+The skill browser opens SKILL.md on every load, so a link cannot point at `references/tasks.md`. Keep the open file in the URL (for example `?file=references/tasks.md`) so a shared link opens it, and back/forward restore it.
+- Start from: `readUrl()` and `writeUrl()` in `src/state/url.ts` (tests in `src/state/url.test.ts`) and the selected file in `src/skillpane/SkillBrowser.tsx`.
+- Done when: a path the skill does not have falls back to SKILL.md and leaves the URL, the URL tests cover it, and the design checks of [DESIGN.md](DESIGN.md) section 8 still pass.
 
 ## 9. `--json` audit output for the CLI
 

@@ -157,7 +157,7 @@ export default {
     const dotted = [];
     const scan = (rel) => {
       const text = readFileSync(join(ROOT, rel), 'utf8');
-      text.split('\n').forEach((line, i) => line.includes('·') && dotted.push(`${rel}:${i + 1}`));
+      text.split('\n').forEach((line, i) => line.includes('\u00b7') && dotted.push(`${rel}:${i + 1}`));
     };
     scan('index.html');
     for (const f of readdirSync(join(ROOT, 'src'), { recursive: true, encoding: 'utf8' })) {

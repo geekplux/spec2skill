@@ -68,91 +68,9 @@ Several small projects already turn MCP servers into agent skills. spec2skill do
 
 Wording rule for every outward-facing text: describe what spec2skill does, with checkable facts (commands, counts from the samples); no superlatives about others, no "unlike X".
 
-## 3. Design direction: "Survey chart"
+## 3. Design
 
-The identity is a surveyor's chart of an API, kept from v1: warm chart paper, precise ink lines, small-caps territory labels, a faint survey grid. The skill pane is the chart's legend sheet: the same paper, ink and type, with the file tree and SKILL.md set like a surveyor's field notes (monospace on vellum, ruled dividers). It reads as a chart and its notes, not as a dashboard template or an IDE clone. Flat 2D only; no decorative 3D, no glow, no gradients beyond a single paper tone.
-
-### 3.1 Type
-
-- **Display** (wordmark, cluster "territory" labels, headings): **Bricolage Grotesque** variable (OFL-1.1), self-hosted via `@fontsource-variable/bricolage-grotesque`, Latin subset only, `font-display: swap`, bundled by Vite (no CDN, works offline). Budget: the Latin woff2 <= 45 KB; if larger, use a single static weight (600). Cluster labels: uppercase, letter-spacing 0.08em, weight 650, like region names on a chart.
-- **Body/UI**: system stack `system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif`, 14 px base on desktop, 15 px on mobile, line-height 1.45.
-- **Code, paths, operation ids, tool names**: `ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace`, 12.5 px in nodes. Path parameters `{petId}` rendered in the Meridian colour **and** italic (never colour alone).
-
-### 3.2 Colour: the "Survey" palette
-
-Light theme ("Chart paper", default) and dark theme ("Night survey", follows `prefers-color-scheme`, toggle in header). Text/UI pairs must meet WCAG AA (4.5:1 text, 3:1 graphics); a unit test computes every pair (section 4, AC-A6).
-
-| Token | Light | Dark | Use |
-|---|---|---|---|
-| `paper` | `#F7F3EA` | `#0E1621` | page background |
-| `vellum` | `#FFFDF7` | `#16212F` | panels, node fill, cluster card fill |
-| `ink` | `#1C2430` | `#ECE6D8` | primary text, node borders |
-| `graphite` | `#59636F` | `#A6B0BC` | secondary text, sub-path edges |
-| `rule` | `#D9D1C0` | `#2B3B4F` | survey grid, dividers, cluster borders |
-| `meridian` | `#1F5FAD` | `#7DB0EA` | brand accent, GET badge, feeds edges, links |
-| `fir` | `#1E7A5A` | `#5CC49B` | POST badge |
-| `ochre` | `#9A6200` | `#E2B455` | PUT/PATCH badge |
-| `brick` | `#B23A1E` | `#F08A6C` | DELETE badge, errors |
-| `plum` | `#7A3E8F` | `#C99BDB` | MCP tool badge, shared-schema edges |
-| `marker` | `#F2C230` | `#F2C230` | focus halo (always paired with a 2 px `ink` outline) |
-
-Cluster "territories" use a 6 % wash of a hue from the list above, cycling deterministically; the wash is decoration only (clusters are identified by position, border and label).
-
-**Never colour alone** (every hue-coded thing has a second channel):
-- **Edge types** by line style + marker + text label:
-  - *feeds* (output -> input): dashed `6 4`, 1.75 px, filled triangle arrowhead at the consumer, label `taskId -> taskId` / `id -> petId`.
-  - *sub-path* (`/pets` -> `/pets/{petId}`): solid 1.5 px, open chevron at the child, label `sub-path`.
-  - *shared schema*: dotted `1 4` round caps, 1.75 px, small diamond at the midpoint, no arrow (undirected), label = schema name (`Task`).
-- **Node kinds** by shape/glyph: HTTP endpoints are rounded rectangles with the method as text (`GET`, `POST`, ...); MCP tools are notched rectangles (clipped top-right corner) with a `fn` glyph. Mutating operations have a solid 3 px left bar; destructive ones (DELETE, `destructiveHint`) a hatched left bar plus a `!` glyph; read-only ones none. Deprecated: struck-through name + "deprecated" text.
-- **CRUD** by letter badge (`L C R U D`) and order within the cluster.
-- **CVD safety**: the meaning-carrying hues (5 method/kind hues, 3 edge hues) are checked under protanopia, deuteranopia and tritanopia simulation (Machado 2009 matrices) with a unit test asserting a minimum OKLab distance between pairs that appear side by side, and visually via simulated screenshots (AC-A5). Where a pair fails (likely `fir`/`ochre` under deuteranopia) it is acceptable only because the method text is always present; the test documents those pairs explicitly.
-
-### 3.3 Layout
-
-The first view leads with the generated skill, with the map right beside it.
-
-- **Desktop (>= 1024 px)**: header bar (logo + wordmark left; source input in the middle; theme toggle and the primary **Generate skill** button right), with the one-line pitch "Turn any OpenAPI spec or MCP server into an agent skill in one click." under the wordmark (hidden below 1280 px to save height). Below: sample chips row (collapsible once the user loaded their own spec). Main area, two panes:
-  - **Skill pane (left, 40 %, min 380 px, max 560 px)**: heading "`tasks-api` skill" with slug and licence fields behind an "Options" disclosure; the file tree (folders `kit/`, `references/`, `examples/`, `scripts/`, `evals/`, `ci/`, keyboard-navigable); the selected file's preview as plain monospace text (SKILL.md selected by default); the audit checklist ("Audit passed" heading plus one row per check, each with a glyph **and** the text "passed" / "failed: reason"); primary **Download .zip** and secondary "Copy install command". The tree/preview split is vertical (tree 40 % height, preview 60 %), the checklist a collapsible strip at the bottom showing its summary line when collapsed.
-  - **Map pane (right, flex)**: "Map | List" tabs at its top, the map with a floating toolbar top-left (search, filter menu, zoom -/+/fit) and the legend as a collapsible strip under the map (phase 6 decision). The detail panel (360 px) overlays the map pane from its right edge and is closable; its "In the skill" link selects the file in the skill pane.
-  - The split is fixed in v1 (40/60 within the min/max above); a resizable splitter is listed as a good first issue (phase 19).
-- **Tablet and mobile (< 1024 px)**: one pane at a time behind tabs **Skill | Map | List** (`role="tablist"`, Skill selected by default) under the input; sample chips as a horizontal scroller with a scroll hint (edge fade + "More samples" affordance). Skill tab: file tree as a collapsible list above the preview, sticky bottom **Download .zip** button. Map tab: map fits to screen with pinch/drag; detail panel is a bottom sheet (half height, draggable, closable with a button and Esc). Legend collapses behind a "Legend" button. At 390 px the header shows mark + wordmark and the theme toggle on one row, the input on the next.
-- Survey grid: 1 px `rule` lines every 48 px at 50 % opacity behind the map, static.
-
-### 3.4 Motion
-
-Subtle and functional only: 150 ms ease-out for panel open/close and hover; 250 ms camera pan/zoom when keyboard focus moves to an off-screen node; edge highlight fade 120 ms. No looping animation, no bouncing, no physics. Under `prefers-reduced-motion: reduce` all transitions are 0 ms and camera moves jump instantly; the loading step list shows static ticks instead of a moving indicator.
-
-### 3.5 Logo and wordmark
-
-- **Mark** (24x24 SVG, <= 1.5 KB, in `public/logo.svg` and as favicon), unchanged from v1: a meridian ring (circle, 1.5 px ink stroke) with two small nodes inside, upper-left and lower-right, joined by a dashed arrowed line (the "feeds" edge) in `meridian`, and a short solid tick at north like a compass mark. It now reads as "spec feeds skill" as well as "a chart of an API". Monochrome version works (single ink colour). Accessible name "spec2skill".
-- **Wordmark**: `spec2skill` lowercase in Bricolage Grotesque, tight tracking (-0.01em): `spec` and `skill` in weight 700 ink, the `2` in weight 500 and `meridian`, sitting on a short dashed baseline rule with a small filled arrowhead pointing right (the "feeds" edge from the map, so spec feeds skill). The weight contrast and the dashed arrow carry the distinction in monochrome, so the colour is decoration only. All glyphs are outlined to SVG paths (one-off outline with the self-hosted font file, e.g. fontTools or opentype.js run once via `pnpm dlx`/`python3`, not a dependency; the command is noted in a comment in `Logo.tsx`) so it renders identically without the font. The standalone mark sits left of the wordmark at cap height in the header. Social preview: mark + wordmark + the one-line pitch on chart paper with a cropped screenshot of the skill pane beside the map (phase 19).
-
-### 3.6 Empty, loading and error states
-
-- **First view** is never empty: the default sample's skill and map are rendered. While the skill generator chunk loads (it is prefetched with the first load), the skill pane shows a static outline of the file tree with the text "Writing skill..." (no spinner under reduced motion).
-- **Loading**: an ordered step list "Fetching spec (URL host) -> Parsing (OpenAPI 3.1 / Swagger 2 / MCP) -> Mapping N operations -> Writing skill (audit passed / N checks failed)" with check marks, in an `aria-live="polite"` region; the previous skill and map stay visible but dimmed so nothing jumps. Cancel button aborts the request.
-- **Errors** (each with a plain-language title, the reason, and two actions: "Paste spec text instead" and "Try a sample"):
-  - invalid URL or non-http(s) scheme;
-  - blocked host (private/loopback/link-local addresses): "spec2skill can only fetch public URLs. Paste the spec text to turn a private API into a skill." (The CLI fetches directly from your machine and has no such limit.);
-  - timeout (10 s), too large (> 5 MB), HTTP error status (shows status code);
-  - not JSON/YAML; JSON/YAML but not OpenAPI/Swagger/MCP (lists what was detected);
-  - MCP server needs auth (401/403): explains, and shows how to record `tools/list` yourself (`npx @modelcontextprotocol/inspector --cli <url> --method tools/list`) and paste it;
-  - MCP server uses the legacy HTTP+SSE transport (405/404 on POST): explains, suggests pasting `tools/list`;
-  - proxy unavailable (local `pnpm dev` without `wrangler dev`): "Run `pnpm dev:worker` or paste the spec text.";
-- **Spec with zero operations**: an illustrated (inline SVG, static) empty chart: "This spec has no paths. Webhooks and callbacks are not mapped yet." plus the warnings list; the skill pane says "No operations, so no skill to write" and Download is disabled with that reason.
-- **Warnings** (unresolved external `$ref`, missing operationIds, truncated pagination): a small "N warnings" pill opening a list; never blocks the skill or the map; the generated skill lists them in `references/pagination-and-errors.md` under "Known gaps in the source spec".
-
-### 3.7 Calm layout (2026-10-21)
-
-Binding from phase 15 on (Sean's design direction; it refines sections 3.1-3.6, it does not replace them). The current UI shows too much at once; the goal is a calmer, more confident interface at the same bar. The focal point of the product is **the generated skill** (file tree, SKILL.md preview, audit passed); the map sits beside it as the quiet way to check it.
-
-1. **One focal point per view.** Each view has one primary thing; everything else is visibly secondary: smaller, quieter, or one step away.
-2. **Fewer simultaneous elements.** Cap what is visible on first load. Secondary controls, legends, metadata, raw tables and "read as text" summaries move behind progressive disclosure (`<details>`, a "More options" toggle, a panel opened on demand). Nothing is removed for keyboard or screen-reader users: hidden content stays reachable and labelled.
-3. **Whitespace and rhythm.** One spacing scale, 4/8/16/24/40/64 px, used consistently; the hero gets room. Fewer borders, frames and cards; group with space and alignment instead of boxes.
-4. **Clear hierarchy.** Title, then hero, then supporting text, then controls. One accent colour (`meridian`) for the one thing that matters on a view; neutrals for the rest; quiet chips and badges.
-5. **Unchanged constraints.** CVD-safe palette, never colour alone (shape, label, pattern or position as well), keyboard operable, reduced-motion aware, no decorative 3D. Iterate the "Survey chart" concept; do not start a new one.
-
-The concrete per-view rules (the one focal point of the first view / skill pane, map, list, detail panel, loading and error states; what moves behind disclosure, e.g. legend, filters, metadata, install hint, audit details; the spacing scale as tokens; where the single accent is used) live in **`docs/DESIGN.md` "Calm layout"**, written in phase 15 (the first UI phase from now) and reviewed by `a11y-reviewer` and the verifier. From phase 15 on, **crowding counts as a design FAIL** in every UI phase's implement -> verify -> fix loop: the verifier checks each screenshot against DESIGN.md and fails the phase when a view has competing focal points, secondary content on first load that DESIGN.md puts behind disclosure, off-scale spacing, or the accent used for more than the one thing. Phase 18 is the dedicated pass that brings the views built in phases 5-14 into line.
+The design lives in [docs/DESIGN.md](DESIGN.md): the "Route map" identity approved by Sean on 2026-10-24 and built in redesign phases R1 to R7 (tokens, type, logo, the page and its grid, the route map, the list view and phones, motion, and the acceptance checks). It replaces the "Survey chart" direction and the calm-layout rules this section used to hold; [docs/redesign/](redesign/PLAN.md) keeps the redesign's plan, spec and boards as the record. References below to "section 3.x" point at that earlier direction and are kept as history.
 
 ## 4. Product acceptance criteria
 

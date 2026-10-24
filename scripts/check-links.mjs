@@ -5,7 +5,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const DOCS = ['README.md', 'CONTRIBUTING.md', 'CHANGELOG.md', 'docs/EXTENDING.md', 'docs/GOOD_FIRST_ISSUES.md', 'docs/LAUNCH.md', 'docs/DEPLOY.md', 'examples/README.md'];
+export const DOCS = ['README.md', 'CONTRIBUTING.md', 'CHANGELOG.md', 'docs/DESIGN.md', 'docs/EXTENDING.md', 'docs/GOOD_FIRST_ISSUES.md', 'docs/LAUNCH.md', 'docs/DEPLOY.md', 'examples/README.md'];
 const SOURCE_DIRS = ['src', 'worker', 'scripts'];
 const PATH_SPAN = /^(?:src|worker|scripts|samples|docs|examples|public|ci)\/[\w./-]*$/;
 

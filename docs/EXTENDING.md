@@ -4,7 +4,7 @@ spec2skill is a pipeline of small, pure modules. Each stage takes plain data and
 
 ```text
 text or URL -> parseText() -> detect() -> normalise() -> ApiModel -> buildGraph() -> AtlasGraph -> generateSkill() -> FileTree -> auditTree()
-                                                                                  \-> layout() -> the map
+                                                                                  \-> routeLayout() -> the route map
 ```
 
 | Stage | Where | Main entry point |
@@ -37,7 +37,7 @@ To add a rule:
 
 1. Decide its **kind** (`EdgeKind` in `src/graph/types.ts`) and **confidence**: `exact` when the spec states the link (same field name and path parameter, a shared `$ref`), `inferred` when it is a naming guess. Inferred links are marked as such in the generated skill's references and ranked below exact ones when the skill picks its workflows.
 2. Respect the **caps** that keep the map readable: at most `MAX_INCOMING_FEEDS` feeds edges into one operation, exact before inferred, and bundles above `BUNDLE_OVER`. A rule that fires on every operation of a large spec is noise; check it against `src/__fixtures__/synthetic.ts`.
-3. Give every edge a short `label` (shown on the map, in the list view and in the skill) and an `evidence` string saying why the rule fired (kept in the graph and its snapshots, for review).
+3. Give every edge a short `label` (shown in the workflow caption, the operation card, the list view and the skill) and an `evidence` string saying why the rule fired (kept in the graph and its snapshots, for review).
 4. Add focused cases to `src/graph/rules.test.ts`, then review the golden snapshot changes in `src/graph/__snapshots__/` (`pnpm test -u` rewrites them; read the diff before committing). Layout snapshots in `src/layout/__snapshots__/` may move too.
 5. New words for CRUD classification and MCP verbs live in `VERBS` in `src/graph/words.ts`, used by `classifyCrud()` in `src/graph/crud.ts`.
 
@@ -59,7 +59,7 @@ To add a reference page, return it from `referenceFiles()` (or a new writer spre
 1. Add the file to `samples/` (small, redistributable, nothing sensitive; nothing finance-related) and document its source, licence and changes in `samples/README.md`.
 2. Register it in `SAMPLES` in `src/samples/index.ts` (`id`, `label`, `kind`, `load`); `sampleModel()` and `getSample()` pick it up, and so do the Samples control on the page and `spec2skill --sample <id>`.
 3. Add it to `SAMPLES` in `scripts/build-gallery.mjs` with a one-line "what it shows", run `pnpm gallery`, and commit the new `examples/<slug>/`.
-4. Add golden snapshots: the graph and layout tests iterate over the samples, so `pnpm test -u` writes `src/graph/__snapshots__/<id>.graph.json` and `src/layout/__snapshots__/<id>.layout.json`; review them.
+4. Add golden snapshots: the graph and layout tests iterate over the samples, so `pnpm test -u` writes `src/graph/__snapshots__/<id>.graph.json` and `src/layout/__snapshots__/<id>.route.json`; review them.
 5. Check the bundle budget with `pnpm build && pnpm check:size`: samples ship in the app.
 
 ## Using the generator from code
