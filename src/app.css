@@ -257,7 +257,7 @@ h3, h4 { font-weight: 600; }
 .op[data-route] .id { color: var(--indigo-11); font-weight: 600; }
 .op:hover, .op[data-hot] { background: var(--gray-3); }
 /* Unrelated rows (hover, focus, search) fade to the lightest ink that keeps AA text contrast, not to
-   opacity 0.38, which would put live buttons at 2.3:1 (D46). The method's amber and the workflow's
+   opacity 0.38, which would put live buttons at 2.3:1 (D47). The method's amber and the workflow's
    indigo fade with them; the hot links carry the emphasis. */
 .op[data-dim] .m, .op[data-dim] .id { color: var(--gray-11); }
 .op[data-dim][data-route] .id { font-weight: 400; }

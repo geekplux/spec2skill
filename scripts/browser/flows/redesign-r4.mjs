@@ -210,7 +210,7 @@ export default {
     });
     const { t: tl } = d;
     expect(h.hot.length >= 5 && h.hot.every(([stroke, width, marker]) => stroke === tl['--gray-12'] && width === '1.25px' && marker) && h.ahk === tl['--gray-12'], `hover links ${JSON.stringify(h.hot)} ${h.ahk}`);
-    // Faded rows take gray-11, the lightest AA ink, rather than opacity 0.38 (D46).
+    // Faded rows take gray-11, the lightest AA ink, rather than opacity 0.38 (D47).
     expect(h.dim.length > 0 && h.dim.every((o) => o === `1,${tl['--gray-11']},${tl['--gray-11']}`) && h.lit.includes('getTask') && h.lit.includes('listTasks'), `hover fades ${JSON.stringify(h.dim)} lit ${h.lit}`);
     expect(h.faded.length > 0 && h.faded.every(([stroke, marker]) => stroke === tl['--gray-6'] && !marker), `faded links ${JSON.stringify(h.faded)}`);
     expect(h.wf === 0, 'the workflow line and its discs stay drawn while a row is hot');

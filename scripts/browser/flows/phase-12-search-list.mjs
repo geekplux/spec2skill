@@ -78,7 +78,7 @@ export default {
     const matching = Number(said.split(' ')[0]);
     expect(matching > 0 && matching < total, `matches: ${said}`);
     expect((await page.locator('.op[data-op][data-dim]').count()) === total - matching, 'faded row count');
-    // Not lightness alone: matches also turn 600 (gray-12 against gray-11 is under 3:1, D46).
+    // Not lightness alone: matches also turn 600 (gray-12 against gray-11 is under 3:1, D47).
     const weights = await page.locator('.op[data-op]').evaluateAll((els) => els.map((el) => [el.hasAttribute('data-dim'), getComputedStyle(el.querySelector('.id')).fontWeight]));
     expect(weights.every(([dim, w]) => (dim ? w === '400' : w === '600')), `search matches differ only by lightness: ${JSON.stringify(weights)}`);
     await page.waitForFunction(() => new URL(location.href).searchParams.get('q') === 'member');
