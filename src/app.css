@@ -53,7 +53,7 @@ code { font-family: var(--font-mono); font-size: inherit; }
 /* The field: 48 px, radius 10, a gray-8 ring; Open file and Generate inset 4 px (radius 6, concentric).
    Pasted text grows the field while it has focus; the buttons stay on its last line. */
 .source-field {
-  --field-h: 40px;
+  --field-h: 40px; container-type: inline-size;
   display: flex; align-items: flex-end; gap: var(--space-4); padding: var(--space-4) var(--space-4) var(--space-4) var(--space-16);
   border-radius: var(--radius-box); background: var(--gray-1); box-shadow: inset 0 0 0 var(--line) var(--gray-8);
 }
@@ -69,11 +69,14 @@ code { font-family: var(--font-mono); font-size: inherit; }
 /* The placeholder stays on one line (cut with an ellipsis) instead of wrapping out of the 40 px box. */
 .source .input:placeholder-shown { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .source-field .icon-btn { margin: 0 var(--space-4) var(--space-4) 0; } /* its focus ring stays clear of Generate */
-/* Generate keeps one width through its stages (the widest, "Fetching" with the spinner, is 111 px), so the field holds still. */
 .generate {
-  flex: none; min-width: 112px; height: var(--field-h); padding: 0 var(--space-16); border: 0; border-radius: var(--radius-row);
+  flex: none; height: var(--field-h); padding: 0 var(--space-16); border: 0; border-radius: var(--radius-row);
   background: var(--indigo-9); color: var(--indigo-contrast); font: 500 var(--text-14)/var(--leading-14) var(--font-sans); white-space: nowrap; cursor: pointer;
 }
+/* Generate keeps one width through its stages (the widest, "Fetching" with the spinner, is 111 px), so the
+   field holds still. Only in a field narrower than 416 px (D39's grid gives it 395 px at 960, up to about
+   1000 px; on phones Generate has its own line) does it grow with its label, so the URL keeps 240 px (D65). */
+@container (width >= 416px) { .generate { min-width: 112px; } }
 /* "Samples" and the segmented control filling the rest of the row. */
 /* When "Samples" and the control no longer fit one line, the control wraps under the label. */
 .samples { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16); }
