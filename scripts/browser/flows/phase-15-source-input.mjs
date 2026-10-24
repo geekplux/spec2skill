@@ -349,6 +349,8 @@ export default {
       await page.getByTestId('empty-chart').waitFor();
       await page.getByTestId('announcer').filter({ hasText: 'Quiet API: no operations. This spec has no paths, so there is no skill to write.' }).waitFor();
       expect(await page.getByText('No operations, so no skill to write').isVisible(), 'empty skill browser');
+      // Nothing of the previous skill stays: no files, preview or audit (D61).
+      expect((await page.locator('#skill-preview, .sb-preview, .sb-audit, .skill-browser [role="tree"]').count()) === 0, 'the empty spec shows the previous skill');
       expect(await page.getByRole('button', { name: 'Download .zip' }).isDisabled(), 'Download enabled for an empty spec');
       await screenshot('empty-spec');
       await submit(WARNED);

@@ -154,7 +154,8 @@ export function SkillBrowser({ skill, error, ready, empty, options, onOptions, f
         )}
         {editing && !empty && <Options key={options.key} value={options} onChange={onOptions} plainText={plainText} />}
       </div>
-      {skill && showPreview && (
+      {/* Without operations there is no skill: never the previous spec's files, preview or audit (D61). */}
+      {skill && !empty && showPreview && (
         <div className="sb-preview" data-stale={!ready || undefined}>
           <div className="sb-head">
             <h3 id="file-head"><span className="fname">{path}</span><span className="visually-hidden">, </span><span className="lines">{lines.length} {lines.length === 1 ? 'line' : 'lines'}</span>{!ready && <><span className="visually-hidden">, </span><span className="lines">Updating…</span></>}</h3>
@@ -171,7 +172,7 @@ export function SkillBrowser({ skill, error, ready, empty, options, onOptions, f
           </div>
         </div>
       )}
-      {skill && <Audit audit={skill.audit} tree={skill.tree} phone={phone} />}
+      {skill && !empty && <Audit audit={skill.audit} tree={skill.tree} phone={phone} />}
     </section>
   );
 }

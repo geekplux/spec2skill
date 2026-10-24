@@ -25,6 +25,11 @@ describe('SkillBrowser', () => {
     expect(html).not.toMatch(/<(script|img)\b/);
     expect(html).toContain('aria-label="Copy SKILL.md"');
   });
+  it('with no operations shows only the note: no files, preview or audit of an earlier skill (D61)', () => {
+    const html = render({ empty: true, ready: false });
+    expect(html).toContain('<p class="sb-note" id="skill-empty">No operations, so no skill to write.</p>');
+    expect(html).not.toMatch(/role="tree"|id="skill-preview"|sb-preview|sb-audit|Audit passed|Audit failed|Edit name/);
+  });
   it('heads the files with the slug and opens no options until asked', () => {
     const html = render();
     expect(html).toContain('<h3 class="sb-head mono" id="skill-title" tabindex="-1">tasks-api/<span class="visually-hidden"> skill</span></h3>');
