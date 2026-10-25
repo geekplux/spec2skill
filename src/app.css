@@ -36,7 +36,7 @@ code { font-family: var(--font-mono); font-size: inherit; }
 .nav { display: flex; align-items: center; gap: var(--space-24); color: var(--gray-11); }
 .nav a, .nav button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: none; cursor: pointer; }
 .nav a:hover, .nav button:hover { color: var(--gray-12); }
-.menu { display: none; }
+.menu { display: none; -webkit-tap-highlight-color: transparent; }
 /* The header's right group: the nav (or Menu on phones), then the theme button (D82): a 16 px glyph
    in a 32 px target, gray-11 like the links and gray-12 on hover. Its 8 px inset is pulled out on both
    sides, so the glyph sits 24 px after GitHub and ends on the column's right edge. */
@@ -44,6 +44,7 @@ code { font-family: var(--font-mono); font-size: inherit; }
 .theme-btn {
   display: grid; place-items: center; flex: none; width: 32px; height: 32px; margin: 0 calc(-1 * var(--space-8));
   padding: 0; border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-11); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .theme-btn:hover { color: var(--gray-12); }
 .icon-btn {
