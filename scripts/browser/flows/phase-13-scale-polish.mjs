@@ -125,15 +125,17 @@ export default {
     await page.locator('#skill-preview').scrollIntoViewIfNeeded();
     await screenshot('skill-pane-split');
 
-    // 5. The theme follows the OS live (A10); since redesign R1 there is no toggle and nothing pins it.
+    // 5. The theme follows the OS live (A10) while nothing is pinned, and so does the theme button's
+    // name (R8, D82: it says what a click does).
     const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     await page.emulateMedia({ colorScheme: 'dark' });
     expect((await background()) === 'rgb(17, 17, 17)', `dark OS: background ${await background()}`);
+    await page.locator('header').getByRole('button', { name: 'Switch to light theme', exact: true }).waitFor();
     await screenshot('theme-follows-os');
     await page.emulateMedia({ colorScheme: 'light' });
     expect((await background()) === 'rgb(252, 252, 252)', `light OS: background ${await background()}`);
     expect(!(await page.evaluate(() => document.documentElement.hasAttribute('data-theme'))), 'the theme is pinned on <html>');
-    expect((await page.getByRole('button', { name: 'Dark theme' }).count()) === 0, 'a theme toggle is back');
+    await page.locator('header').getByRole('button', { name: 'Switch to dark theme', exact: true }).waitFor();
 
     // 6. Mobile (updated in redesign R2): the hero stacks in DOM order (the field, then Generate at full
     // width under it, then Samples); the three samples fit one line, so nothing scrolls or hides

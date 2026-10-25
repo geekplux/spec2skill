@@ -11,6 +11,8 @@
 //   sideways page scroll; check 7 (reduced motion: no running animation or transition, none declared)
 //   on home, hover and the list at 1440 and the phone at 390; no two pieces of text print over each
 //   other on home at rest at 1440, 1024, 768, 640, 390 and 320 (page-wide, and in each Made by row).
+//   The Tasks API home again with the theme pinned by the header's button against the system's, both
+//   ways, at 1440 (with the grid) and 390 (D82).
 // Then the source-level checks: 4 (no middle dot in src or index.html), 5 (the CVD and contrast unit
 // tests, src/design/cvd.test.ts and contrast.test.ts) and 8 (pnpm check:size). It prints the result of
 // every check for every state and fails on any problem. Other flows keep only checks this one does not
@@ -230,6 +232,28 @@ export default {
       await motion(`${id} phone 390 reduced motion`);
       await page.emulateMedia({ reducedMotion: 'no-preference' });
     }
+    await page.setViewportSize(DESK);
+
+    // The theme pinned by the header's button against the system's (D82): checks 1-4, axe and the grid
+    // with the button in the header, the page in the theme the button chose, at 1440 and 390.
+    for (const system of THEMES) {
+      const theme = system === 'light' ? 'dark' : 'light';
+      await page.emulateMedia({ colorScheme: system, reducedMotion: 'no-preference' });
+      for (const size of [DESK, PHONE]) {
+        await page.setViewportSize(size);
+        await ready(page, `${origin}/?sample=tasks`);
+        await page.locator('header').getByRole('button', { name: `Switch to ${theme} theme` }).click();
+        await page.mouse.move(0, 0);
+        await settled(page);
+        const pinned = await page.evaluate(() => document.documentElement.dataset.theme);
+        expect(pinned === theme, `the button on a ${system} system pinned ${pinned}, not ${theme}`);
+        const label = `tasks home ${size.width} ${theme} by the button on a ${system} system`;
+        await pageChecks(label, theme);
+        if (size === DESK) record('6 grid', label, await gridCheck(page, { label: `grid ${label}` }));
+        await page.evaluate(() => localStorage.removeItem('spec2skill:theme'));
+      }
+    }
+    await page.emulateMedia({ colorScheme: 'light' });
     await page.setViewportSize(DESK);
 
     // Check 4 in the source: no middle dot in src (UI strings, the skill generator and its snapshots) or index.html.

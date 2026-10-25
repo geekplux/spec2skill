@@ -68,11 +68,12 @@ export default {
     await page.unroute('**/*.woff2');
     await load(page, origin);
 
-    // A choice stored by the old theme toggle (either key) is ignored: the theme follows the system.
-    await page.evaluate(() => (localStorage.clear(), localStorage.setItem('tool-atlas:theme', 'dark'), localStorage.setItem('spec2skill:theme', 'dark')));
+    // A choice stored under the pre-rename key is never read: the theme follows the system (only
+    // spec2skill:theme, written by the header's theme button since R8, pins one; D82).
+    await page.evaluate(() => (localStorage.clear(), localStorage.setItem('tool-atlas:theme', 'dark')));
     await load(page, origin);
     const theme = await page.evaluate(() => [document.documentElement.hasAttribute('data-theme'), getComputedStyle(document.body).backgroundColor]);
-    expect(theme.join() === 'false,rgb(252, 252, 252)', `a stored theme still applies: ${theme}`);
+    expect(theme.join() === 'false,rgb(252, 252, 252)', `the pre-rename theme key applies: ${theme}`);
     await page.evaluate(() => localStorage.clear());
     await page.emulateMedia({ colorScheme: 'dark' });
     await screenshot('header-dark-desktop', await header(page));
