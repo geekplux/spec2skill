@@ -33,7 +33,7 @@ Open the HTML files in the headless browser or read their `<style>` block. The b
 10. No casual radius or shadow; no card with a coloured left stripe. A radius or shadow must fit its function (the operation card is the only element with a shadow: it floats).
 11. No habitual eyebrows or overlines: no small uppercase label above a heading unless it adds what the heading lacks.
 
-Also binding from `CLAUDE.md`: never colour alone, CVD-safe (protanopia, deuteranopia, tritanopia), keyboard operable, reduced motion respected, no decorative 3D, nothing finance-related, never mention Sean's employer.
+Also binding from `CLAUDE.md`: never colour alone, CVD-safe (protanopia, deuteranopia, tritanopia), keyboard operable, reduced motion respected, no decorative 3D, nothing finance-related, no company names beyond tools, services and cited sources.
 
 ## 2. Tokens
 

@@ -381,7 +381,7 @@ Spec-provided text in generated files is quoted as data (`> ` blockquotes or tab
 - **Standard verification** (the verifier runs all of this every phase, then the phase-specific checks):
   1. `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm check:size`.
   2. `pnpm check:browser -- --phase <n>` (from phase 1): builds nothing itself; starts `vite preview --host 127.0.0.1 --port 4173 --strictPort` in the background (PID recorded, process group killed in `finally` and on SIGINT/SIGTERM), launches headless system Chrome via playwright-core, aborts and fails on any request outside `http://127.0.0.1:4173` (offline guarantee), fails on console errors or page errors, runs the flows registered for phases <= n, saves screenshots to `docs/screenshots/phase-<n>/` (desktop 1280x800 and mobile 390x844), prints `browser check passed`, exits non-zero on any failure. From phase 5: `--axe` (fail on serious/critical) and `--cvd` (protanopia/deuteranopia/tritanopia screenshots) are on by default.
-  3. The verifier looks at every screenshot, checks every acceptance criterion of the phase with evidence, checks the hard rules (no secrets, no Next/Remix, no 3D, nothing finance-related, no employer mention, nothing under `.github/workflows/`, no deploy run), then confirms with `ps` that no preview server, wrangler or Chrome process it started is left.
+  3. The verifier looks at every screenshot, checks every acceptance criterion of the phase with evidence, checks the hard rules (no secrets, no Next/Remix, no 3D, nothing finance-related, no company names, nothing under `.github/workflows/`, no deploy run), then confirms with `ps` that no preview server, wrangler or Chrome process it started is left.
 - **UI phases** (5, 6, 7, 8, 11, 12, 13, 15, 17, 18, plus the README/media review in 19 and the polish pass in 20): `a11y-reviewer` reviews before the verifier signs off.
 - **Calm-layout review (from phase 15)**: every UI phase is also reviewed against `docs/DESIGN.md` "Calm layout" (section 3.7). The verifier checks each screenshot for the view's one focal point, what DESIGN.md puts behind disclosure, the 4/8/16/24/40/64 spacing scale and the single accent; crowding is a FAIL like any other acceptance criterion, and the FAIL report names the view, the competing elements and the rule broken.
 - **From phase 8**: PR screenshot links use `https://github.com/geekplux/spec2skill/blob/<branch>/docs/screenshots/phase-<n>/<file>.png?raw=true`; user-facing text says spec2skill; the browser check's default screenshots are the skill-first first view from phase 11 on.
@@ -777,7 +777,7 @@ Spec-provided text in generated files is quoted as data (`> ` blockquotes or tab
   3. Issue templates are valid YAML issue forms (parsed with js-yaml in a test); `git ls-files .github/workflows` prints nothing.
   4. `docs/social-preview.png` is exactly 1280x640 (PNG header read in a test) and under 1 MB; `docs/media/hero.png` exists and was produced by the script from the real app.
   5. `docs/EXTENDING.md` names real files and functions that exist (spot-checked by the link check for paths); `docs/GOOD_FIRST_ISSUES.md` lists >= 8 items.
-  6. No employer mention, nothing finance-related and no "tool-atlas" outside the CHANGELOG rename note in any new file (verifier greps).
+  6. No company names, nothing finance-related and no "tool-atlas" outside the CHANGELOG rename note in any new file (verifier greps).
 - **Verifier**: standard steps; run both capture scripts once each and confirm no Chrome/preview process remains; read README as a first-time visitor and judge the 10-second test (does a visitor see within 10 seconds that this makes agent skills, and why they are good?); `yamllint`-equivalent parse of `ci/github-workflow.yml` with js-yaml.
 - **Screenshots**: `hero.png` (copy), `social-preview.png` (copy), `readme-rendered.png`.
 - **Risks**: docs drift from code (link check and EXTENDING path checks mitigate); the hero image must be regenerated if the UI changes (documented in CONTRIBUTING: `pnpm capture:readme`).
@@ -794,7 +794,7 @@ Spec-provided text in generated files is quoted as data (`> ` blockquotes or tab
   2. `node scripts/capture-demo.mjs` runs end to end, produces the frames (and the GIF when `ffmpeg` exists), and leaves no Chrome/preview/ffmpeg process.
   3. Nothing was posted or sent anywhere (no network calls in the scripts beyond `127.0.0.1`; verifier inspects the scripts).
   4. All browser flows from phases 1-19 still pass with axe and CVD; polished states are screenshotted.
-- **Verifier**: standard steps; run the demo capture once; read LAUNCH.md for accuracy, tone and the hard rules (no finance, no employer mention).
+- **Verifier**: standard steps; run the demo capture once; read LAUNCH.md for accuracy, tone and the hard rules (no finance, no company names).
 - **Screenshots**: `demo-scenario-1.png`, `demo-scenario-2.png`, `demo-scenario-3.png`, `polish-empty.png`, `polish-error.png`, `polish-loading.png`.
 - **Risks**: the GIF may be large (cap frames and width, or fall back to PNGs); comparisons date quickly (date-stamp the table).
 
