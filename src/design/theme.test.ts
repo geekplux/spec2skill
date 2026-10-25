@@ -2,7 +2,10 @@
 // storage blocked, the initial theme, the switch, and the pin before the first paint.
 import { describe, expect, it } from 'vitest';
 import indexHtml from '../../index.html?raw';
-import { THEME_KEY, otherTheme, pinTheme, pinnedTheme, resolveTheme, safeStorage, storeTheme, storedTheme, switchTheme, themeButtonLabel } from './theme';
+import {
+  DARK_QUERY, THEME_KEY, applyStorageEvent, currentTheme, otherTheme, pinTheme, pinnedTheme, resolveTheme, safeStorage, storeTheme, storedTheme,
+  subscribeTheme, switchTheme, themeButtonLabel, unpinTheme,
+} from './theme';
 import { color } from './tokens';
 
 /** A Map-backed Storage, or one whose every access throws (blocked storage, privacy mode). */
@@ -21,7 +24,7 @@ const blocked = {
 
 /** A document with <html> and the two theme-color metas. */
 function fakeDoc() {
-  const metas = [{ content: '#fcfcfc' }, { content: '#111111' }];
+  const metas = [{ content: '#fcfcfc', media: '(prefers-color-scheme: light)' }, { content: '#111111', media: '(prefers-color-scheme: dark)' }];
   const documentElement = { dataset: {} as DOMStringMap };
   return { documentElement, metas, querySelectorAll: (sel: string) => (sel === 'meta[name="theme-color"]' ? metas : []) };
 }
@@ -108,6 +111,80 @@ describe('switch', () => {
     expect(pinnedTheme(doc.documentElement)).toBe('dark');
     pinTheme('light', doc);
     expect(pinnedTheme(doc.documentElement)).toBe('light');
+  });
+});
+
+/** A window with a system scheme to flip, `storage` events to send, and listener counts. */
+function fakeWindow(systemDark = false) {
+  const media = Object.assign(new EventTarget(), { matches: systemDark });
+  const target = new EventTarget();
+  const counts = { media: 0, storage: 0 };
+  const win = {
+    document: fakeDoc(),
+    matchMedia: (query: string) => {
+      expect(query).toBe(DARK_QUERY);
+      return {
+        get matches() { return media.matches; },
+        addEventListener: (type: string, fn: () => void) => (counts.media++, media.addEventListener(type, fn)),
+        removeEventListener: (type: string, fn: () => void) => (counts.media--, media.removeEventListener(type, fn)),
+      };
+    },
+    addEventListener: (type: 'storage', fn: (e: StorageEvent) => void) => (counts.storage++, target.addEventListener(type, fn as EventListener)),
+    removeEventListener: (type: 'storage', fn: (e: StorageEvent) => void) => (counts.storage--, target.removeEventListener(type, fn as EventListener)),
+  };
+  const system = (dark: boolean) => (media.matches = dark, media.dispatchEvent(new Event('change')));
+  const storage = (key: string | null, newValue: string | null) => target.dispatchEvent(Object.assign(new Event('storage'), { key, newValue }));
+  return { win, counts, system, storage };
+}
+
+describe('other tabs (the storage event)', () => {
+  it("applies another tab's choice, and follows the system again when it is removed or storage is cleared", () => {
+    const doc = fakeDoc();
+    expect(applyStorageEvent({ key: THEME_KEY, newValue: 'dark' }, doc)).toBe(true);
+    expect([pinnedTheme(doc.documentElement), doc.metas.map((m) => m.content).join()]).toEqual(['dark', '#111111,#111111']);
+    expect(applyStorageEvent({ key: THEME_KEY, newValue: null }, doc)).toBe(true);
+    expect([pinnedTheme(doc.documentElement), doc.metas.map((m) => m.content).join()]).toEqual([null, '#fcfcfc,#111111']);
+    pinTheme('light', doc);
+    expect(applyStorageEvent({ key: null, newValue: null }, doc)).toBe(true); // localStorage.clear()
+    expect(pinnedTheme(doc.documentElement)).toBeNull();
+    pinTheme('light', doc);
+    expect(applyStorageEvent({ key: THEME_KEY, newValue: 'sepia' }, doc)).toBe(true);
+    expect(pinnedTheme(doc.documentElement)).toBeNull();
+  });
+
+  it('ignores other keys', () => {
+    const doc = fakeDoc();
+    pinTheme('dark', doc);
+    expect(applyStorageEvent({ key: 'tool-atlas:theme', newValue: 'light' }, doc)).toBe(false);
+    expect(pinnedTheme(doc.documentElement)).toBe('dark');
+  });
+
+  it('unpinTheme restores each theme-color to its own scheme', () => {
+    const doc = fakeDoc();
+    pinTheme('dark', doc);
+    unpinTheme(doc);
+    expect([doc.documentElement.dataset.theme, ...doc.metas.map((m) => m.content)]).toEqual([undefined, '#fcfcfc', '#111111']);
+  });
+
+  it('subscribeTheme reports system changes and theme storage events, applies them, and unsubscribes cleanly', () => {
+    const { win, counts, system, storage } = fakeWindow(false);
+    let changes = 0;
+    const unsubscribe = subscribeTheme(win, () => changes++);
+    expect(counts).toEqual({ media: 1, storage: 1 });
+    expect(currentTheme(win)).toBe('light');
+    system(true);
+    expect([changes, currentTheme(win)]).toEqual([1, 'dark']);
+    storage(THEME_KEY, 'light');
+    expect([changes, currentTheme(win), pinnedTheme(win.document.documentElement)]).toEqual([2, 'light', 'light']);
+    storage('another-key', 'x');
+    expect(changes).toBe(2);
+    storage(THEME_KEY, null);
+    expect([changes, currentTheme(win), pinnedTheme(win.document.documentElement)]).toEqual([3, 'dark', null]);
+    unsubscribe();
+    expect(counts).toEqual({ media: 0, storage: 0 });
+    system(false);
+    storage(THEME_KEY, 'dark');
+    expect([changes, pinnedTheme(win.document.documentElement)]).toEqual([3, null]);
   });
 });
 

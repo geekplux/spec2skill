@@ -24,7 +24,7 @@ Also binding (CLAUDE.md): never colour alone; CVD-safe under protanopia, deutera
 
 ### Colour
 
-Radix gray, indigo and amber 3.0.0, copied as 36 `light-dark()` custom properties (D30). The theme follows the system through `color-scheme: light dark` until the header's theme button pins one: `data-theme` on `<html>` sets `color-scheme: light` or `dark`, and nothing else, so every token follows (D82). The choice is stored under `spec2skill:theme` (blocked storage is tolerated: the button then switches for the visit) and kept until the button is used again, even when it equals the system's; an inline script in `index.html` pins it before the first paint, so it never flashes. Print is always light (`@media print`).
+Radix gray, indigo and amber 3.0.0, copied as 36 `light-dark()` custom properties (D30). The theme follows the system through `color-scheme: light dark` until the header's theme button pins one: `data-theme` on `<html>` sets `color-scheme: light` or `dark`, and nothing else, so every token follows (D82). The choice is stored under `spec2skill:theme` (blocked storage is tolerated: the button then switches for the visit), applies live in other open tabs, and is kept until the button is used again, even when it equals the system's; an inline script in `index.html` pins it before the first paint, so it never flashes. Print is always light (`@media print`).
 
 | Role | Token |
 |---|---|

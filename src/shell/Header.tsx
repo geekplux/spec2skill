@@ -1,7 +1,7 @@
-import { type MouseEvent, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { type MouseEvent, useEffect, useReducer, useRef, useState, useSyncExternalStore } from 'react';
 import { MOON_ICON, SUN_ICON } from '../design/icons';
 import { Wordmark } from '../design/Logo';
-import { DARK_QUERY, pinnedTheme, resolveTheme, safeStorage, switchTheme, themeButtonLabel } from '../design/theme';
+import { currentTheme, safeStorage, subscribeTheme, switchTheme, themeButtonLabel } from '../design/theme';
 
 export const REPO = 'https://github.com/geekplux/spec2skill';
 
@@ -17,24 +17,26 @@ export function onInPage(e: MouseEvent<HTMLAnchorElement>) {
   target.focus({ preventScroll: true });
 }
 
-const onSystemChange = (change: () => void) => {
-  const media = window.matchMedia(DARK_QUERY);
-  media.addEventListener('change', change);
-  return () => media.removeEventListener('change', change);
-};
+const subscribe = (change: () => void) => subscribeTheme(window, change);
+const snapshot = () => currentTheme(window);
 
 /**
  * The theme button (D82): it says what a click does ("Switch to dark theme") and shows that theme's
  * glyph. Until it is used the page follows the system, live, and so does its name; a click pins the
- * other theme (kept even when it equals the system's) and remembers it. The swap is instant.
+ * other theme (kept even when it equals the system's) and remembers it; another tab's choice applies
+ * live. The theme is read from <html>, where index.html's inline script pinned a stored choice. The
+ * swap is instant.
  */
 function ThemeButton() {
-  const systemDark = useSyncExternalStore(onSystemChange, () => window.matchMedia(DARK_QUERY).matches, () => false);
-  // index.html's inline script has already pinned a stored choice on <html>.
-  const [pinned, setPinned] = useState(() => (typeof document === 'undefined' ? null : pinnedTheme(document.documentElement)));
-  const theme = resolveTheme(pinned, systemDark);
+  const theme = useSyncExternalStore(subscribe, snapshot, () => 'light' as const);
+  // A click changes <html> in this tab, which no event reports: re-render to read it.
+  const [, clicked] = useReducer((n: number) => n + 1, 0);
+  const onClick = () => {
+    switchTheme(theme, document, safeStorage());
+    clicked();
+  };
   return (
-    <button type="button" className="theme-btn" aria-label={themeButtonLabel(theme)} onClick={() => setPinned(switchTheme(theme, document, safeStorage()))}>
+    <button type="button" className="theme-btn" aria-label={themeButtonLabel(theme)} onClick={onClick}>
       {theme === 'dark' ? SUN_ICON : MOON_ICON}
     </button>
   );

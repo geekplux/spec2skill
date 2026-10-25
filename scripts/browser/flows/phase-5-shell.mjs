@@ -1,6 +1,6 @@
 // Phase 5: design system and app shell (Route map tokens since redesign R1). The theme follows the
 // system until the header's theme button pins one (R8, D82: remembered, pinned before the first paint,
-// print always light, blocked storage survived), self-hosted IBM Plex (Sans and Mono, tabular
+// applied live in other tabs, print always light, blocked storage survived), self-hosted IBM Plex (Sans and Mono, tabular
 // figures), favicon and the Overlap logo, reduced motion, focus style, axe in both themes, CVD
 // screenshots, and no horizontal scroll at 390 px and at 200 % zoom.
 const DARK_PAGE = 'rgb(17, 17, 17)'; // gray-1 dark
@@ -183,6 +183,21 @@ export default {
     expect(back.pin === 'light' && back.bg === LIGHT_PAGE && (await page.evaluate((k) => localStorage.getItem(k), THEME_KEY)) === 'light', `light by the button not kept on a dark system: ${JSON.stringify(back)}`);
     await axe('light by the button on a dark system');
     await page.emulateMedia({ colorScheme: 'light' });
+
+    // Another tab follows live: a click here pins it there; removing the choice here lets it follow the system.
+    await page.evaluate((k) => localStorage.removeItem(k), THEME_KEY);
+    await load(page, origin);
+    const other = await context.newPage();
+    await other.emulateMedia({ colorScheme: 'light' });
+    await load(other, origin);
+    await themeButton(page, 'dark').click();
+    await themeButton(other, 'light').waitFor({ timeout: 2000 });
+    const synced = await drawn(other);
+    await page.evaluate((k) => localStorage.removeItem(k), THEME_KEY);
+    await themeButton(other, 'dark').waitFor({ timeout: 2000 });
+    const unsynced = await drawn(other);
+    await other.close();
+    expect(synced.pin === 'dark' && synced.bg === DARK_PAGE && unsynced.pin === null && unsynced.bg === LIGHT_PAGE, `another tab: ${JSON.stringify({ synced, unsynced })}`);
 
     // Blocked storage (every localStorage access throws): the page follows the system, nothing breaks,
     // and the button still switches for the visit.
