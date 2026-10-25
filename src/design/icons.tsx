@@ -57,3 +57,17 @@ export const CHEVRON_ICON = (
     <path d="m6 4 4 4-4 4" />
   </svg>
 );
+
+/** The theme button (D82): a moon while light (a click goes dark), a sun while dark; 16 px like the controls. */
+export const MOON_ICON = (
+  <svg className="i-theme" width="16" height="16" viewBox="0 0 16 16" {...STROKE} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 2a4 4 0 0 0 6 6 6 6 0 1 1-6-6z" />
+  </svg>
+);
+
+export const SUN_ICON = (
+  <svg className="i-theme" width="16" height="16" viewBox="0 0 16 16" {...STROKE} strokeLinecap="round">
+    <circle cx="8" cy="8" r="2.75" />
+    <path d="M8 1.75v1.5M8 12.75v1.5M1.75 8h1.5M12.75 8h1.5M3.58 3.58l1.06 1.06M11.36 11.36l1.06 1.06M12.42 3.58l-1.06 1.06M4.64 11.36l-1.06 1.06" />
+  </svg>
+);

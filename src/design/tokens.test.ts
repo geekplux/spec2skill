@@ -63,9 +63,21 @@ describe('tokens.css mirrors tokens.ts', () => {
     expect(zeroed.toSorted()).toEqual(Object.keys(MOTION).toSorted());
   });
 
-  it('follows the system theme and never pins one (no toggle, no [data-theme])', () => {
-    expect(css).toMatch(/:root\s*\{\s*color-scheme: light dark;/);
-    for (const source of [css, appCss]) expect(source.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/data-theme|prefers-color-scheme/);
+  it('follows the system theme unless [data-theme] pins one; print is always light (D82)', () => {
+    const plain = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(plain).toMatch(/:root\s*\{\s*color-scheme: light dark;/);
+    // The pin is only color-scheme, so every light-dark() token follows it and nothing else changes.
+    const pins = [...plain.matchAll(/([^{}]*\[data-theme[^{}]*)\{([^}]*)\}/g)].map((m) => `${m[1]!.trim()} {${m[2]!.trim()}}`);
+    expect(pins).toEqual([
+      ':root[data-theme="light"] {color-scheme: light;}',
+      ':root[data-theme="dark"] {color-scheme: dark;}',
+      ':root, :root[data-theme] {color-scheme: light;}',
+    ]);
+    // The last one is inside @media print, after the pins, so it wins over a pinned dark.
+    expect(plain).toMatch(/@media print \{\s*:root, :root\[data-theme\] \{ color-scheme: light; \}\s*\}/);
+    expect(plain.indexOf('@media print')).toBeGreaterThan(plain.indexOf(':root[data-theme="dark"]'));
+    expect(plain).not.toMatch(/prefers-color-scheme/);
+    expect(appCss.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/data-theme|prefers-color-scheme|color-scheme/);
   });
 
   it('self-hosts only the Latin subset of IBM Plex Sans and Mono, 400/500/600, as woff2', () => {

@@ -37,6 +37,15 @@ code { font-family: var(--font-mono); font-size: inherit; }
 .nav a, .nav button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: none; cursor: pointer; }
 .nav a:hover, .nav button:hover { color: var(--gray-12); }
 .menu { display: none; }
+/* The header's right group: the nav (or Menu on phones), then the theme button (D82): a 16 px glyph
+   in a 32 px target, gray-11 like the links and gray-12 on hover. Its 8 px inset is pulled out on both
+   sides, so the glyph sits 24 px after GitHub and ends on the column's right edge. */
+.hdr-end { display: flex; align-items: center; gap: var(--space-24); }
+.theme-btn {
+  display: grid; place-items: center; flex: none; width: 32px; height: 32px; margin: 0 calc(-1 * var(--space-8));
+  padding: 0; border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-11); cursor: pointer;
+}
+.theme-btn:hover { color: var(--gray-12); }
 .icon-btn {
   display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 0;
   border-radius: var(--radius-row); background: none; color: var(--gray-11); cursor: pointer;
@@ -146,7 +155,10 @@ code { font-family: var(--font-mono); font-size: inherit; }
   .wrap { padding: 0 var(--space-16); }
   .two, .how { grid-template-columns: minmax(0, 1fr); }
   .two, .how { row-gap: var(--space-16); }
-  .menu { display: grid; place-items: center; width: 44px; height: 44px; margin-right: calc(-1 * var(--space-12)); padding: 0; border: 0; background: none; color: var(--gray-12); cursor: pointer; }
+  /* Menu, then the theme button, both 44 px and gray-12; the theme glyph ends on the 16 px gutter. */
+  .hdr-end { gap: 0; }
+  .menu { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: var(--gray-12); cursor: pointer; }
+  .theme-btn { width: 44px; height: 44px; margin: 0 calc(-1 * var(--space-14)) 0 0; color: var(--gray-12); }
   .hdr .nav { display: none; }
   .hdr .nav[data-open] {
     position: absolute; z-index: 4; top: 100%; left: 0; right: 0; display: flex; flex-direction: column; align-items: stretch; gap: 0;

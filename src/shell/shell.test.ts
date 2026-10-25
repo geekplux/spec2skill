@@ -23,7 +23,7 @@ const page = () => renderToStaticMarkup(createElement(Layout, {
 
 describe('page shell', () => {
   const html = page();
-  it('has one h1 (the hero), the lede, and the header links without buttons other than the phone menu', () => {
+  it('has one h1 (the hero), the lede, and the header links, with the phone menu and the theme button as its only buttons', () => {
     expect(html.match(/<h1\b/g)).toHaveLength(1);
     expect(html).toContain('<h1 id="hero-title">Turn any API into an agent skill</h1>');
     expect(html).toContain('Paste an OpenAPI spec or an MCP server. Get a tested skill, and a map to check what it teaches.');
@@ -32,7 +32,9 @@ describe('page shell', () => {
     expect(header).toContain('href="#how"');
     expect(header).toContain('href="#cli"');
     expect(header).toContain('href="https://github.com/geekplux/spec2skill"');
-    expect([...header.matchAll(/<button[^>]*aria-label="([^"]*)"/g)].map((m) => m[1])).toEqual(['Menu']);
+    // The theme button comes last; rendered without a window it follows a light system (D82).
+    expect([...header.matchAll(/<button[^>]*aria-label="([^"]*)"/g)].map((m) => m[1])).toEqual(['Menu', 'Switch to dark theme']);
+    expect(header.indexOf('Switch to dark theme')).toBeGreaterThan(header.indexOf('GitHub'));
     expect(html).not.toContain('Generate skill');
     expect(html).not.toContain('class="pitch"');
   });

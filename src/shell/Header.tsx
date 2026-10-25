@@ -1,5 +1,7 @@
-import { type MouseEvent, useEffect, useRef, useState } from 'react';
+import { type MouseEvent, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { MOON_ICON, SUN_ICON } from '../design/icons';
 import { Wordmark } from '../design/Logo';
+import { DARK_QUERY, pinnedTheme, resolveTheme, safeStorage, switchTheme, themeButtonLabel } from '../design/theme';
 
 export const REPO = 'https://github.com/geekplux/spec2skill';
 
@@ -15,7 +17,33 @@ export function onInPage(e: MouseEvent<HTMLAnchorElement>) {
   target.focus({ preventScroll: true });
 }
 
-/** Wordmark left; How it works, Command line, GitHub right (behind a Menu button on phones). No other buttons. */
+const onSystemChange = (change: () => void) => {
+  const media = window.matchMedia(DARK_QUERY);
+  media.addEventListener('change', change);
+  return () => media.removeEventListener('change', change);
+};
+
+/**
+ * The theme button (D82): it says what a click does ("Switch to dark theme") and shows that theme's
+ * glyph. Until it is used the page follows the system, live, and so does its name; a click pins the
+ * other theme (kept even when it equals the system's) and remembers it. The swap is instant.
+ */
+function ThemeButton() {
+  const systemDark = useSyncExternalStore(onSystemChange, () => window.matchMedia(DARK_QUERY).matches, () => false);
+  // index.html's inline script has already pinned a stored choice on <html>.
+  const [pinned, setPinned] = useState(() => (typeof document === 'undefined' ? null : pinnedTheme(document.documentElement)));
+  const theme = resolveTheme(pinned, systemDark);
+  return (
+    <button type="button" className="theme-btn" aria-label={themeButtonLabel(theme)} onClick={() => setPinned(switchTheme(theme, document, safeStorage()))}>
+      {theme === 'dark' ? SUN_ICON : MOON_ICON}
+    </button>
+  );
+}
+
+/**
+ * Wordmark left; How it works, Command line, GitHub (behind a Menu button on phones), then the theme
+ * button, always the last item on the right. DOM order is the visual order at every width.
+ */
 export function Header() {
   const [open, setOpen] = useState(false);
   const header = useRef<HTMLElement>(null);
@@ -44,14 +72,17 @@ export function Header() {
     <header className="hdr" ref={header}>
       <div className="wrap hdr-in">
         <a href="/" className="brand"><Wordmark /></a>
-        <button type="button" ref={menu} className="menu" aria-label="Menu" aria-expanded={open} aria-controls="site-nav" onClick={() => setOpen(!open)}>
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" aria-hidden="true"><path d="M3.5 7h13M3.5 13h13" /></svg>
-        </button>
-        <nav id="site-nav" className="nav" aria-label="Site" data-open={open || undefined}>
-          <a href="#how" onClick={go}>How it works</a>
-          <a href="#cli" onClick={go}>Command line</a>
-          <a href={REPO}>GitHub</a>
-        </nav>
+        <div className="hdr-end">
+          <button type="button" ref={menu} className="menu" aria-label="Menu" aria-expanded={open} aria-controls="site-nav" onClick={() => setOpen(!open)}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" aria-hidden="true"><path d="M3.5 7h13M3.5 13h13" /></svg>
+          </button>
+          <nav id="site-nav" className="nav" aria-label="Site" data-open={open || undefined}>
+            <a href="#how" onClick={go}>How it works</a>
+            <a href="#cli" onClick={go}>Command line</a>
+            <a href={REPO}>GitHub</a>
+          </nav>
+          <ThemeButton />
+        </div>
       </div>
     </header>
   );

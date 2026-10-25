@@ -8,6 +8,17 @@
     <meta property="og:description" content="Turn any OpenAPI spec or MCP server into an agent skill in one click." />
     <meta name="theme-color" content="#fcfcfc" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
+    <script>
+      // A stored theme (src/design/theme.ts) is pinned before the first paint, so it never flashes.
+      (function () {
+        try {
+          var theme = localStorage.getItem('spec2skill:theme');
+          if (theme !== 'light' && theme !== 'dark') return;
+          document.documentElement.dataset.theme = theme;
+          document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) { meta.content = theme === 'dark' ? '#111111' : '#fcfcfc'; });
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>spec2skill: turn any OpenAPI spec or MCP server into an agent skill</title>
   </head>
