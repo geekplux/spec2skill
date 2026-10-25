@@ -15,15 +15,20 @@
   },
   // Custom domain, also attached in the dashboard: declaring it here keeps `wrangler deploy` from removing it.
   "routes": [{ "pattern": "spec2skill.geekplux.com", "custom_domain": true }],
-  // 30 requests / 60 s per client IP for /api/fetch-spec and /api/mcp/tools (D19); 10 / 60 s for /api/ai/describe.
+  // 30 requests / 60 s per client IP for /api/fetch-spec and /api/mcp/tools (D19); 10 / 60 s for /api/ai/describe;
+  // PROXY_LIMITER: 300 / 60 s for the two proxies site-wide (one shared key). namespace_id must be unique in the
+  // Cloudflare account: Workers that share one share counters, so this project uses 4xxx.
   "ratelimits": [
-    { "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
-    { "name": "AI_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
+    { "name": "RATE_LIMITER", "namespace_id": "4001", "simple": { "limit": 30, "period": 60 } },
+    { "name": "AI_RATE_LIMITER", "namespace_id": "4002", "simple": { "limit": 10, "period": 60 } },
+    { "name": "PROXY_LIMITER", "namespace_id": "4003", "simple": { "limit": 300, "period": 60 } }
   ],
   // Optional lean AI (phase 17): cluster names and skill prose for user-loaded specs. Without the AI
   // binding, /api/ai/describe answers 501 and the app stays deterministic. No API key or secret is needed.
   "ai": { "binding": "AI" },
-  "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8" },
+  // DAILY_AI_CAP: model calls per UTC day for the whole site, counted in SPEC_CACHE (worker/budget.ts); past it
+  // the app keeps its deterministic text. "0" switches AI off.
+  "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8", "DAILY_AI_CAP": "300" },
   // AI results, 30-day TTL. Namespace id (docs/DEPLOY.md, step 2),
   // created with `pnpm exec wrangler kv namespace create SPEC_CACHE`.
   "kv_namespaces": [{ "binding": "SPEC_CACHE", "id": "b7d9422f1e0748e591bb18006fb87c38" }],
@@ -32,13 +37,15 @@
   "observability": { "enabled": true, "redact_query_string": true },
   // Workers Builds branch previews (`npx wrangler preview`) do not inherit the bindings above. Previews get
   // AI and their own rate-limit counters but no SPEC_CACHE (the cache is optional), so they never touch
-  // production KV and need no second namespace id.
+  // production KV and need no second namespace id. Without KV there is nowhere to count DAILY_AI_CAP, so
+  // previews never call the model either.
   "previews": {
     "ratelimits": [
-      { "name": "RATE_LIMITER", "namespace_id": "2001", "simple": { "limit": 30, "period": 60 } },
-      { "name": "AI_RATE_LIMITER", "namespace_id": "2002", "simple": { "limit": 10, "period": 60 } }
+      { "name": "RATE_LIMITER", "namespace_id": "4101", "simple": { "limit": 30, "period": 60 } },
+      { "name": "AI_RATE_LIMITER", "namespace_id": "4102", "simple": { "limit": 10, "period": 60 } },
+      { "name": "PROXY_LIMITER", "namespace_id": "4103", "simple": { "limit": 300, "period": 60 } }
     ],
     "ai": { "binding": "AI" },
-    "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8" }
+    "vars": { "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8", "DAILY_AI_CAP": "300" }
   }
 }

@@ -105,6 +105,8 @@ export function Footer({ onShortcuts }: { onShortcuts: () => void }) {
             <a href={`${REPO}/blob/main/LICENSE`}>MIT licence</a>
           </nav>
         </div>
+        {/* Matches DAILY_AI_CAP and the rate limits in wrangler.jsonc: they keep the free demo's bill bounded. */}
+        <p className="foot-note muted">AI names are capped per day site-wide, and fetching is rate-limited; samples and the deterministic skill always work.</p>
       </div>
     </footer>
   );

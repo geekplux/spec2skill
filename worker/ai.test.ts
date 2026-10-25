@@ -5,6 +5,7 @@ import { buildGraph } from '../src/graph';
 import { normalise } from '../src/model/normalise';
 import injection from '../src/skillgen/__fixtures__/injection.json';
 import { DEFAULT_MODEL } from './ai';
+import { budgetKey } from './budget';
 import { TTL_SECONDS } from './cache';
 import { hangingFetch } from './__fixtures__/fakes';
 import { type WorkerEnv, handle } from './index';
@@ -35,6 +36,9 @@ function kv(fail = false) {
     },
   };
 }
+
+/** Cache entries other than the daily budget counter. */
+const cached = (cache: ReturnType<typeof kv>) => [...cache.data.keys()].filter((k) => !k.startsWith('budget:'));
 
 function fakeAi(answer: () => unknown) {
   const calls: { model: string; input: { messages: { content: string }[]; temperature: number } }[] = [];
@@ -68,7 +72,7 @@ describe('/api/ai/describe', () => {
     const tidy = { ...GOOD, prose: { ...GOOD.prose, summary: 'Lists and reads notes for a coding agent' } };
     expect(first).toEqual({ status: 200, body: { ...tidy, cached: false, model: '@cf/test/model' } });
     const key = await cacheKey(SUMMARY, '@cf/test/model');
-    expect([...cache.data.keys()]).toEqual([key]);
+    expect(cached(cache)).toEqual([key]);
     expect(key).toMatch(/^ai:v1:describe:[0-9a-f]{64}$/);
     expect(cache.data.get(key)!.ttl).toBe(TTL_SECONDS);
     // Same summary with its keys in another order and an extra field: same key, served from KV.
@@ -79,9 +83,29 @@ describe('/api/ai/describe', () => {
     expect(ai.calls[0]!.input.messages[0]!.content).toContain('untrusted data');
   });
 
-  it('accepts an already parsed JSON answer and works without KV or with a failing KV', async () => {
-    expect((await ask({ ASSETS: assets, AI: fakeAi(() => ({ response: GOOD })) })).status).toBe(200);
+  it('accepts an already parsed JSON answer and works with a failing KV', async () => {
+    expect((await ask({ ASSETS: assets, AI: fakeAi(() => ({ response: GOOD })), SPEC_CACHE: kv() })).status).toBe(200);
     expect((await ask({ ASSETS: assets, AI: fakeAi(() => GOOD), SPEC_CACHE: kv(true) })).status).toBe(200);
+  });
+
+  it('makes no model call without KV (branch previews): nowhere to count the daily budget', async () => {
+    const ai = fakeAi(() => GOOD);
+    expect(await ask({ ASSETS: assets, AI: ai })).toEqual({ status: 501, body: { fallback: true, reason: 'budget' } });
+    expect(ai.calls).toHaveLength(0);
+  });
+
+  it('counts every model call, failed or not, and falls back (501 budget) at DAILY_AI_CAP', async () => {
+    const cache = kv();
+    const day = budgetKey(new Date());
+    expect((await ask({ ASSETS: assets, AI: fakeAi(() => ({ response: 'nope' })), SPEC_CACHE: cache, DAILY_AI_CAP: '2' })).status).toBe(501);
+    expect(cache.data.get(day)?.value).toBe('1');
+    expect((await ask({ ASSETS: assets, AI: fakeAi(() => GOOD), SPEC_CACHE: cache, DAILY_AI_CAP: '2' })).status).toBe(200);
+    const ai = fakeAi(() => GOOD);
+    const other = { ...SUMMARY, title: 'Other Notes API' };
+    expect(await ask({ ASSETS: assets, AI: ai, SPEC_CACHE: cache, DAILY_AI_CAP: '2' }, { summary: other })).toEqual({ status: 501, body: { fallback: true, reason: 'budget' } });
+    expect(ai.calls).toHaveLength(0);
+    // A cache hit never meets the budget.
+    expect((await ask({ ASSETS: assets, AI: ai, SPEC_CACHE: cache, DAILY_AI_CAP: '2' })).body).toMatchObject({ cached: true });
   });
 
   const bad: [string, () => unknown][] = [
@@ -111,7 +135,7 @@ describe('/api/ai/describe', () => {
   it.each(bad)('falls back (501) on %s and caches nothing', async (_, answer) => {
     const cache = kv();
     expect(await ask({ ASSETS: assets, AI: fakeAi(answer), SPEC_CACHE: cache })).toEqual({ status: 501, body: { fallback: true, reason: 'invalid-output' } });
-    expect(cache.data.size).toBe(0);
+    expect(cached(cache)).toHaveLength(0);
   });
 
   it('rejects malformed summaries before calling the model', async () => {
@@ -128,7 +152,7 @@ describe('/api/ai/describe', () => {
 
   it('rate limits with its own binding', async () => {
     let left = 1;
-    const env: WorkerEnv = { ASSETS: assets, AI: fakeAi(() => GOOD), AI_RATE_LIMITER: { limit: async () => ({ success: left-- > 0 }) } };
+    const env: WorkerEnv = { ASSETS: assets, AI: fakeAi(() => GOOD), SPEC_CACHE: kv(), AI_RATE_LIMITER: { limit: async () => ({ success: left-- > 0 }) } };
     expect((await ask(env)).status).toBe(200);
     expect(await ask(env)).toMatchObject({ status: 429, body: { error: { code: 'rate-limited' } } });
   });
@@ -137,7 +161,7 @@ describe('/api/ai/describe', () => {
     const model = await normalise(injection);
     const summary = buildSummary(model, buildGraph(model))!;
     const ai = fakeAi(() => ({ clusters: [{ id: 'cluster-pwned', name: 'Pwned', description: 'x' }], prose: GOOD.prose }));
-    const res = await ask({ ASSETS: assets, AI: ai }, { summary });
+    const res = await ask({ ASSETS: assets, AI: ai, SPEC_CACHE: kv() }, { summary });
     expect(res.status).toBe(501);
     const prompt = ai.calls[0]!.input.messages[1]!.content;
     expect(prompt).not.toContain('rm -rf');
@@ -155,6 +179,6 @@ describe('/api/ai/describe', () => {
       const res = await ask({ ASSETS: assets, AI: fakeAi(() => ({ clusters, prose: { summary: echo, idea } })), SPEC_CACHE: cache }, { summary });
       expect(res).toEqual({ status: 501, body: { fallback: true, reason: 'invalid-output' } });
     }
-    expect(cache.data.size).toBe(0);
+    expect(cached(cache)).toHaveLength(0);
   });
 });

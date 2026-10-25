@@ -21,14 +21,17 @@ describe('wrangler.jsonc', () => {
     });
     expect(wrangler.compatibility_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
-  it('binds AI, the SPEC_CACHE namespace, both rate limiters and AI_MODEL, with logs but no secrets', () => {
+  it('binds AI, the SPEC_CACHE namespace, the three rate limiters, AI_MODEL and DAILY_AI_CAP, with logs but no secrets', () => {
     expect(wrangler.ai).toEqual({ binding: 'AI' });
     expect(wrangler.kv_namespaces).toEqual([{ binding: 'SPEC_CACHE', id: expect.stringMatching(/^[0-9a-f]{32}$/) }]);
     expect(wrangler.ratelimits.map((r) => [r.name, r.simple.limit, r.simple.period])).toEqual([
       ['RATE_LIMITER', 30, 60],
       ['AI_RATE_LIMITER', 10, 60],
+      ['PROXY_LIMITER', 300, 60],
     ]);
-    expect(Object.keys(wrangler.vars)).toEqual(['AI_MODEL']);
+    // Namespace ids are account-wide: sibling projects use 1xxx-3xxx, so a shared id would share counters.
+    expect(wrangler.ratelimits.map((r) => r.namespace_id)).toEqual(['4001', '4002', '4003']);
+    expect(wrangler.vars).toEqual({ AI_MODEL: '@cf/meta/llama-3.1-8b-instruct-fp8', DAILY_AI_CAP: '300' });
     expect(wrangler.observability).toEqual({ enabled: true, redact_query_string: true });
   });
   it('is production only: no named environments (no warning on a bare `wrangler deploy`), custom domain declared', () => {
@@ -38,8 +41,8 @@ describe('wrangler.jsonc', () => {
   it('gives Workers Builds previews AI and their own rate limiters, but never the production KV namespace', () => {
     expect(wrangler.previews.ai).toEqual({ binding: 'AI' });
     expect(wrangler.previews.vars).toEqual(wrangler.vars);
-    expect(wrangler.previews.ratelimits.map((r) => r.name)).toEqual(['RATE_LIMITER', 'AI_RATE_LIMITER']);
-    expect(wrangler.previews.ratelimits.map((r) => r.namespace_id)).not.toContain('1001');
+    expect(wrangler.previews.ratelimits.map((r) => r.name)).toEqual(['RATE_LIMITER', 'AI_RATE_LIMITER', 'PROXY_LIMITER']);
+    expect(wrangler.previews.ratelimits.map((r) => r.namespace_id)).toEqual(['4101', '4102', '4103']);
     expect(wrangler.previews.kv_namespaces).toBeUndefined();
   });
 });
