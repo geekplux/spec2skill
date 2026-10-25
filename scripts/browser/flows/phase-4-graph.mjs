@@ -1,17 +1,18 @@
 // Phase 4: the sample page lists the inferred clusters and edge counts as plain text (since
-// phase 12 in the list view: one table per cluster and a summary line).
+// phase 12 in the list view: a group per cluster and a summary line; since R5 the groups follow the
+// map's column order and the summary is for screen readers).
 const EXPECTED = {
-  tasks: { clusters: ['Comments', 'Labels', 'Projects', 'Members', 'Tasks'], hub: 'Error on 20 operations' },
+  tasks: { clusters: ['Projects', 'Members', 'Labels', 'Tasks', 'Comments'], hub: 'Error on 20 operations' },
   petstore: { clusters: ['Pet', 'User'] },
-  filesystem: { clusters: ['File', 'Directory'] },
+  filesystem: { clusters: ['Directory', 'File'] }, // Directory feeds File: column order
 };
 
 async function expectGraph(page, id) {
   const summary = page.getByTestId('list-view');
   await summary.waitFor();
-  const names = (await summary.locator('table caption').allTextContents()).map((c) => c.split(' · ')[0].trim());
+  const names = await summary.locator('.lgroup .lname').allTextContents();
   if (names.join() !== EXPECTED[id].clusters.join()) throw new Error(`${id}: clusters ${names.join()}`);
-  const text = await summary.locator('.list-summary').innerText();
+  const text = await summary.locator('.list-summary').textContent();
   if (!/\d+ relationships shown: \d+ feeds, \d+ sub-path, \d+ shared schema\./.test(text)) {
     throw new Error(`${id}: edge counts missing in "${text}"`);
   }

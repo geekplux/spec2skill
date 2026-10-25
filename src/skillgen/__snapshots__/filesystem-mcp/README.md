@@ -5,7 +5,7 @@ An agent skill for the secure-filesystem-server: read [SKILL.md](SKILL.md) first
 ## Install
 
 ```sh
-unzip filesystem-mcp-skill.zip -d .claude/skills/   # or your agent's skills directory
+mkdir -p .claude/skills && unzip filesystem-mcp-skill.zip -d .claude/skills/   # or your agent's skills directory
 node .claude/skills/filesystem-mcp/scripts/audit.mjs .claude/skills/filesystem-mcp   # prints "audit passed"
 ```
 

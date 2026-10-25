@@ -92,9 +92,9 @@ Replace `<worker>` with `spec2skill.geekplux.com`.
 
 1. `curl -s https://<worker>/api/health` returns `{"ok":true,"ai":true,"model":"@cf/meta/llama-3.1-8b-instruct-fp8"}` (or `{"ok":true,"ai":false}` without the AI binding).
 2. `curl -s -X POST https://<worker>/api/fetch-spec -d '{"url":"http://127.0.0.1/"}'` returns a `blocked-host` error (the proxy refuses private addresses).
-3. Open `https://<worker>/`: the Tasks API sample's skill pane shows **Audit passed** beside the map. Switch to the Petstore and Filesystem samples.
+3. Open `https://<worker>/`: the Tasks API sample's route map, with the skill browser under it showing **Audit passed**. Switch to the Petstore and Filesystem samples.
 4. Click **Download .zip**, unzip it and run `node scripts/audit.mjs .` inside the skill folder: it ends with `audit passed`.
-5. Paste a public spec URL, for example `https://petstore3.swagger.io/api/v3/openapi.json`, and press **Load**: the map and skill appear; with AI enabled the names are credited "AI-drafted" after a moment.
+5. Paste a public spec URL, for example `https://petstore3.swagger.io/api/v3/openapi.json`, and press **Generate**: the map and skill appear; with AI enabled the names are credited "AI-drafted" after a moment.
 6. Open `https://<worker>/?sample=petstore` directly: the Petstore sample opens (shareable URL state), and an unknown path such as `https://<worker>/nope` still serves the app (single-page fallback).
 
 ## 7. Rollback

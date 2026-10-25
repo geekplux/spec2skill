@@ -23,6 +23,9 @@ const fresh = () => join(tmp, `out-${++n}`);
 
 const realFetch: CliDeps['fetch'] = (input, init) => fetch(input, init);
 const noNetwork: CliDeps['fetch'] = () => Promise.reject(new Error('network use'));
+/** GET answers `get`; every POST (the MCP client) answers `post`. */
+const fake = (get: () => Response, post: number): CliDeps['fetch'] => async (_input, init) => (init?.method === 'POST' ? new Response('', { status: post }) : get());
+const rpc = () => new Response(JSON.stringify({ jsonrpc: '2.0', error: { code: -32600, message: 'POST only' } }), { headers: { 'content-type': 'application/json' } });
 async function cli(args: string[], fetch: CliDeps['fetch'] = noNetwork) {
   const out: string[] = [];
   const err: string[] = [];
@@ -178,6 +181,28 @@ describe('a local server on 127.0.0.1', () => {
 
   it.each(['/openapi.yaml', '/moved', '/mcp', '/sse', '/rpc'])('%s gives a passing skill', async (path) => {
     expect(await cli([`${base}${path}`, '--out', fresh(), '--quiet'], realFetch)).toMatchObject({ code: EXIT.ok, last: 'audit passed' });
+  });
+
+  it('in Auto mode shows an MCP-only error only when the GET looked like MCP (same rule as the web app)', async () => {
+    const url = 'https://specs.example.test/api';
+    expect(await cli([url, '--out', fresh()], fake(rpc, 401))).toMatchObject({ code: EXIT.input, err: expect.stringContaining('needs credentials') });
+    expect(await cli([url, '--out', fresh()], fake(rpc, 404))).toMatchObject({ code: EXIT.input, err: expect.stringContaining('older HTTP+SSE') });
+    const typo = await cli([url, '--out', fresh()], fake(() => new Response('', { status: 404 }), 404));
+    expect(typo).toMatchObject({ code: EXIT.input, err: expect.stringContaining('The server answered 404') });
+    expect(typo.err).not.toContain('HTTP+SSE');
+    const waf = await cli([url, '--out', fresh()], fake(() => new Response('', { status: 404 }), 403));
+    expect(waf.err).not.toContain('credentials');
+  });
+
+  it('makes one MCP attempt when the GET already said MCP, showing that attempt\'s error', async () => {
+    const url = 'https://tools.example.test/rpc';
+    for (const status of [405, 406]) {
+      let posts = 0;
+      const counted: CliDeps['fetch'] = async (input, init) => (init?.method === 'POST' && posts++, fake(() => new Response('', { status }), 500)(input, init));
+      const r = await cli([url, '--out', fresh()], counted);
+      expect([posts, r.code]).toEqual([1, EXIT.input]);
+      expect(r.err).toContain('The MCP server answered 500');
+    }
   });
 
   it('never sends tools/call, and reports a missing spec with exit 3', async () => {

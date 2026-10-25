@@ -62,17 +62,17 @@ async function browserChecks() {
   await page.emulateMedia({ colorScheme: 'light' });
 
   await page.goto(ORIGIN);
-  await page.locator('.skill-pane[data-ready="true"]').waitFor();
+  await page.locator('.skill-browser[data-ready="true"]').waitFor();
   await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor();
-  const verdict = (await page.locator('.skill-pane .verdict').first().textContent())?.trim();
+  const verdict = (await page.locator('.skill-browser .verdict').first().textContent())?.trim();
   expect(verdict === 'Audit passed:', `skill pane verdict: ${verdict}`);
-  const [pane, map] = [await page.locator('.skill-pane').boundingBox(), await page.locator('.map').first().boundingBox()];
+  const [pane, map] = [await page.locator('.skill-browser').boundingBox(), await page.locator('.map').first().boundingBox()];
   expect(pane && map && pane.x + pane.width <= map.x, `skill pane is not beside the map: ${JSON.stringify({ pane, map })}`);
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: join(OUT, 'worker-dev-landing.png') });
   console.log('  / -> skill pane ready, "Audit passed" beside the map; screenshot worker-dev-landing.png');
 
-  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.skill-pane').getByRole('button', { name: 'Download .zip' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.skill-browser').getByRole('button', { name: 'Download .zip' }).click()]);
   const file = await download.path();
   const entries = Object.keys(unzipSync(readFileSync(file)));
   const slug = download.suggestedFilename().replace(/-skill\.zip$/, '');

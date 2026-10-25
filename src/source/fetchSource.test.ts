@@ -11,6 +11,10 @@ const TOOLS = { tools: [{ name: 'read_file', description: 'Read a file', inputSc
 const text = (body: string, headers: Record<string, string> = {}, status = 200) => new Response(body, { status, headers });
 const json = (body: unknown, status = 200) => text(JSON.stringify(body), { 'content-type': 'application/json' }, status);
 const html = (status = 404) => text('<!doctype html><title>x</title>', { 'content-type': 'text/html' }, status);
+const asHtml = (body: string) => () => text(body, { 'content-type': 'text/html; charset=utf-8' });
+/** The MCP proxy route failing with an MCP-only reason. */
+const mcpDown = () => json({ error: { code: 'http-error', message: 'The MCP server answered 502 to initialize.' } }, 502);
+const mcpFails = (code: 'needs-auth' | 'legacy-transport') => () => json({ error: { code, message: '' } }, code === 'needs-auth' ? 401 : 502);
 const cors = () => Promise.reject(new TypeError('Failed to fetch'));
 
 /** Runs loadSource against `routes` (exact URL -> handler); records calls, steps and writes. */
@@ -26,7 +30,7 @@ async function run(input: Input, routes: Record<string, Handler>, mode: Mode = '
       return route(url, init);
     },
     signal: ctl.signal,
-    step: (id, label) => steps.push(`${id}: ${label}`),
+    step: (id, label) => void steps.push(`${id}: ${label}`),
     write,
   };
   const out = await loadSource(input, mode, deps).then((r) => ({ ...r, error: undefined }), (error: unknown) => ({ error, model: undefined }));
@@ -52,9 +56,26 @@ describe('loadSource: URLs', () => {
     expect(r.error).toBeUndefined();
     expect(r.urls).toEqual([SPEC]);
     expect(r.calls[0]!.init).toMatchObject({ credentials: 'omit' });
-    expect(r.steps).toEqual(['fetch: Fetching spec (specs.example.test)', 'parse: Parsing (OpenAPI 3.1.0)', 'map: Mapping 22 operations', 'write: Writing skill']);
+    expect(r.steps).toEqual(['fetch: Fetching spec (specs.example.test)', 'parse: Parsing (OpenAPI 3.1.0)', 'map: Relating 22 operations', 'write: Writing skill']);
     expect(r.model!.source.url).toBe(SPEC);
     expect(r.write).toHaveBeenCalledOnce();
+  });
+
+  it('starts the audit step from the writer and waits for each step before its work (R6: the button names the stage)', async () => {
+    const log: string[] = [];
+    const deps: LoadDeps = {
+      fetch: async () => text(tasksYaml, { 'content-type': 'application/yaml' }),
+      signal: new AbortController().signal,
+      // Each step resolves a task later, as the app's does after a paint: the work must not start before.
+      step: (id) => new Promise<void>((done) => setTimeout(() => (log.push(`${id} shown`), done()), 0)),
+      write: async (_m, _g, audit) => {
+        log.push('written');
+        await audit();
+        log.push('audited');
+      },
+    };
+    await loadSource({ url: SPEC }, 'auto', deps);
+    expect(log).toEqual(['fetch shown', 'parse shown', 'map shown', 'write shown', 'written', 'audit shown', 'audited']);
   });
 
   it('falls back to /api/fetch-spec on a CORS or network failure and reads the x-spec-* headers', async () => {
@@ -118,9 +139,9 @@ describe('loadSource: URLs', () => {
     expect(codeOf(auth.error)).toBe('needs-auth');
   });
 
-  it('in Auto mode retries as MCP when the URL is not a spec (405, an event stream, or another document)', async () => {
+  it('in Auto mode retries as MCP when the URL is not a spec (400/404/405, an event stream, a page, or another document)', async () => {
     const url = 'https://tools.example.test/rpc';
-    for (const answer of [() => text('', {}, 405), () => text('', { 'content-type': 'text/event-stream' }), () => json({ hello: 1 })]) {
+    for (const answer of [() => text('', {}, 405), () => text('', {}, 404), () => text('', {}, 400), () => text('', { 'content-type': 'text/event-stream' }), () => json({ hello: 1 }), () => html(200)]) {
       const r = await run({ url }, { [url]: answer, '/api/mcp/tools': () => json(TOOLS) });
       expect([r.error, r.urls]).toEqual([undefined, [url, '/api/mcp/tools']]);
     }
@@ -134,10 +155,68 @@ describe('loadSource: URLs', () => {
     const both = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': () => json({ error: { code: 'legacy-transport', message: '' } }, 502) });
     expect(codeOf(both.error)).toBe('unsupported');
     expect((both.error as Error).message).toContain('"hello"');
+    const page = await run({ url }, { [url]: () => html(200), '/api/mcp/tools': () => json({ error: { code: 'http-error', message: 'The server answered 404.' } }, 502) });
+    expect([codeOf(page.error), page.urls]).toEqual(['html-page', [url, '/api/mcp/tools']]);
+    const missing = await run({ url }, { [url]: () => text('', {}, 404), '/api/mcp/tools': () => json({ error: { code: 'http-error', message: 'The server answered 404.' } }, 502) });
+    expect(codeOf(missing.error)).toBe('http-error');
+    expect((missing.error as Error).message).toContain('404');
     const strict = await run({ url }, { [url]: () => json({ hello: 1 }) }, 'openapi');
     expect([codeOf(strict.error), strict.urls]).toEqual(['unsupported', [url]]);
     const mcpOnly = await run({ url }, { [url]: () => text('', {}, 405) }, 'openapi');
     expect(codeOf(mcpOnly.error)).toBe('http-error');
+  });
+
+  it('shows an MCP-only error (credentials, older transport) only when the GET already looked like MCP', async () => {
+    const url = 'https://specs.example.test/data.json';
+    // A JSON-RPC answer to GET, or a proxied "answered 405": the MCP reason is the useful one.
+    for (const code of ['needs-auth', 'legacy-transport'] as const) {
+      const rpc = await run({ url }, { [url]: () => json({ jsonrpc: '2.0', error: { code: -32600, message: 'POST only' } }), '/api/mcp/tools': mcpFails(code) });
+      expect([codeOf(rpc.error), rpc.urls]).toEqual([code, [url, '/api/mcp/tools']]);
+    }
+    const proxied = await run({ url }, { [url]: cors, '/api/fetch-spec': () => json({ error: { code: 'http-error', message: 'The server answered 405.' } }, 502), '/api/mcp/tools': mcpFails('needs-auth') });
+    expect(codeOf(proxied.error)).toBe('needs-auth');
+    // The MCP client reports any POST 404/405 as the older transport and 401/403 as credentials: a
+    // mistyped URL, a docs page, a 5xx or another document keep the spec's own error.
+    const typo = await run({ url }, { [url]: () => text('', {}, 404), '/api/mcp/tools': mcpFails('legacy-transport') });
+    expect([codeOf(typo.error), (typo.error as Error).message]).toEqual(['http-error', expect.stringContaining('404')]);
+    const docs = await run({ url }, { [url]: () => html(200), '/api/mcp/tools': mcpFails('legacy-transport') });
+    expect(codeOf(docs.error)).toBe('html-page');
+    const waf = await run({ url }, { [url]: () => text('', {}, 404), '/api/mcp/tools': mcpFails('needs-auth') });
+    expect(codeOf(waf.error)).toBe('http-error');
+    const down = await run({ url }, { [url]: () => text('', {}, 502), '/api/mcp/tools': mcpFails('needs-auth') });
+    expect(codeOf(down.error)).toBe('http-error');
+    const other = await run({ url }, { [url]: () => json({ hello: 1 }), '/api/mcp/tools': mcpFails('legacy-transport') });
+    expect(codeOf(other.error)).toBe('unsupported');
+  });
+
+  it('makes one MCP attempt when the GET already said MCP, showing that attempt\'s error', async () => {
+    const url = 'https://tools.example.test/rpc';
+    for (const answer of [() => text('', {}, 405), () => text('', {}, 406), () => text('', { 'content-type': 'text/event-stream' })]) {
+      const r = await run({ url }, { [url]: answer, '/api/mcp/tools': mcpDown });
+      expect([codeOf(r.error), (r.error as Error).message, r.urls]).toEqual(['http-error', 'The MCP server answered 502 to initialize.', [url, '/api/mcp/tools']]);
+    }
+  });
+
+  it('tries a URL whose GET answers 5xx as MCP once, keeping the 5xx error when that fails', async () => {
+    const url = 'https://tools.example.test/rpc';
+    const ok = await run({ url }, { [url]: () => text('', {}, 500), '/api/mcp/tools': () => json(TOOLS) });
+    expect([ok.error, ok.urls, ok.model?.source.kind]).toEqual([undefined, [url, '/api/mcp/tools'], 'mcp']);
+    const down = await run({ url }, { [url]: () => text('', {}, 503), '/api/mcp/tools': () => json({ error: { code: 'http-error', message: 'The server answered 503.' } }, 502) });
+    expect([codeOf(down.error), down.urls]).toEqual(['http-error', [url, '/api/mcp/tools']]);
+    expect((down.error as Error).message).toContain('503');
+  });
+
+  it('accepts a spec or tools/list served as text/html, and still calls a real page a page', async () => {
+    const url = 'https://specs.example.test/spec';
+    const spec = await run({ url }, { [url]: asHtml(JSON.stringify(petstore)) }, 'openapi');
+    expect([spec.error, spec.model?.source.kind]).toEqual([undefined, 'swagger2']);
+    const yaml = await run({ url }, { [url]: asHtml(tasksYaml) }, 'openapi');
+    expect(yaml.model?.source.title).toBe('Tasks API');
+    const tools = await run({ url }, { [url]: asHtml(JSON.stringify({ tools: TOOLS.tools })) }, 'openapi');
+    expect(tools.model?.source.kind).toBe('mcp');
+    for (const body of ['<!DOCTYPE html><p>docs</p>', '<div>API docs</div>', '{"hello": 1}']) {
+      expect(codeOf((await run({ url }, { [url]: asHtml(body) }, 'openapi')).error)).toBe('html-page');
+    }
   });
 });
 

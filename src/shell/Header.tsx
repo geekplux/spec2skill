@@ -1,52 +1,91 @@
-import { type ReactNode, useEffect, useState } from 'react';
-import { Logo } from '../design/Logo';
-import { applyTheme, followSystem, initialTheme, safeStorage } from '../design/theme';
+import { type MouseEvent, useEffect, useReducer, useRef, useState, useSyncExternalStore } from 'react';
+import { MOON_ICON, SUN_ICON } from '../design/icons';
+import { Wordmark } from '../design/Logo';
+import { currentTheme, safeStorage, subscribeTheme, switchTheme, themeButtonLabel } from '../design/theme';
 
-const prefersDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
+export const REPO = 'https://github.com/geekplux/spec2skill';
 
-interface HeaderProps {
-  /** The source input (paste a URL or spec text, More options). */
-  source: ReactNode;
-  /** Write the skill again and bring the skill pane into view. */
-  onGenerate: () => void;
-  /** A load is in progress: writing the skill again now would rewrite the previous one. */
-  disabled?: boolean;
+/**
+ * An in-page link (#how, #cli) scrolls to its section and moves focus there without touching the URL:
+ * the hash belongs to the open operation (`#op=`, src/state/url.ts).
+ */
+export function onInPage(e: MouseEvent<HTMLAnchorElement>) {
+  const target = document.getElementById(e.currentTarget.hash.slice(1));
+  if (!target || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault();
+  target.scrollIntoView({ block: 'start' });
+  target.focus({ preventScroll: true });
 }
 
-export function Header({ source, onGenerate, disabled }: HeaderProps) {
-  const [theme, setTheme] = useState(() => initialTheme(safeStorage(), prefersDark()));
-  // Until the user picks a theme, an OS change applies live (A10), without storing anything.
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const change = (e: MediaQueryListEvent) => {
-      const next = followSystem(safeStorage(), e.matches);
-      if (!next) return;
-      document.documentElement.dataset.theme = next;
-      setTheme(next);
-    };
-    media.addEventListener('change', change);
-    return () => media.removeEventListener('change', change);
-  }, []);
-  const toggle = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    applyTheme(next, document.documentElement, safeStorage());
-    setTheme(next);
+const subscribe = (change: () => void) => subscribeTheme(window, change);
+const snapshot = () => currentTheme(window);
+
+/**
+ * The theme button (D82): it says what a click does ("Switch to dark theme") and shows that theme's
+ * glyph. Until it is used the page follows the system, live, and so does its name; a click pins the
+ * other theme (kept even when it equals the system's) and remembers it; another tab's choice applies
+ * live. The theme is read from <html>, where index.html's inline script pinned a stored choice. The
+ * swap is instant.
+ */
+function ThemeButton() {
+  const theme = useSyncExternalStore(subscribe, snapshot, () => 'light' as const);
+  // A click changes <html> in this tab, which no event reports: re-render to read it.
+  const [, clicked] = useReducer((n: number) => n + 1, 0);
+  const onClick = () => {
+    switchTheme(theme, document, safeStorage());
+    clicked();
   };
   return (
-    <header className="header">
-      <div className="brand">
-        <Logo />
-        <p className="pitch">Turn any OpenAPI spec or MCP server into an agent skill in one click.</p>
+    <button type="button" className="theme-btn" aria-label={themeButtonLabel(theme)} onClick={onClick}>
+      {theme === 'dark' ? SUN_ICON : MOON_ICON}
+    </button>
+  );
+}
+
+/**
+ * Wordmark left; How it works, Command line, GitHub (behind a Menu button on phones), then the theme
+ * button, always the last item on the right. DOM order is the visual order at every width.
+ */
+export function Header() {
+  const [open, setOpen] = useState(false);
+  const header = useRef<HTMLElement>(null);
+  const menu = useRef<HTMLButtonElement>(null);
+  // The phone menu closes on Escape (focus back on Menu) and on a click or tap outside the header.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setOpen(false);
+      menu.current?.focus();
+    };
+    const onDown = (e: PointerEvent) => !header.current?.contains(e.target as Node) && setOpen(false);
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onDown);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onDown);
+    };
+  }, [open]);
+  const go = (e: MouseEvent<HTMLAnchorElement>) => {
+    setOpen(false);
+    onInPage(e);
+  };
+  return (
+    <header className="hdr" ref={header}>
+      <div className="wrap hdr-in">
+        <a href="/" className="brand"><Wordmark /></a>
+        <div className="hdr-end">
+          <button type="button" ref={menu} className="menu" aria-label="Menu" aria-expanded={open} aria-controls="site-nav" onClick={() => setOpen(!open)}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" aria-hidden="true"><path d="M3.5 7h13M3.5 13h13" /></svg>
+          </button>
+          <nav id="site-nav" className="nav" aria-label="Site" data-open={open || undefined}>
+            <a href="#how" onClick={go}>How it works</a>
+            <a href="#cli" onClick={go}>Command line</a>
+            <a href={REPO}>GitHub</a>
+          </nav>
+          <ThemeButton />
+        </div>
       </div>
-      {/* DOM order is the visual order at every width (logo, source, theme, Generate): no CSS `order`. */}
-      {source}
-      <button type="button" className="btn theme" aria-pressed={theme === 'dark'} onClick={toggle}>
-        <span aria-hidden="true">☾</span> Dark theme
-      </button>
-      {/* Neutral: the skill pane's Download .zip is the view's one accent (docs/DESIGN.md 4). */}
-      <button type="button" className="btn generate" disabled={disabled} onClick={onGenerate}>
-        Generate skill
-      </button>
     </header>
   );
 }

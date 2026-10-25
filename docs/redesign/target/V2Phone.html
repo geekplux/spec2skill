@@ -1,0 +1,180 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>spec2skill v2 phone</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"><style>
+body{margin:0}
+.s2{font-family:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;font-size:14px;line-height:20px;color:var(--gray-12);background:var(--gray-1);font-feature-settings:"tnum";-webkit-font-smoothing:antialiased}
+.s2 *{box-sizing:border-box}
+.s2 a{color:inherit;text-decoration:none}
+.s2 button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer}
+.s2 input{font:inherit;color:inherit}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.muted{color:var(--gray-11)}
+.wrap{max-width:1136px;margin:0 auto;padding:0 32px;width:100%}
+.hdr{height:56px;border-bottom:.5px solid var(--gray-6);display:flex;align-items:center}
+.hdr .wrap{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600}
+.nav{display:flex;gap:24px;color:var(--gray-11)}
+.nav a:hover{color:var(--gray-12)}
+.hero{padding:104px 0 64px}
+.hero .wrap{display:grid;grid-template-columns:492px 492px;column-gap:88px;align-items:end}
+h1{font-size:48px;line-height:52px;font-weight:600;letter-spacing:-.035em;margin:0 0 20px;text-wrap:balance}
+.lede{font-size:20px;line-height:28px;color:var(--gray-11);margin:0;letter-spacing:-.01em;text-wrap:pretty}
+.load{display:flex;flex-direction:column;gap:12px}
+.field{display:flex;align-items:center;height:48px;padding:0 4px 0 16px;border-radius:10px;background:var(--gray-1);box-shadow:inset 0 0 0 .5px var(--gray-8)}
+.field input{flex:1;border:0;background:none;outline:none;min-width:0}
+.field input::placeholder{color:var(--gray-11)}
+.btn{height:32px;padding:0 12px;border-radius:6px;display:inline-flex;align-items:center;gap:8px;font-weight:500;white-space:nowrap}
+.btn.lg{height:40px;padding:0 16px}
+.btn.pri{background:var(--indigo-9);color:#fff}
+.btn.sec{box-shadow:inset 0 0 0 .5px var(--gray-8);background:var(--gray-1)}
+.btn.ghost{color:var(--gray-11)}
+.btn svg{flex:none}
+.samples{display:flex;align-items:center;gap:16px}
+.samples .seg{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg{display:inline-flex;padding:4px;border-radius:10px;background:var(--gray-3);gap:2px}
+.seg button{height:32px;padding:0 12px;border-radius:6px;color:var(--gray-11)}
+.seg button.on{background:var(--gray-1);color:var(--gray-12);font-weight:500;box-shadow:0 0 0 .5px var(--gray-7)}
+.frame{margin:0 -32px;border-radius:16px;box-shadow:inset 0 0 0 .5px var(--gray-7);padding:32px}
+.fhead{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:32px}
+.ftitle{font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.015em;margin:0 0 4px}
+.meta{display:flex;flex-wrap:wrap;column-gap:20px;row-gap:4px;color:var(--gray-11);align-items:center}
+.meta b{color:var(--gray-12);font-weight:500}
+.tag{height:20px;padding:0 6px;border-radius:4px;background:var(--gray-3);color:var(--gray-11);font-size:12px;line-height:20px}
+.actions{display:flex;gap:8px;flex:none}
+.tools{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:16px}
+.tools-l{display:flex;gap:12px;align-items:center}
+.search{height:40px;width:202px;border-radius:10px;box-shadow:inset 0 0 0 .5px var(--gray-7);display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--gray-11)}
+.kbd{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;line-height:18px;min-width:20px;height:20px;text-align:center;border-radius:4px;box-shadow:inset 0 0 0 .5px var(--gray-7);color:var(--gray-11)}
+.legend{display:flex;gap:20px;font-size:12px;color:var(--gray-11);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.map{position:relative}
+.map svg.edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.cl{position:absolute;width:202px;border-radius:8px;background:var(--gray-1);box-shadow:inset 0 0 0 .5px var(--gray-7);padding-bottom:4px}
+.cl h3{margin:0;height:36px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600;border-bottom:.5px solid var(--gray-6)}
+.cl h3 small{font-size:12px;font-weight:400;color:var(--gray-11)}
+.s2 .op{height:32px;display:flex;align-items:center;gap:6px;padding:0 6px 0 10px;margin:0 4px;border-radius:6px;width:calc(100% - 8px);text-align:left}
+.op .m{font-size:12px;width:44px;color:var(--gray-11);flex:none}
+.op .m.del{color:var(--amber-11)}
+.op .id{font-size:14px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.op.route .id{color:var(--indigo-11);font-weight:600}
+.op.hot{background:var(--gray-3)}
+.op.dim{opacity:.38}
+.stop{width:18px;height:18px;border-radius:50%;background:var(--indigo-9);color:#fff;font-size:12px;line-height:18px;text-align:center;font-weight:600;flex:none}
+.caption{margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;color:var(--gray-11)}
+.caption .chain{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--gray-12)}
+.caption code{font-size:12px;color:var(--gray-11)}
+.split{border-top:.5px solid var(--gray-6);margin-top:40px;padding-top:32px;display:grid;grid-template-columns:202px 492px 202px;column-gap:88px}
+.tree h4,.prev h4,.audit h4{margin:0 0 16px;font-size:14px;font-weight:600;height:20px;display:flex;justify-content:space-between;align-items:center}
+.tree h4{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.row{height:28px;transition:background-color 250ms ease-out;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:6px;margin:0 -8px}
+.row .n{flex:1;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.row .c{font-size:12px;color:var(--gray-11)}
+.row.on{background:var(--gray-3)}
+.row svg{color:var(--gray-11);flex:none}
+.s2 .edit{display:block;margin-top:16px;font-size:12px;color:var(--gray-11);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:.5px}
+.code{max-height:392px;overflow-y:auto;border-radius:10px;background:var(--gray-2);box-shadow:inset 0 0 0 .5px var(--gray-6);padding:12px 0;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;line-height:20px;overflow:hidden}
+.code .l{display:flex;white-space:pre-wrap;padding-right:16px}
+.code .l>span:last-child{flex:1;min-width:0;overflow-wrap:anywhere}
+.code .ln{width:44px;text-align:right;padding-right:16px;color:var(--gray-11);flex:none}
+.code .k{color:var(--gray-11)}
+.code .h{font-weight:600}
+.audit .ok{display:flex;align-items:center;gap:8px}
+.chk{display:flex;gap:8px;padding:7px 0;border-top:.5px solid var(--gray-6);font-size:12px;line-height:16px}
+.audit h4+.chk{border-top:0;padding-top:0}
+.chk svg{flex:none;margin-top:1px;color:var(--indigo-11)}
+.block{padding:96px 0 0}
+.sec2{display:grid;grid-template-columns:492px 492px;column-gap:88px;align-items:start}
+h2{font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.015em;margin:0 0 8px}
+.cli{border-radius:10px;background:var(--gray-2);box-shadow:inset 0 0 0 .5px var(--gray-6);padding:14px 16px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;line-height:20px;white-space:pre;position:relative}
+.cli .p{color:var(--gray-11)}
+.cli button{position:absolute;right:8px;top:8px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--gray-11)}
+.steps{display:grid;grid-template-columns:repeat(4,202px);column-gap:88px;margin-top:24px}
+.steps div{border-top:.5px solid var(--gray-7);padding-top:16px}
+.steps b{display:block;font-weight:600;margin-bottom:4px}
+.steps p{margin:0;color:var(--gray-11)}
+.made{margin-top:96px}
+.made .in{border-top:.5px solid var(--gray-6);padding-top:48px}
+.made .sec2 p{margin:0 0 12px}
+.s2 .ul{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:.5px}
+.links{display:flex;flex-direction:column}
+.links a{display:grid;grid-template-columns:202px 202px;column-gap:88px;padding:14px 0;border-top:.5px solid var(--gray-6)}
+.links a:first-child{border-top:0;padding-top:4px}
+.links a>span{grid-column:2;grid-row:1 / span 2}
+.links b{display:block;font-weight:500}
+.links span{display:block;color:var(--gray-11)}
+.links code{display:block;font-size:12px;color:var(--gray-11);margin-top:4px}
+.foot{margin-top:64px}
+.foot .in{border-top:.5px solid var(--gray-6);height:72px;display:flex;justify-content:space-between;align-items:center}
+.tip{position:absolute;width:300px;border-radius:10px;background:var(--gray-1);box-shadow:0 0 0 .5px var(--gray-7),0 8px 24px rgba(0,0,0,.08);padding:16px;z-index:2}
+.tip .t{font-weight:600;margin:4px 0 12px}
+.tip dl{margin:0;display:grid;grid-template-columns:64px minmax(0,1fr);row-gap:8px;column-gap:12px;font-size:12px;line-height:16px}
+.tip dt{color:var(--gray-11)}
+.tip dd{margin:0}
+.s2 .tip .ref{color:var(--indigo-11);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:.5px}
+
+@keyframes s2fade{from{opacity:0}to{opacity:1}}
+@keyframes s2rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes s2draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes s2pop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+.anim .cl{animation:s2rise 250ms ease-out both;animation-delay:calc(var(--i) * 40ms)}
+.anim .e{animation:s2fade 250ms ease-out 200ms both}
+.anim .rt{stroke-dasharray:1 1;animation:s2draw 300ms ease-out both;animation-delay:calc(450ms + var(--i) * 300ms)}
+.anim .op .stop{animation:s2pop 250ms ease-out both;animation-delay:calc(var(--i) * 300ms + 200ms)}
+.anim .chk{animation:s2fade 250ms ease-out both;animation-delay:calc(900ms + var(--i) * 30ms)}
+.tip{animation:s2rise 250ms ease-out both}
+@media (prefers-reduced-motion:reduce){.s2 *{animation:none!important;transition:none!important}}
+
+.ph .wrap{padding:0 16px}
+.ph .hero{padding:40px 0 32px}
+.ph .hero .wrap{display:block}
+.ph .lede{font-size:14px;line-height:20px;max-width:none}
+.ph .load{width:auto;margin-top:24px}
+.ph .field{height:auto;flex-direction:column;align-items:stretch;padding:4px;gap:4px}
+.ph .field input{height:40px;padding:0 12px;flex:none}
+.ph .field .btn{justify-content:center}
+.ph .samples{flex-direction:column;align-items:stretch;gap:8px}
+.ph .samples .seg{grid-template-columns:auto auto auto}
+.ph .fx{padding:0 16px}
+.ph .fhead{flex-direction:column;margin-bottom:24px}
+.ph .actions{width:100%;flex-direction:column}
+.ph .actions .btn{justify-content:center;width:100%}
+.lst h3{margin:24px 0 4px;font-size:14px;font-weight:600;display:flex;justify-content:space-between;height:28px;align-items:center;border-bottom:.5px solid var(--gray-6)}
+.lst h3 small{font-size:12px;font-weight:400;color:var(--gray-11)}
+.lrow{display:flex;align-items:center;gap:8px;min-height:44px;border-bottom:.5px solid var(--gray-5)}
+.lrow .m{font-size:12px;width:48px;color:var(--gray-11);flex:none}
+.lrow .m.del{color:var(--amber-11)}
+.lrow .id{flex:1;font-size:14px}
+.lrow .id small{display:block;font-size:12px;color:var(--gray-11);line-height:16px}
+.lrow.route .id>span{color:var(--indigo-11);font-weight:600}
+.more{display:flex;justify-content:space-between;align-items:center;height:44px;border-bottom:.5px solid var(--gray-6);font-weight:600}
+.more small{font-weight:400;color:var(--gray-11);font-size:12px;display:flex;gap:8px;align-items:center}
+.ph .steps{grid-template-columns:minmax(0,1fr);gap:16px}
+.ph .block{padding-top:64px}
+.ph .sec2{grid-template-columns:minmax(0,1fr);gap:16px}
+.ph .links a{grid-template-columns:minmax(0,1fr)}
+.ph .links a>span{grid-column:1;grid-row:auto}
+.ph .made{margin-top:64px;padding-top:40px}
+.ph .cli{white-space:pre-wrap;word-break:break-all;padding-right:44px}
+.ph .foot{height:auto;padding:24px 0}
+.ph .foot .in{height:auto;padding:24px 0;flex-direction:column;align-items:flex-start;gap:16px}
+.ph .nav{gap:20px}
+</style></head><body><div class="s2 ph" style="--gray-1:#fcfcfc;--gray-2:#f9f9f9;--gray-3:#f0f0f0;--gray-4:#e8e8e8;--gray-5:#e0e0e0;--gray-6:#d9d9d9;--gray-7:#cecece;--gray-8:#bbbbbb;--gray-9:#8d8d8d;--gray-10:#838383;--gray-11:#646464;--gray-12:#202020;--indigo-1:#fdfdfe;--indigo-2:#f7f9ff;--indigo-3:#edf2fe;--indigo-4:#e1e9ff;--indigo-5:#d2deff;--indigo-6:#c1d0ff;--indigo-7:#abbdf9;--indigo-8:#8da4ef;--indigo-9:#3e63dd;--indigo-10:#3358d4;--indigo-11:#3a5bc7;--indigo-12:#1f2d5c;--amber-1:#fefdfb;--amber-2:#fefbe9;--amber-3:#fff7c2;--amber-4:#ffee9c;--amber-5:#fbe577;--amber-6:#f3d673;--amber-7:#e9c162;--amber-8:#e2a336;--amber-9:#ffc53d;--amber-10:#ffba18;--amber-11:#ab6400;--amber-12:#4f3422;width:390px">
+<header class="hdr"><div class="wrap"><a href="#" class="brand"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lg6"><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3"/></clipPath></defs><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3" fill="var(--indigo-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--amber-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--gray-12)" clip-path="url(#lg6)"/></svg>spec2skill</a><button type="button" aria-label="Menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" aria-hidden="true"><path d="M3.5 7h13M3.5 13h13"/></svg></button></div></header>
+<section class="hero"><div class="wrap"><h1>Turn any API into an agent skill</h1><p class="lede">Paste an OpenAPI spec or an MCP server. Get a tested skill, and a map to check what it teaches.</p>
+<div class="load"><label class="field"><input placeholder="OpenAPI or MCP URL, or paste the spec" aria-label="Spec or server URL, or the spec text"><button type="button" class="btn lg pri">Generate</button></label>
+<div class="samples"><span class="muted">Samples</span><div class="seg"><button class="on">Tasks API</button><button>Petstore</button><button>Filesystem MCP</button></div></div></div></div></section>
+<section class="fx" aria-label="Tasks API skill" style="border-top:.5px solid var(--gray-6);padding-top:32px">
+<div class="fhead"><div><h2 class="ftitle">Tasks API</h2><div class="meta"><span>OpenAPI 3.1</span><span><b>22</b> operations</span><span><b>5</b> resources</span><span><b>78</b> links</span><span class="tag">Sample</span></div></div>
+<div class="actions"><button class="btn lg pri"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10"/></svg>Download .zip</button><button class="btn lg sec"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V4A1.5 1.5 0 0 0 9 2.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg>Install command</button></div></div>
+<div class="tools"><div class="seg"><button>Map</button><button class="on">List</button></div><label class="search" style="width:auto;flex:1"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14" stroke-linecap="round"/></svg><span>Search</span></label></div>
+<div class="caption" style="margin:0 0 8px"><span class="chain"><span class="stop">1</span><span class="mono">listProjects</span><span class="stop">2</span><span class="mono">listTasks</span><span class="stop">3</span><span class="mono">getTask</span></span></div>
+<div class="lst"><h3>Projects<small>5</small></h3><a href="#" class="lrow route"><span class="m mono">GET</span><span class="id"><span class="mono">listProjects</span><small class="mono">/projects</small></span><span class="stop">1</span></a><a href="#" class="lrow"><span class="m mono">POST</span><span class="id"><span class="mono">createProject</span><small class="mono">/projects</small></span></a><a href="#" class="lrow"><span class="m mono">GET</span><span class="id"><span class="mono">getProject</span><small class="mono">/projects/{projectId}</small></span></a><a href="#" class="lrow"><span class="m mono">PATCH</span><span class="id"><span class="mono">updateProject</span><small class="mono">/projects/{projectId}</small></span></a><a href="#" class="lrow"><span class="m mono del">DELETE</span><span class="id"><span class="mono">deleteProject</span><small class="mono">/projects/{projectId}</small></span></a><h3>Tasks<small>6</small></h3><a href="#" class="lrow route"><span class="m mono">GET</span><span class="id"><span class="mono">listTasks</span><small class="mono">/projects/{projectId}/tasks</small></span><span class="stop">2</span></a><a href="#" class="lrow"><span class="m mono">POST</span><span class="id"><span class="mono">createTask</span><small class="mono">/projects/{projectId}/tasks</small></span></a><a href="#" class="lrow route"><span class="m mono">GET</span><span class="id"><span class="mono">getTask</span><small class="mono">/tasks/{taskId}</small></span><span class="stop">3</span></a><a href="#" class="lrow"><span class="m mono">PATCH</span><span class="id"><span class="mono">updateTask</span><small class="mono">/tasks/{taskId}</small></span></a><a href="#" class="lrow"><span class="m mono del">DELETE</span><span class="id"><span class="mono">deleteTask</span><small class="mono">/tasks/{taskId}</small></span></a><a href="#" class="lrow"><span class="m mono">POST</span><span class="id"><span class="mono">completeTask</span><small class="mono">/tasks/{taskId}/complete</small></span></a><div style="margin-top:16px"><a href="#" class="more">Members<small>4 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></small></a><a href="#" class="more">Labels<small>3 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></small></a><a href="#" class="more">Comments<small>4 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></small></a></div></div>
+<div style="margin-top:40px"><h4 class="mono" style="margin:0 0 8px;font-size:14px">tasks-api/</h4><a href="#" class="row on" style="height:44px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M4 2h5.5L12.5 5v8.5a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5v-11A.5.5 0 0 1 4 2z"/><path d="M9.5 2v3h3"/></svg><span class="n" style="font-size:14px">SKILL.md</span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></a><a href="#" class="row" style="height:44px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h2.8l1.4 1.5h4.8A1.5 1.5 0 0 1 14 6v5.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5z"/></svg><span class="n" style="font-size:14px">kit</span><span class="c">4</span></a><a href="#" class="row" style="height:44px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h2.8l1.4 1.5h4.8A1.5 1.5 0 0 1 14 6v5.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5z"/></svg><span class="n" style="font-size:14px">references</span><span class="c">8</span></a><a href="#" class="row" style="height:44px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h2.8l1.4 1.5h4.8A1.5 1.5 0 0 1 14 6v5.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5z"/></svg><span class="n" style="font-size:14px">examples</span><span class="c">4</span></a><a href="#" class="row" style="height:44px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h2.8l1.4 1.5h4.8A1.5 1.5 0 0 1 14 6v5.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5z"/></svg><span class="n" style="font-size:14px">scripts</span><span class="c">3</span></a><a href="#" class="row" style="height:44px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h2.8l1.4 1.5h4.8A1.5 1.5 0 0 1 14 6v5.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5z"/></svg><span class="n" style="font-size:14px">evals</span><span class="c">1</span></a><a href="#" class="row" style="height:44px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h2.8l1.4 1.5h4.8A1.5 1.5 0 0 1 14 6v5.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5z"/></svg><span class="n" style="font-size:14px">ci</span><span class="c">1</span></a><a href="#" class="row" style="height:44px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M4 2h5.5L12.5 5v8.5a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5v-11A.5.5 0 0 1 4 2z"/><path d="M9.5 2v3h3"/></svg><span class="n" style="font-size:14px">README.md</span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></a></div>
+<a href="#" class="more" style="margin-top:24px;border-top:.5px solid var(--gray-6)"><span class="ok" style="display:flex;gap:8px;align-items:center"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="var(--indigo-9)"/><path d="m5 8.2 2 2 4-4.4" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Audit passed</span><small>9 of 9 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></small></a>
+</section>
+<section class="block" id="cli"><div class="wrap sec2"><div><h2>Run it from the command line</h2><p class="muted" style="margin:0">Writes the skill to disk and ends with its audit. Works offline, with no key.</p></div>
+<div class="cli"><span class="p">$ </span>git clone https://github.com/geekplux/spec2skill
+<span class="p">$ </span>cd spec2skill &amp;&amp; pnpm install
+<span class="p">$ </span>pnpm cli openapi.yaml --out .claude/skills<button aria-label="Copy commands"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V4A1.5 1.5 0 0 0 9 2.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></div></div></section>
+<section class="made"><div class="wrap"><div class="in sec2"><div><h2>Made by GeekPlux</h2><p class="muted" style="margin:0 0 8px">Writing, projects and data visualization</p><a class="mono ul" style="font-size:12px" href="#">geekplux.com</a></div>
+<div class="links"><a href="#"><b>Vert</b><span>Turn a GPX track into a terrain poster</span><code>vert.geekplux.org</code></a><a href="#"><b>Explorable</b><span>Turn a paper into an interactive essay</span><code>explorable.geekplux.com</code></a><a href="#"><b>Reasontrail</b><span>See how your coding agent got there</span><code>reasontrail.geekplux.com</code></a><a href="#"><b>markvis</b><span>Charts written in Markdown</span><code>github.com/geekplux/markvis</code></a></div></div></div></section>
+<footer class="foot"><div class="wrap"><div class="in"><a href="#" class="brand"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lg7"><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3"/></clipPath></defs><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3" fill="var(--indigo-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--amber-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--gray-12)" clip-path="url(#lg7)"/></svg>spec2skill</a><nav class="nav"><a href="#">How it works</a><a href="#">GitHub</a><a href="#">MIT licence</a></nav></div></div></footer>
+</div></body></html>

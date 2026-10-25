@@ -1,5 +1,5 @@
-// The loading and error states (PLAN 3.6, docs/DESIGN.md): one focal point each, shown above the
-// previous skill and map, which stay in place (greyscale while loading) so nothing jumps.
+// The loading and error states (docs/redesign/DESIGN.md 4.3): one focal point each, inside the result
+// frame. While loading, the previous result stays below, greyscale; an error takes its place.
 import { useEffect, useRef } from 'react';
 import { useAnnounce } from '../a11y/Announcer';
 import type { Explained } from './errors';
@@ -7,10 +7,16 @@ import { STEPS, type StepId } from './fetchSource';
 
 export interface Progress { at: StepId; labels: Partial<Record<StepId, string>> }
 
-const DEFAULT: Record<StepId, string> = { fetch: 'Fetching spec', parse: 'Parsing', map: 'Mapping operations', write: 'Writing skill' };
+const DEFAULT: Record<StepId, string> = { fetch: 'Fetching spec', parse: 'Parsing', map: 'Relating operations', write: 'Writing skill', audit: 'Auditing skill' };
+
+/** The stage word the Generate button shows: the label's first word (Fetching or Reading, Parsing, Relating, Writing, Auditing). */
+export const stageWord = (progress: Progress): string => (progress.labels[progress.at] ?? DEFAULT[progress.at]).split(' ')[0]!;
 const STATE = [['✓', 'done'], ['▸', 'in progress'], ['○', 'waiting']] as const;
 
-/** The ordered steps with static glyphs (no moving indicator, so reduced motion needs nothing more). */
+/**
+ * The ordered steps with static glyphs; the Generate button names the stage with its spinner (R6). The
+ * stage shown here and announced is the one the button shows (up at least 100 ms, src/source/stages.ts).
+ */
 export function LoadingSteps({ progress, onCancel }: { progress: Progress; onCancel: () => void }) {
   const at = STEPS.indexOf(progress.at);
   const label = progress.labels[progress.at] ?? DEFAULT[progress.at];
@@ -30,10 +36,13 @@ export function LoadingSteps({ progress, onCancel }: { progress: Progress; onCan
   );
 }
 
-interface ErrorPanelProps { error: Explained; onPaste: () => void; onSample: () => void; onMcp?: () => void }
+interface ErrorPanelProps { error: Explained; onPaste: () => void; onSample: () => void }
 
-/** Title, reason and the two ways on; focus moves to the title so the error is read first. */
-export function ErrorPanel({ error, onPaste, onSample, onMcp }: ErrorPanelProps) {
+/**
+ * Title, reason and the two ways on; focus moves to the title so the error is read first. There is no
+ * "load it as" choice: a URL is already tried as a spec and then as an MCP server (D37).
+ */
+export function ErrorPanel({ error, onPaste, onSample }: ErrorPanelProps) {
   const title = useRef<HTMLHeadingElement>(null);
   const announce = useAnnounce();
   useEffect(() => {
@@ -51,7 +60,6 @@ export function ErrorPanel({ error, onPaste, onSample, onMcp }: ErrorPanelProps)
       <p className="status-actions">
         <button type="button" className="btn" onClick={onPaste}>Paste spec text instead</button>
         <button type="button" className="btn" onClick={onSample}>Try a sample</button>
-        {onMcp && <button type="button" className="link" onClick={onMcp}>Load it as an MCP server</button>}
       </p>
     </section>
   );

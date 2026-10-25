@@ -4,7 +4,7 @@
 
 ## `search_files`
 
-MCP tool `search_files` · list · read-only
+MCP tool `search_files`: list, read-only
 
 > Search Files
 >
@@ -24,7 +24,7 @@ Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` 
 
 ## `write_file`
 
-MCP tool `write_file` · create · destructive: confirm first · idempotent
+MCP tool `write_file`: create, destructive (confirm first), idempotent
 
 > Write File
 >
@@ -39,7 +39,7 @@ Returns `object` with `content`.
 
 ## `read_file`
 
-MCP tool `read_file` · read · read-only · deprecated
+MCP tool `read_file`: read, read-only, deprecated
 
 > Read File (Deprecated)
 >
@@ -57,7 +57,7 @@ Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` 
 
 ## `read_text_file`
 
-MCP tool `read_text_file` · read · read-only
+MCP tool `read_text_file`: read, read-only
 
 > Read Text File
 >
@@ -75,7 +75,7 @@ Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` 
 
 ## `read_media_file`
 
-MCP tool `read_media_file` · read · read-only
+MCP tool `read_media_file`: read, read-only
 
 > Read Media File
 >
@@ -91,7 +91,7 @@ Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` 
 
 ## `read_multiple_files`
 
-MCP tool `read_multiple_files` · read · read-only
+MCP tool `read_multiple_files`: read, read-only
 
 > Read Multiple Files
 >
@@ -105,7 +105,7 @@ Returns `object` with `content`.
 
 ## `get_file_info`
 
-MCP tool `get_file_info` · read · read-only
+MCP tool `get_file_info`: read, read-only
 
 > Get File Info
 >
@@ -121,7 +121,7 @@ Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` 
 
 ## `edit_file`
 
-MCP tool `edit_file` · update · destructive: confirm first
+MCP tool `edit_file`: update, destructive (confirm first)
 
 > Edit File
 >
@@ -139,7 +139,7 @@ Fed by: `list_directory` (`listed path`, inferred), `list_directory_with_sizes` 
 
 ## `move_file`
 
-MCP tool `move_file` · update · destructive: confirm first
+MCP tool `move_file`: update, destructive (confirm first)
 
 > Move File
 >

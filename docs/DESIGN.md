@@ -1,123 +1,159 @@
-# spec2skill design rules
+# spec2skill design: the Route map
 
-The identity ("Survey chart": type, palette, logo, motion) is in [PLAN.md section 3](PLAN.md#3-design-direction-survey-chart). This file holds the rules reviewers apply to screenshots and the DOM. Every rule below is checkable from a screenshot at 1440 px and 390 px, or from the DOM.
+This is the current design of the web app, as built. It was approved by Sean on 2026-10-24 as the "Route map" redesign and built in phases R1 to R7; [docs/redesign/DESIGN.md](redesign/DESIGN.md) is the historical spec it was built from, and `docs/redesign/target/` holds the approved boards (V2Home, V2HomeDark, V2Hover, V2Phone, V2Motion, V2System). Where the build departs from that spec, this file says what was built and names the decision in [docs/DECISIONS.md](DECISIONS.md) (D30 to D82) that records why.
 
-## Calm layout
+Every rule below is checked: `scripts/browser/flows/redesign-acceptance.mjs` runs section 8 on every sample, light and dark, at 1440 and 390 px, at rest, on hover, with the card pinned, in the list and on the phone; the unit tests guard tokens, contrast, colour vision, copy and motion.
 
-Binding from phase 15 on (Sean's direction of 2026-10-21, PLAN.md 3.7). The product's focal point is **the generated skill** (file tree, SKILL.md preview, the "Audit passed" line). The map sits beside it as the quiet way to check it. Phase 18 brought the views built in phases 5-14 into line (the "Calm polish audit" below); every view added or changed must pass the checklist at the end of this section.
+## 1. The rules (Sean's 11, binding on every change)
 
-### 1. One focal point per view
+1. Never use the middle dot as a separator in UI copy, titles, `aria-label`s, docs or generated skills (D58).
+2. No redundant explanatory text in the UI.
+3. Copy is clear and fit for developers: not colloquial, no filler, no coined words.
+4. Every colour comes from Radix Colors 3.0 by its 12-step roles: 1-2 backgrounds, 3-5 component backgrounds, 6-8 borders, 9-10 solid fills, 11-12 text. Exception: `#fff` text and icons on `indigo-9`.
+5. Optical alignment; nested corners concentric (outer radius = inner radius + padding).
+6. Lines and borders are 0.5 px.
+7. Minimal motion; ease-out; 250 ms base; only the moments of section 7.
+8. Exactly four font sizes: 12, 14, 20, 48 px. Hierarchy by weight, colour and space.
+9. Minimise decisions; put unavoidable choices where the user already intends to choose.
+10. No casual radius or shadow; no card with a coloured left stripe. The operation card is the only element with a shadow (it floats).
+11. No habitual eyebrows or overlines.
 
-Each view has exactly one focal point. Everything else is visibly secondary: smaller, in a neutral colour, or one step away behind a disclosure.
+Also binding (CLAUDE.md): never colour alone; CVD-safe under protanopia, deuteranopia and tritanopia; keyboard operable; reduced motion respected; no decorative 3D; nothing finance-related.
 
-| View | The one focal point | Visibly secondary |
+## 2. Tokens (`src/design/tokens.css`, mirrored in `src/design/tokens.ts`)
+
+### Colour
+
+Radix gray, indigo and amber 3.0.0, copied as 36 `light-dark()` custom properties (D30). The theme follows the system through `color-scheme: light dark` until the header's theme button pins one: `data-theme` on `<html>` sets `color-scheme: light` or `dark`, and nothing else, so every token follows (D82). The choice is stored under `spec2skill:theme` (blocked storage is tolerated: the button then switches for the visit), applies live in other open tabs, and is kept until the button is used again, even when it equals the system's; an inline script in `index.html` pins it before the first paint, so it never flashes. Print is always light (`@media print`).
+
+| Role | Token |
+|---|---|
+| Page | `gray-1` |
+| Code and command boxes | `gray-2` fill, 0.5 px `gray-6` ring |
+| Segmented track, selected file, tag, hovered row | `gray-3` |
+| Faded links while a row is hot | `gray-5` (D47) |
+| Soft rules (section dividers, list rows, audit rows) | `gray-6` |
+| Frames, cards | `gray-7` ring; the source field `gray-8` |
+| Links on the map at rest | `gray-9` (3.2:1 on `gray-1`) |
+| Muted text | `gray-11` |
+| Ink | `gray-12` |
+| The one accent: strongest workflow, primary buttons, audit pass | `indigo-9` (fills, the route), `indigo-11` (text, check glyphs) |
+| Destructive method text | `--destructive`: `amber-12` in light (amber-11 on gray-1 is 4.49:1, just under AA), `amber-11` in dark (D34) |
+| Destructive warning mark, failed check `!` | `amber-11` (a graphic, over 3:1 in both themes) |
+| The logo's skill | `amber-9` (logo only) |
+
+### Type
+
+IBM Plex Sans and IBM Plex Mono, 400, 500 and 600, Latin subset, self-hosted woff2 (D32); `font-feature-settings: "tnum"` on the root.
+
+| Size / line | Use |
+|---|---|
+| 48 / 52 | the hero headline only (600, -0.035em, balanced) |
+| 20 / 28 | hero lede (400, `gray-11`), result title, section titles (600, -0.015em) |
+| 14 / 20 | body, controls, operation ids (mono), file names on phones |
+| 12 / 16 | meta, methods, paths, code, counts, captions, the operation card's list |
+
+No other sizes, no uppercase or letter-spaced labels. Identifiers (operation ids, paths, schema and field names, file names) wrap only at their word boundaries: `<Breakable>` (`src/design/breaks.tsx`) puts a `<wbr>` at each camelCase or separator boundary (before a hump, after `_`, `-`, `/` and `.`, before `{`), so a line ends between two words of an id, never inside one; copied text and accessible names stay the plain id, and `overflow-wrap: anywhere` is only the last resort for one word wider than its box (D79).
+
+### Lines, shape and space
+
+- Lines are 0.5 px box-shadows (`0 0 0 var(--line)` rings, `inset 0 ±var(--line) 0` rules), never CSS borders, which Chrome renders 1 px at 0.5 (D33). Focus is a 2 px `gray-12` outline. Map strokes are SVG.
+- Radii: frame 16, boxes and the source field 10 (its inset Generate 6, concentric at 4 px), cluster cards 8, rows and inner buttons 6, tags 4.
+- One shadow, `--shadow-float` (`0 8px 24px rgba(0, 0, 0, 0.08)`), on `.op-card` only.
+- Spacing tokens are named by value (`--space-16` is 16 px): 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32, 40, 48, 64, 88, 96, 104; `scripts/check-spacing.mjs` rejects raw lengths in spacing properties (D38, D51).
+
+### One grid (D39)
+
+`.wrap` is at most 1136 px with 32 px padding: a 1072 px column of four 202 px columns with 88 px gaps (grids use `minmax(0, 1fr)` columns and a `min(88px, 7.75vw)` gap, exact from 1136 px and fluid below). The left edges of the h1, the frame's contents, the first map column, the files column, the command-line title, How it works and Made by share one x; the hero field, the third map column, the command box and the Made by rows start 580 px in (checked to 1 px). The result frame hangs 32 px outside the column on each side; below 1200 px `.wrap` takes 48 px padding so the frame keeps at least 16 px from the window. The hero stacks below 960 px; under 640 px everything is one column with a 16 px gutter.
+
+## 3. Logo
+
+"Overlap": an `indigo-9` rounded square (the spec) and an `amber-9` circle (the skill), their overlap in `gray-12` so it flips in dark (`src/design/Logo.tsx`, a unique clip id per instance). Wordmark: the mark at 20 px and "spec2skill" 14/600, gap 8. The favicon and `docs/media/wordmark*.svg` carry fixed hex values.
+
+## 4. The page (V2Home)
+
+1. **Header**, 56 px, a 0.5 px `gray-6` rule under it: the wordmark; How it works, Command line, GitHub (14, `gray-11`), then the **theme button** (D82): a 16 px stroke glyph in a 32 px target, `gray-11` and `gray-12` on hover like the links, its glyph 24 px after GitHub and on the column's right edge; a moon while light, a sun while dark, named by what a click does ("Switch to dark theme", "Switch to light theme"), no tooltip, the swap instant. In-page links scroll to their section and move focus without touching the URL, whose hash is `#op=`. On phones the links sit behind a Menu button (Escape or a tap outside closes it) (D40), and the theme button follows Menu, 44 px and `gray-12` like it, its glyph on the gutter.
+2. **Hero**, 492 / 492, bottoms aligned: h1 "Turn any API into an agent skill" and the lede; the **source field** (48 px, "OpenAPI or MCP URL, or paste the spec") with an Open file icon button and the inset **Generate**; pasted text grows it into a textarea (Enter loads, Shift+Enter adds a line); a file can be dropped on it. There is no source selector: a URL is fetched as a spec and, when it is not one, tried as an MCP server (D37). Generate with an empty field writes the current skill again. Under it, "Samples" and a segmented control of native radios (Tasks API, Petstore, Filesystem MCP; one Tab stop, arrows select; none checked for the user's own source).
+3. **Result frame** (radius 16, `gray-7` ring, padding 32):
+   - **Head** (D56): the API title (h2, 20/600); a meta line of source kind and version ("OpenAPI 3.1", "Swagger 2.0", "MCP"), operations (tools for MCP), resources and links, with numbers in `gray-12` 500 and 20 px gaps; tags "Sample", "AI-drafted prose" (only when AI prose is in use) and "N warnings" (a button that discloses the parser's warnings). Right: **Install command** copies `mkdir -p .claude/skills && unzip <slug>-skill.zip -d .claude/skills/ && node .claude/skills/<slug>/scripts/audit.mjs .claude/skills/<slug>` (D63), shown in its title and announced, with a by-hand fallback if the clipboard refuses; **Download .zip** (primary). Each turns into "Copied" or "Downloaded" with a check for 2 s.
+   - **Tools row**: Map | List (a tablist), the search field (202 x 40, "Search", a `/` hint), and the legend: Output feeds input, Inferred, Strongest workflow (the last only when the map draws one).
+   - **Map** (section 5) or **List** (section 6).
+   - **Workflow caption**: "Strongest workflow", then each stop's numbered disc and operation id with the carrying field between them (`id → projectId`). None when the spec has no chain.
+   - **Skill browser** (D57), under a 0.5 px rule, on 202 / 492 / 202: the files (`<slug>/`, 28 px rows, folders with counts, "Edit name and licence" opening the name, licence and, when AI text exists, "Use deterministic text" in place); the preview (file name, line count, copy; the file in a `gray-2` code box with CSS line numbers, wrapping, scrolling inside at 392 px and keyboard scrollable); the audit, always open: "Audit passed" with its glyph and "N of N", then each check as a short true sentence ("2 worked examples are present", "7 evals name known operations"); a failing check shows an amber `!` and the word "Failed". From 640 to 1135 px files and preview sit over the audit.
+4. **Run it from the command line** (`#cli`), 492 / 492: the title, "Writes the skill to disk and ends with its audit. Works offline, with no key.", and the command box with copy (a check and "Commands copied" for 2 s). Lines hang 2ch so a wrapped command never starts at the `$` column.
+5. **How it works** (`#how`): Parse, Relate, Write and audit, Check, on four 202 px columns under 0.5 px rules.
+6. **Made by GeekPlux**: the title, "Writing, projects and data visualization", geekplux.com; four project rows (Vert, Explorable, Reasontrail, markvis).
+7. **Footer**: the wordmark; How it works, GitHub, Keyboard shortcuts (the `?` dialog), MIT licence.
+
+**Loading, error and empty states** live in the frame (D61, D65). While loading, the previous result greys and Generate names the running step with a 16 px spinner: "Fetching" for a URL or "Reading" for a file or pasted text, then "Parsing", "Relating", "Writing", "Auditing". Each label is painted before its step's synchronous work and stays up at least 100 ms (`stageTimer` in `src/source/stages.ts`): a step that starts sooner is shown when the time is up if the thread is free, else skipped, so nothing waits for a label and a fast load shows one stage without flicker. The loading panel lists the same steps with Cancel, and the announcer reads each shown step once. Sample switches show no stage. Generate is at least 112 px wide (its widest label with the spinner) so the field holds still: from about 1007 px the field's content box (a container query at 396 px) gives it 112 at rest and while loading; from 960 to about 1007 px it rests at 91 px and widens to 112 once when a load starts and narrows once when it ends, so a URL keeps 240 px; on phones it is a full-width row. An error replaces the frame's contents with its title, reason and two recovery actions, "Paste spec text instead" and "Try a sample"; an empty spec keeps its note in the skill browser.
+
+## 5. The map (`src/map/RouteMap.tsx`, layout in `src/layout/route.ts`)
+
+| Element | Drawing |
+|---|---|
+| Resource | A card 202 wide: radius 8, `gray-1`, `gray-7` ring; a 36 px head (name 14/600, count 12 `gray-11`, a `gray-6` rule) |
+| Operation | A 32 px row, a real `<button>`: the method (mono 12, `gray-11`, a 44 px column), the operation id (mono 14, ellipsis), the stop disc on workflow rows. MCP tools show `read` (read-only by hint or by name) or `write` (D41) |
+| Destructive operation | DELETE and destructiveHint tools alike: method text in `--destructive` and a 12 px `amber-11` warning triangle at the row's right end, left of a stop disc; the row's name says "destructive" and the mark is `aria-hidden` (D41, D53). The method column stays 44 px so ids keep one x |
+| Feed link (output feeds input) | A curve, 1 px `gray-9`, open arrowhead at the target, from the source row's right edge to the target row's left edge |
+| Inferred link | The same, dashed 3 3 |
+| Bundle | One source feeding many operations of one resource: one curve to the target card's head. Three or more feed links from one card to a card two or more columns to its right also rest as one line between the two heads (D54) |
+| Strongest workflow (`topChains()[0]`) | 2.5 px `indigo-9` over a 6 px `gray-1` halo, a filled arrowhead; workflow ids `indigo-11` 600; an 18 px `indigo-9` disc with its white 12/600 number at the row's right end (CSS `::after`, so the number is not in the row's visible text); a same-card step loops out of the card's left edge |
+| Same-card, same-column and backward links, sub-path and shared schema | Not drawn at rest |
+
+**Layout** (pure and deterministic, snapshot-tested on the three samples and the synthetic 1000-operation spec):
+
+1. Columns by dependency: the resource feed graph, cycles broken by the greedy feedback-arc order of Eades, Lin and Smyth (after dropping any pair that runs back against the strongest workflow), each resource at its longest-path depth (`src/layout/route-columns.ts`, D42). Tasks API: Projects | Members, Labels | Tasks | Comments. Resources with no feeds to or from another go to the shortest of the first four columns, biggest first (D43).
+2. The main line: the workflow's cards sit so the line runs straight between columns; other cards of a column stack above and below, alternating, at least 32 px clear of the cards and of the line's row band (D44).
+3. Operations keep CRUD order: list, create, read, update, delete, action.
+4. Columns at x = 0, 290, 580, 870. More than four columns, or a map wider than the frame, scroll sideways inside the frame: a native scroller (`role="region"`, "Map, scrolls sideways", focusable), its box tight to what can be drawn, hover links included (D50). No zoom.
+5. A card shows at most 8 rows (workflow stops always among them), then "N more" (focusable, `aria-expanded`), which expands it in place.
+6. Links never cross a card: they curve only in the 88 px gaps and cross a column through the free corridor nearest the straight line, 8 px clear, 6 px apart when they share it; the workflow's row band blocks them like a card (D44).
+
+**Interaction**
+
+- **Hover or focus an operation** (D45, D47): its feed links appear, each its own 1.25 px `gray-12` curve with an arrowhead (sub-path and shared-schema relations are listed in the card and the list, not drawn). Rows are lit or faded by weight as well as colour: lit (the hot row, rows its links reach, search matches) id `gray-12` 600 and method 500; faded id and method `gray-11` 400; a card with no lit row fades its name to `gray-11` 500; rest links fade to `gray-5` without arrowheads and the workflow line and discs rest in `gray-5` until nothing is hot. Not opacity 0.38, which drops buttons to about 2.3:1.
+- **The operation card** (D46, D60, D70, D76, D80): 300 wide, radius 10, `gray-1`, `gray-7` ring and the float shadow, padding 16; method and path, title, then Input, Output, Fed by, Feeds, Shares schema, Sub-paths, Sub-path of, In skill (opens the reference file in the skill browser). The hover preview lists at most four inputs and four operations per group, then "and N more"; the pinned card lists them all. It sits 16 px right of the row's card with its top 40 px above the row's centre, flips left of the card at the frame's or window's edge, and never covers the skill browser: any preview that would end more than 64 px under the map rises beside its row until it ends there, so it is never cut either (D76). Kept short (D80), no preview on the samples is taller than the map and those 64 px together; one from a pasted spec that still is starts at the map's top and passes the line rather than being cut (D70). The hover preview is `aria-hidden` (the row's name carries the essentials); a pointer has 150 ms to travel from the row to it.
+- **Pinned** by click, Enter or Space: a non-modal dialog named by its title, after the map in the Tab order, with Close, the description, auth, related operations as buttons that move the pin, and the example request with Copy example. Escape closes it and returns focus to the row; `#op=` names the pinned row and back and forward move the pin. Its height is capped at the map's bottom plus 64 px and it scrolls inside, so it never covers the skill browser. On phones it is a bottom sheet (at most 50dvh) with the page padded so a focused row stays clear; in the list it docks under the groups.
+- **Keyboard** (`src/map/keyboard.ts`, D48): the map is one Tab stop (roving tabindex); arrows move to the nearest row that way, Page Up and Page Down change card, Home and End go to a card's first and last row, E cycles the focused row's relationships (announced, the far row outlined), Enter or Space pins; `?` opens the shortcuts dialog anywhere outside a text field. A row's name starts with its visible text: "GET getTask, /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 13 relationships".
+- **Search**: `/` focuses it; matches stay lit, the rest fade, and the count is announced. URL state keeps `#op=`, `q=` and `view=` (`map` or `list`).
+
+## 6. List view and phones
+
+- **List** (D59): groups by resource in the map's column order, each a disclosure heading (14/600, count 12 `gray-11`) over 44 px rows: method (mono 12, a 48 px column), operation id (mono 14) over its path (mono 12 `gray-11`), the stop disc and the destructive mark as on the map. A row pins the same card, docked. After each row a visually hidden list gives its relationships in words, so the list is the map's full text alternative. Desktop opens every group; phones open the workflow's groups first; a search or a pin opens its group.
+- **One scroll at every width** (D55): no Skill tab. Without `?view=` desktop opens the Map and phones (under 640 px) the List.
+- **Phones** (V2Phone): one column, 16 px gutter; the hero's field over a full-width Generate; the samples on one line. The result is not a card: a full-width 0.5 px rule above it, the title, the meta (wrapping), a full-width Download .zip then Install command, Map | List with List selected, the workflow as one compact line above the list. Then the skill's files as 44 px rows (each opens a full-width preview with Close), and "Audit passed, 9 of 9" as one row that expands its checks. Nothing scrolls sideways at 320 px.
+
+## 7. Motion (`src/design/motion.tsx`)
+
+All ease-out, one-shot, `--motion-map` 250 ms and `--motion-draw` 300 ms, both 0 under `prefers-reduced-motion: reduce`, where every state appears at once and the spinner is a still arc. Every animation is declared only under `prefers-reduced-motion: no-preference`; `src/design/motion.test.ts` fails on any transition or animation not listed here (in any case, longhand or vendor-prefixed, in CSS, `index.html` or a script, `el.style['transition'] = …` included), on smooth scrolling and on unused keyframes.
+
+| Moment | What moves | Timing |
 |---|---|---|
-| First view (desktop: skill pane + map; phones: Skill tab) | The skill pane: file tree, SKILL.md preview, the "Audit passed" summary line, and **Download .zip** | The map pane (beside it, no accent fill), the title block, the sample chips |
-| Map (pane or tab) | The focused/selected node and its edges (the only accent-weight strokes) | Toolbar, search, cluster labels, other nodes and edges at normal weight |
-| List view | The operations table (cluster captions + rows) | Search, filters, the summary line above the table |
-| Detail panel | The operation's name, method + path, and its "In the skill" link | Inputs, outputs, auth, related operations, Copy example |
-| Loading | The ordered step list (Fetching, Parsing, Mapping, Writing skill) | Cancel (a neutral button); the previous skill and map, shown greyscale (not faded) behind it |
-| Error | The error title and its two recovery actions ("Paste spec text instead", "Try a sample") | The reason sentence, any help (a command to run), the previous skill and map below, shown greyscale as in Loading; the error title is at least the page title's size |
-| Empty spec (zero operations) | The empty chart and its sentence "This spec has no paths..." | The warnings disclosure; the skill pane's "No operations, so no skill to write" |
+| A new result (first view, load, sample switch, Generate) | Cards rise 4 px and fade in, column by column | 250 ms, 40 ms a column (the stagger stops at column 8) |
+| | The links fade in as one layer | 250 ms from 200 ms |
+| | Each workflow segment draws left to right (`pathLength="1"`, dash offset 1 to 0); its arrowhead appears when it is drawn | 300 ms a segment from 450 ms |
+| | Stop disc k pops (scale 0.5 to 1, fade) as the line reaches it | at 450 + 300 (k - 1) ms, 250 ms |
+| | Audit rows fade in, top to bottom | from 900 ms, 30 ms apart |
+| | Phones and the list: groups rise like cards; the phone's audit row fades in | 40 ms apart; at 900 ms |
+| Hover or focus an operation | Rows' grey and lit or faded text, links fading to `gray-5`, the hot links and the card fading in, the card rising 4 px | 250 ms, transitions declared only while a row is hot and 250 ms after, so a theme change or a search snaps (D67) |
+| Generate | The stage label swaps; the spinner turns | 250 ms a swap; 800 ms a turn (the one loop) |
+| Copy, download | The label becomes "Copied", "Downloaded" or "Commands copied" with a check, back after 2 s | 250 ms |
 
-### 2. What sits behind disclosure on first load
+The sequence plays while the result carries `data-enter` (`useEnter`), cleared when the last disc has popped and at least 2 s after it started; nothing mounted later (a hover, a search, "N more", a resize) replays it (D66). The 1000-operation spec runs one animation per card and one for the links. No other motion: no hover lifts, no button transitions, no scroll effects; the theme button swaps the theme at once (D82). The V2Motion board pops each disc 250 ms earlier than this (at 200 + 300 i ms, before the line arrives); the product follows the table.
 
-Each item is reachable in one step by a labelled control with a visible text label (never an icon alone). "Closed" means closed on first load at every width unless a width is named.
+## 8. Acceptance checks
 
-| Content | Revealed by | State exposed |
-|---|---|---|
-| Source selector (Auto / OpenAPI-Swagger / MCP) and **Open file** | "More options" button right of the URL field | `aria-expanded` on the button, `aria-controls` names the panel |
-| Map legend | "Legend" summary under the map, closed at every width | native `<details>` |
-| Filters and edge-kind toggles, and the note "Search and filters apply to the map and list; the skill always covers every operation" | "Filters" summary in the map toolbar row | native `<details>` |
-| Skill slug and licence (and "Use deterministic text" once AI text exists) | "Options" summary in the skill pane head | native `<details>` |
-| Spec metadata (version, servers, auth) | the detail panel / list row, never the first view (the title's one lede line names only the source kind and format version) | - |
-| Install commands and **Copy install command** | "Install command" summary under Download .zip; not rendered when there is nothing to download (empty spec) | native `<details>` |
-| Per-check audit rows and the CLI note | the "Audit passed: N of N checks" summary line | native `<details>` |
-| Spec warnings | the "N warnings" pill beside the title | native `<details>` |
-| "Read as text" summaries (relationships per row) | "N relationships" summary in the list view | native `<details>` |
-| Built-in sample chips, once a user source is loaded | "Try a built-in sample" summary | native `<details>` |
+`pnpm build && pnpm check:browser -- --phase 21 --flow redesign-acceptance` runs all of them and prints each check's result for each state:
 
-Accessibility of disclosed content (all mandatory):
-- The toggle is a native `<summary>` or a `<button>` with `aria-expanded`; it has a text name.
-- The toggle's name says what is inside ("3 warnings", "More options"), so a closed disclosure is never a dead end for a screen-reader user.
-- Opening moves nothing and steals no focus; Tab from the toggle reaches the first control inside.
-- Nothing is removed for keyboard or screen-reader users: everything a pointer user can reach is reachable by Tab and named.
-- When a disclosure closes or a status panel unmounts while it holds focus, focus moves to its toggle or to the field (never to `<body>`).
-- Non-obvious keys are explained to assistive tech (e.g. `aria-describedby`: Enter loads, Shift+Enter new line) and listed in Keyboard shortcuts.
+1. **Type**: the computed `font-size` of every element with text is 12, 14, 20 or 48.
+2. **Colours**: every computed colour, background, border, outline, fill, stroke, decoration and placeholder colour is a Radix value of the page's theme, `#fff` on `indigo-9`, transparent, or the 8 % black float shadow; nothing sits at an opacity between 0 and 1 at rest (a faded colour is not a Radix step, so the shortcuts dialog's backdrop is opaque `gray-1`, D77). `::before` and `::after` with content (the workflow's stop discs, the line numbers) and an open modal dialog's `::backdrop` are read like elements.
+3. **Lines**: no CSS border; every ring and rule is 0.5 px; an outline only on focus; the only blur is the operation card's float.
+4. **Middle dot**: none in rendered text, names or titles, nor in `src` or `index.html` (also `src/design/copy.test.ts`).
+5. **CVD and contrast**: `src/design/cvd.test.ts` and `contrast.test.ts` (text at AA, `indigo-9`, `amber-11` and `gray-12` distinguishable under the three simulations, `gray-9` links at 3:1).
+6. **Grid**: at 1440 the left and 580 px edges of section 2, with the skill browser's columns and the map's four columns, to 1 px (`GRID_PARTS` in `scripts/browser/redesign-checks.mjs`; a map of fewer than three columns has no third column to measure).
+7. **Reduced motion**: no running or declared animation or transition at rest, on hover, in the list and on the phone.
+8. **Budgets and accessibility**: `pnpm check:size` passes; axe finds no violation of any impact.
 
-### 3. Spacing scale
+9. **Text overlap**: no two pieces of text print over each other (every rendered line of every visible text node, clipped by its clipping ancestors and narrowed to its em box, crossing another by more than 2 px on both axes fails), and in each Made by row the name, line and URL neither cross nor leave the row; on home at rest for every sample at 1440, 1024, 768, 640, 390 and 320 (D75).
 
-One scale, as tokens in `src/design/tokens.css` (mirrored in `tokens.ts`, checked by `tokens.test.ts`):
-
-| Token | Value | Use |
-|---|---|---|
-| `--space-1` | 4px | inside a control: glyph to text, chip padding, dense rows (tree, tables) |
-| `--space-2` | 8px | between related controls in one group |
-| `--space-3` | 16px | between groups in one block; page gutter on phones |
-| `--space-4` | 24px | between blocks; page gutter on desktop |
-| `--space-5` | 40px | around the focal point; between the two panes; between sections |
-| `--space-6` | 64px | page-level breathing room (empty and error states; room for the phone's fixed bottom bar) |
-
-Rules:
-- Layout CSS (margin, padding, gap, inset, top/right/bottom/left) uses only `--space-*` tokens (or 0, or `em` for type-relative indents). `scripts/check-spacing.mjs` enforces this in `pnpm lint`; its allow-list holds the off-screen skip link and the 1 px overlap of joined tabs, each with its reason. Raw `px`/`rem` stay allowed outside those properties: hairlines (1-3 px borders), focus outlines, control min-heights/widths, SVG geometry.
-- Phase 18 moved every view onto this scale and renamed it from `--calm-*` to `--space-*`; the old 4/8/12/16/24/32/48 values are gone (12 became 8 or 16, 32 and 48 became 40).
-- Borders and frames are allowed only for: form fields, buttons and chips, the map frame, the detail panel edge, the skill preview's ruled sheet, tables' row rules, the single left rule of the loading and error states, the header's double rule, the dialog, and the one hairline on top of the phone's sticky Download bar (content scrolls under it). Everything else is grouped by space and alignment, not boxes or cards: the skill pane and the map pane have no card, and the survey grid paper is drawn inside the map only.
-- Disclosure toggles look alike and are quiet: graphite underlined text with the native marker (`<summary>`), or a link-styled button with `aria-expanded` ("More options"); never the accent.
-
-### 4. One accent
-
-- `meridian` at accent weight (filled button, bold coloured text, thick stroke) marks **one** thing per view: first view = **Download .zip**; map = the focused node and its highlighted edges; loading = the active step's marker; error = none (the title is the focal point by size and position; the error glyph uses `brick` with a `!` shape and a visually hidden "Could not load:" prefix on the title).
-- The header's **Generate skill** is neutral (ink border, bold text) at every width and in every state, and disabled while loading; on phones it is the fixed bottom bar of the Map and List tabs.
-- Kickers (small uppercase labels such as "Agent skill · Prose: deterministic") and the skill's slug are `graphite`/`ink`, not `meridian`. Links stay `meridian` underlined text at normal weight (not accent weight).
-- Map edges are quiet at rest (phase 20), so the map reads as the secondary pane beside the skill: edges and feed bundles are drawn at 0.75 opacity, enough to keep every edge hue (graphite, meridian, plum), end marker and diamond >= 3:1 on paper and vellum in both themes (`contrast.test.ts`); the large-spec cluster bands keep 0.85 (they are the overview when zoomed out). Fading never removes meaning: each edge keeps its line style (dashed feeds, solid sub-path, dotted shared schema), its end marker or midpoint diamond, and its text label at full text contrast. The focused or hovered node's edges come up to full opacity and 2.5 px (every edge hue is >= 3:1 on both surfaces, `contrast.test.ts`) while all other edges drop to 0.12.
-- Method/kind hues (`fir`, `ochre`, `brick`, `plum`, `meridian` on GET) appear only as small badges with their text label, never as fills of large areas.
-- Everything else uses neutrals: `ink` for text and primary borders, `graphite` for secondary text and quiet borders, `rule` for dividers, `paper`/`vellum` for surfaces.
-- Chips and badges are quiet: neutral border (`graphite` for chips, `rule` for method badges), no fill except the selected chip (`ink` fill plus a check glyph), text at 0.75-0.93em; method badges keep their hue on the text label only.
-
-### 5. Hierarchy
-
-Title, then the focal point, then supporting text, then controls. The page title block is the `h1` (a sample adds a quiet "(sample)"), one lede line ("OpenAPI 3.1.0 · 22 operations in 5 clusters, 78 relationships.") and, when there are any, the warnings pill; nothing else (no kicker, no banner that repeats the "(sample)" note or the field's placeholder). In the header: wordmark, the URL field (the one prominent control), the theme toggle, then Generate skill. The header's DOM order equals its visual order at every width: no CSS `order`, no absolute positioning that reorders focus. At 1024 px and wider the header is one row (wordmark, URL field, Load, More options, theme, Generate skill); below 640 px it is three rows: wordmark; the URL field; Load, More options and the theme toggle; below 640 px Generate skill is the fixed bottom bar, last in DOM order. The theme toggle sits after the field on phones too, because one DOM order cannot put it after the field on desktop and before it on phones without reordering.
-
-### Unchanged constraints
-
-CVD-safe palette (PLAN 3.2), never colour alone (shape, glyph, line style, text or position as well), keyboard operable with the 2 px ink outline + marker halo, `prefers-reduced-motion` respected (no moving indicators at all in loading states), no decorative 3D. Dimming never lowers text below WCAG AA: "dimmed" content is shown in greyscale with a text note, not with opacity.
-
-### Crowding checklist (verifier and a11y-reviewer, per view, at 1440 and 390 px)
-
-A view is **crowded** (a design FAIL; the report names the view, the competing elements and the rule) when any of these is true:
-
-1. More than one element at accent weight (`meridian` fill, bold `meridian` text, or thick `meridian` stroke) is visible, other than the ones section 4 names for that view.
-2. Content that section 2 lists as behind disclosure is visible on first load (except where section 2 names a width or a later phase).
-3. New layout CSS uses spacing outside the `--space-*` scale (grep the phase's CSS diff for raw `px`/`rem` in margin/padding/gap/inset/top/right/bottom/left).
-4. A new frame, card or box border appears that section 3 does not allow.
-5. The focal point named in section 1 is not the largest or highest-contrast element of its region, or is pushed below the fold at 1440x900 by secondary content.
-6. A disclosure toggle has no visible text label, no `aria-expanded`/native state, or hides content that keyboard users cannot reach.
-7. Two error, loading or empty messages are visible at once.
-
-## Calm polish audit (phase 18)
-
-Every view at 1440x900 and 390x844, before and after: `docs/screenshots/phase-18/before/<view>-<width>.png` and `after/<view>-<width>.png` (same names), produced by `pnpm check:browser -- --phase 18 --audit --viewports 1440x900,390x844 --label <before|after>` (`scripts/browser/audit.mjs`). The phase 18 flow (`scripts/browser/flows/phase-18-calm.mjs`) reaches every folded item below by keyboard only and checks its name and expanded state in Chrome's accessibility tree.
-
-Applies to every view (the shared chrome): "Generate skill" made neutral (it was a second meridian fill beside Download .zip); the meridian kickers ("Surveyed from ...", "Agent skill · ...", the detail panel's) and the meridian slug made graphite/ink; the card frames with the double neatline around both panes, the grid paper behind the whole page, the double rules in the pane head and above the actions, the rule under the samples row and the audit's side rule removed (grouped by space instead; the grid stays inside the map); the sample banner removed (it repeated the h1's "(sample)" and the field's placeholder), the source kind and version moved from the kicker into the lede line; chips 32 px high at 0.93em; disclosure toggles quiet; spacing on the 4/8/16/24/40/64 scale.
-
-| View (file name) | Focal point | What competed with it (before) | Action (after) |
-|---|---|---|---|
-| First view (`first-view`) | Skill pane: tree, SKILL.md preview, "Audit passed", Download .zip | Two meridian fills (Generate skill, Download .zip); meridian kickers and slug; banner with a meridian rule; framed cards; the open audit rows (8 lines); the install hint line and Copy install command at button weight; the open legend under the map; the filter note under the panes | Generate neutral; kickers graphite; banner removed; cards removed; audit rows folded behind the "Audit passed" line; install hint and Copy behind "Install command"; legend closed; filter note moved into Filters. Tree, preview and "Audit passed" fit above the fold at 1440 and above the sticky Download at 390 |
-| Another file (`skill-file`) | The preview of `references/tasks.md` | At 390 the open audit rows pushed the preview off screen; the preview sat on the same paper as the page | Audit rows folded; the preview is the pane's one framed, ruled sheet (vellum) |
-| Audit rows (`audit-expanded`) | The per-check rows, once asked for | The rule beside the audit; rows always open | Rows behind their summary (one step away), summary in ink with the tally underlined as the cue to open it |
-| Options (`options`) | The slug and licence fields | The meridian "Options" link | Quiet graphite toggle |
-| Download done (`download-done`) | Download .zip and its "Downloaded" note | Copy install command at the same weight; the install line | Install commands and Copy behind "Install command" |
-| Map, focused node (`map-focus`) | The focused node and its edges | The meridian bottom bar at 390 (Generate skill); the card frame around the map's own frame; the framed toolbar box; the open legend | Generate neutral; one frame (the map's); toolbar buttons without the extra box; legend closed |
-| Detail panel (`detail`) | Name, method + path, "In the skill" | Meridian kicker; a rule under every section heading | Kicker graphite; section headings separated by space |
-| Search (`search`) | The matching nodes and the count | Bold "Search operations" label; meridian Filters link | Label graphite regular; Filters quiet |
-| List with a filter (`list-filter`) | The operations tables | The boxed filter panel; hue-bordered method badges; meridian relationship summaries; the filter note | Filter panel unboxed (space); badges with a neutral border, hue on the text only, 0.75rem; relationship summaries quiet; the note inside Filters |
-| Shortcut help (`shortcut-help`) | The dialog's tables | Nothing (modal) | Row padding on the scale only |
-| Dark theme (`first-view-dark`) | As the first view | As the first view | As the first view |
-| Loading (`loading`) | The step list | Framed greyscale cards below the steps | Cards removed: the greyscale skill and map below are plain |
-| Error, blocked host (`error`) | Error title and its two recovery actions | Framed greyscale cards below; (not-a-spec errors) raw backticks in the reason | Cards removed; detection messages quote keys with "..." instead of backticks |
-| Empty spec (`empty-spec`) | The empty chart and its sentence | A 680 px empty skill card; disabled Download and Copy install command; an install hint for a zip that cannot exist; the filter note | No card; no install disclosure or Copy when empty; the chart's sentence and the pane's "No operations" sentence at 1.15rem ink |
-| Warnings (`warnings`) | The warnings list, once opened | As the first view | As the first view; the pill is unchanged (already quiet) |
-| AI provenance (`ai-labels`) | Skill pane with "Prose: AI-drafted" | As the first view; the meridian kicker carried the provenance | Provenance kept as quiet graphite text (kicker and the map's credit line) |
-
-Folded items reached by keyboard in the phase 18 flow (both widths): More options, Options, Audit passed (rows), Install command, Filters, Legend, a list row's "N relationships", N warnings, Try a built-in sample.
-
+The states: every sample (Tasks API, Petstore, Filesystem MCP) in light and dark, at 1440 (rest, hover, pinned, the next row focused from the keyboard, a card pinned from the address with `#op=`, the shortcuts dialog, list) and 390 (phone list, phone map, phone pinned sheet), plus no sideways page scroll in each; and the Tasks API home with the theme pinned by the header's button against the system's, both ways, at 1440 (with the grid) and 390 (D82). `phase-5-shell` checks the button itself: the default follows the system both ways, a click switches and is kept across reloads, the stored theme is on before the app mounts and in the first frame, print is light, blocked storage, and axe in both states. `redesign-r4` also hovers every row of every sample and checks that no preview is cut or reaches the skill browser (D76).

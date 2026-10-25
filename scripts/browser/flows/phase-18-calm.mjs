@@ -1,9 +1,14 @@
-// Phase 18: calm polish, nothing lost (docs/DESIGN.md "Calm polish audit"). On first load nothing that
-// DESIGN.md folds is open, the accent marks one thing, and the focal point is on screen at 1440 and 390.
+// Phase 18: calm polish, nothing lost (the calm polish audit of phase 18, kept in the history of docs/DESIGN.md before redesign R7). On first load nothing that
+// DESIGN.md folds is open, the accent marks the primary buttons, and the focal point (since redesign R2
+// the hero) is on screen at 1440 and 390. More options and the folded sample chips are gone in R2.
 // Then every folded item is reached by keyboard only: Tab to its toggle, Enter or Space opens it,
 // focus moves inside (or, for text-only content, the text is in the accessibility tree); each toggle
 // has a name and an expanded state (read from Chrome's accessibility tree); under reduced motion
 // nothing animates. The map's screen-reader summary and the list view are still in the tree.
+// Since R5: no Skill tab, the Options and Install command disclosures and the list's relationship
+// disclosures are gone (Edit name and licence toggles the fields in place; Install command copies; each
+// list row's relationships are a list for screen readers); on phones the audit and the list groups
+// off the workflow fold, and the warnings open from their tag.
 const expect = (ok, message) => {
   if (!ok) throw new Error(message);
 };
@@ -21,22 +26,18 @@ paths:
 `;
 
 /**
- * The folded items (DESIGN.md audit table): the toggle, its expected name, the content it reveals,
+ * The folded items (DESIGN.md audit table; the Filters and Legend disclosures went in redesign R4:
+ * search replaces the filters, and the legend is always shown in the tools row, checked below): the toggle, its expected name, the content it reveals,
  * the control Tab reaches inside (null: text only), and what must be on screen first.
  */
 const FOLDED = [
-  { name: /^More options$/, toggle: 'button[aria-controls="source-more"]', content: '#source-more', inside: 'select' },
-  { name: /^Options$/, toggle: '.options > summary', content: '#opt-slug', inside: '#opt-slug', pane: true },
-  { name: /^Audit passed: 9 of 9 checks$/, toggle: '.audit > summary', content: '.audit ul', inside: null, text: 'Every operation: passed', pane: true },
-  { name: /^Install command$/, toggle: '.install > summary', content: '.install pre', inside: '.install button', text: 'unzip tasks-api-skill.zip', pane: true },
-  { name: /^Filters$/, toggle: '.filters > summary', content: '.filters fieldset', inside: '.filters input[type="checkbox"]', tab: 'map' },
-  { name: /^Legend$/, toggle: '.legend > summary', content: '.legend p', inside: null, text: 'Ctrl + scroll to zoom', tab: 'map' },
-  { name: /^\d+ relationships: /, toggle: '.rels > summary', content: '.rels ul', inside: null, text: 'feeds', tab: 'list' },
+  { name: /^Edit name and licence$/, toggle: '.skill-browser .edit', content: '#opt-slug', inside: '#opt-slug' },
+  { name: /^Audit passed, 9 of 9$/, toggle: '.audit-row', content: '#audit-checks', inside: null, text: 'Passed: Every operation appears in SKILL.md or a reference', phone: true },
+  { name: /^Members, 4 operations: /, toggle: '[data-cluster="cluster-members"] .lhead button', content: '#lg-cluster-members', inside: '.lrow[data-op="listMembers"]', tab: 'list', phone: true },
 ];
 /** Folded only once a user source is loaded. */
 const LOADED = [
-  { name: /^\d+ warnings?$/, toggle: '.warnings > summary', content: '.warnings ul', inside: null, text: 'external' },
-  { name: /^Try a built-in sample$/, toggle: '.samples-fold > summary', content: '.samples-fold .chips', inside: '.samples-fold .chip' },
+  { name: /^\d+ warnings?$/, toggle: '.meta .tag-btn', content: 'ul.warnings', inside: null, text: 'external' },
 ];
 
 export default {
@@ -57,8 +58,8 @@ export default {
       return { role: n.role?.value, name: (n.name?.value ?? '').replace(/\s+/g, ' ').trim(), expanded: prop('expanded'), ignored: n.ignored };
     };
     const ready = async () => {
-      await page.locator('.skill-pane[data-ready="true"]').waitFor({ state: 'attached' });
-      await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' });
+      await page.locator('.skill-browser[data-ready="true"]').waitFor({ state: 'attached' });
+      await page.locator('[data-testid="atlas"][data-ready="true"], [data-testid="list-view"]').first().waitFor({ state: 'attached' });
     };
     const isActive = (selector) => page.evaluate((s) => !!document.activeElement?.matches(s), selector);
     /** Tab from the top of the page until `selector` has focus (keyboard only). */
@@ -78,13 +79,13 @@ export default {
       expect((await page.locator(`#tab-${id}`).getAttribute('aria-selected')) === 'true', `could not select the ${id} tab by keyboard`);
     };
     const walk = async (items, width) => {
-      for (const [i, item] of items.entries()) {
+      for (const [i, item] of items.filter((x) => !x.phone || width < 640).entries()) {
         const label = `${width}: ${item.name}`;
-        const tab = item.tab ?? (item.pane && width < 1024 ? 'skill' : undefined);
-        if (tab) await tabKey(tab);
+        if (item.tab) await tabKey(item.tab);
         await tabTo(item.toggle, label);
         const closed = await ax(item.toggle);
-        expect(item.name.test(closed.name), `${label}: toggle named "${closed.name}"`);
+        // Chrome puts a space before a visually hidden separator ("Members , 4"); compare without it.
+        expect(item.name.test(closed.name.replaceAll(' ,', ',')), `${label}: toggle named "${closed.name}"`);
         expect(closed.expanded === false, `${label}: toggle does not expose a collapsed state (${JSON.stringify(closed)})`);
         expect(!(await page.locator(item.content).first().isVisible()), `${label}: content visible before opening`);
         await page.keyboard.press(i % 2 ? 'Space' : 'Enter');
@@ -107,9 +108,9 @@ export default {
         console.log(`  ${label}: reached, named, opened, closed`);
       }
     };
-    const meridianFills = () => page.evaluate(() => {
+    const accentFills = () => page.evaluate(() => {
       const probe = document.createElement('i');
-      probe.style.color = 'var(--meridian)';
+      probe.style.color = 'var(--indigo-9)';
       document.body.append(probe);
       const accent = getComputedStyle(probe).color;
       probe.remove();
@@ -126,40 +127,48 @@ export default {
       await page.evaluate(() => document.fonts.ready);
 
       // First load: nothing DESIGN.md folds is open, one accent fill, the focal point on screen.
-      const open = await page.evaluate(() => [...document.querySelectorAll('details[open]')].map((d) => d.className));
+      const open = await page.evaluate(() => [...document.querySelectorAll('details[open], .skill-browser [aria-expanded="true"], .meta [aria-expanded="true"]')].map((d) => d.className));
       expect(open.length === 0, `${width}: disclosures open on first load: ${open}`);
-      expect(await page.locator('#source-more').isHidden(), `${width}: More options open on first load`);
-      const fills = await meridianFills();
-      expect(fills.length === 1 && fills[0] === 'Download .zip', `${width}: accent fills ${JSON.stringify(fills)}`);
+      // Since redesign R2 the primary buttons share the accent: Generate in the hero, Download .zip.
+      const fills = await accentFills();
+      expect(fills.join() === 'Generate,Download .zip', `${width}: accent fills ${JSON.stringify(fills)}`);
+      // The focal point is the hero (R2): headline, field, Generate and the samples on screen; at
+      // desktop width the result frame and its first view start on screen too (since R4 the map,
+      // with the skill browser under it).
       const box = async (selector) => page.locator(selector).first().boundingBox();
-      const [tree, audit, preview, actions] = [await box('[role="tree"]'), await box('.audit > summary'), await box('#skill-preview'), await box('.actions')];
-      const fold = width >= 1024 ? height : actions.y; // phones: above the sticky Download bar
-      expect(tree.y + Math.min(tree.height, 100) <= fold && audit.y + audit.height <= fold && preview.y + 40 <= fold,
-        `${width}: tree, "Audit passed" or the preview start below ${fold}px: ${JSON.stringify({ tree, audit, preview })}`);
-      if (width >= 1024) expect(preview.y + preview.height <= height && actions.y + actions.height <= height, `${width}: preview or Download below the fold`);
-      expect((await page.locator('.audit > summary').textContent()).includes('Audit passed'), `${width}: audit line`);
+      const [h1, field, samples, frame, map] = [await box('.hero h1'), await box('.source-field'), await box('.samples'), await box('#result'), await box('.tools')];
+      expect([h1, field, samples].every((b) => b.y >= 0 && b.y + b.height <= height), `${width}: the hero is not on screen: ${JSON.stringify({ h1, field, samples })}`);
+      if (width >= 1024) expect(frame.y < height && map.y + map.height <= height, `${width}: the result starts below the fold: ${JSON.stringify({ frame, map })}`);
+      expect((await page.locator('.sb-audit .verdict').textContent()).includes('Audit passed'), `${width}: audit line`);
+      // Desktop: the audit is always open (no toggle); phones: one row (checked in FOLDED).
+      if (width >= 640) expect((await page.locator('.audit-row').count()) === 0 && (await page.locator('#audit-checks').isVisible()), `${width}: the audit is folded`);
+      expect((await page.locator('#tab-skill, details.install, details.options').count()) === 0, `${width}: the Skill tab or an old disclosure is back`);
 
       // The map's screen-reader summary and the list view are still in the accessibility tree.
-      if (width < 1024) await tabKey('map');
+      if (width < 640) await tabKey('map'); // phones open on the List (R5)
       const atlas = await ax('[data-testid="atlas"]');
       expect(!atlas.ignored && /22 operations in 5 clusters/.test(atlas.name), `${width}: map summary ${JSON.stringify(atlas)}`);
       const help = await page.getByTestId('atlas').getAttribute('aria-describedby');
       expect((await page.locator(`[id="${help}"]`).textContent()).includes('The List view shows the same map as text'), `${width}: map description`);
+      // The legend is not folded any more (R4): a list of the three line styles, in the tree, no disclosures.
+      const legend = await page.getByRole('list', { name: 'Legend' }).ariaSnapshot();
+      expect(['Output feeds input', 'Inferred', 'Strongest workflow'].every((t) => legend.includes(t)), `${width}: legend ${legend}`);
+      expect((await page.locator('.filters, details.legend').count()) === 0, `${width}: a Filters or Legend disclosure is back`);
       const listTab = await ax('#tab-list');
       expect(listTab.role === 'tab' && listTab.name === 'List' && !listTab.ignored, `${width}: list tab ${JSON.stringify(listTab)}`);
       await tabKey('list');
-      const list = await ax('[data-testid="list-view"]');
-      expect(!list.ignored && list.name === 'Tasks API as text', `${width}: list view ${JSON.stringify(list)}`);
-      await tabKey(width < 1024 ? 'skill' : 'map');
+      const summary = await ax('.list-summary');
+      expect(!summary.ignored && (summary.name || (await page.locator('.list-summary').textContent())).startsWith('22 operations in 5 resources; 78 relationships shown'), `${width}: list summary ${JSON.stringify(summary)}`);
+      const panel = await ax('#panel-map');
+      expect(panel.role === 'tabpanel' && panel.name === 'List', `${width}: list panel ${JSON.stringify(panel)}`);
 
       await walk(FOLDED, width);
       await axe(`folded items ${width}`);
 
-      // A loaded source folds the sample chips; its warnings stay one step away.
-      await tabKey(width < 1024 ? 'skill' : 'map');
+      // A loaded source's warnings stay one step away.
       await page.locator('#source-field').fill(WARNED);
       await page.locator('#source-field').press('Enter');
-      await page.locator('.title h1', { hasText: 'Shelf API' }).waitFor();
+      await page.locator('#result-title', { hasText: 'Shelf API' }).waitFor();
       await ready();
       await walk(LOADED, width);
       await screenshot(`folded-items-${width}`);

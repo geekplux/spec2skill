@@ -4,7 +4,7 @@
 
 ## `createUser`
 
-`POST /user` · create
+`POST /user`: create
 
 > Create user
 >
@@ -25,7 +25,7 @@ Returns no documented body.
 
 ## `createUsersWithArrayInput`
 
-`POST /user/createWithArray` · create
+`POST /user/createWithArray`: create
 
 > Creates list of users with given input array
 
@@ -37,7 +37,7 @@ Returns no documented body.
 
 ## `createUsersWithListInput`
 
-`POST /user/createWithList` · create
+`POST /user/createWithList`: create
 
 > Creates list of users with given input array
 
@@ -49,7 +49,7 @@ Returns no documented body.
 
 ## `getUserByName`
 
-`GET /user/{username}` · read · read-only · idempotent
+`GET /user/{username}`: read, read-only, idempotent
 
 > Get user by user name
 
@@ -61,7 +61,7 @@ Returns `User` with `email`, `firstName`, `id`, `lastName`, `password`, `phone`,
 
 ## `updateUser`
 
-`PUT /user/{username}` · update · idempotent
+`PUT /user/{username}`: update, idempotent
 
 > Updated user
 >
@@ -83,7 +83,7 @@ Returns no documented body.
 
 ## `deleteUser`
 
-`DELETE /user/{username}` · delete · destructive: confirm first · idempotent
+`DELETE /user/{username}`: delete, destructive (confirm first), idempotent
 
 > Delete user
 >
@@ -97,7 +97,7 @@ Returns no documented body.
 
 ## `loginUser`
 
-`GET /user/login` · action · read-only · idempotent
+`GET /user/login`: action, read-only, idempotent
 
 > Logs user into the system
 
@@ -110,7 +110,7 @@ Returns `string`.
 
 ## `logoutUser`
 
-`GET /user/logout` · action · read-only · idempotent
+`GET /user/logout`: action, read-only, idempotent
 
 > Logs out current logged in user session
 

@@ -4,7 +4,7 @@
 
 ## `listProjects`
 
-`GET /projects` · list · read-only · idempotent · paginated (cursor)
+`GET /projects`: list, read-only, idempotent, paginated (cursor)
 
 > List projects
 
@@ -20,7 +20,7 @@ Feeds: `getProject` (`id -> projectId`), `updateProject` (`id -> projectId`), `d
 
 ## `createProject`
 
-`POST /projects` · create
+`POST /projects`: create
 
 > Create a project
 
@@ -35,7 +35,7 @@ Feeds: `getProject` (`id -> projectId`), `updateProject` (`id -> projectId`), `d
 
 ## `getProject`
 
-`GET /projects/{projectId}` · read · read-only · idempotent
+`GET /projects/{projectId}`: read, read-only, idempotent
 
 > Get a project
 
@@ -51,7 +51,7 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`),
 
 ## `updateProject`
 
-`PATCH /projects/{projectId}` · update
+`PATCH /projects/{projectId}`: update
 
 > Update a project
 
@@ -68,7 +68,7 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`).
 
 ## `deleteProject`
 
-`DELETE /projects/{projectId}` · delete · destructive: confirm first · idempotent
+`DELETE /projects/{projectId}`: delete, destructive (confirm first), idempotent
 
 > Delete a project
 >

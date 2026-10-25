@@ -4,7 +4,7 @@
 
 ## `findPetsByStatus`
 
-`GET /pet/findByStatus` · list · read-only · idempotent
+`GET /pet/findByStatus`: list, read-only, idempotent
 
 > Finds Pets by status
 >
@@ -20,7 +20,7 @@ Feeds: `getPetById` (`id -> petId`), `updatePetWithForm` (`id -> petId`), `delet
 
 ## `findPetsByTags`
 
-`GET /pet/findByTags` · list · read-only · idempotent · deprecated
+`GET /pet/findByTags`: list, read-only, idempotent, deprecated
 
 > Finds Pets by tags
 >
@@ -36,7 +36,7 @@ Feeds: `getPetById` (`id -> petId`), `updatePetWithForm` (`id -> petId`), `delet
 
 ## `addPet`
 
-`POST /pet` · create
+`POST /pet`: create
 
 > Add a new pet to the store
 
@@ -53,7 +53,7 @@ Returns no documented body.
 
 ## `getPetById`
 
-`GET /pet/{petId}` · read · read-only · idempotent
+`GET /pet/{petId}`: read, read-only, idempotent
 
 > Find pet by ID
 >
@@ -69,7 +69,7 @@ Fed by: `findPetsByStatus` (`id -> petId`), `findPetsByTags` (`id -> petId`).
 
 ## `updatePet`
 
-`PUT /pet` · update · idempotent
+`PUT /pet`: update, idempotent
 
 > Update an existing pet
 
@@ -86,7 +86,7 @@ Returns no documented body.
 
 ## `deletePet`
 
-`DELETE /pet/{petId}` · delete · destructive: confirm first · idempotent
+`DELETE /pet/{petId}`: delete, destructive (confirm first), idempotent
 
 > Deletes a pet
 
@@ -101,7 +101,7 @@ Fed by: `findPetsByStatus` (`id -> petId`), `findPetsByTags` (`id -> petId`).
 
 ## `updatePetWithForm`
 
-`POST /pet/{petId}` · action
+`POST /pet/{petId}`: action
 
 > Updates a pet in the store with form data
 
@@ -117,7 +117,7 @@ Fed by: `findPetsByStatus` (`id -> petId`), `findPetsByTags` (`id -> petId`).
 
 ## `uploadFile`
 
-`POST /pet/{petId}/uploadImage` · action
+`POST /pet/{petId}/uploadImage`: action
 
 > uploads an image
 

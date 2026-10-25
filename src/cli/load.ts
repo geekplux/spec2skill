@@ -7,7 +7,7 @@ import type { ApiModel } from '../model/types';
 import { MAX_SPEC_BYTES, ParseError } from '../parse/text';
 import { getSample, sampleModel } from '../samples';
 import { SourceError, isSourceErrorCode } from '../source/errors';
-import { type Doc, MCP_PATH, type Mode, notSpec, parse, toUrl } from '../source/fetchSource';
+import { type Doc, MCP_PATH, type Mode, fallbackError, notSpec, parse, toUrl } from '../source/fetchSource';
 import { ProxyError, toProxyError } from '../../worker/errors';
 import { SPEC_HEADERS, SPEC_TIMEOUT_MS } from '../../worker/fetchSpec';
 import { type FetchFn, MAX_BYTES, type UrlCheck, deadline, fetchFollowing, readCapped } from '../../worker/limits';
@@ -50,16 +50,18 @@ async function spec(url: URL, fetch: FetchFn): Promise<Doc | 'mcp'> {
 async function fromUrl(raw: string, mode: Mode, fetch: FetchFn): Promise<Doc> {
   const url = toUrl(raw);
   if (mode === 'mcp' || (mode === 'auto' && MCP_PATH.test(url.pathname))) return mcp(url, fetch);
+  let got: Doc | 'mcp';
   try {
-    const got = await spec(url, fetch);
-    if (got !== 'mcp') return got;
-    if (mode === 'openapi') throw new SourceError('http-error', 'The URL answered like an MCP server, not a spec.');
-    return await mcp(url, fetch);
+    got = await spec(url, fetch);
   } catch (e) {
+    // Only a spec fetch or parse failure falls back to MCP.
     const error = asSource(e);
     if (mode !== 'auto' || !notSpec(error)) throw error;
-    return mcp(url, fetch).catch(() => Promise.reject(error)); // the spec error says more
+    return mcp(url, fetch).catch((second: unknown) => Promise.reject(fallbackError(error, asSource(second))));
   }
+  if (got !== 'mcp') return got;
+  if (mode === 'openapi') throw new SourceError('http-error', 'The URL answered like an MCP server, not a spec.');
+  return mcp(url, fetch); // the GET already said MCP: one attempt, its error as is
 }
 
 async function fromFile(path: string): Promise<Doc> {

@@ -2,6 +2,10 @@
 // through playwright-core, runs the flows for phases <= --phase, saves screenshots.
 //
 //   pnpm build && pnpm check:browser -- --phase 1 [--flow <name>[,<name>...]] [--no-axe] [--no-cvd] [--label <name>]
+//     [--capture <flow>[,<flow>...]]
+//   --capture lets the named flows write their committed screenshots (the redesign flows' docs/screenshots/
+//   redesign-rN/); without it they write into the run's phase-<n> folder, so a later run never
+//   overwrites an earlier phase's committed images.
 //   pnpm check:browser -- --phase 18 --audit [--viewports 1440x900,390x844] --label before
 //   --audit visits every view (scripts/browser/audit.mjs) once per viewport instead of running the flows;
 //   --label puts the screenshots in docs/screenshots/phase-<n>/<label>/.
@@ -25,7 +29,7 @@ const VIEWPORTS = { desktop: { width: 1280, height: 800 }, mobile: { width: 390,
 const TIMEOUT = Number(process.env.CHECK_TIMEOUT_MS || 30_000);
 
 function parseArgs(argv) {
-  const args = { phase: 1, flow: null, axe: true, cvd: true, audit: false, label: null, viewports: [{ width: 1440, height: 900 }, { width: 390, height: 844 }] };
+  const args = { phase: 1, flow: null, capture: [], axe: true, cvd: true, audit: false, label: null, viewports: [{ width: 1440, height: 900 }, { width: 390, height: 844 }] };
   for (let i = 0; i < argv.length; i++) {
     const [key, inline] = argv[i].split('=', 2);
     if (key === '--') continue;
@@ -38,10 +42,11 @@ function parseArgs(argv) {
       args.audit = true;
       continue;
     }
-    if (!['--phase', '--flow', '--label', '--viewports'].includes(key)) throw new Error(`unknown argument: ${argv[i]}`);
+    if (!['--phase', '--flow', '--label', '--viewports', '--capture'].includes(key)) throw new Error(`unknown argument: ${argv[i]}`);
     const value = inline ?? argv[++i];
     if (!value) throw new Error(`${key} needs a value`);
     if (key === '--flow') args.flow = value;
+    else if (key === '--capture') args.capture = value.split(',').map((n) => n.trim()).filter(Boolean);
     else if (key === '--label') {
       if (!/^[a-z0-9-]+$/.test(value)) throw new Error(`--label must be lowercase letters, digits and dashes, got ${value}`);
       args.label = value;
@@ -131,7 +136,8 @@ async function main() {
     const axe = async (label) => args.axe && problems.push(...(await runAxe(page, `${flow.name}: ${label}`)));
     // null when --no-cvd, so flows skip their simulated screenshots.
     const cvd = args.cvd ? (type) => simulateCvd(page, type) : null;
-    return { page, context, origin: ORIGIN, viewports: VIEWPORTS, screenshot, axe, cvd };
+    // `outDir`: where screenshots go; `capture`: this flow may write its committed screenshots (--capture).
+    return { page, context, origin: ORIGIN, viewports: VIEWPORTS, screenshot, axe, cvd, outDir, capture: args.capture.includes(flow.name) };
   };
   if (args.audit) {
     const audit = (await import(pathToFileURL(join(ROOT, 'scripts', 'browser', 'audit.mjs')).href)).default;

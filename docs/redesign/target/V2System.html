@@ -1,0 +1,143 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>spec2skill v2 design system</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"><style>
+body{margin:0}
+.s2{font-family:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;font-size:14px;line-height:20px;color:var(--gray-12);background:var(--gray-1);font-feature-settings:"tnum";-webkit-font-smoothing:antialiased}
+.s2 *{box-sizing:border-box}
+.s2 a{color:inherit;text-decoration:none}
+.s2 button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer}
+.s2 input{font:inherit;color:inherit}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.muted{color:var(--gray-11)}
+.wrap{max-width:1136px;margin:0 auto;padding:0 32px;width:100%}
+.hdr{height:56px;border-bottom:.5px solid var(--gray-6);display:flex;align-items:center}
+.hdr .wrap{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600}
+.nav{display:flex;gap:24px;color:var(--gray-11)}
+.nav a:hover{color:var(--gray-12)}
+.hero{padding:104px 0 64px}
+.hero .wrap{display:grid;grid-template-columns:492px 492px;column-gap:88px;align-items:end}
+h1{font-size:48px;line-height:52px;font-weight:600;letter-spacing:-.035em;margin:0 0 20px;text-wrap:balance}
+.lede{font-size:20px;line-height:28px;color:var(--gray-11);margin:0;letter-spacing:-.01em;text-wrap:pretty}
+.load{display:flex;flex-direction:column;gap:12px}
+.field{display:flex;align-items:center;height:48px;padding:0 4px 0 16px;border-radius:10px;background:var(--gray-1);box-shadow:inset 0 0 0 .5px var(--gray-8)}
+.field input{flex:1;border:0;background:none;outline:none;min-width:0}
+.field input::placeholder{color:var(--gray-11)}
+.btn{height:32px;padding:0 12px;border-radius:6px;display:inline-flex;align-items:center;gap:8px;font-weight:500;white-space:nowrap}
+.btn.lg{height:40px;padding:0 16px}
+.btn.pri{background:var(--indigo-9);color:#fff}
+.btn.sec{box-shadow:inset 0 0 0 .5px var(--gray-8);background:var(--gray-1)}
+.btn.ghost{color:var(--gray-11)}
+.btn svg{flex:none}
+.samples{display:flex;align-items:center;gap:16px}
+.samples .seg{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg{display:inline-flex;padding:4px;border-radius:10px;background:var(--gray-3);gap:2px}
+.seg button{height:32px;padding:0 12px;border-radius:6px;color:var(--gray-11)}
+.seg button.on{background:var(--gray-1);color:var(--gray-12);font-weight:500;box-shadow:0 0 0 .5px var(--gray-7)}
+.frame{margin:0 -32px;border-radius:16px;box-shadow:inset 0 0 0 .5px var(--gray-7);padding:32px}
+.fhead{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:32px}
+.ftitle{font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.015em;margin:0 0 4px}
+.meta{display:flex;flex-wrap:wrap;column-gap:20px;row-gap:4px;color:var(--gray-11);align-items:center}
+.meta b{color:var(--gray-12);font-weight:500}
+.tag{height:20px;padding:0 6px;border-radius:4px;background:var(--gray-3);color:var(--gray-11);font-size:12px;line-height:20px}
+.actions{display:flex;gap:8px;flex:none}
+.tools{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:16px}
+.tools-l{display:flex;gap:12px;align-items:center}
+.search{height:40px;width:202px;border-radius:10px;box-shadow:inset 0 0 0 .5px var(--gray-7);display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--gray-11)}
+.kbd{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;line-height:18px;min-width:20px;height:20px;text-align:center;border-radius:4px;box-shadow:inset 0 0 0 .5px var(--gray-7);color:var(--gray-11)}
+.legend{display:flex;gap:20px;font-size:12px;color:var(--gray-11);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.map{position:relative}
+.map svg.edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.cl{position:absolute;width:202px;border-radius:8px;background:var(--gray-1);box-shadow:inset 0 0 0 .5px var(--gray-7);padding-bottom:4px}
+.cl h3{margin:0;height:36px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600;border-bottom:.5px solid var(--gray-6)}
+.cl h3 small{font-size:12px;font-weight:400;color:var(--gray-11)}
+.s2 .op{height:32px;display:flex;align-items:center;gap:6px;padding:0 6px 0 10px;margin:0 4px;border-radius:6px;width:calc(100% - 8px);text-align:left}
+.op .m{font-size:12px;width:44px;color:var(--gray-11);flex:none}
+.op .m.del{color:var(--amber-11)}
+.op .id{font-size:14px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.op.route .id{color:var(--indigo-11);font-weight:600}
+.op.hot{background:var(--gray-3)}
+.op.dim{opacity:.38}
+.stop{width:18px;height:18px;border-radius:50%;background:var(--indigo-9);color:#fff;font-size:12px;line-height:18px;text-align:center;font-weight:600;flex:none}
+.caption{margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;color:var(--gray-11)}
+.caption .chain{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--gray-12)}
+.caption code{font-size:12px;color:var(--gray-11)}
+.split{border-top:.5px solid var(--gray-6);margin-top:40px;padding-top:32px;display:grid;grid-template-columns:202px 492px 202px;column-gap:88px}
+.tree h4,.prev h4,.audit h4{margin:0 0 16px;font-size:14px;font-weight:600;height:20px;display:flex;justify-content:space-between;align-items:center}
+.tree h4{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.row{height:28px;transition:background-color 250ms ease-out;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:6px;margin:0 -8px}
+.row .n{flex:1;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.row .c{font-size:12px;color:var(--gray-11)}
+.row.on{background:var(--gray-3)}
+.row svg{color:var(--gray-11);flex:none}
+.s2 .edit{display:block;margin-top:16px;font-size:12px;color:var(--gray-11);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:.5px}
+.code{max-height:392px;overflow-y:auto;border-radius:10px;background:var(--gray-2);box-shadow:inset 0 0 0 .5px var(--gray-6);padding:12px 0;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;line-height:20px;overflow:hidden}
+.code .l{display:flex;white-space:pre-wrap;padding-right:16px}
+.code .l>span:last-child{flex:1;min-width:0;overflow-wrap:anywhere}
+.code .ln{width:44px;text-align:right;padding-right:16px;color:var(--gray-11);flex:none}
+.code .k{color:var(--gray-11)}
+.code .h{font-weight:600}
+.audit .ok{display:flex;align-items:center;gap:8px}
+.chk{display:flex;gap:8px;padding:7px 0;border-top:.5px solid var(--gray-6);font-size:12px;line-height:16px}
+.audit h4+.chk{border-top:0;padding-top:0}
+.chk svg{flex:none;margin-top:1px;color:var(--indigo-11)}
+.block{padding:96px 0 0}
+.sec2{display:grid;grid-template-columns:492px 492px;column-gap:88px;align-items:start}
+h2{font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.015em;margin:0 0 8px}
+.cli{border-radius:10px;background:var(--gray-2);box-shadow:inset 0 0 0 .5px var(--gray-6);padding:14px 16px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;line-height:20px;white-space:pre;position:relative}
+.cli .p{color:var(--gray-11)}
+.cli button{position:absolute;right:8px;top:8px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--gray-11)}
+.steps{display:grid;grid-template-columns:repeat(4,202px);column-gap:88px;margin-top:24px}
+.steps div{border-top:.5px solid var(--gray-7);padding-top:16px}
+.steps b{display:block;font-weight:600;margin-bottom:4px}
+.steps p{margin:0;color:var(--gray-11)}
+.made{margin-top:96px}
+.made .in{border-top:.5px solid var(--gray-6);padding-top:48px}
+.made .sec2 p{margin:0 0 12px}
+.s2 .ul{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:.5px}
+.links{display:flex;flex-direction:column}
+.links a{display:grid;grid-template-columns:202px 202px;column-gap:88px;padding:14px 0;border-top:.5px solid var(--gray-6)}
+.links a:first-child{border-top:0;padding-top:4px}
+.links a>span{grid-column:2;grid-row:1 / span 2}
+.links b{display:block;font-weight:500}
+.links span{display:block;color:var(--gray-11)}
+.links code{display:block;font-size:12px;color:var(--gray-11);margin-top:4px}
+.foot{margin-top:64px}
+.foot .in{border-top:.5px solid var(--gray-6);height:72px;display:flex;justify-content:space-between;align-items:center}
+.tip{position:absolute;width:300px;border-radius:10px;background:var(--gray-1);box-shadow:0 0 0 .5px var(--gray-7),0 8px 24px rgba(0,0,0,.08);padding:16px;z-index:2}
+.tip .t{font-weight:600;margin:4px 0 12px}
+.tip dl{margin:0;display:grid;grid-template-columns:64px minmax(0,1fr);row-gap:8px;column-gap:12px;font-size:12px;line-height:16px}
+.tip dt{color:var(--gray-11)}
+.tip dd{margin:0}
+.s2 .tip .ref{color:var(--indigo-11);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:.5px}
+
+@keyframes s2fade{from{opacity:0}to{opacity:1}}
+@keyframes s2rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes s2draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes s2pop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+.anim .cl{animation:s2rise 250ms ease-out both;animation-delay:calc(var(--i) * 40ms)}
+.anim .e{animation:s2fade 250ms ease-out 200ms both}
+.anim .rt{stroke-dasharray:1 1;animation:s2draw 300ms ease-out both;animation-delay:calc(450ms + var(--i) * 300ms)}
+.anim .op .stop{animation:s2pop 250ms ease-out both;animation-delay:calc(var(--i) * 300ms + 200ms)}
+.anim .chk{animation:s2fade 250ms ease-out both;animation-delay:calc(900ms + var(--i) * 30ms)}
+.tip{animation:s2rise 250ms ease-out both}
+@media (prefers-reduced-motion:reduce){.s2 *{animation:none!important;transition:none!important}}
+</style></head><body><div class="s2" style="--gray-1:#fcfcfc;--gray-2:#f9f9f9;--gray-3:#f0f0f0;--gray-4:#e8e8e8;--gray-5:#e0e0e0;--gray-6:#d9d9d9;--gray-7:#cecece;--gray-8:#bbbbbb;--gray-9:#8d8d8d;--gray-10:#838383;--gray-11:#646464;--gray-12:#202020;--indigo-1:#fdfdfe;--indigo-2:#f7f9ff;--indigo-3:#edf2fe;--indigo-4:#e1e9ff;--indigo-5:#d2deff;--indigo-6:#c1d0ff;--indigo-7:#abbdf9;--indigo-8:#8da4ef;--indigo-9:#3e63dd;--indigo-10:#3358d4;--indigo-11:#3a5bc7;--indigo-12:#1f2d5c;--amber-1:#fefdfb;--amber-2:#fefbe9;--amber-3:#fff7c2;--amber-4:#ffee9c;--amber-5:#fbe577;--amber-6:#f3d673;--amber-7:#e9c162;--amber-8:#e2a336;--amber-9:#ffc53d;--amber-10:#ffba18;--amber-11:#ab6400;--amber-12:#4f3422;width:960px;padding:48px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:40px"><h2 style="margin:0;font-size:20px">spec2skill design system, v2</h2><span class="muted">Radix Colors, IBM Plex, 0.5px lines, a 4-column grid of 202 px with 88 px gaps</span></div>
+<h2>Colour</h2><div style="display:grid;grid-template-columns:80px minmax(0,1fr) minmax(0,1fr);gap:16px;margin:16px 0 8px" class="muted"><span></span><span style="font-size:12px">Light, steps 1 to 12</span><span style="font-size:12px">Dark</span></div>
+<div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px"><div style="display:grid;grid-template-columns:80px minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center"><span>Gray</span><div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px"><div style="height:28px;background:#fcfcfc;border-radius:2px" title="gray-1 #fcfcfc"></div><div style="height:28px;background:#f9f9f9;border-radius:2px" title="gray-2 #f9f9f9"></div><div style="height:28px;background:#f0f0f0;border-radius:2px" title="gray-3 #f0f0f0"></div><div style="height:28px;background:#e8e8e8;border-radius:2px" title="gray-4 #e8e8e8"></div><div style="height:28px;background:#e0e0e0;border-radius:2px" title="gray-5 #e0e0e0"></div><div style="height:28px;background:#d9d9d9;border-radius:2px" title="gray-6 #d9d9d9"></div><div style="height:28px;background:#cecece;border-radius:2px" title="gray-7 #cecece"></div><div style="height:28px;background:#bbbbbb;border-radius:2px" title="gray-8 #bbbbbb"></div><div style="height:28px;background:#8d8d8d;border-radius:2px" title="gray-9 #8d8d8d"></div><div style="height:28px;background:#838383;border-radius:2px" title="gray-10 #838383"></div><div style="height:28px;background:#646464;border-radius:2px" title="gray-11 #646464"></div><div style="height:28px;background:#202020;border-radius:2px" title="gray-12 #202020"></div></div><div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px"><div style="height:28px;background:#111111;border-radius:2px" title="gray-1 #111111"></div><div style="height:28px;background:#191919;border-radius:2px" title="gray-2 #191919"></div><div style="height:28px;background:#222222;border-radius:2px" title="gray-3 #222222"></div><div style="height:28px;background:#2a2a2a;border-radius:2px" title="gray-4 #2a2a2a"></div><div style="height:28px;background:#313131;border-radius:2px" title="gray-5 #313131"></div><div style="height:28px;background:#3a3a3a;border-radius:2px" title="gray-6 #3a3a3a"></div><div style="height:28px;background:#484848;border-radius:2px" title="gray-7 #484848"></div><div style="height:28px;background:#606060;border-radius:2px" title="gray-8 #606060"></div><div style="height:28px;background:#6e6e6e;border-radius:2px" title="gray-9 #6e6e6e"></div><div style="height:28px;background:#7b7b7b;border-radius:2px" title="gray-10 #7b7b7b"></div><div style="height:28px;background:#b4b4b4;border-radius:2px" title="gray-11 #b4b4b4"></div><div style="height:28px;background:#eeeeee;border-radius:2px" title="gray-12 #eeeeee"></div></div></div><div style="display:grid;grid-template-columns:80px minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center"><span>Indigo</span><div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px"><div style="height:28px;background:#fdfdfe;border-radius:2px" title="indigo-1 #fdfdfe"></div><div style="height:28px;background:#f7f9ff;border-radius:2px" title="indigo-2 #f7f9ff"></div><div style="height:28px;background:#edf2fe;border-radius:2px" title="indigo-3 #edf2fe"></div><div style="height:28px;background:#e1e9ff;border-radius:2px" title="indigo-4 #e1e9ff"></div><div style="height:28px;background:#d2deff;border-radius:2px" title="indigo-5 #d2deff"></div><div style="height:28px;background:#c1d0ff;border-radius:2px" title="indigo-6 #c1d0ff"></div><div style="height:28px;background:#abbdf9;border-radius:2px" title="indigo-7 #abbdf9"></div><div style="height:28px;background:#8da4ef;border-radius:2px" title="indigo-8 #8da4ef"></div><div style="height:28px;background:#3e63dd;border-radius:2px" title="indigo-9 #3e63dd"></div><div style="height:28px;background:#3358d4;border-radius:2px" title="indigo-10 #3358d4"></div><div style="height:28px;background:#3a5bc7;border-radius:2px" title="indigo-11 #3a5bc7"></div><div style="height:28px;background:#1f2d5c;border-radius:2px" title="indigo-12 #1f2d5c"></div></div><div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px"><div style="height:28px;background:#11131f;border-radius:2px" title="indigo-1 #11131f"></div><div style="height:28px;background:#141726;border-radius:2px" title="indigo-2 #141726"></div><div style="height:28px;background:#182449;border-radius:2px" title="indigo-3 #182449"></div><div style="height:28px;background:#1d2e62;border-radius:2px" title="indigo-4 #1d2e62"></div><div style="height:28px;background:#253974;border-radius:2px" title="indigo-5 #253974"></div><div style="height:28px;background:#304384;border-radius:2px" title="indigo-6 #304384"></div><div style="height:28px;background:#3a4f97;border-radius:2px" title="indigo-7 #3a4f97"></div><div style="height:28px;background:#435db1;border-radius:2px" title="indigo-8 #435db1"></div><div style="height:28px;background:#3e63dd;border-radius:2px" title="indigo-9 #3e63dd"></div><div style="height:28px;background:#5472e4;border-radius:2px" title="indigo-10 #5472e4"></div><div style="height:28px;background:#9eb1ff;border-radius:2px" title="indigo-11 #9eb1ff"></div><div style="height:28px;background:#d6e1ff;border-radius:2px" title="indigo-12 #d6e1ff"></div></div></div><div style="display:grid;grid-template-columns:80px minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center"><span>Amber</span><div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px"><div style="height:28px;background:#fefdfb;border-radius:2px" title="amber-1 #fefdfb"></div><div style="height:28px;background:#fefbe9;border-radius:2px" title="amber-2 #fefbe9"></div><div style="height:28px;background:#fff7c2;border-radius:2px" title="amber-3 #fff7c2"></div><div style="height:28px;background:#ffee9c;border-radius:2px" title="amber-4 #ffee9c"></div><div style="height:28px;background:#fbe577;border-radius:2px" title="amber-5 #fbe577"></div><div style="height:28px;background:#f3d673;border-radius:2px" title="amber-6 #f3d673"></div><div style="height:28px;background:#e9c162;border-radius:2px" title="amber-7 #e9c162"></div><div style="height:28px;background:#e2a336;border-radius:2px" title="amber-8 #e2a336"></div><div style="height:28px;background:#ffc53d;border-radius:2px" title="amber-9 #ffc53d"></div><div style="height:28px;background:#ffba18;border-radius:2px" title="amber-10 #ffba18"></div><div style="height:28px;background:#ab6400;border-radius:2px" title="amber-11 #ab6400"></div><div style="height:28px;background:#4f3422;border-radius:2px" title="amber-12 #4f3422"></div></div><div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px"><div style="height:28px;background:#16120c;border-radius:2px" title="amber-1 #16120c"></div><div style="height:28px;background:#1d180f;border-radius:2px" title="amber-2 #1d180f"></div><div style="height:28px;background:#302008;border-radius:2px" title="amber-3 #302008"></div><div style="height:28px;background:#3f2700;border-radius:2px" title="amber-4 #3f2700"></div><div style="height:28px;background:#4d3000;border-radius:2px" title="amber-5 #4d3000"></div><div style="height:28px;background:#5c3d05;border-radius:2px" title="amber-6 #5c3d05"></div><div style="height:28px;background:#714f19;border-radius:2px" title="amber-7 #714f19"></div><div style="height:28px;background:#8f6424;border-radius:2px" title="amber-8 #8f6424"></div><div style="height:28px;background:#ffc53d;border-radius:2px" title="amber-9 #ffc53d"></div><div style="height:28px;background:#ffd60a;border-radius:2px" title="amber-10 #ffd60a"></div><div style="height:28px;background:#ffca16;border-radius:2px" title="amber-11 #ffca16"></div><div style="height:28px;background:#ffe7b3;border-radius:2px" title="amber-12 #ffe7b3"></div></div></div></div>
+<p class="muted" style="margin:0 0 40px;max-width:72ch">Gray carries the page: 1 to 2 grounds, 3 to 5 fills, 6 to 8 lines, 11 to 12 text. Indigo is the one accent: the strongest workflow, the primary button, the audit. Amber marks destructive operations and the logo's skill. Indigo and amber differ in lightness as well as hue, and each also has a shape or a word, never colour alone.</p>
+<h2>Type</h2><div style="display:flex;flex-direction:column;gap:16px;margin:16px 0 40px">
+<div style="display:flex;gap:24px;align-items:baseline"><span class="muted" style="width:120px;font-size:12px">48 / 600</span><span style="font-size:48px;line-height:52px;font-weight:600;letter-spacing:-.035em">Turn any API into an agent skill</span></div>
+<div style="display:flex;gap:24px;align-items:baseline"><span class="muted" style="width:120px;font-size:12px">20 / 400, 600</span><span style="font-size:20px;line-height:28px;letter-spacing:-.01em">Paste an OpenAPI spec <b style="font-weight:600">Tasks API</b></span></div>
+<div style="display:flex;gap:24px;align-items:baseline"><span class="muted" style="width:120px;font-size:12px">14 / 400, 500, 600</span><span>Body, controls, operation ids <span class="mono">listProjects</span></span></div>
+<div style="display:flex;gap:24px;align-items:baseline"><span class="muted" style="width:120px;font-size:12px">12 / 400</span><span style="font-size:12px">Meta, methods, paths, code <span class="mono">GET /tasks/{taskId}</span></span></div></div>
+<h2>Map encoding</h2><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;margin:16px 0 40px">
+<div><svg width="80" height="16" aria-hidden="true"><path d="M0 8h72" stroke="var(--gray-9)"/><path d="M68 5.5 73 8 68 10.5" fill="none" stroke="var(--gray-9)" stroke-width="1.2"/></svg><b style="display:block;margin-top:8px;font-weight:600">Output feeds input</b><span class="muted">Exact match, solid</span></div>
+<div><svg width="80" height="16" aria-hidden="true"><path d="M0 8h72" stroke="var(--gray-9)" stroke-dasharray="3 3"/></svg><b style="display:block;margin-top:8px;font-weight:600">Inferred</b><span class="muted">Dashed, marked in references</span></div>
+<div><svg width="80" height="16" aria-hidden="true"><path d="M2 8h50" stroke="var(--indigo-9)" stroke-width="2.5" stroke-linecap="round"/><circle cx="66" cy="8" r="7" fill="var(--indigo-9)"/><text x="66" y="12" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">1</text></svg><b style="display:block;margin-top:8px;font-weight:600">Strongest workflow</b><span class="muted">Thick, numbered stops</span></div>
+<div><div style="display:flex;gap:12px;font-size:12px" class="mono"><span class="muted">GET</span><span style="color:var(--amber-11)">DELETE</span></div><b style="display:block;margin-top:8px;font-weight:600">Method as text</b><span class="muted">Destructive in amber</span></div></div>
+<h2>Logo</h2><div style="display:flex;gap:32px;align-items:center;margin-top:16px">
+<div style="display:flex;gap:24px;align-items:center;padding:24px;border-radius:12px;box-shadow:inset 0 0 0 .5px var(--gray-7)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lg8"><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3"/></clipPath></defs><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3" fill="var(--indigo-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--amber-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--gray-12)" clip-path="url(#lg8)"/></svg><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lg9"><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3"/></clipPath></defs><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3" fill="var(--indigo-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--amber-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--gray-12)" clip-path="url(#lg9)"/></svg><svg width="48" height="48" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lg10"><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3"/></clipPath></defs><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3" fill="var(--indigo-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--amber-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--gray-12)" clip-path="url(#lg10)"/></svg><span style="display:flex;gap:8px;align-items:center;font-weight:600"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lg11"><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3"/></clipPath></defs><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3" fill="var(--indigo-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--amber-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--gray-12)" clip-path="url(#lg11)"/></svg>spec2skill</span></div>
+<div style="display:flex;gap:24px;align-items:center;padding:24px;border-radius:12px;--gray-1:#111111;--gray-2:#191919;--gray-3:#222222;--gray-4:#2a2a2a;--gray-5:#313131;--gray-6:#3a3a3a;--gray-7:#484848;--gray-8:#606060;--gray-9:#6e6e6e;--gray-10:#7b7b7b;--gray-11:#b4b4b4;--gray-12:#eeeeee;--indigo-1:#11131f;--indigo-2:#141726;--indigo-3:#182449;--indigo-4:#1d2e62;--indigo-5:#253974;--indigo-6:#304384;--indigo-7:#3a4f97;--indigo-8:#435db1;--indigo-9:#3e63dd;--indigo-10:#5472e4;--indigo-11:#9eb1ff;--indigo-12:#d6e1ff;--amber-1:#16120c;--amber-2:#1d180f;--amber-3:#302008;--amber-4:#3f2700;--amber-5:#4d3000;--amber-6:#5c3d05;--amber-7:#714f19;--amber-8:#8f6424;--amber-9:#ffc53d;--amber-10:#ffd60a;--amber-11:#ffca16;--amber-12:#ffe7b3;background:var(--gray-1);color:var(--gray-12)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lg12"><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3"/></clipPath></defs><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3" fill="var(--indigo-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--amber-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--gray-12)" clip-path="url(#lg12)"/></svg><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lg13"><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3"/></clipPath></defs><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3" fill="var(--indigo-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--amber-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--gray-12)" clip-path="url(#lg13)"/></svg><svg width="48" height="48" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lg14"><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3"/></clipPath></defs><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3" fill="var(--indigo-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--amber-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--gray-12)" clip-path="url(#lg14)"/></svg><span style="display:flex;gap:8px;align-items:center;font-weight:600"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lg15"><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3"/></clipPath></defs><rect x="1.5" y="1.5" width="13.5" height="13.5" rx="3" fill="var(--indigo-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--amber-9)"/><circle cx="15.5" cy="15.5" r="7" fill="var(--gray-12)" clip-path="url(#lg15)"/></svg>spec2skill</span></div>
+<p class="muted" style="margin:0;max-width:26ch">The spec and the skill; where they meet is the part your agent uses.</p></div>
+</div></body></html>

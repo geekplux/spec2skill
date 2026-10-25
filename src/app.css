@@ -1,366 +1,579 @@
-/* App shell and the phase-4 text atlas, styled with the Survey tokens (src/design/tokens.css). */
+/* App shell, map, list and skill pane, styled with the Route map tokens (src/design/tokens.css).
+   Every line is 0.5 px, drawn as a box-shadow: a ring (`0 0 0 var(--line)`) or an inset rule on one side. */
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.45 var(--font-body); }
-h1, h2 { font-family: var(--font-display); }
-code { font-family: var(--font-mono); font-size: 0.93em; }
-:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--marker); }
-.skip { position: absolute; left: var(--space-2); top: -100px; padding: var(--space-2); background: var(--vellum); color: var(--ink); }
-.skip:focus { top: var(--space-2); z-index: 2; }
+html { font-feature-settings: "tnum"; }
+body { margin: 0; background: var(--gray-1); color: var(--gray-12); font: var(--text-14)/var(--leading-14) var(--font-sans); -webkit-font-smoothing: antialiased; }
+b, strong, th { font-weight: 600; }
+code { font-family: var(--font-mono); font-size: inherit; }
+:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--gray-12); outline-offset: 2px; }
+.skip { position: absolute; left: var(--space-8); top: -100px; padding: var(--space-8); background: var(--gray-2); color: var(--gray-12); }
+.skip:focus { top: var(--space-8); z-index: 2; }
 
-.header {
-  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3);
-  padding: var(--space-3) var(--space-4); background: var(--vellum);
-  border-bottom: 3px double var(--ink); color: var(--ink);
-}
-.brand { flex: none; }
-.logo { display: block; }
-.pitch { margin: var(--space-1) 0 0; color: var(--graphite); font-size: 13px; }
-@media (max-width: 1279px) { .pitch { display: none; } }
-.logo-accent { color: var(--meridian); }
+.wordmark { display: flex; align-items: center; gap: var(--space-8); font-weight: 600; }
+.logo { display: block; flex: none; }
+.logo-spec { fill: var(--indigo-9); }
+.logo-skill { fill: var(--amber-9); }
+.logo-both { fill: var(--gray-12); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 [hidden] { display: none !important; }
-.btn, .chip {
-  font: inherit; min-height: 36px; padding: var(--space-1) var(--space-3); cursor: pointer;
-  border: 1px solid var(--ink); border-radius: var(--radius-md); background: var(--vellum); color: var(--ink);
-  transition: background-color var(--motion-fast) ease-out, color var(--motion-fast) ease-out;
-}
-.btn[aria-pressed='true'], .chip[aria-pressed='true'] { background: var(--ink); color: var(--paper); font-weight: 600; }
-/* The theme toggle's pressed state is a word underline (plus aria-pressed), not a fill: the header's quietest button stays quiet. */
-.btn.theme[aria-pressed='true'] { background: var(--vellum); color: var(--ink); text-decoration: underline 2px; text-underline-offset: 4px; }
-.btn.primary { background: var(--meridian); border-color: var(--meridian); color: var(--paper); font-weight: 600; } /* the view's one accent (DESIGN.md 4) */
-.generate { font-weight: 600; } /* neutral: Download .zip is the first view's one accent */
-.btn:disabled { cursor: not-allowed; border-style: dashed; border-color: var(--graphite); background: var(--vellum); color: var(--graphite); }
 
-.samples { padding: var(--space-3) var(--space-4) 0; }
-.chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; padding: 0; border: 0; }
-.chips legend, .kicker {
-  float: left; margin: 0 var(--space-2) 0 0; padding: 0; color: var(--graphite);
-  font-size: 0.8rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase;
+/* The page shell (docs/redesign/DESIGN.md 2 and 4): one grid. The content column is 1072 px (.wrap:
+   1136 with 32 px side padding), four 202 px columns with 88 px gaps. Columns are always
+   minmax(0, 1fr) and the gap is min(88 px, 7.75vw), so the grid is exact at 1136 and up and fluid
+   below; below 640 px it is one column with a 16 px gutter. */
+:root { --gap: min(var(--space-88), 7.75vw); }
+.wrap { width: 100%; max-width: 1136px; margin: 0 auto; padding: 0 var(--space-32); }
+/* Below 1200 px the window no longer leaves 32 px outside the column, so the side padding grows to 48
+   (and the wrap to 1168, keeping the 1072 column until the window is too narrow): the frame, hanging
+   32 px, keeps at least 16 px from the window edge (D39). */
+@media (max-width: 1199px) { .wrap { max-width: 1168px; padding: 0 var(--space-48); } }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--gap); }
+.muted { color: var(--gray-11); }
+.mono { font-family: var(--font-mono); }
+.hdr { position: relative; height: 56px; box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6); }
+.hdr-in { height: 100%; display: flex; align-items: center; justify-content: space-between; }
+.brand { display: flex; color: var(--gray-12); text-decoration: none; }
+.nav { display: flex; align-items: center; gap: var(--space-24); color: var(--gray-11); }
+.nav a, .nav button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: none; cursor: pointer; }
+.nav a:hover, .nav button:hover { color: var(--gray-12); }
+.menu { display: none; -webkit-tap-highlight-color: transparent; }
+/* The header's right group: the nav (or Menu on phones), then the theme button (D82): a 16 px glyph
+   in a 32 px target, gray-11 like the links and gray-12 on hover. Its 8 px inset is pulled out on both
+   sides, so the glyph sits 24 px after GitHub and ends on the column's right edge. */
+.hdr-end { display: flex; align-items: center; gap: var(--space-24); }
+.theme-btn {
+  display: grid; place-items: center; flex: none; width: 32px; height: 32px; margin: 0 calc(-1 * var(--space-8));
+  padding: 0; border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-11); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-.chip { min-height: 32px; padding-block: 0; border-radius: var(--radius-pill); border-color: var(--graphite); font-size: 0.93em; }
-.chip[aria-pressed='true']::before { content: '\2713  ' / ''; }
-.chip-kind { font: 0.8em var(--font-mono); opacity: 0.9; }
+.theme-btn:hover { color: var(--gray-12); }
+.icon-btn {
+  display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 0;
+  border-radius: var(--radius-row); background: none; color: var(--gray-11); cursor: pointer;
+}
+.icon-btn:hover { background: var(--gray-3); color: var(--gray-12); }
 
-.stage { display: block; min-height: 70vh; padding: var(--space-4) var(--space-4) var(--space-5); outline-offset: -2px; }
-/* No cards (DESIGN.md 3): the panes group by space and alignment; the map frame and the preview sheet are the frames. */
-.kicker { float: none; margin: 0; }
-h1 { margin: 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
-h2 { margin: 0 0 var(--space-3); font-size: 1.15rem; font-weight: 650; }
-.lede { margin: 0; color: var(--graphite); }
-.title { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); margin-bottom: var(--space-4); }
-.h1-note { color: var(--graphite); font-weight: 400; }
-.method {
-  display: inline-block; min-width: 4.6em; padding: 0 var(--space-1); margin-right: var(--space-2);
-  border: 1px solid var(--rule); border-radius: var(--radius-sm); font: 600 0.75rem var(--font-mono); text-align: center;
+/* Hero: 492 / 492, bottoms aligned. */
+.hero { padding: var(--space-104) 0 var(--space-64); }
+.hero-in { align-items: end; }
+.hero h1 { margin: 0 0 var(--space-20); font-size: var(--text-48); line-height: var(--leading-48); font-weight: 600; letter-spacing: -0.035em; text-wrap: balance; }
+.hero-lede { margin: 0; color: var(--gray-11); font-size: var(--text-20); line-height: var(--leading-20); letter-spacing: -0.01em; text-wrap: pretty; }
+.load { display: flex; flex-direction: column; gap: var(--space-12); min-width: 0; }
+.source { margin: 0; }
+/* The field: 48 px, radius 10, a gray-8 ring; Open file and Generate inset 4 px (radius 6, concentric).
+   Pasted text grows the field while it has focus; the buttons stay on its last line. */
+.source-field {
+  --field-h: 40px; container-type: inline-size;
+  display: flex; align-items: flex-end; gap: var(--space-4); padding: var(--space-4) var(--space-4) var(--space-4) var(--space-16);
+  border-radius: var(--radius-box); background: var(--gray-1); box-shadow: inset 0 0 0 var(--line) var(--gray-8);
 }
-[data-method='get'] { color: var(--meridian); }
-[data-method='post'] { color: var(--fir); }
-[data-method='put'], [data-method='patch'] { color: var(--ochre); }
-[data-method='delete'] { color: var(--brick); }
-[data-method='tool'] { color: var(--plum); }
-.summary { color: var(--graphite); }
-.flag { margin-left: var(--space-2); padding: 0 var(--space-1); border: 1px solid var(--graphite); border-radius: var(--radius-sm); font-size: 0.8em; }
+.source-field[data-drop] { background: var(--gray-3); }
+.source-field:has(.input:focus-visible) { outline: 2px solid var(--gray-12); outline-offset: 2px; }
+.source .input {
+  flex: 1; min-width: 0; height: var(--field-h); padding: calc((var(--field-h) - var(--leading-14)) / 2) 0; resize: none;
+  border: 0; background: none; color: var(--gray-12); font: inherit;
+}
+.source .input:focus-visible { outline: none; }
+.source .input:focus { height: auto; min-height: var(--field-h); max-height: 12lh; field-sizing: content; } /* pasted text shows while editing */
+.source .input::placeholder { color: var(--gray-11); opacity: 1; text-overflow: ellipsis; }
+/* The placeholder stays on one line (cut with an ellipsis) instead of wrapping out of the 40 px box. */
+.source .input:placeholder-shown { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.source-field .icon-btn { margin: 0 var(--space-4) var(--space-4) 0; } /* its focus ring stays clear of Generate */
+.generate {
+  flex: none; height: var(--field-h); padding: 0 var(--space-16); border: 0; border-radius: var(--radius-row);
+  background: var(--indigo-9); color: var(--indigo-contrast); font: 500 var(--text-14)/var(--leading-14) var(--font-sans); white-space: nowrap; cursor: pointer;
+}
+/* Generate keeps one width through its stages (the widest, "Fetching" with the spinner, is 111 px), so the
+   field holds still. Where the field's content box is under 396 px (D39's grid: 960 to about 1007 px) a
+   112 px Generate at rest would leave the URL under 240 px, so there it widens once when a load starts and
+   narrows once when it ends (D65). On phones Generate has its own line. */
+.generate[data-stage] { min-width: 112px; }
+@container (width >= 396px) { .generate { min-width: 112px; } }
+/* "Samples" and the segmented control filling the rest of the row. */
+/* When "Samples" and the control no longer fit one line, the control wraps under the label. */
+.samples { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16); }
+.samples-label { color: var(--gray-11); }
+.seg { display: inline-flex; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-box); background: var(--gray-3); }
+.samples .seg { flex: 1 0 max-content; display: grid; grid-template-columns: repeat(3, minmax(max-content, 1fr)); }
+.seg-item {
+  position: relative; display: flex; align-items: center; justify-content: center; height: 32px; padding: 0 var(--space-12);
+  border-radius: var(--radius-row); color: var(--gray-11); white-space: nowrap; cursor: pointer;
+}
+.seg-item:hover { color: var(--gray-12); }
+.seg-item:has(:checked) { background: var(--gray-1); color: var(--gray-12); font-weight: 500; box-shadow: 0 0 0 var(--line) var(--gray-7); }
+.seg-item:has(:focus-visible) { outline: 2px solid var(--gray-12); outline-offset: 2px; }
 
-/* The atlas map (phase 6): survey-chart cards, ink nodes, three edge styles that never rely on colour alone. */
-.chips-more { display: none; }
-/* Height from the map's measured page top (--map-top, set by Map.tsx), leaving a 16px margin below. */
-.map { position: relative; height: clamp(360px, calc(100dvh - var(--map-top, 300px) - var(--space-3)), 900px); background: var(--paper); border: 1px solid var(--ink); border-radius: var(--radius-sm); overflow: clip; }
-.map:has(> .atlas:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--marker); }
-.atlas { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; cursor: grab; }
-.atlas:focus-visible { outline: none; box-shadow: none; }
-.camera { transform-origin: 0 0; }
-.camera[data-animate] { transition: transform var(--motion-camera) ease-out; }
-.grid-line { fill: none; stroke: var(--rule); opacity: 0.6; }
-.card { fill: color-mix(in srgb, var(--wash) 7%, var(--vellum)); stroke: var(--graphite); stroke-opacity: 0.8; }
-.card-rule { stroke: var(--rule); }
-.territory-label { font: 650 13px var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; fill: var(--ink); }
-/* Zoomed out, cluster names grow (up to 1.6x, clear of the hub badge) to stay readable as territories; --inv is 1 / zoom. */
-.territory-label { font-size: calc(13px * clamp(1, var(--inv, 1), 1.6)); }
-.hub, .sub, .crud text { font: 11px var(--font-mono); fill: var(--graphite); }
-.node .shape, .legend-node { fill: var(--vellum); stroke: var(--ink); }
-.node { cursor: pointer; }
-.node[data-hot] .shape { stroke-width: 2; }
-/* Focus: 2 px ink outline + marker halo, drawn in SVG (A1); the far end of the `E` edge gets a dashed ring. */
-.hit { fill: transparent; stroke: none; outline: none; }
-.hit:focus { stroke: var(--marker); stroke-width: 5; box-shadow: none; }
-.node:has(.hit:focus) .shape { stroke-width: 2; }
-.ring { fill: none; stroke: none; }
-.node:has(.hit:focus) .ring { stroke: var(--ink); stroke-width: 2; }
-.node[data-target] .hit { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 5 3; }
-.bar { fill: var(--ink); }
-.bar.hatched { fill: url(#hatch); stroke: var(--brick); stroke-width: 0.75; }
-.hatch, .bang { fill: var(--brick); }
-.n-method { font: 600 10.5px var(--font-mono); fill: currentColor; }
-.bang { font: 800 14px var(--font-mono); }
-.name { font: 12px var(--font-mono); fill: var(--ink); }
-.name[data-deprecated] { text-decoration: line-through; }
-.param { font-style: italic; fill: var(--meridian); }
-.sub { font: 10.5px var(--font-body); }
-.crud rect { fill: none; stroke: var(--graphite); }
-.crud text { font-weight: 600; text-anchor: middle; }
-[data-kind='feeds'] { --hue: var(--meridian); }
-[data-kind='sub-path'] { --hue: var(--graphite); }
-[data-kind='shared-schema'], .diamond { --hue: var(--plum); fill: var(--hue); }
-.line { fill: none; stroke: var(--hue); stroke-width: 1.75; }
-.line[data-kind='feeds'] { stroke-dasharray: 6 4; }
-.line[data-kind='sub-path'] { stroke-width: 1.5; }
-.line[data-kind='shared-schema'] { stroke-dasharray: 1 4; stroke-linecap: round; }
-.mk-feeds { fill: var(--meridian); }
-.mk-sub-path { fill: none; stroke: var(--graphite); stroke-width: 1.5; }
-/* Calm map: at rest every edge is drawn quietly (style, marker and label unchanged, so never colour alone);
-   the focused or hovered node's edges come up to full strength (>= 3:1) and the rest fade further. */
-/* Resting opacity 0.75 keeps every edge hue, marker and diamond >= 3:1 on paper and vellum in both themes (contrast.test.ts). */
-.edge { opacity: 0.75; transition: opacity var(--motion-fade) ease-out; }
-.edge[data-hot] { opacity: 1; }
-.edge[data-hot] .line { stroke-width: 2.5; }
-.edge[data-cycled] .line { stroke-width: 4.5; }
-.atlas[data-hot] .edge:not([data-hot]) { opacity: 0.12; }
-.edge-label { font: 600 10.5px var(--font-mono); fill: var(--hue); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round; }
-.edge-label[data-shown='false'], .atlas[data-far] .edge-label, .atlas[data-hot] .edge-label { visibility: hidden; }
-.atlas .edge-label[data-hot] { visibility: visible; }
-/* Bundled edges show only on highlight; their bundle (feeds style, bolder) and the large-spec cluster
-   links (a thick graphite band) carry a text label, so neither relies on colour. */
-.edge[data-bundled]:not([data-hot]) { display: none; }
-.map-link { opacity: 0.85; transition: opacity var(--motion-fade) ease-out; }
-.map-link[data-link='bundle'] { opacity: 0.75; } /* bundles rest quietly like edges; the large-spec cluster bands stay the overview */
-.map-link[data-link='bundle'][data-hot] { opacity: 1; }
-.labels .map-link { opacity: 1; } /* link labels keep full text contrast (4.5:1) */
-.map-link[data-link='bundle'] .line { stroke-width: 2.5; }
-.map-link[data-link='clusters'] { --hue: var(--graphite); }
-.map-link[data-link='clusters'] .line { stroke-width: 5; stroke-linecap: round; stroke-opacity: 0.9; }
-/* Bundle labels follow the edge labels; cluster links (large specs, read zoomed out) always show, enlarged. */
-.atlas .map-link[data-link='clusters'] .edge-label { visibility: visible; font-size: calc(10.5px * clamp(1, var(--inv, 1), 1.6)); }
-.atlas[data-hot] .map-link:not([data-hot]) { opacity: 0.12; }
-/* While a node is hot, other links' labels hide (like edge labels) rather than fade below legible contrast. */
-.atlas[data-hot] .labels .map-link:not([data-hot]) .edge-label { visibility: hidden; }
-.node[data-summary] .name { font-weight: 650; }
-.toolbar { position: absolute; z-index: 2; top: var(--space-2); left: var(--space-2); display: flex; gap: var(--space-1); margin: 0; padding: 0; border: 0; }
-.toolbar .btn { min-width: 36px; padding-inline: var(--space-2); }
-.map-credit { position: absolute; z-index: 1; right: var(--space-2); bottom: var(--space-2); margin: 0; padding: 0 var(--space-1); background: var(--paper); color: var(--graphite); font-size: 0.8rem; pointer-events: none; }
-.legend { margin: var(--space-2) 0 var(--space-4); font-size: 0.9em; }
-.legend ul { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin: var(--space-2) 0 0; padding: 0; list-style: none; }
-.legend li { display: flex; align-items: center; gap: var(--space-2); }
-.legend svg { flex: none; }
-.legend p { margin: var(--space-2) 0 0; color: var(--graphite); }
-.legend-glyph { font: 700 9px var(--font-mono); fill: var(--ink); }
+/* The result frame: radius 16, a gray-7 ring, padding 32, hanging 32 px outside the column so its
+   contents share the column's edges. Its contents (today's skill pane and map) arrive restyled in R4/R5. */
+.frame { margin: 0 calc(-1 * var(--space-32)); padding: var(--space-32); border-radius: var(--radius-frame); box-shadow: inset 0 0 0 var(--line) var(--gray-7); }
+.frame:focus { outline: none; }
 
-/* Detail panel (F10): 360 px right of the map on desktop, an overlay on tablets, a bottom sheet on phones (PLAN 3.3). */
-.atlas-wrap { position: relative; }
-/* The panel overlays the map from its right edge (PLAN 3.3), so opening it never shrinks the map. */
-.detail {
-  position: absolute; z-index: 3; top: 0; right: 0; width: min(360px, 88%); max-height: 100%; overflow: auto;
-  padding: var(--space-3) var(--space-3); background: var(--vellum); border: 1px solid var(--ink); border-radius: var(--radius-sm);
-  box-shadow: -4px 0 0 var(--paper); overflow-wrap: anywhere;
+/* Command line, How it works, Made by, footer. */
+.block { padding-top: var(--space-96); }
+.block:focus, .block:focus-visible { outline: none; }
+.block h2, .made h2 { margin: 0 0 var(--space-8); }
+.two h2 + p, .block h2 + p { margin: 0; }
+#cli h2 + p { max-width: 44ch; }
+.cli { position: relative; min-width: 0; border-radius: var(--radius-box); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); }
+.cli pre { margin: 0; padding: var(--space-14) var(--space-48) var(--space-14) var(--space-16); font: var(--text-12)/20px var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; } /* wraps on narrow columns: never a scroll region */
+.cli-line { display: block; padding-left: 2ch; text-indent: -2ch; } /* a wrapped command hangs under its text, not under the $ */
+.cli-p { color: var(--gray-11); }
+.cli .icon-btn { position: absolute; top: var(--space-8); right: var(--space-8); }
+.how { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: var(--gap); margin: var(--space-24) 0 0; padding: 0; list-style: none; }
+.how li { padding-top: var(--space-16); box-shadow: inset 0 var(--line) 0 var(--gray-7); }
+.how b { display: block; margin-bottom: var(--space-4); }
+.how p { margin: 0; color: var(--gray-11); }
+.made { margin-top: var(--space-96); }
+.made-in { padding-top: var(--space-48); box-shadow: inset 0 var(--line) 0 var(--gray-6); }
+.made-in h2 + p { margin: 0 0 var(--space-12); }
+.ul { color: var(--gray-12); font-size: var(--text-12); line-height: var(--leading-12); text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; }
+.projects { margin: 0; padding: 0; list-style: none; container-type: inline-size; }
+.projects a {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--gap); padding: var(--space-14) 0;
+  color: var(--gray-12); text-decoration: none; box-shadow: inset 0 var(--line) 0 var(--gray-6);
 }
-.detail-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.detail h2 { margin: var(--space-2) 0; font-size: 1rem; }
-.detail h3 { margin: var(--space-4) 0 var(--space-1); font-size: 0.95rem; }
-.detail h4 { margin: var(--space-2) 0 0; font-size: 0.85rem; color: var(--graphite); }
-.detail p { margin: var(--space-1) 0; }
-.desc { white-space: pre-line; color: var(--graphite); }
-.detail table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-.detail th, .detail td { padding: var(--space-1); border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
-.fields, .related { margin: 0; padding-left: var(--space-3); }
-.related li { padding-block: var(--space-1); }
-.link { padding: 0; border: 0; background: none; color: var(--meridian); font: inherit; text-decoration: underline; cursor: pointer; }
-.link[aria-expanded] { color: var(--graphite); text-underline-offset: 3px; } /* a disclosure toggle: quiet, like the summaries */
-.copied { margin-left: var(--space-2); font-weight: 600; }
-.example { margin: var(--space-2) 0; padding: var(--space-2); background: var(--paper); border: 1px solid var(--rule); font: 12px/1.4 var(--font-mono); white-space: pre; overflow-x: auto; }
-kbd { padding: 0 var(--space-1); border: 1px solid var(--graphite); border-bottom-width: 2px; border-radius: var(--radius-sm); font: 0.85em var(--font-mono); white-space: nowrap; }
-/* Skill pane beside the map (phase 11, PLAN 3.3): the chart's legend sheet, set like field notes. */
-.panes { display: grid; grid-template-columns: clamp(380px, 40%, 560px) minmax(0, 1fr); gap: var(--space-5); align-items: start; }
-.tabs { display: flex; margin: 0 0 var(--space-2); }
-.tabs [role='tab'] { font: inherit; min-height: 36px; padding: var(--space-1) var(--space-4); border: 1px solid var(--ink); background: var(--vellum); color: var(--ink); cursor: pointer; }
-.tabs [role='tab'] + [role='tab'] { margin-left: -1px; }
-.tabs [role='tab']:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
-.tabs [role='tab']:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
-.tabs [aria-selected='true'] { background: var(--ink); color: var(--paper); font-weight: 650; text-decoration: underline 2px; text-underline-offset: 4px; }
-.skill-pane {
-  position: sticky; top: var(--space-2); display: flex; flex-direction: column; gap: var(--space-2);
-  height: clamp(560px, calc(100dvh - var(--panes-top, 260px) - var(--space-3)), 960px);
+.projects li:first-child a { padding-top: var(--space-4); box-shadow: none; }
+.projects b { font-weight: 500; }
+.project-text { grid-column: 2; grid-row: 1 / span 2; color: var(--gray-11); }
+.projects code { min-width: 0; margin-top: var(--space-4); color: var(--gray-11); font-size: var(--text-12); line-height: 20px; overflow-wrap: anywhere; } /* rows of 72 px, as the target */
+/* A row is two 202 px cells at full width; once the list is narrower the longest URL no longer fits
+   its cell, so the row stacks: name, line, URL (D75). */
+@container (width < 490px) {
+  .projects a { grid-template-columns: minmax(0, 1fr); }
+  .project-text { grid-column: 1; grid-row: auto; }
+  .projects code { margin-top: 0; }
 }
-.pane-head { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 0 var(--space-3); }
-.pane-head .kicker { grid-column: 1 / -1; }
-.pane-head h2 { margin: 0; font-size: 1.5rem; }
-.pane-head h2 code { font: 650 0.85em var(--font-mono); }
-.options { justify-self: end; font-size: 0.9em; }
-/* Disclosure toggles are quiet: graphite underlined text with the native marker, never the accent. */
-:is(.samples-fold, .options, .filters, .rels, .legend, .install, .audit) > summary { width: fit-content; cursor: pointer; color: var(--graphite); text-decoration: underline; text-underline-offset: 3px; }
-.options[open] { grid-column: 1 / -1; justify-self: stretch; }
-/* Label | field rows; the help line sits under its field. */
-.options-body { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-1) var(--space-3); align-items: center; padding-top: var(--space-2); }
-.options-body .field { max-width: 24rem; }
-.options .help { grid-column: 2; margin: 0 0 var(--space-1); color: var(--graphite); font-size: 0.9em; }
-.options .check { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--space-2); min-height: 28px; }
-.field { font: 13px var(--font-mono); padding: var(--space-1) var(--space-2); border: 1px solid var(--graphite); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); }
-.field[aria-invalid='true'] { border: 2px dashed var(--brick); }
-/* Files and the audit line side by side (at most 40 % of the height), the open file below taking the rest; each scrolls inside. */
-.skill-body { flex: 1; min-height: 0; display: grid; grid-template: fit-content(40%) auto minmax(0, 1fr) / minmax(0, 1.2fr) minmax(0, 1fr); gap: 0 var(--space-4); }
-.file-head, .preview { grid-column: 1 / -1; }
-/* Stale or still writing: a dashed frame and words, never faded text (contrast stays AA). */
-.skill-body[data-stale] { outline: 2px dashed var(--graphite); outline-offset: 4px; }
-.writing .outline { opacity: 0.6; }
-.tree, .audit { min-height: 0; overflow: auto; }
-.tree { font: 12.5px/1.3 var(--font-mono); }
-/* A long name wraps under itself, not under its twisty (hanging indent). */
-[role='treeitem'] { padding: var(--space-1) var(--space-2) var(--space-1) calc(var(--space-2) + 1.2em + (var(--level) - 1) * 1.44em); text-indent: -1.2em; border-radius: var(--radius-sm); cursor: pointer; outline-offset: -2px; }
-[role='treeitem']:hover { background: var(--paper); }
-[role='treeitem'][aria-selected='true'] { background: var(--paper); box-shadow: inset 3px 0 0 var(--ink); font-weight: 700; }
-[role='treeitem']:focus-visible { box-shadow: inset 0 0 0 4px var(--marker); }
-.twisty { display: inline-block; width: 1.2em; color: var(--graphite); }
-.count { color: var(--graphite); font: 0.85em var(--font-body); }
-.file-head { margin: 0; padding: var(--space-3) 0 var(--space-1); color: var(--graphite); font-size: 0.85em; }
-.file-head code { color: var(--ink); font-weight: 650; }
-.preview {
-  margin: 0; padding: 0 var(--space-3); overflow: auto; white-space: pre; font: 12px/18px var(--font-mono); color: var(--ink); outline-offset: -2px;
-  border: 1px solid var(--rule); border-radius: var(--radius-sm); /* the ruled sheet: the pane's one frame */
-  background: var(--vellum) repeating-linear-gradient(transparent 0 17px, color-mix(in srgb, var(--rule) 70%, transparent) 17px 18px) local;
-}
-.audit { padding: var(--space-2); font-size: 0.85em; line-height: 1.4; } /* room for the summary's focus ring inside the scroll box */
-.audit > summary { padding-block: var(--space-1); color: var(--ink); text-decoration: none; font: 650 1.05rem var(--font-display); }
-.audit > summary .tally { text-decoration: underline; text-underline-offset: 3px; }
-.verdict { white-space: nowrap; } /* "Audit passed:" never breaks inside; the tally has its own line */
-.tally { display: block; padding-left: 2.85em; color: var(--graphite); font: 0.85rem var(--font-body); }
-.audit ul { margin: var(--space-1) 0; padding: 0; list-style: none; }
-.audit li[data-ok='false'] { font-weight: 650; }
-.mark { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; margin-right: var(--space-1); border: 1.5px solid; border-radius: 50%; font: 700 0.75em var(--font-mono); color: var(--fir); }
-[data-ok='false'] > .mark, [data-ok='false'] > summary .mark { border-radius: 0; color: var(--brick); }
-.audit .help { margin: 0; color: var(--graphite); font-size: 0.9em; }
-.outline { margin: var(--space-2) 0; padding-left: var(--space-3); border-left: 1px dashed var(--graphite); font: 12.5px/1.7 var(--font-mono); list-style: none; }
-.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding-top: var(--space-3); background: var(--paper); }
-.actions .primary { min-width: 10rem; transition: none; }
-.install { margin-top: var(--space-2); font-size: 0.9em; }
-.install[open] { display: grid; justify-items: start; gap: var(--space-2); }
-.install pre { max-width: 100%; margin: 0 0 var(--space-2); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.9em; }
-.in-skill { padding: var(--space-1) var(--space-2); border-left: 3px solid var(--meridian); background: var(--paper); }
-@media (max-width: 1023px) {
-  html { scroll-padding-bottom: 7rem; } /* keep focused items clear of the sticky action bar (200 % zoom) */
-  .panes { display: block; }
-  .tabs [role='tab'] { flex: 1; }
-  .skill-pane { position: static; height: auto; }
-  .skill-body { gap: 0 var(--space-3); }
-  .preview { max-height: 60vh; }
-  /* sticky over the scrolling skill: one hairline marks its edge */
-  .actions { position: sticky; z-index: 1; bottom: 0; padding-bottom: var(--space-2); border-top: 1px solid var(--rule); }
-  body:has(.skill-pane:not([hidden])) .generate { display: none; }
-}
+.projects a:hover b { text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; }
+.foot { margin-top: var(--space-64); }
+.foot-in { height: 72px; display: flex; align-items: center; justify-content: space-between; box-shadow: inset 0 var(--line) 0 var(--gray-6); }
 
+@media (max-width: 959px) {
+  /* The hero stacks before its field gets too narrow for the placeholder. */
+  .two.hero-in { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-24); }
+}
 @media (max-width: 639px) {
-  /* Phones: tree and audit share the row equally, and the verdict steps down so "Audit passed:" fits on one line. */
-  .skill-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .audit > summary { font-size: 0.95rem; }
-  .detail { position: fixed; top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 50dvh; border-radius: var(--radius-md) var(--radius-md) 0 0; box-shadow: 0 -4px 0 var(--paper); }
-  body:has(.detail) { padding-bottom: 50dvh; } /* room to scroll the map above the bottom sheet */
-  html { scroll-padding-bottom: 7rem; } /* clear of the fixed Generate button and the sticky action bar */
-  body { font-size: 15px; padding-bottom: var(--space-6); } /* room for the fixed Generate skill bar */
-  .header, .samples { padding-inline: var(--space-3); }
-  .header .brand { margin-right: auto; }
-  .generate { position: fixed; z-index: 1; left: var(--space-3); right: var(--space-3); bottom: var(--space-3); min-height: 48px; }
-  .chips { flex-wrap: nowrap; overflow-x: auto; padding-block: var(--space-1); scroll-padding-inline: var(--space-2) 10rem; } /* a focused chip scrolls clear of the hint (reveal.ts) */
-  .chips legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .chip { flex: none; }
-  .samples { position: relative; }
-  .chips-more {
-    position: absolute; top: var(--space-3); right: 0; bottom: 0; display: flex; align-items: center; padding: 0 var(--space-3) 0 var(--space-5);
-    background: linear-gradient(to right, transparent, var(--paper) var(--space-4)); color: var(--ink); font-weight: 650; pointer-events: none;
+  /* Phones (V2Phone): one column, a 16 px gutter; the field becomes input over a full-width Generate. */
+  .wrap { padding: 0 var(--space-16); }
+  .two, .how { grid-template-columns: minmax(0, 1fr); }
+  .two, .how { row-gap: var(--space-16); }
+  /* Menu, then the theme button, both 44 px and gray-12; the theme glyph ends on the 16 px gutter. */
+  .hdr-end { gap: 0; }
+  .menu { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: var(--gray-12); cursor: pointer; }
+  .theme-btn { width: 44px; height: 44px; margin: 0 calc(-1 * var(--space-14)) 0 0; color: var(--gray-12); }
+  .hdr .nav { display: none; }
+  .hdr .nav[data-open] {
+    position: absolute; z-index: 4; top: 100%; left: 0; right: 0; display: flex; flex-direction: column; align-items: stretch; gap: 0;
+    padding: var(--space-8) var(--space-16); background: var(--gray-1); box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6);
   }
-  .header { gap: var(--space-2); padding-block: var(--space-3); }
-  .stage { padding: var(--space-3) var(--space-3) var(--space-4); }
-  .title { margin-bottom: var(--space-3); }
-  h1 { font-size: 1.5rem; }
-  .map { height: clamp(300px, 50vh, 560px); }
+  .hdr .nav[data-open] a { display: flex; align-items: center; min-height: 44px; }
+  .hero { padding: var(--space-40) 0 var(--space-32); }
+  .hero-lede { font-size: var(--text-14); line-height: var(--leading-14); letter-spacing: 0; }
+  .source-field { flex-wrap: wrap; padding: var(--space-4); }
+  .source .input { padding-inline: var(--space-12); }
+  .generate { flex-basis: 100%; }
+  .samples { flex-direction: column; align-items: stretch; gap: var(--space-8); }
+  .samples .seg { flex: none; }
+  .samples .seg { grid-template-columns: auto auto auto; }
+  .seg-item { padding: 0 var(--space-8); }
+  /* The result is not a framed card on phones: a rule above it. */
+  .frame {
+    margin: 0 calc(-1 * var(--space-16)); padding: var(--space-32) var(--space-16) 0; border-radius: 0;
+    box-shadow: inset 0 var(--line) 0 var(--gray-6); /* the rule spans the window; the contents keep the gutter */
+  }
+  .block { padding-top: var(--space-64); }
+  .made { margin-top: var(--space-64); }
+  .made-in { padding-top: var(--space-40); }
+  .foot-in { height: auto; padding: var(--space-24) 0; flex-direction: column; align-items: flex-start; gap: var(--space-16); }
+  .foot-nav { flex-wrap: wrap; gap: var(--space-8) var(--space-20); }
+}
+/* Buttons (V2Home .btn): 32 px, or 40 (lg) in the frame head; radius 6, label 500, an icon 8 px before it.
+   Secondary: gray-1 with a gray-8 ring; primary: indigo-9 with white text (the view's one accent). */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-8); height: 32px; padding: 0 var(--space-12);
+  border: 0; border-radius: var(--radius-row); background: var(--gray-1); box-shadow: inset 0 0 0 var(--line) var(--gray-8); color: var(--gray-12);
+  font: 500 var(--text-14)/var(--leading-14) var(--font-sans); white-space: nowrap; cursor: pointer;
+}
+/* No colour transition: enabling must not fade (not in DESIGN.md 7's table); hover motion is R6's. */
+.btn.lg { height: 40px; padding: 0 var(--space-16); }
+.btn svg { flex: none; }
+.btn:not(:disabled, .primary):hover { background: var(--gray-3); }
+.btn.primary { background: var(--indigo-9); box-shadow: none; color: var(--indigo-contrast); }
+.btn:disabled { cursor: not-allowed; box-shadow: inset 0 0 0 var(--line) var(--gray-6); background: var(--gray-2); color: var(--gray-11); }
+
+h2 { margin: 0 0 var(--space-16); font-size: var(--text-20); line-height: var(--leading-20); font-weight: 600; letter-spacing: -0.015em; }
+h3, h4 { font-weight: 600; }
+.lede { margin: 0; color: var(--gray-11); }
+
+/* The frame head (DESIGN.md 4.3): title 20/600; the meta line 14 gray-11, numbers gray-12 500, 20 px
+   apart; tags gray-3, radius 4; Install command and Download .zip on the right. */
+.fhead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-24); margin-bottom: var(--space-32); }
+.fhead-l { min-width: 0; }
+.ftitle { margin: 0 0 var(--space-4); overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-20); color: var(--gray-11); }
+.meta b { color: var(--gray-12); font-weight: 500; }
+.tag { height: 20px; padding: 0 var(--space-6); border-radius: var(--radius-sm); background: var(--gray-3); color: var(--gray-11); font-size: var(--text-12); line-height: 20px; white-space: nowrap; }
+.tag-btn { border: 0; font-family: inherit; cursor: pointer; text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; }
+.tag-btn:hover { color: var(--gray-12); }
+.fhead-actions { display: flex; flex: none; gap: var(--space-8); }
+.warnings { max-height: 12rem; overflow: auto; margin: calc(-1 * var(--space-16)) 0 var(--space-32); padding-left: var(--space-24); color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
+.install-cmds { display: flex; align-items: flex-start; gap: var(--space-8); margin: calc(-1 * var(--space-16)) 0 var(--space-32); padding: var(--space-8) var(--space-8) var(--space-8) var(--space-12); border-radius: var(--radius-box); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); }
+.install-cmds pre { flex: 1; min-width: 0; margin: 0; font: var(--text-12)/20px var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* The route map (docs/redesign/DESIGN.md 4-5, redesign R4). Tools row: Map | List, search, legend. */
+.tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-12) var(--space-16); margin-bottom: var(--space-24); }
+.tools-l { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); }
+.search {
+  display: flex; align-items: center; gap: var(--space-8); width: 202px; height: 40px; padding: 0 var(--space-12);
+  border-radius: var(--radius-box); box-shadow: inset 0 0 0 var(--line) var(--gray-7); color: var(--gray-11);
+}
+.search svg { flex: none; fill: none; stroke: currentColor; stroke-width: 1.25; stroke-linecap: round; }
+.search input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: none; color: var(--gray-12); font: inherit; outline: none; appearance: none; }
+.search input::-webkit-search-cancel-button { appearance: none; }
+.search input::placeholder { color: var(--gray-11); opacity: 1; }
+.search:has(input:focus-visible) { outline: 2px solid var(--gray-12); outline-offset: 2px; }
+.search kbd { min-width: 20px; height: 20px; line-height: 20px; text-align: center; }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-20); margin: 0; padding: 0; list-style: none; color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
+.legend li { display: inline-flex; align-items: center; gap: var(--space-8); }
+.legend svg { flex: none; }
+.lg-feed, .lg-route { fill: none; }
+.lg-feed { stroke: var(--gray-9); stroke-width: 1px; }
+.lg-feed[data-inferred] { stroke-dasharray: 3 3; }
+.lg-route { stroke: var(--indigo-9); stroke-width: 2.5px; stroke-linecap: round; }
+
+/* The map: cards on the grid (x = 0, 290, 580, 870), links in one SVG underneath. Wider than the
+   frame, it scrolls sideways inside a focusable region (no zoom). */
+.map-wrap { position: relative; }
+.map-scroll { margin-right: calc(-1 * var(--space-32)); overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; } /* to the frame's edge */
+.map-scroll:focus-visible { outline: 2px solid var(--gray-12); outline-offset: -2px; }
+.route { position: relative; }
+.route-origin { position: absolute; }
+.links { position: absolute; overflow: visible; pointer-events: none; fill: none; }
+/* Feed links 1 px gray-9 with open arrowheads, inferred ones dashed; while a row is hot the rest turn
+   gray-5 and its own links are drawn 1.25 px in ink. The workflow: a 6 px gray-1 halo under a 2.5 px indigo line. */
+.ln { stroke: var(--gray-9); stroke-width: 1px; }
+.ln[data-faded] { stroke: var(--gray-5); }
+.ln[data-inferred], .ln-hot[data-inferred] { stroke-dasharray: 3 3; }
+.ln-hot { stroke: var(--gray-12); stroke-width: 1.25px; }
+.halo { stroke: var(--gray-1); stroke-width: 6px; stroke-linecap: round; }
+.wf { stroke: var(--indigo-9); stroke-width: 2.5px; stroke-linecap: round; }
+.ah, .ahk { fill: none; stroke-width: 1.2px; stroke-linecap: round; stroke-linejoin: round; }
+.ah { stroke: var(--gray-9); }
+.ahk { stroke: var(--gray-12); }
+.ahr { fill: var(--indigo-9); }
+/* A resource: 202 wide, radius 8, gray-1, a gray-7 ring; head 36 (name 14/600, count 12) over a gray-6 rule. */
+.rc { position: absolute; width: 202px; padding-bottom: var(--space-4); border-radius: var(--radius-md); background: var(--gray-1); box-shadow: inset 0 0 0 var(--line) var(--gray-7); }
+.rc-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); height: 36px; margin: 0; padding: 0 var(--space-12);
+  font-size: var(--text-14); line-height: var(--leading-14); font-weight: 600; box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6);
+}
+.rc-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-count { flex: none; color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); font-weight: 400; }
+/* An operation: a 32 px button; method text in a 44 px column, the id in mono 14, the stop disc at its end. */
+.op {
+  display: flex; align-items: center; gap: var(--space-6); width: calc(100% - var(--space-8)); height: 32px; margin: 0 var(--space-4); padding: 0 var(--space-6) 0 var(--space-10);
+  border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-12); font: inherit; text-align: left; cursor: pointer;
+}
+/* Hover or focus an operation (DESIGN.md 7): rows and links fade over 250 ms while a row is hot and for
+   250 ms after (data-fading), so they also fade back; a theme change or a search alone snaps (D67). */
+.route:is([data-hot], [data-fading]) .ln { transition: stroke var(--motion-map) ease-out; }
+.route:is([data-hot], [data-fading]) .op { transition: background-color var(--motion-map) ease-out; }
+.route:is([data-hot], [data-fading]) :is(.op .m, .op .id, .rc-name) { transition: color var(--motion-map) ease-out; }
+.op:focus-visible { outline-offset: -2px; }
+.op .m { flex: none; width: 44px; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); white-space: nowrap; }
+.op .m[data-destructive] { color: var(--destructive); }
+/* D53: the destructive mark at the row's right end (left of a stop disc), a 12 px amber-11 warning triangle (a graphic: 3:1 is enough, it has 4.49:1 in light). */
+.warn { flex: none; }
+.warn-bg { fill: var(--amber-11); }
+.warn-x { fill: none; stroke: var(--gray-1); stroke-width: 1.5px; stroke-linecap: round; }
+.op .id { flex: 1; min-width: 0; overflow: hidden; font: var(--text-14)/var(--leading-14) var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
+/* While a row is hot (hover, focus, pinned) or a search narrows the map, related rows and matches
+   are lit: ink, id 600, method 500; the rest fade to the lightest ink that keeps AA text contrast
+   (gray-11, weight 400), and a card with nothing lit fades its name. Weight as well as lightness,
+   never lightness alone, and no opacity: 0.38 would put live buttons at 2.3:1 (D47). */
+.op[data-lit] .m { color: var(--gray-12); font-weight: 500; }
+.op[data-lit] .m[data-destructive] { color: var(--destructive); }
+.op[data-lit] .id { color: var(--gray-12); font-weight: 600; }
+.op[data-route] .id { color: var(--indigo-11); font-weight: 600; }
+.op:hover, .op[data-hot] { background: var(--gray-3); }
+.op[data-dim] .m, .op[data-dim] .id { color: var(--gray-11); font-weight: 400; }
+.rc[data-dim] .rc-name { color: var(--gray-11); font-weight: 500; }
+.op[data-target] { outline: 2px dashed var(--gray-12); outline-offset: -2px; } /* the far end of the link E highlights */
+/* The stop disc: generated from data-route, so it is not part of the row's text (the name says the step). */
+.op[data-route]::after { content: attr(data-route); flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--indigo-9); color: var(--indigo-contrast); font: 600 var(--text-12)/18px var(--font-sans); text-align: center; }
+.op.more .m { display: flex; align-items: center; }
+.op.more svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.op.more[aria-expanded='true'] svg { transform: rotate(180deg); }
+.op.more .id { color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-sans); }
+.map-credit { margin: var(--space-8) 0 0; color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); text-align: right; }
+
+/* The operation card (the one element with a shadow: it floats): 300 wide, radius 10, padding 16. */
+.op-card {
+  position: absolute; z-index: 3; width: 300px; padding: var(--space-16); border-radius: var(--radius-box); background: var(--gray-1);
+  box-shadow: 0 0 0 var(--line) var(--gray-7), var(--shadow-float); overflow-wrap: anywhere; overflow-y: hidden;
+}
+/* Only the pinned card scrolls (capped above the skill browser): a scrolling preview would be a
+   keyboard-focusable scroller that vanishes on blur, dropping focus to the body. */
+.op-card[role='dialog'] { overflow-y: auto; }
+.oc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-8); }
+.oc-path { margin: 0; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); }
+.oc-close {
+  flex: none; height: 24px; margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-8)) 0 0; padding: 0 var(--space-8); border: 0; border-radius: var(--radius-row);
+  background: none; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-sans); cursor: pointer;
+}
+.oc-close:hover { background: var(--gray-3); color: var(--gray-12); }
+.oc-title { margin: var(--space-4) 0 var(--space-12); font-size: var(--text-14); line-height: var(--leading-14); font-weight: 600; }
+.oc-flag { margin-left: var(--space-8); padding: 0 var(--space-4); border-radius: var(--radius-sm); background: var(--gray-3); color: var(--gray-11); font-size: var(--text-12); font-weight: 400; }
+.oc-desc { margin: calc(-1 * var(--space-4)) 0 var(--space-12); color: var(--gray-11); white-space: pre-line; }
+.op-card dl { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--space-8) var(--space-12); margin: 0; font-size: var(--text-12); line-height: var(--leading-12); }
+.op-card dt { color: var(--gray-11); }
+.op-card dd { margin: 0; }
+.oc-feed { display: block; }
+.oc-feed + .oc-feed { margin-top: var(--space-4); }
+.oc-via { display: block; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); }
+.nowrap { white-space: nowrap; }
+.oc-link, .oc-ref {
+  padding: 0; border: 0; background: none; color: var(--gray-12); font: inherit; font-family: var(--font-mono); cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px; text-decoration-color: var(--gray-8);
+}
+.oc-ref { color: var(--indigo-11); text-decoration-color: currentColor; }
+.oc-example { margin: var(--space-16) 0 var(--space-8); padding: var(--space-8); border-radius: var(--radius-row); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); font: var(--text-12)/var(--leading-12) var(--font-mono); white-space: pre; overflow-x: auto; }
+.oc-actions { display: flex; align-items: center; margin: 0; font-size: var(--text-12); line-height: var(--leading-12); }
+.oc-copy {
+  height: 32px; padding: 0 var(--space-12); border: 0; border-radius: var(--radius-row); background: var(--gray-1); color: var(--gray-12);
+  box-shadow: inset 0 0 0 var(--line) var(--gray-8); font: 500 var(--text-14)/var(--leading-14) var(--font-sans); cursor: pointer;
 }
 
-/* Search, filters and dimmed nodes (phase 12, F11): faded and dashed, never colour alone. */
-.search { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-2); }
-.search label[for] { color: var(--graphite); }
-.search .field { flex: 1 1 8rem; min-width: 0; min-height: 36px; }
-.search-count { margin: 0; color: var(--graphite); font-size: 0.9em; }
-.filters > summary { min-height: 36px; display: flex; align-items: center; }
-.filters[open] { flex-basis: 100%; order: 1; padding-bottom: var(--space-2); }
-.filters .help { margin: var(--space-2) 0 0; color: var(--graphite); font-size: 0.9em; }
-.filters fieldset { margin: 0 0 var(--space-1); padding: 0; border: 0; }
-.filters legend { float: left; min-width: 8.5rem; padding: 0; margin-right: var(--space-2); line-height: 28px; font-weight: 650; }
-.filters label { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 28px; margin-right: var(--space-3); }
-.node[data-dim] :is(.shape, .bar, .crud rect) { opacity: 0.45; }
-.node[data-dim] text { opacity: 0.75; }
-.node[data-dim] .shape { stroke-dasharray: 4 3; }
+kbd { padding: 0 var(--space-4); box-shadow: inset 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm); color: var(--gray-11); font: var(--text-12) var(--font-mono); white-space: nowrap; }
+/* Map | List: a segmented control, the selected tab raised. */
+.tabs { display: inline-flex; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-box); background: var(--gray-3); }
+.tabs [role='tab'] { height: 32px; padding: 0 var(--space-12); border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-11); font: inherit; cursor: pointer; }
+.tabs [role='tab']:hover { color: var(--gray-12); }
+.tabs [aria-selected='true'] { background: var(--gray-1); color: var(--gray-12); font-weight: 500; box-shadow: 0 0 0 var(--line) var(--gray-7); }
 
-/* List view (F12, A3): one table per cluster, edges in words. */
-.list { min-width: 0; overflow-x: auto; outline-offset: 2px; }
-.list-summary { margin: 0 0 var(--space-3); color: var(--graphite); }
-.list table { width: 100%; margin: 0 0 var(--space-4); border-collapse: collapse; font-size: 0.9em; }
-.list caption { padding: var(--space-1) 0; border-bottom: 2px solid var(--ink); text-align: left; font: 650 0.95rem var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; }
-.crud-summary { font: 0.85rem var(--font-body); letter-spacing: 0; text-transform: none; color: var(--graphite); }
-.list th, .list td { padding: var(--space-1); border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; overflow-wrap: break-word; }
-.rels ul, .list td > ul { margin: var(--space-1) 0 0; padding-left: var(--space-3); }
-.list thead th { font-size: 0.85em; color: var(--graphite); }
-.list tr[data-open] > * { background: var(--paper); }
-.list tr[data-open] > th { box-shadow: inset 4px 0 0 var(--ink); font-weight: 700; }
-.list-empty { padding: var(--space-3); border: 1px dashed var(--graphite); }
-/* List details: docked to the bottom of the viewport under the list (as on phones), so the tables
-   keep their full width and the panel shows wherever the row is; the scroll padding keeps the
-   focused row clear of it (Focus Not Obscured). */
-@media (min-width: 640px) {
-  .list-wrap[data-panel] { display: block; }
-  .list-wrap .detail {
-    position: sticky; z-index: 3; top: auto; right: auto; bottom: 0; width: auto; max-height: var(--list-detail-h);
-    margin-top: var(--space-3); box-shadow: 0 -4px 0 var(--paper);
-  }
-  :root { --list-detail-h: min(45dvh, 480px); }
-  html:has(.list-wrap[data-panel]) { scroll-padding-bottom: calc(var(--list-detail-h) + var(--space-3)); }
+/* The strongest workflow in words, under the map (margin-top 16): stop discs, ids mono 14, the labels mono 12 gray-11. */
+.caption { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-12); margin-top: var(--space-16); color: var(--gray-11); }
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); margin: 0; padding: 0; list-style: none; color: var(--gray-12); }
+.chain li { display: inline-flex; align-items: center; gap: var(--space-8); }
+.chain .mono { font-size: var(--text-14); }
+.chain .via { color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
+.stop { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--indigo-9); color: var(--indigo-contrast); font: 600 var(--text-12)/18px var(--font-sans); text-align: center; }
+.tools + .caption { margin: 0 0 var(--space-24); } /* in the List view the chain heads the list */
+.tools + .caption[data-compact] { margin: 0 0 var(--space-8); }
+/* One line of stops on phones; a stop that does not fit moves whole to a second line (320 px), never clipped. */
+.caption[data-compact] .chain { row-gap: var(--space-4); }
+.caption[data-compact] .chain li { white-space: nowrap; }
+
+/* The skill browser (DESIGN.md 4.3): a gray-6 rule, 40 above and 32 below it; files, preview and
+   audit on the grid's 202 / 492 / 202 (the 4-column grid with the preview spanning two columns). */
+.skill-browser {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr); column-gap: var(--gap); align-items: start;
+  margin-top: var(--space-40); padding-top: var(--space-32); box-shadow: inset 0 var(--line) 0 var(--gray-6);
 }
+/* 2fr would be two columns without the gap between them: 492 = 2 x 202 + 88. */
+@media (min-width: 640px) { .skill-browser { grid-template-columns: minmax(0, 1fr) calc(2 * (100% - 3 * var(--gap)) / 4 + var(--gap)) minmax(0, 1fr); } }
+.sb-files, .sb-preview, .sb-audit { min-width: 0; }
+.sb-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); height: 20px; margin: 0 0 var(--space-16); font-size: var(--text-14); line-height: var(--leading-14); font-weight: 600; }
+.sb-head:focus { outline: none; }
+.sb-head:focus-visible { outline: 2px solid var(--gray-12); outline-offset: 2px; }
+.sb-head.mono { font-family: var(--font-mono); }
+.sb-note { margin: 0; color: var(--gray-11); }
+/* File rows: 28 px, icon 14, name mono 12, count 12 gray-11; selected gray-3 (rows bleed 8 px each side). */
+.tree { margin: 0 calc(-1 * var(--space-8)); }
+[role='treeitem'] {
+  display: flex; align-items: center; gap: var(--space-8); min-height: 28px; padding: 0 var(--space-8) 0 calc(var(--space-8) + (var(--level) - 1) * var(--space-16));
+  border-radius: var(--radius-row); color: var(--gray-12); cursor: pointer; outline-offset: -2px;
+}
+[role='treeitem'] svg { flex: none; color: var(--gray-11); }
+[role='treeitem'] .n { flex: 1; min-width: 0; font: var(--text-12)/var(--leading-12) var(--font-mono); overflow-wrap: anywhere; }
+[role='treeitem'] .count { color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); }
+[role='treeitem']:hover, [role='treeitem'][aria-selected='true'] { background: var(--gray-3); }
+.writing .outline { margin: 0 0 var(--space-8); padding: 0; list-style: none; color: var(--gray-11); font: var(--text-12)/28px var(--font-mono); }
+.edit {
+  display: block; margin-top: var(--space-16); padding: 0; border: 0; background: none; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-sans); cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: var(--line); text-underline-offset: 3px;
+}
+.edit:hover { color: var(--gray-12); }
+.options { display: grid; gap: var(--space-4); margin-top: var(--space-12); font-size: var(--text-12); line-height: var(--leading-12); }
+.options label { color: var(--gray-11); }
+.options .help { margin: 0 0 var(--space-8); color: var(--gray-11); }
+.options .check { display: flex; align-items: center; gap: var(--space-8); min-height: 28px; color: var(--gray-12); }
+.field { min-width: 0; height: 32px; padding: 0 var(--space-8); border: 0; border-radius: var(--radius-row); background: var(--gray-1); box-shadow: inset 0 0 0 var(--line) var(--gray-8); color: var(--gray-12); font: var(--text-12)/var(--leading-12) var(--font-mono); }
+.field[aria-invalid='true'] { box-shadow: inset 0 0 0 var(--line) var(--amber-8); } /* with "Not used:" in its help line */
+/* Preview: file name 14/600, "N lines" 12 gray-11, a copy icon button; the code box gray-2, radius 10,
+   mono 12/20, line numbers gray-11 (generated, not part of the text), wraps, at most 392 tall. */
+.sb-preview h3 { display: flex; align-items: baseline; gap: var(--space-8); min-width: 0; margin: 0; font-size: var(--text-14); line-height: var(--leading-14); }
+.sb-preview .fname { overflow-wrap: anywhere; }
+.sb-preview .lines { color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); font-weight: 400; white-space: nowrap; }
+.sb-tools { display: flex; align-items: center; gap: var(--space-4); margin-right: calc(-1 * var(--space-6)); }
+.sb-preview .icon-btn { width: 28px; height: 28px; }
+.sb-close { height: 28px; padding: 0 var(--space-8); border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-sans); cursor: pointer; }
+.code {
+  max-height: 392px; overflow-y: auto; padding: var(--space-12) 0; border-radius: var(--radius-box); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6);
+  font: var(--text-12)/20px var(--font-mono); color: var(--gray-12); outline-offset: -2px;
+}
+.code .l { display: flex; min-height: 20px; padding-right: var(--space-16); white-space: pre-wrap; overflow-wrap: anywhere; }
+.code .l::before { content: attr(data-n) / ''; flex: none; width: 44px; padding-right: var(--space-16); color: var(--gray-11); text-align: right; user-select: none; }
+/* Stale (the next skill is being written): a ring and "Updating…", never faded text. */
+.sb-preview[data-stale] .code { box-shadow: inset 0 0 0 var(--line) var(--gray-8); }
+/* Audit, always open: the verdict (16 px indigo-9 disc with a white check) and "N of N"; a row per check
+   (indigo-11 check, 12/16) between gray-6 rules. A failed check: an amber `!` and the word "Failed". */
+.verdict { display: inline-flex; align-items: center; gap: var(--space-8); }
+.tally { display: inline-flex; align-items: center; gap: var(--space-8); color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); font-weight: 400; }
+.i-verdict circle { fill: var(--indigo-9); }
+.i-verdict path { stroke: var(--indigo-contrast); }
+.i-verdict[data-ok='false'] circle { fill: var(--amber-11); }
+.i-verdict[data-ok='false'] path { stroke: var(--gray-1); }
+.checks { margin: 0; padding: 0; list-style: none; }
+.checks li { display: flex; gap: var(--space-8); padding: calc(var(--space-14) / 2) 0; box-shadow: inset 0 var(--line) 0 var(--gray-6); font-size: var(--text-12); line-height: var(--leading-12); }
+.checks li:first-child { padding-top: 0; box-shadow: none; }
+.checks svg { flex: none; margin-top: calc(var(--space-2) / 2); color: var(--indigo-11); }
+.checks .i-fail { color: var(--amber-11); }
+.checks strong { font-weight: 600; }
+.audit-row { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 44px; padding: 0; border: 0; background: none; color: var(--gray-12); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
+.audit-row[aria-expanded='true'] .i-chev { transform: rotate(90deg); }
+
+/* List view (DESIGN.md 6): groups by resource, a 14/600 heading with the count; rows 44 px min:
+   method mono 12 in a 48 px column, the id mono 14 with the path under it, the stop disc and the
+   destructive mark as on the map. */
+/* The list's box bleeds 8 px each side (padding brings the column back), so rows can bleed into it without scrolling it. */
+.list { min-width: 0; margin: 0 calc(-1 * var(--space-8)); padding: 0 var(--space-8); }
+.lgroup + .lgroup { margin-top: var(--space-24); }
+.lhead { margin: 0; }
+.lhead button {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; height: 28px; padding: 0; border: 0; background: none;
+  color: var(--gray-12); font: 600 var(--text-14)/var(--leading-14) var(--font-sans); text-align: left; cursor: pointer; box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6);
+}
+.lcount { display: inline-flex; align-items: center; gap: var(--space-8); color: var(--gray-11); font-size: var(--text-12); line-height: var(--leading-12); font-weight: 400; }
+.lhead [aria-expanded='true'] .i-chev { transform: rotate(90deg); }
+.lrows { margin: var(--space-4) 0 0; padding: 0; list-style: none; }
+/* The rule stays on the column (on the item); the row's grey and focus ring bleed 8 px each side, like the file tree's rows. */
+.lrows > li { box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-5); }
+.lrow {
+  display: flex; align-items: center; gap: var(--space-8); width: calc(100% + 2 * var(--space-8)); min-height: 44px; margin: 0 calc(-1 * var(--space-8)); padding: var(--space-4) var(--space-8);
+  border: 0; border-radius: var(--radius-row); background: none; color: var(--gray-12); font: inherit; text-align: left; cursor: pointer; outline-offset: -2px;
+}
+/* A row's grey fades in and out on hover (D67): declared on the hovered row (so it fades in at once)
+   and while the pointer is on a row and 250 ms after (so it fades back), and so a theme change at rest snaps. */
+.lrow:hover, .list:is([data-hover], [data-fading]) .lrow { transition: background-color var(--motion-map) ease-out; }
+.lrow:hover, .lrow[data-open] { background: var(--gray-3); }
+.lrow .m { flex: none; width: 48px; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); }
+.lrow .m[data-destructive] { color: var(--destructive); }
+.lid { flex: 1; min-width: 0; }
+.lrow .id { display: block; font: var(--text-14)/var(--leading-14) var(--font-mono); overflow-wrap: anywhere; }
+.lrow .path { display: block; color: var(--gray-11); font: var(--text-12)/var(--leading-12) var(--font-mono); overflow-wrap: anywhere; }
+.lrow[data-route] .id { color: var(--indigo-11); font-weight: 600; }
+.lrow[data-route]::after { content: attr(data-route); flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--indigo-9); color: var(--indigo-contrast); font: 600 var(--text-12)/18px var(--font-sans); text-align: center; }
+.list-empty { margin: 0; padding: var(--space-16); border-radius: var(--radius-box); box-shadow: inset 0 0 0 var(--line) var(--gray-7); }
+/* The list's operation card: pinned and docked to the bottom of the viewport under the list, so the
+   rows keep their width and the card shows wherever the row is; the scroll padding keeps the focused
+   row clear of it (Focus Not Obscured). */
+.list-wrap { position: relative; }
+.op-card.docked { position: sticky; bottom: 0; width: auto; max-height: var(--list-detail-h); margin-top: var(--space-16); overflow: auto; }
+:root { --list-detail-h: min(45dvh, 480px); }
+html:has(.list-wrap[data-panel]) { scroll-padding-bottom: calc(var(--list-detail-h) + var(--space-16)); }
 
 /* Shortcut help: a native modal dialog. */
-.help-dialog { max-width: min(40rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: var(--space-3); color: var(--ink); background: var(--vellum); border: 1px solid var(--ink); border-radius: var(--radius-sm); }
-.help-dialog::backdrop { background: color-mix(in srgb, var(--ink) 40%, transparent); }
-.help-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); border-bottom: 3px double var(--ink); }
+.help-dialog { max-width: min(40rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: var(--space-16); color: var(--gray-12); background: var(--gray-1); border: 0; box-shadow: 0 0 0 var(--line) var(--gray-7); border-radius: var(--radius-sm); }
+.help-dialog::backdrop { background: var(--gray-1); } /* opaque: a faded page mixes colours that are not Radix steps (D77) */
+.help-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-16); box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6); }
 .help-head h2 { margin: 0; }
 .help-head form { margin: 0; }
-.help-dialog table { width: 100%; margin-top: var(--space-3); border-collapse: collapse; font-size: 0.9em; }
-.help-dialog caption { text-align: left; font-weight: 650; padding-bottom: var(--space-1); }
-.help-dialog th, .help-dialog td { padding: var(--space-1) var(--space-2); border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+.help-dialog table { width: 100%; margin-top: var(--space-16); border-collapse: collapse; font-size: var(--text-12); line-height: var(--leading-12); }
+.help-dialog caption { text-align: left; font-weight: 600; padding-bottom: var(--space-4); }
+.help-dialog th, .help-dialog td { padding: var(--space-4) var(--space-8); box-shadow: inset 0 calc(-1 * var(--line)) 0 var(--gray-6); text-align: left; vertical-align: top; }
 .help-dialog th { width: 40%; font-weight: 400; }
 
-/* Source input, loading and error states (phase 15): calm layout, docs/DESIGN.md. */
-.source { flex: 1 1 20rem; min-width: 0; }
-.source-row { display: flex; align-items: flex-start; gap: var(--space-2); }
-.source .input { flex: 1; min-width: 0; height: 40px; resize: none; padding: var(--space-2) var(--space-3); font: inherit; color: var(--ink);
-  background: var(--paper); border: 1px solid var(--graphite); border-radius: var(--radius-md); }
-.source .input:focus { height: auto; min-height: 40px; max-height: 12lh; field-sizing: content; } /* pasted text shows while editing */
-.source .input::placeholder { color: var(--graphite); opacity: 1; }
-.source .btn, .source .link { min-height: 40px; white-space: nowrap; }
-.source-more { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding-top: var(--space-2); }
-.file { display: inline-flex; align-items: center; }
-.file:has(:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--marker); }
-@media (max-width: 639px) {
-  /* Phones: field on its own row, then Load, More options and the theme toggle (still DOM order). */
-  .source, .source-row { display: contents; }
-  .source .input { flex-basis: 100%; }
-  .source-more { flex-basis: 100%; padding: 0; }
-  .header .theme { margin-left: auto; }
-}
-.stage[data-status] > :not(.source-status) { filter: grayscale(1); } /* dimmed without fading: text keeps its contrast */
-.source-status { max-width: 44rem; margin: 0 0 var(--space-4); padding: var(--space-3) 0 var(--space-3) var(--space-4); border-left: 3px solid var(--ink); }
-.source-status h2 { width: fit-content; margin: 0 0 var(--space-2); font-size: 1.25rem; outline-offset: var(--space-1); }
-.source-status.error h2 { font-size: 1.75rem; } /* the focal point: at least the page title's size */
-@media (max-width: 639px) { .source-status.error h2 { font-size: 1.5rem; } }
-/* Below 380 px the audit line takes its own row under the files rather than squeezing beside them. */
-@media (max-width: 379px) { .skill-body { grid-template: fit-content(40%) auto auto minmax(0, 1fr) / minmax(0, 1fr); } }
-.source-status p { margin: 0 0 var(--space-3); }
-.steps { margin: 0 0 var(--space-3); padding: 0; list-style: none; }
-.steps li { display: flex; gap: var(--space-2); padding-block: var(--space-1); color: var(--graphite); }
-.steps li:not([data-state='waiting']) { color: var(--ink); }
-.steps li[data-state='in progress'] { font-weight: 650; --tick: var(--meridian); }
+/* Loading, error and empty states, inside the result frame. While loading the previous result stays,
+   greyscale (text keeps its contrast); an error replaces the frame's body: the title (20/600), the
+   reason (14 gray-11) and its two recovery actions. */
+.stage[data-status='loading'] > .stage-content { filter: grayscale(1); }
+.stage[data-status='error'] > .stage-content { display: none; }
+.source-status { max-width: 492px; }
+.source-status[data-testid='loading'] { margin-bottom: var(--space-32); }
+.source-status h2 { width: fit-content; margin: 0 0 var(--space-8); outline-offset: var(--space-4); }
+.source-status p { margin: 0 0 var(--space-16); color: var(--gray-11); }
+.steps { margin: 0 0 var(--space-16); padding: 0; list-style: none; }
+.steps li { display: flex; gap: var(--space-8); padding-block: var(--space-4); color: var(--gray-11); }
+.steps li:not([data-state='waiting']) { color: var(--gray-12); }
+.steps li[data-state='in progress'] { font-weight: 600; --tick: var(--indigo-11); }
 .tick { width: 1.25em; font-family: var(--font-mono); text-align: center; color: var(--tick, inherit); }
-.error { border-left-style: double; border-left-width: 4px; }
-.err-mark { display: inline-grid; place-items: center; width: 1.3em; height: 1.3em; margin-right: var(--space-2); border: 2px solid var(--brick); color: var(--brick); font: 800 0.8em var(--font-mono); }
-.command { margin: 0 0 var(--space-3); padding: var(--space-2) var(--space-3); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--vellum); font-size: 0.9em; }
-.status-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
-.warnings { flex-basis: 100%; font-size: 0.9em; }
-.warnings summary { width: fit-content; padding: 0 var(--space-2); border: 1px solid var(--graphite); border-radius: var(--radius-pill); cursor: pointer; color: var(--graphite); }
-.warnings ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); max-height: 12rem; overflow: auto; }
-.samples-fold > summary { margin-bottom: var(--space-2); }
-.empty-note { font-size: 1.15rem; } /* the empty spec's sentence, as large as the empty chart's */
-.empty-chart { display: grid; justify-items: center; gap: var(--space-4); padding: var(--space-6) var(--space-4); color: var(--ink); font-size: 1.15rem; text-align: center; }
-.empty-ring { fill: none; stroke: var(--ink); }
+.err-mark { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: var(--space-8); border-radius: 50%; background: var(--amber-11); color: var(--gray-1); font: 600 var(--text-14)/var(--leading-14) var(--font-mono); vertical-align: 2px; }
+.command { margin: 0 0 var(--space-16); padding: var(--space-8) var(--space-12); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); border-radius: var(--radius-box); font: var(--text-12)/20px var(--font-mono); }
+.status-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); }
+.empty-chart { display: grid; justify-items: center; gap: var(--space-24); padding: var(--space-64) var(--space-24); color: var(--gray-12); font-size: var(--text-20); line-height: var(--leading-20); text-align: center; }
+.empty-ring { fill: none; stroke: var(--gray-7); }
+
+/* Motion (docs/redesign/DESIGN.md 7, D65-D67). Ease-out, 250 ms base, one-shot (the Generate spinner is
+   the one loop); nothing else moves. The transitions above are the hover moment (an operation row's grey,
+   lit and faded text, links fading to gray-5) and use --motion-map, 0 ms under reduced motion. Every
+   animation is declared here, only under prefers-reduced-motion: no-preference, so under reduce each
+   state appears at once and the spinner is a still arc. The load sequence runs while the result carries
+   data-enter (App.tsx sets it for each new result and clears it once the sequence is over), so a card
+   that mounts later (a hover, a search, a view toggle, "N more", a resize) never replays it. */
+@keyframes s2-fade { from { opacity: 0; } }
+@keyframes s2-rise { from { opacity: 0; transform: translateY(4px); } }
+/* pathLength 1: the dash covers the whole segment as the offset runs from 1 to 0. Hidden at the very
+   start, as a round cap would draw a dot where the dash has no length yet. */
+@keyframes s2-draw { from { stroke-dashoffset: 1; opacity: 0; } 1% { opacity: 1; } to { stroke-dashoffset: 0; } }
+@keyframes s2-pop { from { opacity: 0; transform: scale(0.5); } }
+@keyframes s2-nomark { from, to { marker-end: none; } }
+@keyframes s2-spin { to { transform: rotate(360deg); } }
+.label { display: inline-flex; align-items: center; gap: var(--space-8); }
+@media (prefers-reduced-motion: no-preference) {
+  /* Load or switch sample: cards rise and fade in column by column, 40 ms apart (the stagger stops at
+     column 8: further columns sit in the sideways scroll); the links fade in as one layer after them;
+     each workflow segment draws in 300 ms after the one before, its arrowhead once it is drawn, and
+     each stop disc pops as the line reaches it; the audit rows fade in, 30 ms apart. */
+  [data-enter] .rc { animation: s2-rise var(--motion-map) ease-out calc(min(var(--col, 0), 8) * 40ms) both; }
+  [data-enter] .links { animation: s2-fade var(--motion-map) ease-out 200ms both; }
+  [data-enter] :is(.halo, .wf) { stroke-dasharray: 1 1; animation: s2-draw var(--motion-draw) ease-out calc(450ms + var(--i, 0) * var(--motion-draw)) both; }
+  [data-enter] .wf {
+    animation: s2-draw var(--motion-draw) ease-out calc(450ms + var(--i, 0) * var(--motion-draw)) both,
+      s2-nomark 0s linear calc(450ms + (var(--i, 0) + 1) * var(--motion-draw)) backwards;
+  }
+  [data-enter] .op[data-route]::after { animation: s2-pop var(--motion-map) ease-out calc(450ms + (var(--stop, 1) - 1) * var(--motion-draw)) both; }
+  [data-enter] .checks li { animation: s2-fade var(--motion-map) ease-out calc(900ms + var(--i, 0) * 30ms) both; }
+  /* The list (phones open on it, D66): groups rise like the cards, the phone's audit row fades in. */
+  [data-enter] .lgroup { animation: s2-rise var(--motion-map) ease-out calc(min(var(--g, 0), 8) * 40ms) both; }
+  [data-enter] .audit-row { animation: s2-fade var(--motion-map) ease-out 900ms both; }
+  /* Hover or focus an operation: its links appear and the card rises 4 px as it fades in. */
+  .ln-hot { animation: s2-fade var(--motion-map) ease-out both; }
+  .op-card { animation: s2-rise var(--motion-map) ease-out both; }
+  /* Generate, Download, copy: the new label fades in; the stage spinner turns. */
+  .swap { animation: s2-fade var(--motion-map) ease-out both; }
+  .spinner { animation: s2-spin 800ms linear infinite; }
+}
+
+/* Between 640 and 1136 px: files and preview side by side, the audit under them. */
+@media (min-width: 640px) and (max-width: 1135px) {
+  .skill-browser { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); row-gap: var(--space-40); }
+  .sb-audit { grid-column: 1 / -1; }
+}
+
+/* Phones (V2Phone, below 640 px): the head stacks with full-width Download .zip then Install command;
+   Map | List and a full-width search; the skill's files as 44 px rows, each opening a full-width
+   preview; the audit one row that expands its checks. */
+@media (max-width: 639px) {
+  .fhead { flex-direction: column; margin-bottom: var(--space-24); }
+  .fhead-actions { flex-direction: column; width: 100%; }
+  .fhead-actions .btn { width: 100%; }
+  .tools-l { flex: 1; min-width: 0; flex-wrap: nowrap; }
+  .tools-l .search { flex: 1; width: auto; min-width: 0; }
+  .tools-l .search kbd { display: none; }
+  .skill-browser { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-24); }
+  .sb-head.mono { margin-bottom: var(--space-8); }
+  [role='treeitem'] { min-height: 44px; }
+  [role='treeitem'] .n { font-size: var(--text-14); line-height: var(--leading-14); }
+  .sb-audit { margin-top: 0; box-shadow: inset 0 var(--line) 0 var(--gray-6); }
+  .sb-audit .sb-head { height: auto; margin: 0; }
+  .sb-audit .checks { padding-bottom: var(--space-8); }
+  .lhead button { height: 44px; }
+  .lgroup + .lgroup { margin-top: var(--space-16); }
+  .lgroup:not([data-open]) + .lgroup:not([data-open]) { margin-top: 0; }
+  .map-scroll { margin-right: calc(-1 * var(--space-16)); }
+  /* The pinned card is a bottom sheet; there is no hover preview on phones. */
+  .map-wrap .op-card[role='dialog'] { position: fixed; inset: auto 0 0 0 !important; width: auto; max-height: 50dvh !important; overflow: auto; border-radius: var(--radius-box) var(--radius-box) 0 0; }
+  .map-wrap .op-card[aria-hidden='true'] { display: none; }
+  body:has(.map-wrap .op-card[role='dialog']) { padding-bottom: 50dvh; } /* room to scroll the map above the bottom sheet */
+  html:has(.map-wrap .op-card[role='dialog']) { scroll-padding-bottom: calc(50dvh + var(--space-16)); } /* a focused row stays clear of the sheet (2.4.11) */
+}

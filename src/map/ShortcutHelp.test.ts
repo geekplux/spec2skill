@@ -2,38 +2,34 @@
 // map, the file tree and the tabs handle must be in it (no drift).
 import { beforeAll, describe, expect, it } from 'vitest';
 import { buildGraph } from '../graph';
-import { type AtlasLayout, layout } from '../layout/layout';
+import { routeLayout } from '../layout/route';
 import { getSample, sampleModel } from '../samples';
 import { nextTab } from '../shell/Tabs';
 import { treeKey, treeRows } from '../skillpane/tree';
-import { type NavState, SHORTCUTS, edgesOf, keyAction, keyLabel, sourceFieldLoads } from './keyboard';
+import { type NavMap, type NavState, SHORTCUTS, edgesOf, keyAction, keyLabel, navOf, sourceFieldLoads } from './keyboard';
 
 const NAMED = ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown', 'Enter', 'Escape', 'Tab', 'Backspace', 'Delete', 'F1', 'Insert'];
 const PRINTABLE = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i));
 const KEYS = [...NAMED, ...PRINTABLE];
 const listed = (where: string) => new Set(SHORTCUTS.filter((s) => s.where === where).flatMap((s) => s.keys));
 
-let atlas: AtlasLayout, states: NavState[];
+let nav: NavMap, states: NavState[];
 beforeAll(async () => {
   const model = await sampleModel(getSample('tasks')!);
   const graph = buildGraph(model);
-  atlas = layout(model, graph);
+  nav = navOf(routeLayout(model, graph), null);
   const edges = edgesOf(graph.edges, 'getTask');
-  const focus = atlas.nodes.find((n) => n.id === 'getTask');
+  const focus = nav.nodes.find((n) => n.id === 'getTask');
   states = [{ focus, edges, edge: null }, { focus, edges, edge: 0 }, { focus: undefined, edges: [], edge: null }];
 });
 
 describe('shortcut help', () => {
-  it('lists every key the map handles (with and without Shift)', () => {
-    const handled = KEYS.flatMap((key) =>
-      [false, true].flatMap((shift) => {
-        const action = states.map((s) => keyAction(atlas, s, key, shift)).find(Boolean);
-        return action ? [shift && action.type === 'pan' ? `Shift+${key}` : key] : [];
-      }),
-    );
+  it('lists every key the map handles, and no key it does not (zoom and pan are gone, R4)', () => {
+    const handled = KEYS.filter((key) => states.some((s) => keyAction(nav, s, key)));
     const known = new Set([...listed('Map'), ...listed('Anywhere outside a text field')]);
-    expect(handled.length).toBeGreaterThan(20);
+    expect(handled.length).toBeGreaterThan(10);
     expect(handled.filter((k) => !known.has(k))).toEqual([]);
+    expect([...listed('Map')].filter((k) => !handled.includes(k))).toEqual([]);
   });
 
   it('lists every key the skill file tree and the tabs handle', () => {

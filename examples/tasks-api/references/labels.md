@@ -4,7 +4,7 @@
 
 ## `listLabels`
 
-`GET /projects/{projectId}/labels` · list · read-only · idempotent · paginated (cursor)
+`GET /projects/{projectId}/labels`: list, read-only, idempotent, paginated (cursor)
 
 > List labels in a project
 
@@ -22,7 +22,7 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`),
 
 ## `createLabel`
 
-`POST /projects/{projectId}/labels` · create
+`POST /projects/{projectId}/labels`: create
 
 > Create a label
 
@@ -40,7 +40,7 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`).
 
 ## `deleteLabel`
 
-`DELETE /labels/{labelId}` · delete · destructive: confirm first · idempotent
+`DELETE /labels/{labelId}`: delete, destructive (confirm first), idempotent
 
 > Delete a label
 >

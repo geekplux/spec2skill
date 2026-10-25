@@ -1,0 +1,284 @@
+{
+  "cards": [
+    {
+      "id": "cluster-directory",
+      "name": "Directory",
+      "column": 0,
+      "x": 0,
+      "y": 0,
+      "w": 202,
+      "h": 200,
+      "main": true,
+      "count": 5,
+      "rows": [
+        {
+          "op": "list_directory",
+          "x": 4,
+          "y": 36,
+          "w": 194,
+          "h": 32,
+          "cy": 52,
+          "method": "read",
+          "destructive": false
+        },
+        {
+          "op": "list_directory_with_sizes",
+          "x": 4,
+          "y": 68,
+          "w": 194,
+          "h": 32,
+          "cy": 84,
+          "method": "read",
+          "destructive": false
+        },
+        {
+          "op": "list_allowed_directories",
+          "x": 4,
+          "y": 100,
+          "w": 194,
+          "h": 32,
+          "cy": 116,
+          "method": "read",
+          "destructive": false,
+          "stop": 1
+        },
+        {
+          "op": "create_directory",
+          "x": 4,
+          "y": 132,
+          "w": 194,
+          "h": 32,
+          "cy": 148,
+          "method": "write",
+          "destructive": false
+        },
+        {
+          "op": "directory_tree",
+          "x": 4,
+          "y": 164,
+          "w": 194,
+          "h": 32,
+          "cy": 180,
+          "method": "read",
+          "destructive": false
+        }
+      ]
+    },
+    {
+      "id": "cluster-file",
+      "name": "File",
+      "column": 1,
+      "x": 290,
+      "y": 64,
+      "w": 202,
+      "h": 328,
+      "main": true,
+      "count": 9,
+      "rows": [
+        {
+          "op": "search_files",
+          "x": 294,
+          "y": 100,
+          "w": 194,
+          "h": 32,
+          "cy": 116,
+          "method": "read",
+          "destructive": false,
+          "stop": 2
+        },
+        {
+          "op": "write_file",
+          "x": 294,
+          "y": 132,
+          "w": 194,
+          "h": 32,
+          "cy": 148,
+          "method": "write",
+          "destructive": true
+        },
+        {
+          "op": "read_file",
+          "x": 294,
+          "y": 164,
+          "w": 194,
+          "h": 32,
+          "cy": 180,
+          "method": "read",
+          "destructive": false
+        },
+        {
+          "op": "read_text_file",
+          "x": 294,
+          "y": 196,
+          "w": 194,
+          "h": 32,
+          "cy": 212,
+          "method": "read",
+          "destructive": false,
+          "stop": 3
+        },
+        {
+          "op": "read_media_file",
+          "x": 294,
+          "y": 228,
+          "w": 194,
+          "h": 32,
+          "cy": 244,
+          "method": "read",
+          "destructive": false
+        },
+        {
+          "op": "read_multiple_files",
+          "x": 294,
+          "y": 260,
+          "w": 194,
+          "h": 32,
+          "cy": 276,
+          "method": "read",
+          "destructive": false
+        },
+        {
+          "op": "get_file_info",
+          "x": 294,
+          "y": 292,
+          "w": 194,
+          "h": 32,
+          "cy": 308,
+          "method": "read",
+          "destructive": false
+        },
+        {
+          "op": "edit_file",
+          "x": 294,
+          "y": 324,
+          "w": 194,
+          "h": 32,
+          "cy": 340,
+          "method": "write",
+          "destructive": true
+        }
+      ],
+      "more": {
+        "x": 294,
+        "y": 356,
+        "w": 194,
+        "h": 32,
+        "cy": 372,
+        "hidden": [
+          "move_file"
+        ],
+        "count": 1,
+        "expanded": false
+      }
+    }
+  ],
+  "links": [
+    {
+      "id": "bundle:list_directory->cluster-file:path",
+      "kind": "bundle",
+      "from": "list_directory",
+      "to": "cluster-file",
+      "edges": [
+        "feeds:list_directory->read_file",
+        "feeds:list_directory->read_text_file",
+        "feeds:list_directory->read_media_file",
+        "feeds:list_directory->edit_file",
+        "feeds:list_directory->search_files",
+        "feeds:list_directory->get_file_info"
+      ],
+      "inferred": true,
+      "d": "M202 52C246 52 246 82 290 82"
+    },
+    {
+      "id": "bundle:list_directory_with_sizes->cluster-file:path",
+      "kind": "bundle",
+      "from": "list_directory_with_sizes",
+      "to": "cluster-file",
+      "edges": [
+        "feeds:list_directory_with_sizes->read_file",
+        "feeds:list_directory_with_sizes->read_text_file",
+        "feeds:list_directory_with_sizes->read_media_file",
+        "feeds:list_directory_with_sizes->edit_file",
+        "feeds:list_directory_with_sizes->search_files",
+        "feeds:list_directory_with_sizes->get_file_info"
+      ],
+      "inferred": true,
+      "d": "M202 84C246 84 246 82 290 82"
+    }
+  ],
+  "workflow": {
+    "ops": [
+      "list_allowed_directories",
+      "search_files",
+      "read_text_file"
+    ],
+    "via": [
+      "listed path",
+      "listed path"
+    ],
+    "inferred": [
+      true,
+      true
+    ],
+    "stops": [
+      {
+        "op": "list_allowed_directories",
+        "n": 1,
+        "cx": 183,
+        "cy": 116
+      },
+      {
+        "op": "search_files",
+        "n": 2,
+        "cx": 473,
+        "cy": 116
+      },
+      {
+        "op": "read_text_file",
+        "n": 3,
+        "cx": 473,
+        "cy": 212
+      }
+    ],
+    "steps": [
+      {
+        "from": "list_allowed_directories",
+        "to": "search_files",
+        "shape": "line",
+        "d": "M202 116H290"
+      },
+      {
+        "from": "search_files",
+        "to": "read_text_file",
+        "shape": "loop",
+        "d": "M290 116C258 116 258 212 290 212"
+      }
+    ],
+    "y": 116
+  },
+  "columns": [
+    {
+      "index": 0,
+      "x": 0,
+      "cards": [
+        "cluster-directory"
+      ]
+    },
+    {
+      "index": 1,
+      "x": 290,
+      "cards": [
+        "cluster-file"
+      ]
+    }
+  ],
+  "width": 492,
+  "height": 392,
+  "bounds": {
+    "x": 0,
+    "y": 0,
+    "w": 492,
+    "h": 392
+  },
+  "scrolls": false
+}

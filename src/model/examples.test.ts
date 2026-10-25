@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import hostile from '../detail/__fixtures__/hostile-strings.json';
+import hostile from '../map/__fixtures__/hostile-strings.json';
 import { getSample, sampleModel } from '../samples';
 import { envName, example, outputFields, typeLabel } from './examples';
 import { normalise } from './normalise';

@@ -34,6 +34,9 @@ describe('canonicalUrl', () => {
   it('names the sample shown and drops unknown views', () => {
     expect(canonicalUrl(`${BASE}?sample=nope&view=bogus&q=x#op=a`, known, 'tasks')).toBe(`${BASE}?sample=tasks&q=x#op=a`);
     expect(canonicalUrl(`${BASE}?sample=&view=`, known, 'tasks')).toBe(`${BASE}?sample=tasks`);
+    // The Skill tab is gone since R5 (one scroll; D55): an old link's view=skill is dropped.
+    expect(readUrl(`${BASE}?view=skill`).view).toBeUndefined();
+    expect(canonicalUrl(`${BASE}?sample=tasks&view=skill`, known, 'tasks')).toBe(`${BASE}?sample=tasks`);
   });
   it('leaves valid and absent parameters alone', () => {
     const href = `${BASE}?sample=petstore&view=list#op=getPetById`;

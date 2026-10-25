@@ -10,16 +10,20 @@ import { SourceError, isSourceErrorCode } from './errors';
 
 export type Mode = 'auto' | 'openapi' | 'mcp';
 export type Input = { url: string } | { text: string } | { file: Blob & { name: string } };
-export type StepId = 'fetch' | 'parse' | 'map' | 'write';
-export const STEPS: readonly StepId[] = ['fetch', 'parse', 'map', 'write'];
+export type StepId = 'fetch' | 'parse' | 'map' | 'write' | 'audit';
+export const STEPS: readonly StepId[] = ['fetch', 'parse', 'map', 'write', 'audit'];
 export const DIRECT_TIMEOUT_MS = 5000;
 
 export interface LoadDeps {
   fetch: (input: string, init?: RequestInit) => Promise<Response>;
   signal: AbortSignal;
-  /** A step starts, with its label ("Fetching spec (example.com)"); the steps before it are done. */
-  step: (id: StepId, label: string) => void;
-  write: (model: ApiModel, graph: AtlasGraph) => Promise<unknown>;
+  /**
+   * A step starts, with its label ("Fetching spec (example.com)"); the steps before it are done. Before
+   * a step that runs synchronous work, its promise (if any) is awaited, so the label can be painted first.
+   */
+  step: (id: StepId, label: string) => void | Promise<void>;
+  /** Writes the skill; `audit` starts the audit step, between writing the files and auditing them. */
+  write: (model: ApiModel, graph: AtlasGraph, audit: () => void | Promise<void>) => Promise<unknown>;
 }
 
 export interface Got { text: string; type?: string; url?: string }
@@ -35,8 +39,24 @@ export function toUrl(value: string): URL {
   return url;
 }
 
-/** Errors that mean "not a spec": in Auto mode the URL is then tried as an MCP server. */
-export const notSpec = (e: unknown) => e instanceof SourceError && (e.code === 'not-a-spec' || e.code === 'unsupported' || (e.code === 'http-error' && /\b40[56]\b/.test(e.message)));
+/**
+ * Errors that mean "not a spec": in Auto mode the URL is then tried as an MCP server, once (the web app
+ * has no source selector, D37). A page (HTML), or a GET answered 400/404/405/406 or 5xx, may be an MCP
+ * endpoint that only takes POST.
+ */
+export const notSpec = (e: unknown) => e instanceof SourceError && (['not-a-spec', 'unsupported', 'html-page'].includes(e.code) || (e.code === 'http-error' && /\b(40[0456]|5\d\d)\b/.test(e.message)));
+
+/** The spec error itself says the URL is an MCP endpoint: its GET answered 405/406, or a JSON-RPC message. */
+const looksMcp = (e: unknown) => e instanceof SourceError && ((e.code === 'http-error' && /\b40[56]\b/.test(e.message)) || (e.code === 'unsupported' && /JSON-RPC/.test(e.message)));
+
+/**
+ * The error to show when both tries failed. The MCP one only when it is specific to MCP (credentials,
+ * the older transport) and the GET already looked like an MCP endpoint: the MCP client reports any POST
+ * 404/405 as the older transport and any 401/403 as credentials, which for a mistyped URL, a docs
+ * page or a 5xx would mislead. Otherwise the spec's own error, which says more.
+ */
+export const fallbackError = (spec: unknown, asMcp: unknown): unknown =>
+  looksMcp(spec) && asMcp instanceof SourceError && (asMcp.code === 'needs-auth' || asMcp.code === 'legacy-transport') ? asMcp : spec;
 
 /** Reads a direct or proxied answer: 405/406 or an event stream means an MCP endpoint. */
 async function read(res: Response, type = res.headers.get('content-type') ?? ''): Promise<Got | 'mcp'> {
@@ -62,11 +82,21 @@ async function mcp(url: URL, deps: LoadDeps): Promise<Doc> {
   return { doc: { tools: r.tools }, options: { url: url.href, serverInfo: r.serverInfo, protocolVersion: r.protocolVersion } };
 }
 
+/**
+ * A fetched or pasted document. A body that starts like HTML is a page; a body served as text/html that
+ * still parses as a spec or a tools/list is accepted (some servers label everything text/html).
+ */
 export function parse(got: Got): Doc {
-  if (got.type?.includes('text/html') || /^\s*<(!doctype|html)/i.test(got.text)) throw new SourceError('html-page');
-  const { value } = parseText(got.text);
+  if (/^\s*<(!doctype|html)/i.test(got.text)) throw new SourceError('html-page');
+  const served = got.type?.includes('text/html');
+  let value: unknown;
+  try {
+    value = parseText(got.text).value;
+  } catch (e) {
+    throw served ? new SourceError('html-page') : e;
+  }
   const found = detect(value);
-  if (found.kind === 'unsupported') throw new SourceError('unsupported', found.message);
+  if (found.kind === 'unsupported') throw served ? new SourceError('html-page') : new SourceError('unsupported', found.message);
   return { doc: value, options: got.url ? { url: got.url } : {} };
 }
 
@@ -74,10 +104,11 @@ async function fromUrl(raw: string, mode: Mode, deps: LoadDeps): Promise<Doc> {
   const url = toUrl(raw);
   deps.step('fetch', `Fetching spec (${url.host})`);
   if (mode === 'mcp' || (mode === 'auto' && MCP_PATH.test(url.pathname))) return mcp(url, deps);
+  let got: Got | 'mcp' | undefined;
   try {
     const slow = new AbortController();
     const timer = setTimeout(() => slow.abort(), DIRECT_TIMEOUT_MS);
-    let got = await deps.fetch(url.href, { signal: AbortSignal.any([deps.signal, slow.signal]), credentials: 'omit' }).then((res) => read(res), (e: unknown) => {
+    got = await deps.fetch(url.href, { signal: AbortSignal.any([deps.signal, slow.signal]), credentials: 'omit' }).then((res) => read(res), (e: unknown) => {
       if (deps.signal.aborted) throw e;
       return undefined; // CORS, network or slow: ask the proxy
     }).finally(() => clearTimeout(timer));
@@ -86,15 +117,14 @@ async function fromUrl(raw: string, mode: Mode, deps: LoadDeps): Promise<Doc> {
       got = await read(res, res.headers.get('x-spec-content-type') ?? '');
       if (got !== 'mcp') got.url = res.headers.get('x-spec-url') ?? url.href;
     }
-    if (got === 'mcp') {
-      if (mode === 'openapi') throw new SourceError('http-error', 'The URL answered like an MCP server, not a spec.');
-      return await mcp(url, deps);
-    }
-    return parse({ url: url.href, ...got });
+    if (got !== 'mcp') return parse({ url: url.href, ...got });
   } catch (e) {
+    // Only a spec fetch or parse failure falls back to MCP.
     if (mode !== 'auto' || !notSpec(e)) throw e;
-    return mcp(url, deps).catch((second: unknown) => Promise.reject(deps.signal.aborted ? second : e)); // the spec error says more
+    return mcp(url, deps).catch((second: unknown) => Promise.reject(deps.signal.aborted ? second : fallbackError(e, second)));
   }
+  if (mode === 'openapi') throw new SourceError('http-error', 'The URL answered like an MCP server, not a spec.');
+  return mcp(url, deps); // the GET already said MCP: one attempt, its error as is
 }
 
 async function fromText(input: Exclude<Input, { url: string }>, deps: LoadDeps): Promise<Doc> {
@@ -110,13 +140,16 @@ export async function loadSource(input: Input, mode: Mode, deps: LoadDeps): Prom
   const { doc, options } = 'url' in input ? await fromUrl(input.url, mode, deps) : await fromText(input, deps);
   deps.signal.throwIfAborted();
   const found = detect(doc);
-  deps.step('parse', found.kind === 'unsupported' ? 'Parsing' : `Parsing (${KIND[found.kind]} ${'version' in found ? found.version : 'tools/list'})`);
+  await deps.step('parse', found.kind === 'unsupported' ? 'Parsing' : `Parsing (${KIND[found.kind]} ${'version' in found ? found.version : 'tools/list'})`);
+  deps.signal.throwIfAborted();
   const model = await normalise(doc, options);
   deps.signal.throwIfAborted();
-  deps.step('map', `Mapping ${model.operations.length} ${model.source.kind === 'mcp' ? 'tools' : 'operations'}`);
+  await deps.step('map', `Relating ${model.operations.length} ${model.source.kind === 'mcp' ? 'tools' : 'operations'}`);
+  deps.signal.throwIfAborted();
   const graph = buildGraph(model);
-  deps.step('write', 'Writing skill');
-  if (model.operations.length > 0) await deps.write(model, graph);
+  await deps.step('write', 'Writing skill');
+  deps.signal.throwIfAborted();
+  if (model.operations.length > 0) await deps.write(model, graph, () => deps.step('audit', 'Auditing skill'));
   deps.signal.throwIfAborted();
   return { model, graph };
 }

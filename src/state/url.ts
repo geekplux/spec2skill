@@ -2,10 +2,10 @@
 // back/forward walk through samples and selections. Pure parse/serialise; App owns history.
 import { opFromHash } from '../map/keyboard';
 
-export type View = 'skill' | 'map' | 'list';
+export type View = 'map' | 'list';
 export interface UrlState { sample?: string; url?: string; view?: View; q: string; op?: string }
 
-const VIEWS: readonly string[] = ['skill', 'map', 'list'];
+const VIEWS: readonly string[] = ['map', 'list'];
 
 export function readUrl(href: string): UrlState {
   const url = new URL(href);

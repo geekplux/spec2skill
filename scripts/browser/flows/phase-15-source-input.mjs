@@ -1,8 +1,9 @@
-// Phase 15: the user's own source. Paste a URL (direct fetch, then the /api/fetch-spec proxy; MCP via
-// /api/mcp/tools), paste text, open a file; loading steps with Cancel; every error state with its two
-// recovery actions; ?url= and back; the empty spec, warnings and a 1000-operation paste; the header's
-// focus order against its visual order (AC9). Offline: the fake hosts and /api/* are fulfilled here by
-// page.route from fixtures, so nothing leaves the machine.
+// Phase 15 (updated in redesign R2): the user's own source in the hero's field. Paste a URL (direct
+// fetch, then the /api/fetch-spec proxy; MCP via /api/mcp/tools, and any URL that is not a spec tried as
+// an MCP server), paste text, open a file, drop a file; loading steps with Cancel; every error state with
+// its two recovery actions; ?url= and back; Generate with an empty field; the empty spec, warnings and a
+// 1000-operation paste; the hero's focus order against its visual order (AC9). Offline: the fake hosts
+// and /api/* are fulfilled here by page.route from fixtures, so nothing leaves the machine.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -101,13 +102,15 @@ export default {
     });
 
     const field = page.locator('#source-field');
-    const title = page.locator('.title h1');
+    const title = page.locator('#result-title'); // R5: the API title alone; a Sample tag marks the samples
+    const frame = page.locator('#result');
     const ready = async () => {
-      await page.locator('.skill-pane[data-ready="true"]').waitFor();
-      await page.locator('[data-testid="atlas"][data-ready="true"]').waitFor({ state: 'attached' }); // behind the Map tab on phones
+      await page.locator('.skill-browser[data-ready="true"]').waitFor();
+      // Phones open on the List (R5); elsewhere the map.
+      await page.locator('[data-testid="atlas"][data-ready="true"], [data-testid="list-view"]').first().waitFor({ state: 'attached' });
     };
     const auditPassed = async (label) => {
-      const text = await page.locator('.audit summary').textContent();
+      const text = await page.locator('.sb-audit .verdict').textContent();
       expect(text.includes('Audit passed'), `${label}: audit says "${text}"`);
     };
     const submit = async (value) => {
@@ -117,10 +120,13 @@ export default {
     /** Loads `value` and waits for the new title, the skill (audit passed) and the map. */
     const loadOk = async (value, heading, label) => {
       await submit(value);
+      // The load ends (R6: the Generate button names its stages until then); the title may already be
+      // the same as before (tasks.yaml over the Tasks API sample).
+      await page.locator('.generate[data-stage]').waitFor({ state: 'detached', timeout: 15_000 });
       await title.filter({ hasText: new RegExp(`^${heading}$`) }).waitFor();
       await ready();
       await auditPassed(label);
-      expect(!(await title.textContent()).includes('(sample)'), `${label}: still says sample`);
+      expect((await page.locator('.meta .tag', { hasText: 'Sample' }).count()) === 0, `${label}: still says sample`);
     };
     const openSample = async (id = 'tasks') => {
       await page.goto(`${origin}/?sample=${id}`);
@@ -136,18 +142,20 @@ export default {
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
     await openSample();
 
-    // AC9: header focus order equals its visual order at 1440, 1024 and 390, More options open too.
-    const headerOrder = async (label) => {
-      await page.locator('.skip').focus();
+    // AC9: the hero's focus order equals its visual order at 1440, 1024 and 390: the field, Open file,
+    // Generate, then the samples (one Tab stop; arrows move inside it).
+    const heroOrder = async (label) => {
+      await page.locator('#source-field').focus();
+      await page.keyboard.press('Shift+Tab');
       const seen = [];
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 8; i++) {
         await page.keyboard.press('Tab');
         const at = await page.evaluate(() => {
           const el = document.activeElement;
-          if (!el?.closest('header')) return null;
+          if (!el?.closest('.hero')) return null;
           const shown = el.classList.contains('visually-hidden') ? el.parentElement : el;
           const b = shown.getBoundingClientRect();
-          return { name: el.id || el.textContent.trim() || el.tagName, top: b.top, bottom: b.bottom, left: b.left };
+          return { name: el.id || el.getAttribute('aria-label') || el.textContent.trim() || el.value || el.tagName, top: b.top, bottom: b.bottom, left: b.left };
         });
         if (!at) break;
         seen.push(at);
@@ -162,27 +170,18 @@ export default {
     };
     for (const [width, height] of [[1440, 900], [1024, 768], [390, 844]]) {
       await page.setViewportSize({ width, height });
-      const order = await headerOrder(`header ${width}`);
-      expect(order[0] === 'source-field' && order.includes('More options'), `header ${width}: ${order}`);
-      await screenshot(`header-${width}`, { clip: { x: 0, y: 0, width, height: (await page.locator('.header').boundingBox()).height } });
+      const order = await heroOrder(`hero ${width}`);
+      expect(order.join(' > ') === 'source-field > Open a spec file > Generate > tasks', `hero ${width}: ${order}`);
+      const box = await page.locator('.hero').boundingBox();
+      await screenshot(`hero-${width}`, { clip: { x: 0, y: 0, width, height: box.y + box.height } });
     }
     await page.setViewportSize({ width: 1440, height: 900 });
-    const more = page.getByRole('button', { name: 'More options' });
-    expect((await more.getAttribute('aria-expanded')) === 'false', 'More options starts closed');
-    await more.focus();
-    await page.keyboard.press('Enter');
-    expect((await more.getAttribute('aria-expanded')) === 'true', 'More options opens from the keyboard');
-    await page.keyboard.press('Tab');
-    expect(await page.evaluate(() => document.activeElement?.tagName === 'SELECT'), 'Tab from More options reaches the source selector');
-    const opened = await headerOrder('header 1440, more options open');
-    expect(opened.includes('SELECT') || opened.some((n) => /Auto/.test(n)), `selector in the tab order: ${opened}`);
-    await screenshot('more-options-open', { clip: { x: 0, y: 0, width: 1440, height: 200 } });
-    await axe('more options open');
-    await more.click();
+    // The kind of source is detected: no selector, no More options (D37).
+    expect((await page.locator('select').count()) === 0 && (await page.getByRole('button', { name: 'More options' }).count()) === 0, 'a source selector or More options is still there');
 
     // The multi-line field explains Enter/Shift+Enter to assistive tech, and the shortcut help lists them.
     expect((await field.getAttribute('aria-describedby')) === 'source-hint', 'field not described by #source-hint');
-    expect((await page.locator('#source-hint').textContent()) === 'Enter loads. Shift+Enter adds a new line.', 'source hint text');
+    expect((await page.locator('#source-hint').textContent()) === 'Enter loads. Shift+Enter adds a new line. You can also drop a spec file here.', 'source hint text');
     await page.locator('main').focus();
     await page.keyboard.press('?');
     const help = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
@@ -196,11 +195,11 @@ export default {
     await loadOk(`${HOST}/tasks.yaml`, 'Tasks API', 'tasks.yaml');
     expect(new URL(page.url()).searchParams.get('url') === `${HOST}/tasks.yaml`, `?url= written: ${page.url()}`);
     expect(api.length === 0, `direct fetch used the proxy: ${api}`);
-    expect(await page.locator('.samples-fold:not([open])').isVisible(), 'sample chips fold away once a source is loaded');
+    expect((await page.locator('input[name="sample"]:checked').count()) === 0, 'a sample stays selected once a source is loaded');
     await page.mouse.move(5, 5);
     await screenshot('skill-from-url');
     await page.goBack();
-    await title.filter({ hasText: 'Tasks API (sample)' }).waitFor();
+    await title.filter({ hasText: /^Tasks API$/ }).waitFor();
     await page.goForward();
     await title.filter({ hasText: /^Tasks API$/ }).waitFor();
     await loadOk(`${HOST}/notes.json`, 'Notes API', 'notes.json (OpenAPI 3.0)');
@@ -217,7 +216,7 @@ export default {
     await title.filter({ hasText: /^Tasks API$/ }).waitFor();
     await ready();
     await page.goBack();
-    await title.filter({ hasText: 'Swagger Petstore (sample)' }).waitFor();
+    await title.filter({ hasText: /^Swagger Petstore$/ }).waitFor();
 
     // AC4: loading steps announced, Cancel aborts the request and restores the previous skill and map.
     await openSample('tasks');
@@ -225,11 +224,14 @@ export default {
     await submit(`${HOST}/hang.yaml`);
     await page.getByTestId('loading').waitFor();
     await page.getByTestId('announcer').filter({ hasText: 'Fetching spec (specs.example.test)' }).waitFor();
-    expect((await page.locator('main').getAttribute('aria-busy')) === null, 'aria-busy is on the content, not on main (the steps and Cancel stay live)');
-    expect((await page.locator('main > .stage-content').getAttribute('aria-busy')) === 'true', 'content is busy while loading');
-    expect((await page.locator('main').getAttribute('data-status')) === 'loading', 'main says loading');
-    const generate = page.locator('header .generate');
-    expect(await generate.isDisabled(), 'Generate skill is disabled while loading');
+    expect((await frame.getAttribute('aria-busy')) === null, 'aria-busy is on the content, not on the frame (the steps and Cancel stay live)');
+    expect((await page.locator('#result > .stage-content').getAttribute('aria-busy')) === 'true', 'content is busy while loading');
+    expect((await frame.getAttribute('data-status')) === 'loading', 'the result frame says loading');
+    // Generate with an empty field while loading does not rewrite the previous skill; the load goes on.
+    const generate = page.locator('.hero .generate');
+    await field.fill('');
+    await generate.click();
+    expect((await page.getByTestId('loading').count()) === 1 && (await page.locator('.skill-browser[data-ready="true"]').count()) === 1, 'empty Generate while loading changed the state');
     await page.mouse.move(5, 5);
     await screenshot('paste-url-loading');
     await axe('loading state');
@@ -238,7 +240,7 @@ export default {
     expect(/ABORTED/i.test(failed.failure()?.errorText ?? ''), `hanging fetch was not aborted: ${failed.failure()?.errorText}`);
     hold?.done();
     expect((await page.getByTestId('loading').count()) === 0, 'loading state stays after Cancel');
-    expect((await title.textContent()) === 'Tasks API (sample)', 'Cancel keeps the previous skill and map');
+    expect((await title.textContent()) === 'Tasks API' && (await page.locator('.meta .tag', { hasText: 'Sample' }).count()) === 1, 'Cancel keeps the previous skill and map');
     expect(await page.evaluate(() => document.activeElement?.id === 'source-field'), 'Cancel returns focus to the field');
     await page.getByTestId('announcer').filter({ hasText: 'Cancelled.' }).waitFor();
 
@@ -270,15 +272,13 @@ export default {
       }
     }
     await axe('error state');
-    // The error state: previous content greyscale, title at least the page title's size, Generate neutral.
-    expect((await page.locator('main').getAttribute('data-status')) === 'error', 'main says error');
-    expect(await page.locator('main > .stage-content').evaluate((el) => getComputedStyle(el).filter === 'grayscale(1)'), 'previous content not greyscale under the error');
-    const sizes = await page.evaluate(() => [document.querySelector('#status-title'), document.querySelector('.title h1')].map((el) => parseFloat(getComputedStyle(el).fontSize)));
-    expect(sizes[0] >= sizes[1], `error title ${sizes[0]}px is smaller than the page title ${sizes[1]}px`);
-    expect(await generate.isEnabled(), 'Generate skill enabled under an error');
-    const fill = await generate.evaluate((el) => getComputedStyle(el).backgroundColor);
-    const meridian = await page.evaluate(() => { const b = document.createElement('i'); b.style.color = 'var(--meridian)'; document.body.append(b); const c = getComputedStyle(b).color; b.remove(); return c; });
-    expect(fill !== meridian, `Generate skill keeps the meridian fill under an error (${fill})`);
+    // The error state (R5): it replaces the frame's body (the previous result is kept, not shown, until
+    // a recovery action); the title at least the result title's size; Generate ready.
+    expect((await frame.getAttribute('data-status')) === 'error', 'the result frame says error');
+    expect(await page.locator('#result > .stage-content').evaluate((el) => getComputedStyle(el).display === 'none' && el.childElementCount > 0), 'the previous result shows under the error');
+    const sizes = await page.evaluate(() => [document.querySelector('#status-title'), document.querySelector('#result-title')].map((el) => parseFloat(getComputedStyle(el).fontSize)));
+    expect(sizes[0] >= sizes[1], `error title ${sizes[0]}px is smaller than the result title ${sizes[1]}px`);
+    expect(await generate.isEnabled(), 'Generate enabled under an error');
     proxyDown = true;
     await submit(`${HOST}/petstore.json`);
     await page.locator('.source-status.error[data-code="proxy-unavailable"]').filter({ hasText: 'pnpm dev:worker' }).waitFor();
@@ -287,21 +287,30 @@ export default {
     expect(await page.evaluate(() => document.activeElement?.id === 'source-field'), '"Paste spec text instead" focuses the field');
     await submit(`${HOST}/docs`);
     await page.getByRole('button', { name: 'Try a sample' }).click();
-    await title.filter({ hasText: 'Tasks API (sample)' }).waitFor();
+    await title.filter({ hasText: /^Tasks API$/ }).waitFor();
     await ready();
     expect((await page.locator('.source-status').count()) === 0, '"Try a sample" clears the error');
-    await page.waitForFunction(() => document.activeElement?.id === 'main', null, { timeout: 2000 }).catch(() => {});
-    expect(await page.evaluate(() => document.activeElement?.id === 'main'), `"Try a sample" left focus on ${await page.evaluate(() => document.activeElement?.tagName)}`);
-    // The auto-detect failure offers the MCP selector directly.
+    await page.waitForFunction(() => document.activeElement?.id === 'result', null, { timeout: 2000 }).catch(() => {});
+    expect(await page.evaluate(() => document.activeElement?.id === 'result'), `"Try a sample" left focus on ${await page.evaluate(() => document.activeElement?.tagName)}`);
+    // No selector (D37): a URL that is a page or a 404 is tried as an MCP server too; when that fails,
+    // the spec's own error is shown; an MCP server that answers GET with a page loads directly.
+    const tries = api.length;
     await submit(`${HOST}/docs`);
-    await page.getByRole('button', { name: 'Load it as an MCP server' }).click(); // the docs-page error offers MCP
-    await page.locator('.source-status.error[data-code="http-error"]').waitFor(); // not an MCP server either
-    expect(await page.evaluate(() => document.activeElement?.id === 'status-title'), 'failed MCP retry: focus not on the new error title');
+    await page.locator('.source-status.error[data-code="html-page"]').waitFor();
+    expect(api.slice(tries).join() === `/api/mcp/tools ${HOST}/docs`, `the docs page was not tried as MCP: ${api.slice(tries)}`);
+    expect((await page.getByRole('button', { name: /MCP server/ }).count()) === 0, 'an error still offers a source-kind choice');
     await submit(`${HOST}/server`);
-    await page.getByRole('button', { name: 'Load it as an MCP server' }).click();
     await title.filter({ hasText: /^secure-filesystem-server$/ }).waitFor();
     await ready();
-    expect(await page.evaluate(() => document.activeElement?.id === 'source-field'), `MCP retry left focus on ${await page.evaluate(() => document.activeElement?.tagName)}`);
+    expect(await page.evaluate(() => document.activeElement?.id === 'source-field'), `MCP load left focus on ${await page.evaluate(() => document.activeElement?.tagName)}`);
+
+    // Generate with an empty field writes the current skill again and brings its heading into focus.
+    await openSample('tasks');
+    await field.fill('');
+    await generate.click();
+    await page.waitForFunction(() => document.activeElement?.id === 'skill-title');
+    await ready();
+    await auditPassed('empty Generate');
 
     // AC2: pasted text and opened files give the built-in sample's skill, with no /api request.
     const tmp = mkdtempSync(join(tmpdir(), 'spec2skill-p15-'));
@@ -313,33 +322,45 @@ export default {
         await loadOk(sample(file), heading, `${id} pasted`);
         const [gotPaste, pasteTree] = [await zipHash(), await tree()];
         await openSample(id);
-        await page.getByRole('button', { name: 'More options' }).click();
-        const picker = page.locator('#source-more input[type="file"]');
-        await picker.focus(); // as after choosing in the dialog from the keyboard
-        await picker.setInputFiles(join(ROOT, 'samples', file));
+        const open = page.getByRole('button', { name: 'Open a spec file' });
+        const [chooser] = await Promise.all([page.waitForEvent('filechooser'), open.click()]);
+        await chooser.setFiles(join(ROOT, 'samples', file));
         await title.filter({ hasText: new RegExp(`^${heading}$`) }).waitFor();
         await ready();
-        const at = await page.evaluate(() => document.activeElement?.textContent ?? document.activeElement?.tagName);
-        expect(at === 'More options', `${id}: after picking a file focus is on ${at}, not More options`);
+        const at = await page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.tagName);
+        expect(at === 'Open a spec file', `${id}: after picking a file focus is on ${at}, not Open file`);
         const gotFile = await zipHash();
+        // Drag and drop onto the field loads the same file.
+        await openSample(id === 'tasks' ? 'petstore' : 'tasks');
+        await page.locator('.source-field').evaluate((el, [name, text]) => {
+          const data = new DataTransfer();
+          data.items.add(new File([text], name, { type: 'application/json' }));
+          for (const type of ['dragenter', 'dragover', 'drop']) el.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: data }));
+        }, [file, sample(file)]);
+        await title.filter({ hasText: new RegExp(`^${heading}$`) }).waitFor();
+        await ready();
+        expect((await page.locator('.source-field[data-drop]').count()) === 0, `${id}: the drop state stays on`);
+        const gotDrop = await zipHash();
         expect(api.length === before, `${id}: text/file made /api requests`);
         // The MCP recording has no serverInfo (that comes from initialize), so its name and slug differ: same files.
-        if (id === 'filesystem') expect(JSON.stringify(pasteTree) === JSON.stringify(wantTree) && gotPaste === gotFile, `${id}: tree differs`);
-        else expect(gotPaste === want && gotFile === want, `${id}: pasted/opened zip differs from the sample's`);
+        if (id === 'filesystem') expect(JSON.stringify(pasteTree) === JSON.stringify(wantTree) && gotPaste === gotFile && gotFile === gotDrop, `${id}: tree differs`);
+        else expect(gotPaste === want && gotFile === want && gotDrop === want, `${id}: pasted/opened/dropped zip differs from the sample's`);
       }
 
       // The empty spec, a spec with warnings, and the 1000-operation paste (P4).
       await submit(EMPTY);
       await page.getByTestId('empty-chart').waitFor();
       await page.getByTestId('announcer').filter({ hasText: 'Quiet API: no operations. This spec has no paths, so there is no skill to write.' }).waitFor();
-      expect(await page.getByText('No operations, so no skill to write').isVisible(), 'empty skill pane');
+      expect(await page.getByText('No operations, so no skill to write').isVisible(), 'empty skill browser');
+      // Nothing of the previous skill stays: no files, preview or audit (D61).
+      expect((await page.locator('#skill-preview, .sb-preview, .sb-audit, .skill-browser [role="tree"]').count()) === 0, 'the empty spec shows the previous skill');
       expect(await page.getByRole('button', { name: 'Download .zip' }).isDisabled(), 'Download enabled for an empty spec');
       await screenshot('empty-spec');
       await submit(WARNED);
       await title.filter({ hasText: 'Shelf API' }).waitFor();
       await ready();
-      await page.locator('.warnings summary').click();
-      expect(/external/i.test(await page.locator('.warnings ul').textContent()), 'warnings list');
+      await page.locator('.meta .tag-btn', { hasText: /^\d+ warnings?$/ }).click();
+      expect(/external/i.test(await page.locator('ul.warnings:not([hidden])').textContent()), 'warnings list');
       await screenshot('warnings-list');
       const big = join(tmp, 'synthetic.json');
       writeFileSync(big, execFileSync(process.execPath, [join(ROOT, 'scripts', 'gen-synthetic-spec.mjs')], { maxBuffer: 16 * 1024 * 1024 }));
@@ -349,7 +370,7 @@ export default {
       await title.filter({ hasText: 'Synthetic' }).waitFor();
       await ready();
       console.log(`  1000-operation paste interactive in ${Date.now() - started} ms`);
-      expect((await page.locator('.node[data-summary]').count()) > 0, 'large spec clusters are not collapsed');
+      expect((await page.locator('.op.more').count()) > 0, 'large spec cards do not cap their rows ("N more")');
       await page.mouse.move(5, 5);
       await screenshot('collapsed-clusters');
     } finally {

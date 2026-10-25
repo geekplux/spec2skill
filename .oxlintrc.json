@@ -9,5 +9,5 @@
     "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }]
   },
   "overrides": [{ "files": ["scripts/**/*.mjs", "src/skillgen/assets/**/*.mjs", "examples/**/*.mjs", "*.config.ts"], "env": { "node": true } }],
-  "ignorePatterns": ["dist", "node_modules", "docs/screenshots", ".wrangler"]
+  "ignorePatterns": ["dist", "node_modules", "docs/screenshots", "docs/redesign/target", ".wrangler"]
 }

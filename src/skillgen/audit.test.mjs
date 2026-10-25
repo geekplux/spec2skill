@@ -113,7 +113,7 @@ it('the dry-run plan redacts credentials even when they are set', async () => {
 }, TEST_TIMEOUT);
 
 // Small and odd APIs: 3 tools, 5 operations without ids, 1 operation with hostile strings.
-describe.each(['../model/__fixtures__/mcp-edge.json', '../model/__fixtures__/missing-operation-ids.yaml', '../detail/__fixtures__/hostile-strings.json'])('the generated skill for %s', (file) => {
+describe.each(['../model/__fixtures__/mcp-edge.json', '../model/__fixtures__/missing-operation-ids.yaml', '../map/__fixtures__/hostile-strings.json'])('the generated skill for %s', (file) => {
   it.each(NODES)('has >= 5 evals and >= 2 examples and passes its audit and tests under %s', async (node) => {
     const tree = await passes(file, node);
     expect(auditTree(tree)).toMatchObject({ ok: true });

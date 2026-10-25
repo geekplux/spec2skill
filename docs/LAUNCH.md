@@ -30,16 +30,16 @@ Every number below comes from the built-in samples and can be checked offline wi
 
 ## X thread draft
 
-Each post is at most 280 characters (the longest is 252, counted with the bracketed image placeholders; recount after any edit).
+Each post is at most 280 characters (the longest is 257, counted with the bracketed image placeholders; recount after any edit).
 
 1. spec2skill: turn any OpenAPI spec or MCP server into an agent skill in one click. SKILL.md, a tested kit, references, worked examples, evals and an audit that ends in "audit passed". Free, open source, no account, no key. [demo GIF]
-   - *Alt text:* "Screen recording of spec2skill. The Filesystem MCP sample opens with its generated skill (file tree, SKILL.md preview, Audit passed: 9 of 9 checks) beside a map of 14 tools; Download .zip; a terminal runs the downloaded skill's audit and prints audit passed. Then the Tasks API workflows page, the map with getTask focused, and the Petstore list view and evals."
+   - *Alt text:* "Screen recording of spec2skill on the Tasks API sample. The route map loads column by column and its strongest workflow, listProjects, listTasks, getTask, draws as one indigo line. Hovering getTask draws its feed links in ink and opens its operation card; In skill opens references/tasks.md in the skill browser beside Audit passed, 9 of 9."
 2. What you get for the Tasks API sample: 22 operations become SKILL.md, kit/ (operations, client, chains), 8 reference pages, 2 dry-run examples, 7 evals and a CI workflow. `node scripts/audit.mjs .` checks it all. [hero image]
-   - *Alt text:* "The tasks-api skill in spec2skill: file tree, SKILL.md preview, Audit passed: 9 of 9 checks and Download .zip on the left; on the right the map of 22 operations in 5 clusters with GET /tasks/{taskId} focused and its details open."
+   - *Alt text:* "spec2skill with the Tasks API sample: the headline and source field, then the result with Install command and Download .zip, the route map of 22 operations in 5 resources with getTask hovered and its operation card open, and the skill browser's files, SKILL.md preview and Audit passed below."
 3. The skill leads with real workflows. spec2skill infers which outputs feed which inputs (id -> taskId), so the skill says: listProjects -> listTasks -> getTask, and its examples follow that chain. All deterministic: no model involved. [workflows image]
-   - *Alt text:* "The skill pane showing references/workflows.md for the Tasks API: numbered call chains such as listProjects -> listTasks -> getTask, each step naming the output field and the input it fills."
-4. Check what it teaches: the map beside the skill shows every operation and relationship. Arrow keys move between nodes, E steps through a node's edges, Enter follows one. Edge kinds differ by line style, marker and label, never colour alone. [map image]
-   - *Alt text:* "The spec2skill map with getTask focused: its edges drawn at full strength with labels such as id -> taskId, dashed with arrows for feeds and solid with chevrons for sub-paths; all other edges faded."
+   - *Alt text:* "The skill browser showing references/workflows.md for the Tasks API: numbered call chains such as listProjects -> listTasks -> getTask, each step naming the output field and the input it fills."
+4. Check what it teaches: a route map above the skill puts resources in columns by dependency and the main workflow on one straight line. Hover or arrow to an operation to see what feeds it and what it feeds, in a card that links to the skill page. [map image]
+   - *Alt text:* "The spec2skill route map with getTask hovered: its feed links drawn in ink from listTasks and createTask and on to getProject, listLabels, listMembers and getMember, everything else faded, and its operation card listing input, output, fed by, feeds and In skill."
 5. OpenAPI 3.x, Swagger 2.0 and MCP tools/list all become the same kind of skill. Prefer the terminal? `pnpm cli --sample tasks --out .claude/skills` writes the skill and runs its audit, offline.
 6. MIT, built with React, Vite and a Cloudflare Worker. Try the 3 built-in samples, read the 3 example skills in the repo, and tell me what your agent still gets wrong. [repo link]
 
@@ -51,16 +51,16 @@ All three run offline on the built-in samples, with no account and no key. Start
 pnpm install && pnpm build && pnpm preview      # http://127.0.0.1:4173 (or `pnpm dev`)
 ```
 
-`node scripts/capture-demo.mjs` (after `pnpm build`) drives all three in headless Chrome and writes the frames to `docs/media/demo/<scenario>/` and the GIF to `docs/media/demo.gif`; scenario 1 also unzips the real download and runs its audit.
+`pnpm capture:demo` (after `pnpm build`) records the README's demo in headless Chrome on the built-in samples (Petstore, the switch to the Tasks API and its load sequence, getTask's operation card, In skill) and writes the frames to `docs/media/demo/` and the GIF to `docs/media/demo.gif`.
 
 ### 1. "Teach my agent this MCP server" (Filesystem MCP)
 
-1. Open `http://127.0.0.1:4173/?sample=filesystem` (or click the **Filesystem** sample chip).
-2. The first view is the `filesystem-mcp` skill: its file tree, the SKILL.md preview and **Audit passed: 9 of 9 checks**; the map of 14 tools in 2 clusters (File, Directory) with 28 feeds relationships sits beside it.
-3. Click **Audit passed** to see the nine checks, then **Download .zip** (`filesystem-mcp-skill.zip`).
+1. Open `http://127.0.0.1:4173/?sample=filesystem` (or pick **Filesystem MCP** under Samples).
+2. The result: `secure-filesystem-server`, MCP, 14 tools, 2 resources, 28 links. The route map shows Directory feeding File, the strongest workflow `list_allowed_directories` -> `search_files` -> `read_text_file` as one line, and an amber warning mark on the destructive tools (`write_file`, `edit_file`, `move_file`). Under it the skill browser holds the `filesystem-mcp` files, the SKILL.md preview and **Audit passed, 9 of 9** with its nine checks.
+3. Click **Download .zip** (`filesystem-mcp-skill.zip`), or **Install command** to copy the commands that unzip it into `.claude/skills/` and audit it.
 4. In a terminal:
    ```sh
-   unzip filesystem-mcp-skill.zip -d .claude/skills/
+   mkdir -p .claude/skills && unzip filesystem-mcp-skill.zip -d .claude/skills/
    cd .claude/skills/filesystem-mcp && node scripts/audit.mjs .
    ```
    Expect ten `ok` lines (the CLI audit adds "every example runs as a dry run") and `audit passed`.
@@ -68,17 +68,17 @@ pnpm install && pnpm build && pnpm preview      # http://127.0.0.1:4173 (or `pnp
 
 ### 2. "Check what the skill teaches" (Tasks API)
 
-1. Open `http://127.0.0.1:4173/?sample=tasks` (the default sample): 22 operations in 5 clusters, 78 relationships (53 feeds, 14 sub-path, 11 shared schema).
-2. In the skill's file tree, open `references/` and select `workflows.md`. The first workflow is `listProjects` -> `listTasks` (`id -> projectId, ownerId -> assigneeId`) -> `getTask` (`id -> taskId`).
-3. Check it on the map: Tab to the map, move with the arrow keys to **GET /tasks/{taskId}** (`getTask`) and press Enter to open its details (or open `?sample=tasks#op=getTask`). The details link to `references/tasks.md` under "In the skill".
-4. With focus on `getTask`, press **E** to highlight its first edge, **E** again for the next, and **Enter** to follow the highlighted edge to the operation at its other end. Every highlighted edge keeps its line style, marker and label (`id -> taskId`).
+1. Open `http://127.0.0.1:4173/?sample=tasks` (the default sample): 22 operations, 5 resources, 78 links (53 feeds, 14 sub-path, 11 shared schema). The map's columns read Projects, then Members and Labels, then Tasks, then Comments, and the caption under it spells out the strongest workflow: `listProjects` (`id -> projectId`) `listTasks` (`id -> taskId`) `getTask`.
+2. In the skill browser, open `references/` and select `workflows.md`. The first workflow is the same chain, `listProjects` -> `listTasks` (`id -> projectId, ownerId -> assigneeId`) -> `getTask` (`id -> taskId`).
+3. Check it on the map: hover **getTask**, or Tab to the map and move with the arrow keys to it. Its feed links turn ink and its operation card shows what feeds it and what it feeds; **In skill** opens `references/tasks.md`. Press Enter to pin the card (or open `?sample=tasks#op=getTask`); Escape closes it.
+4. With focus on `getTask`, press **E** to step through its relationships (each announced, the far operation outlined) and **Enter** to follow one to the operation at its other end.
 5. Press `?` for every shortcut.
 
 ### 3. "Review a spec" (Swagger Petstore)
 
-1. Open `http://127.0.0.1:4173/?sample=petstore&view=list`: the list view, 16 operations in 2 clusters (Pet, User), 41 relationships (8 feeds, 13 sub-path, 20 shared schema), every relationship in words.
-2. Open **Filters** and untick **GET**: 10 of 16 operations remain, in the list and on the map; the skill still covers all 16. Click **Show all**.
-3. Search `findPetsByTags`: its row is flagged "deprecated" (the spec marks it so). The Petstore sample has no spec warnings, so no warnings pill appears; a spec with problems (for example an external `$ref`) shows an "N warnings" pill beside its title.
+1. Open `http://127.0.0.1:4173/?sample=petstore&view=list`: the list view, 16 operations in 2 resources (Pet, User), 41 links (8 feeds, 13 sub-path, 20 shared schema), each operation with its path, and every relationship in words for screen readers.
+2. Press `/` and search `pet`: the list keeps the matching operations and the count is announced; switch to **Map** and the same search keeps the matches in ink and fades the rest. Escape clears it.
+3. Search `findPetsByTags` and open it: its operation card says the spec marks it deprecated. The Petstore sample has no spec warnings, so its head has no warnings tag; a spec with problems (for example an external `$ref`) shows an "N warnings" tag that opens them.
 4. In the skill's file tree open `evals/evals.json`: 6 evals (`main-chain`, `single-call`, `missing-param`, `destructive-confirm`, `missing-auth`, `unsupported-capability`), each with a prompt and a concrete expected output.
 5. The committed copy is in [examples/petstore-api](../examples/petstore-api/SKILL.md); `node examples/petstore-api/scripts/audit.mjs examples/petstore-api` ends in `audit passed`.
 

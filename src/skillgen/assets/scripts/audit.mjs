@@ -122,8 +122,10 @@ export function crashReason(error) {
 }
 
 /** auditTree plus running each example as a dry run and validating the plan.json it writes. */
-export async function auditDir(dir) {
-  const [{ execFileSync }, { readFileSync }, { join }] = await Promise.all([node('child_process'), node('fs'), node('path')]);
+export async function auditDir(skillDir) {
+  const [{ execFileSync }, { readFileSync }, { join, resolve }] = await Promise.all([node('child_process'), node('fs'), node('path')]);
+  // Absolute once: the examples run with the skill as their cwd, so a relative dir must not apply twice.
+  const dir = resolve(skillDir);
   const files = await readTree(dir);
   const result = auditTree(files);
   const ids = operationIds(files);

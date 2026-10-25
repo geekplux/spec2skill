@@ -15,8 +15,8 @@ const table = (head: string[], rows: string[][]) => [row(head), row(head.map(() 
 const page = (title: string, intro: string, ...blocks: string[][]) => `${[`# ${title}`, '', intro, ...blocks.flatMap((b) => ['', ...b])].join('\n')}\n`;
 
 export const hints = (op: Operation, crud?: string) =>
-  [crud, op.hints.readOnly && 'read-only', op.hints.destructive && 'destructive: confirm first', op.hints.idempotent && 'idempotent',
-    op.pagination && `paginated (${op.pagination.style})`, op.deprecated && 'deprecated'].filter(Boolean).join(' · ');
+  [crud, op.hints.readOnly && 'read-only', op.hints.destructive && 'destructive (confirm first)', op.hints.idempotent && 'idempotent',
+    op.pagination && `paginated (${op.pagination.style})`, op.deprecated && 'deprecated'].filter(Boolean).join(', ');
 
 const steps = (edges: Edge[], end: 'from' | 'to') => {
   const shown = edges.slice(0, MAX_LINKS).map((e) => `${code(e[end])} (${code(e.label)}${e.confidence === 'inferred' ? ', inferred' : ''})`);
@@ -38,7 +38,7 @@ function operationBlock(ctx: SkillContext, op: Operation): string[] {
   });
   const fields = outputFields(ctx.model, op.output?.schema).map((f) => code(f.name));
   return [
-    `## ${code(op.id)}`, '', `${where} · ${hints(op, ctx.graph.crud[op.id])}`, '', quote(op.title, CAP.summary),
+    `## ${code(op.id)}`, '', [where, hints(op, ctx.graph.crud[op.id])].filter(Boolean).join(': '), '', quote(op.title, CAP.summary),
     ...(op.description && op.description !== op.title ? ['>', quote(op.description)] : []), '',
     ...(params.length ? table(['Param', 'In', 'Required', 'Type', 'Notes'], params) : ['Takes no arguments.']), '',
     op.output ? `Returns ${code(typeLabel(op.output.schema))}${fields.length ? ` with ${fields.join(', ')}` : ''}.` : 'Returns no documented body.',

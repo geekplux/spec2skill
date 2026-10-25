@@ -2,17 +2,17 @@
 
 Small, scoped tasks for a first contribution. Each names the files to start from and what "done" looks like. Comment on the matching issue (or open one with the "Feature request" form) before you start, so two people do not pick the same task. [CONTRIBUTING.md](../CONTRIBUTING.md) explains setup and the checks; [EXTENDING.md](EXTENDING.md) explains the pipeline.
 
-## 1. Collapse an expanded cluster again
+## 1. Keep expanded cards in the URL
 
-On large specs (over 400 operations) clusters start as summary cards and Enter expands one, but nothing folds it back. Add a "Collapse" control on an expanded cluster's label and a key (for example `Shift+Enter` on a node) that re-adds the cluster to the collapsed set.
-- Start from: `expand()` in `src/map/Map.tsx`, `startCollapsed()` in `src/layout/collapse.ts`, shortcuts in `src/map/ShortcutHelp.tsx`.
-- Done when: the control is keyboard-operable with a text label, focus lands on the summary card, the shortcut dialog lists the key, and the phase 13 browser flow covers it.
+On large specs a resource card shows 8 operations and a "N more" row that opens it in place. A shared link forgets which cards were open. Keep them in the URL (for example `?open=r1s,r7s`) so a link reopens them, and back/forward restore them.
+- Start from: `toggle()` and the `expanded` state in `src/map/RouteMap.tsx`, `readUrl()` and `writeUrl()` in `src/state/url.ts` (tests in `src/state/url.test.ts`).
+- Done when: unknown card ids are dropped from the URL, the URL tests cover it, and a browser flow opens a link with two cards expanded.
 
-## 2. Name the source on bundle labels
+## 2. Say what a bundle stands for
 
-A bundled feeds edge reads `projectId -> 4 ops in Members`. When several bundles stack on one cluster you cannot tell which operation feeds each. Include the source operation in the label, or show it on focus.
-- Start from: `bundleFeeds()` in `src/graph/infer.ts`, the bundle drawing in `src/map/Edge.tsx`.
-- Done when: the label or its accessible name names the source, the graph snapshots in `src/graph/__snapshots__/` are updated and reviewed, and long labels still fit.
+One source feeding the same input into many operations of a resource is drawn as one curve to the card's head (`projectId -> 4 ops in Members` in the graph). Nothing on the map says which input it fills. Name the bundle's input and its operations in the source's operation card (and in its row's accessible name).
+- Start from: `bundleFeeds()` in `src/graph/infer.ts`, `restLinks()` in `src/layout/route.ts` and the operation card in `src/map/OpCard.tsx`.
+- Done when: the card lists the bundle (input and count), `src/map/OpCard.test.ts` covers it, and long lists still fit the 300 px card.
 
 ## 3. NFKC-normalise text before the AI injection checks
 
@@ -28,15 +28,15 @@ Swagger 2 array parameters can be `csv`, `ssv`, `tsv`, `pipes` or `multi`. The g
 
 ## 5. A high-contrast theme
 
-Add a third theme beside "Chart paper" and "Night survey" for `prefers-contrast: more` and as a toggle choice: pure ink on white, thicker edges and focus outlines.
-- Start from: `src/design/tokens.css`, `src/design/tokens.ts`, `src/design/theme.ts`, the header toggle in `src/shell/Header.tsx`.
+Follow `prefers-contrast: more` on top of the light and dark themes (which follow the system): ink text where the UI uses muted text, stronger rules and focus outlines, still from the Radix gray, indigo and amber steps.
+- Start from: `src/design/tokens.css`, `src/design/tokens.ts`.
 - Done when: `src/design/contrast.test.ts` checks every new pair at 7:1 for text, the CVD tests still pass, and the browser check has a screenshot.
 
 ## 6. Export the map as SVG
 
 Let users save the current map as a standalone SVG file (for docs or a design review).
-- Start from: the map's `<svg>` in `src/map/Map.tsx` and the toolbar in `src/map/Toolbar.tsx`; inline the computed colours from `src/design/tokens.css` so the file renders on its own.
-- Done when: an "Export SVG" button with a text label downloads a file that opens correctly in a browser, keeps the edge line styles and labels, and contains no script.
+- Start from: `routeLayout()` in `src/layout/route.ts` (the debug render `scripts/debug/route-dump.mjs` already writes one SVG from it) and the tools row in `src/App.tsx`; take the colours from `src/design/tokens.css` so the file renders on its own.
+- Done when: an "Export SVG" button with a text label downloads a file that opens correctly in a browser, keeps the line styles of the legend, and contains no script.
 
 ## 7. More MCP verb prefixes
 
@@ -44,11 +44,11 @@ MCP tool names use many verbs (`query_`, `lookup_`, `insert_`, `patch_`, `drop_`
 - Start from: `VERB_TABLE` and `VERBS` in `src/graph/words.ts`, `classifyCrud()` in `src/graph/crud.ts`, tests in `src/graph/rules.test.ts`.
 - Done when: the new verbs are classified with tests, and the filesystem sample's snapshots are unchanged or the changes are explained.
 
-## 8. A resizable splitter between the skill pane and the map
+## 8. Keep the open skill file in the URL
 
-The split is fixed at 40/60 on wide screens. Add a splitter the user can drag or move with the arrow keys (`role="separator"` with `aria-valuenow`), kept within the pane's minimum and maximum widths.
-- Start from: `src/shell/Layout.tsx` and the pane widths in `src/app.css`.
-- Done when: it works by pointer and keyboard, respects reduced motion, and the layout stays one focal point per view ([DESIGN.md](DESIGN.md)).
+The skill browser opens SKILL.md on every load, so a link cannot point at `references/tasks.md`. Keep the open file in the URL (for example `?file=references/tasks.md`) so a shared link opens it, and back/forward restore it.
+- Start from: `readUrl()` and `writeUrl()` in `src/state/url.ts` (tests in `src/state/url.test.ts`) and the selected file in `src/skillpane/SkillBrowser.tsx`.
+- Done when: a path the skill does not have falls back to SKILL.md and leaves the URL, the URL tests cover it, and the design checks of [DESIGN.md](DESIGN.md) section 8 still pass.
 
 ## 9. `--json` audit output for the CLI
 

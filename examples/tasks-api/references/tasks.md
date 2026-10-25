@@ -4,7 +4,7 @@
 
 ## `listTasks`
 
-`GET /projects/{projectId}/tasks` · list · read-only · idempotent · paginated (cursor)
+`GET /projects/{projectId}/tasks`: list, read-only, idempotent, paginated (cursor)
 
 > List tasks in a project
 
@@ -25,7 +25,7 @@ Fed by: `listProjects` (`id -> projectId, ownerId -> assigneeId`), `createProjec
 
 ## `createTask`
 
-`POST /projects/{projectId}/tasks` · create
+`POST /projects/{projectId}/tasks`: create
 
 > Create a task
 
@@ -46,7 +46,7 @@ Fed by: `listProjects` (`id -> projectId`), `createProject` (`id -> projectId`).
 
 ## `getTask`
 
-`GET /tasks/{taskId}` · read · read-only · idempotent
+`GET /tasks/{taskId}`: read, read-only, idempotent
 
 > Get a task
 
@@ -62,7 +62,7 @@ Fed by: `listTasks` (`id -> taskId`), `createTask` (`id -> taskId`).
 
 ## `updateTask`
 
-`PATCH /tasks/{taskId}` · update
+`PATCH /tasks/{taskId}`: update
 
 > Update a task
 >
@@ -84,7 +84,7 @@ Fed by: `listTasks` (`id -> taskId`), `createTask` (`id -> taskId`).
 
 ## `deleteTask`
 
-`DELETE /tasks/{taskId}` · delete · destructive: confirm first · idempotent
+`DELETE /tasks/{taskId}`: delete, destructive (confirm first), idempotent
 
 > Delete a task
 
@@ -98,7 +98,7 @@ Fed by: `listTasks` (`id -> taskId`), `createTask` (`id -> taskId`).
 
 ## `completeTask`
 
-`POST /tasks/{taskId}/complete` · action
+`POST /tasks/{taskId}/complete`: action
 
 > Mark a task as done
 
