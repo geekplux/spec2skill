@@ -23,6 +23,8 @@ const themeButton = (page, to) => page.locator('header').getByRole('button', { n
  * frame comes just before the first paint (rendering waits for the stylesheet).
  */
 function recordFirstPaint() {
+  // addInitScript serialises this one function, so the helper stays inside.
+  // oxlint-disable-next-line unicorn/consistent-function-scoping
   const snap = () => ({
     pin: document.documentElement.dataset.theme ?? null,
     scheme: getComputedStyle(document.documentElement).colorScheme,
@@ -30,9 +32,9 @@ function recordFirstPaint() {
     mounted: !!document.getElementById('root')?.firstChild,
   });
   document.addEventListener('readystatechange', () => {
-    if (document.readyState === 'interactive') window.__beforeApp = snap();
+    if (document.readyState === 'interactive') window.themeBeforeApp = snap();
   });
-  requestAnimationFrame(() => (window.__firstFrame = snap()));
+  requestAnimationFrame(() => (window.themeFirstFrame = snap()));
 }
 const expect = (ok, message) => {
   if (!ok) throw new Error(message);
@@ -163,8 +165,8 @@ export default {
       await fresh.emulateMedia({ colorScheme: system });
       await fresh.addInitScript(recordFirstPaint);
       await fresh.goto(`${origin}/?sample=tasks`, { waitUntil: 'load' });
-      await fresh.waitForFunction(() => window.__firstFrame && window.__beforeApp);
-      const [before, frame] = await fresh.evaluate(() => [window.__beforeApp, window.__firstFrame]);
+      await fresh.waitForFunction(() => window.themeFirstFrame && window.themeBeforeApp);
+      const [before, frame] = await fresh.evaluate(() => [window.themeBeforeApp, window.themeFirstFrame]);
       await fresh.close();
       console.log(`  no flash (${stored} on a ${system} system): before the app ${JSON.stringify(before)}, first frame ${JSON.stringify(frame)}`);
       expect(before.pin === stored && !before.mounted, `the stored ${stored} is not pinned before the app runs: ${JSON.stringify(before)}`);
