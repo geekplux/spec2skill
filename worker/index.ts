@@ -16,7 +16,13 @@ export interface WorkerEnv extends AiEnv {
   RATE_LIMITER?: Limiter;
   /** The same for /api/ai/describe (10 / 60 s per IP). */
   AI_RATE_LIMITER?: Limiter;
+  /** One shared key for the two fetch proxies, site-wide (300 / 60 s): many IPs together cannot turn
+   * them into a bulk fetcher. Per Cloudflare location, approximate. */
+  PROXY_LIMITER?: Limiter;
 }
+
+/** The key every proxy request is counted under by PROXY_LIMITER. */
+const PROXY_KEY = 'proxy';
 
 export type Deps = SpecDeps;
 
@@ -55,6 +61,8 @@ export async function handle(request: Request, env: WorkerEnv, deps: Deps): Prom
     if (request.method !== 'POST') throw new ProxyError('bad-request', 'Use POST.', 405);
     const limit = await (ai ? env.AI_RATE_LIMITER : env.RATE_LIMITER)?.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' });
     if (limit && !limit.success) throw new ProxyError('rate-limited', 'Too many requests; try again in a minute.');
+    const site = route ? await env.PROXY_LIMITER?.limit({ key: PROXY_KEY }) : undefined;
+    if (site && !site.success) throw new ProxyError('rate-limited', 'This site is fetching a lot of specs right now; try again in a minute.');
     return await (route ? route(await targetUrl(request), request, deps) : describe(request, env));
   } catch (error) {
     return errorResponse(error);

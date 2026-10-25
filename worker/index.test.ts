@@ -77,6 +77,19 @@ describe('router', () => {
     expect([second.status, await errorCode(second)]).toEqual([429, 'rate-limited']);
     expect(keys).toEqual(['203.0.113.9', '203.0.113.9']);
   });
+
+  it('caps both proxies site-wide under one PROXY_LIMITER key, whatever the client IP', async () => {
+    const keys: string[] = [];
+    let remaining = 1;
+    const capped: WorkerEnv = { ASSETS: assets, PROXY_LIMITER: { limit: async ({ key }) => (keys.push(key), { success: remaining-- > 0 }) } };
+    const { fetch, calls } = recorder(() => new Response('openapi: 3.1.0'));
+    const first = await handle(post('/api/fetch-spec', { url: 'https://example.com/a.yaml' }, { 'cf-connecting-ip': '203.0.113.1' }), capped, { fetch });
+    expect(first.status).toBe(200);
+    const second = await handle(post('/api/mcp/tools', { url: 'https://example.com/mcp' }, { 'cf-connecting-ip': '203.0.113.2' }), capped, { fetch });
+    expect([second.status, await errorCode(second)]).toEqual([429, 'rate-limited']);
+    expect(keys).toEqual(['proxy', 'proxy']);
+    expect(calls).toHaveLength(1);
+  });
 });
 
 describe('POST /api/fetch-spec', () => {
