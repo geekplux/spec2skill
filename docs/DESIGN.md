@@ -1,6 +1,6 @@
 # spec2skill design: the Route map
 
-This is the current design of the web app, as built. It was approved by Sean on 2026-10-24 as the "Route map" redesign and built in phases R1 to R7; [docs/redesign/DESIGN.md](redesign/DESIGN.md) is the historical spec it was built from, and `docs/redesign/target/` holds the approved boards (V2Home, V2HomeDark, V2Hover, V2Phone, V2Motion, V2System). Where the build departs from that spec, this file says what was built and names the decision in [docs/DECISIONS.md](DECISIONS.md) (D30 to D74) that records why.
+This is the current design of the web app, as built. It was approved by Sean on 2026-10-24 as the "Route map" redesign and built in phases R1 to R7; [docs/redesign/DESIGN.md](redesign/DESIGN.md) is the historical spec it was built from, and `docs/redesign/target/` holds the approved boards (V2Home, V2HomeDark, V2Hover, V2Phone, V2Motion, V2System). Where the build departs from that spec, this file says what was built and names the decision in [docs/DECISIONS.md](DECISIONS.md) (D30 to D82) that records why.
 
 Every rule below is checked: `scripts/browser/flows/redesign-acceptance.mjs` runs section 8 on every sample, light and dark, at 1440 and 390 px, at rest, on hover, with the card pinned, in the list and on the phone; the unit tests guard tokens, contrast, colour vision, copy and motion.
 
@@ -24,7 +24,7 @@ Also binding (CLAUDE.md): never colour alone; CVD-safe under protanopia, deutera
 
 ### Colour
 
-Radix gray, indigo and amber 3.0.0, copied as 36 `light-dark()` custom properties (D30). The theme follows the system through `color-scheme: light dark`; there is no theme toggle and nothing is stored (D31).
+Radix gray, indigo and amber 3.0.0, copied as 36 `light-dark()` custom properties (D30). The theme follows the system through `color-scheme: light dark` until the header's theme button pins one: `data-theme` on `<html>` sets `color-scheme: light` or `dark`, and nothing else, so every token follows (D82). The choice is stored under `spec2skill:theme` (blocked storage is tolerated: the button then switches for the visit) and kept until the button is used again, even when it equals the system's; an inline script in `index.html` pins it before the first paint, so it never flashes. Print is always light (`@media print`).
 
 | Role | Token |
 |---|---|
@@ -72,7 +72,7 @@ No other sizes, no uppercase or letter-spaced labels. Identifiers (operation ids
 
 ## 4. The page (V2Home)
 
-1. **Header**, 56 px, a 0.5 px `gray-6` rule under it: the wordmark; How it works, Command line, GitHub (14, `gray-11`). In-page links scroll to their section and move focus without touching the URL, whose hash is `#op=`. On phones the links sit behind a Menu button (Escape or a tap outside closes it) (D40).
+1. **Header**, 56 px, a 0.5 px `gray-6` rule under it: the wordmark; How it works, Command line, GitHub (14, `gray-11`), then the **theme button** (D82): a 16 px stroke glyph in a 32 px target, `gray-11` and `gray-12` on hover like the links, its glyph 24 px after GitHub and on the column's right edge; a moon while light, a sun while dark, named by what a click does ("Switch to dark theme", "Switch to light theme"), no tooltip, the swap instant. In-page links scroll to their section and move focus without touching the URL, whose hash is `#op=`. On phones the links sit behind a Menu button (Escape or a tap outside closes it) (D40), and the theme button follows Menu, 44 px and `gray-12` like it, its glyph on the gutter.
 2. **Hero**, 492 / 492, bottoms aligned: h1 "Turn any API into an agent skill" and the lede; the **source field** (48 px, "OpenAPI or MCP URL, or paste the spec") with an Open file icon button and the inset **Generate**; pasted text grows it into a textarea (Enter loads, Shift+Enter adds a line); a file can be dropped on it. There is no source selector: a URL is fetched as a spec and, when it is not one, tried as an MCP server (D37). Generate with an empty field writes the current skill again. Under it, "Samples" and a segmented control of native radios (Tasks API, Petstore, Filesystem MCP; one Tab stop, arrows select; none checked for the user's own source).
 3. **Result frame** (radius 16, `gray-7` ring, padding 32):
    - **Head** (D56): the API title (h2, 20/600); a meta line of source kind and version ("OpenAPI 3.1", "Swagger 2.0", "MCP"), operations (tools for MCP), resources and links, with numbers in `gray-12` 500 and 20 px gaps; tags "Sample", "AI-drafted prose" (only when AI prose is in use) and "N warnings" (a button that discloses the parser's warnings). Right: **Install command** copies `mkdir -p .claude/skills && unzip <slug>-skill.zip -d .claude/skills/ && node .claude/skills/<slug>/scripts/audit.mjs .claude/skills/<slug>` (D63), shown in its title and announced, with a by-hand fallback if the clipboard refuses; **Download .zip** (primary). Each turns into "Copied" or "Downloaded" with a check for 2 s.
@@ -139,7 +139,7 @@ All ease-out, one-shot, `--motion-map` 250 ms and `--motion-draw` 300 ms, both 0
 | Generate | The stage label swaps; the spinner turns | 250 ms a swap; 800 ms a turn (the one loop) |
 | Copy, download | The label becomes "Copied", "Downloaded" or "Commands copied" with a check, back after 2 s | 250 ms |
 
-The sequence plays while the result carries `data-enter` (`useEnter`), cleared when the last disc has popped and at least 2 s after it started; nothing mounted later (a hover, a search, "N more", a resize) replays it (D66). The 1000-operation spec runs one animation per card and one for the links. No other motion: no hover lifts, no button transitions, no scroll effects. The V2Motion board pops each disc 250 ms earlier than this (at 200 + 300 i ms, before the line arrives); the product follows the table.
+The sequence plays while the result carries `data-enter` (`useEnter`), cleared when the last disc has popped and at least 2 s after it started; nothing mounted later (a hover, a search, "N more", a resize) replays it (D66). The 1000-operation spec runs one animation per card and one for the links. No other motion: no hover lifts, no button transitions, no scroll effects; the theme button swaps the theme at once (D82). The V2Motion board pops each disc 250 ms earlier than this (at 200 + 300 i ms, before the line arrives); the product follows the table.
 
 ## 8. Acceptance checks
 
@@ -156,4 +156,4 @@ The sequence plays while the result carries `data-enter` (`useEnter`), cleared w
 
 9. **Text overlap**: no two pieces of text print over each other (every rendered line of every visible text node, clipped by its clipping ancestors and narrowed to its em box, crossing another by more than 2 px on both axes fails), and in each Made by row the name, line and URL neither cross nor leave the row; on home at rest for every sample at 1440, 1024, 768, 640, 390 and 320 (D75).
 
-The states: every sample (Tasks API, Petstore, Filesystem MCP) in light and dark, at 1440 (rest, hover, pinned, the next row focused from the keyboard, a card pinned from the address with `#op=`, the shortcuts dialog, list) and 390 (phone list, phone map, phone pinned sheet), plus no sideways page scroll in each. `redesign-r4` also hovers every row of every sample and checks that no preview is cut or reaches the skill browser (D76).
+The states: every sample (Tasks API, Petstore, Filesystem MCP) in light and dark, at 1440 (rest, hover, pinned, the next row focused from the keyboard, a card pinned from the address with `#op=`, the shortcuts dialog, list) and 390 (phone list, phone map, phone pinned sheet), plus no sideways page scroll in each; and the Tasks API home with the theme pinned by the header's button against the system's, both ways, at 1440 (with the grid) and 390 (D82). `phase-5-shell` checks the button itself: the default follows the system both ways, a click switches and is kept across reloads, the stored theme is on before the app mounts and in the first frame, print is light, blocked storage, and axe in both states. `redesign-r4` also hovers every row of every sample and checks that no preview is cut or reaches the skill browser (D76).
