@@ -396,7 +396,10 @@ export default {
     await webp(page, 'phone-390-preview-light', dir);
     await page.getByRole('button', { name: 'Close SKILL.md' }).click();
     await page.locator('.sb-preview').waitFor({ state: 'detached' });
-    expect(await page.evaluate(() => document.activeElement?.dataset.path === 'SKILL.md'), 'Close did not return focus to the file row');
+    // SkillBrowser focuses the row in the frame after the preview closes, so wait for that frame
+    // (up to 2 s) rather than reading focus as the preview detaches; a timeout still fails.
+    const refocused = await page.waitForFunction(() => document.activeElement?.dataset.path === 'SKILL.md', null, { timeout: 2000 }).then(() => true, () => false);
+    expect(refocused, 'Close did not return focus to the file row');
     // The audit is one row that expands its checks.
     const row = page.locator('.audit-row');
     expect((await row.getAttribute('aria-expanded')) === 'false' && !(await page.locator('#audit-checks').isVisible()), '390: the audit checks show before the row is opened');
