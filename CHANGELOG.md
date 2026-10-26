@@ -4,7 +4,7 @@ All notable changes to spec2skill are listed here. The format follows [Keep a Ch
 
 ## [0.1.0] - Unreleased
 
-The first release. Development started under the working name tool-atlas; the project was renamed to spec2skill (repository, package, wordmark and generated skills) while 0.1.0 was being built.
+The first release. Development started under an earlier working name; the project was renamed to spec2skill (repository, package, wordmark and generated skills) while 0.1.0 was being built.
 
 ### Added
 
