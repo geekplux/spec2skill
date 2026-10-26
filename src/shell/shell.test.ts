@@ -62,7 +62,7 @@ describe('page shell', () => {
     expect([...html.matchAll(/<li><b>([^<]+)<\/b>/g)].map((m) => m[1])).toEqual(['Parse', 'Relate', 'Write and audit', 'Check']);
     expect(html).toContain('Made by GeekPlux');
     expect(html).toContain('href="https://geekplux.com"');
-    for (const href of ['https://vert.geekplux.org', 'https://explorable.geekplux.com', 'https://reasontrail.geekplux.com', 'https://github.com/geekplux/markvis']) {
+    for (const href of ['https://vert.geekplux.com', 'https://explorable.geekplux.com', 'https://reasontrail.geekplux.com', 'https://github.com/geekplux/markvis']) {
       expect(html).toContain(`href="${href}"`);
     }
     const footer = /<footer[\s\S]*<\/footer>/.exec(html)![0];
