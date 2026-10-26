@@ -11,7 +11,7 @@
 
 export const ANALYTICS_HOST = 'spec2skill.geekplux.com';
 /** The GA4 web stream for {@link ANALYTICS_HOST}; empty keeps analytics off. */
-export const MEASUREMENT_ID = '';
+export const MEASUREMENT_ID = 'G-18W9YZSQQE';
 const PAGE_TITLE = 'spec2skill';
 const PATHS = new Set(['/']);
 
