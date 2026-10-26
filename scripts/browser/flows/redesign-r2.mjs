@@ -128,7 +128,7 @@ export default {
     await dialog.waitFor({ state: 'detached' });
     expect(await shortcuts.evaluate((el) => el === document.activeElement), 'focus did not return to the footer button');
     const links = await page.locator('footer a, .projects a, .made a.ul').evaluateAll((els) => els.map((a) => a.getAttribute('href')));
-    expect(links.includes('https://github.com/geekplux/spec2skill/blob/main/LICENSE') && links.includes('https://geekplux.com') && links.includes('https://vert.geekplux.org'), `footer and Made by links: ${links}`);
+    expect(links.includes('https://github.com/geekplux/spec2skill/blob/main/LICENSE') && links.includes('https://geekplux.com') && links.includes('https://vert.geekplux.com'), `footer and Made by links: ${links}`);
 
     // Phones: the nav is behind Menu; the hero field is input over a full-width Generate; the
     // samples fit one line; the result is not a framed card (a rule above it).

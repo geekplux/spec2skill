@@ -22,7 +22,7 @@ const STEPS = [
 ] as const;
 
 const PROJECTS = [
-  ['Vert', 'https://vert.geekplux.org', 'Turn a GPX track into a terrain poster'],
+  ['Vert', 'https://vert.geekplux.com', 'Turn a GPX track into a terrain poster'],
   ['Explorable', 'https://explorable.geekplux.com', 'Turn a paper into an interactive essay'],
   ['Reasontrail', 'https://reasontrail.geekplux.com', 'See how your coding agent got there'],
   ['markvis', 'https://github.com/geekplux/markvis', 'Charts written in Markdown'],
