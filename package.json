@@ -4,6 +4,9 @@
   "private": true,
   "description": "Turn any OpenAPI spec or MCP server into an agent skill in one click.",
   "license": "MIT",
+  "homepage": "https://spec2skill.geekplux.com",
+  "repository": { "type": "git", "url": "git+https://github.com/geekplux/spec2skill.git" },
+  "bugs": { "url": "https://github.com/geekplux/spec2skill/issues" },
   "type": "module",
   "bin": {
     "spec2skill": "dist-cli/spec2skill.mjs"
