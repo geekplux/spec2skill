@@ -35,7 +35,7 @@ describe('stored theme', () => {
     expect(storedTheme(memory({ [THEME_KEY]: 'dark' }))).toBe('dark');
     expect(storedTheme(memory({ [THEME_KEY]: 'light' }))).toBe('light');
     for (const value of ['', 'Dark', 'system', 'auto']) expect(storedTheme(memory({ [THEME_KEY]: value }))).toBeNull();
-    expect(storedTheme(memory({ 'tool-atlas:theme': 'dark' }))).toBeNull(); // the pre-rename key is not read
+    expect(storedTheme(memory({ 'other:theme': 'dark' }))).toBeNull(); // no other key is read
     expect(storedTheme(memory())).toBeNull();
     expect(storedTheme(undefined)).toBeNull();
   });
@@ -155,7 +155,7 @@ describe('other tabs (the storage event)', () => {
   it('ignores other keys', () => {
     const doc = fakeDoc();
     pinTheme('dark', doc);
-    expect(applyStorageEvent({ key: 'tool-atlas:theme', newValue: 'light' }, doc)).toBe(false);
+    expect(applyStorageEvent({ key: 'other:theme', newValue: 'light' }, doc)).toBe(false);
     expect(pinnedTheme(doc.documentElement)).toBe('dark');
   });
 
@@ -215,7 +215,7 @@ describe("index.html's inline script", () => {
   });
 
   it('pins nothing without a valid choice or with storage blocked', () => {
-    for (const storage of [memory(), memory({ [THEME_KEY]: 'auto' }), memory({ 'tool-atlas:theme': 'dark' }), blocked]) {
+    for (const storage of [memory(), memory({ [THEME_KEY]: 'auto' }), memory({ 'other:theme': 'dark' }), blocked]) {
       const doc = run(storage);
       expect(doc.documentElement.dataset.theme).toBeUndefined();
       expect(doc.metas.map((m) => m.content)).toEqual(['#fcfcfc', '#111111']);

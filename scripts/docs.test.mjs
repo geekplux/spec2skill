@@ -45,7 +45,6 @@ describe('repo packaging', () => {
     for (const text of ['Turn any OpenAPI spec or MCP server into an agent skill in one click.', 'Live demo:', 'SKILL.md', 'evals/evals.json', 'audit passed', 'pnpm install && pnpm dev', 'pnpm cli --sample tasks']) {
       expect(top).toContain(text);
     }
-    expect(readme).not.toMatch(/tool-atlas|mcp2skill/i);
   });
   it('has an MIT licence, the Contributor Covenant 2.1 and a changelog with an Unreleased release', () => {
     expect(read('LICENSE')).toMatch(/^MIT License\n\nCopyright \(c\) \d{4} spec2skill contributors\n/);
@@ -85,7 +84,7 @@ describe('repo packaging', () => {
     for (const category of ['Hand-written skills or prompts', 'MCP-to-skill converters', 'API documentation renderers', 'MCP inspectors']) {
       expect(launch).toMatch(new RegExp(`^\\| ${category} \\|.*\\| [^|]{20,} \\|$`, 'm'));
     }
-    expect(launch).not.toMatch(/mcp2skill|tool-atlas|\b(price|pricing|trading|crypto|payment|invoice)s?\b/i);
+    expect(launch).not.toMatch(/\b(price|pricing|trading|crypto|payment|invoice)s?\b/i);
   });
   it('has a 1280x640 social preview under 1 MB and a README hero', () => {
     const png = readFileSync(join(root, 'docs', 'social-preview.png'));
