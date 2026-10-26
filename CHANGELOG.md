@@ -8,6 +8,7 @@ The first release. Development started under an earlier working name; the projec
 
 ### Added
 
+- Page-view counts on spec2skill.geekplux.com with Google Analytics: the path only, never a spec or MCP URL. Self-hosted copies load no analytics.
 - **Toolchain** (phase 1): React + Vite + TypeScript, Vitest, oxlint, a typecheck across app, Worker and CLI, and a headless-browser check (`pnpm check:browser`) on the system Chrome with axe and colour-vision-deficiency screenshots.
 - **One model for every source** (phases 2-3): OpenAPI 3.0/3.1 and Swagger 2.0 (JSON or YAML) and MCP `tools/list` responses normalise into one typed model, with internal `$ref` resolution, cycle handling and source detection by shape. Three built-in samples (Tasks API, Swagger Petstore, a recorded filesystem MCP server) work offline.
 - **Deterministic relationships** (phase 4): path hierarchy, shared schemas, output-to-input "feeds" links with exact or inferred confidence, CRUD grouping and clusters, with golden snapshots per sample.
