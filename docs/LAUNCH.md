@@ -12,7 +12,7 @@ Every number below comes from the built-in samples and can be checked offline wi
 
 > Show HN: spec2skill – turn any OpenAPI spec or MCP server into an agent skill
 
-**URL:** the live demo (not deployed yet; see the checklist).
+**URL:** https://spec2skill.geekplux.com
 
 **First comment:**
 
@@ -105,11 +105,11 @@ spec2skill does not call your API or your MCP tools: worked examples are dry run
 
 ## Launch checklist
 
-- [ ] Deployment approved by Sean and done (phase 21 prepares it and stops for approval).
-- [ ] Demo link live: replace "coming soon" in the README with the deployed URL and check the three scenarios on it.
+- [x] Deployment approved by Sean and done: https://spec2skill.geekplux.com.
+- [x] Demo link live in the README. Check the three scenarios on it before posting.
 - [ ] Social preview set in the repository settings (upload `docs/social-preview.png`).
 - [ ] CLI publish decided: publish `spec2skill` to npm (then `npx spec2skill` in the README) or keep `pnpm cli`.
-- [ ] `CODE_OF_CONDUCT.md` contact filled in (it still says "[INSERT CONTACT METHOD]").
+- [x] `CODE_OF_CONDUCT.md` contact filled in (a private report to @geekplux on GitHub).
 - [ ] Demo GIF regenerated from the final build (`pnpm build && node scripts/capture-demo.mjs`) and the README hero checked.
 - [ ] Drafts above re-read against the deployed app (numbers, commands, character counts).
 - [ ] Sean decides whether, where and when to post. Nothing is posted by any script or agent.
