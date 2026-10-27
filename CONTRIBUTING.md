@@ -51,7 +51,7 @@ The checks are tuned for small machines:
 - Write small commits with clear messages in the imperative ("Add collectionFormat to Swagger examples").
 - Add or update tests with the code: parsing and graph rules get unit tests and, where output changes, updated golden snapshots (`src/graph/__snapshots__/`, `src/layout/__snapshots__/`); review snapshot diffs, do not just accept them.
 - UI changes must stay keyboard-operable, never rely on colour alone, respect reduced motion and follow [docs/DESIGN.md](docs/DESIGN.md). Include a screenshot in the pull request.
-- Do not commit anything under `.github/workflows/`: the CI definition lives in [ci/github-workflow.yml](ci/github-workflow.yml) for now.
+- CI is defined in [.github/workflows/ci.yml](.github/workflows/ci.yml) and runs the same checks on every pull request.
 - Fill in the pull request template; a maintainer reviews and merges.
 
 ## Adding a sample

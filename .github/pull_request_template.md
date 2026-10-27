@@ -20,4 +20,4 @@
 
 - [ ] Keyboard-operable, with visible focus
 - [ ] Nothing relies on colour alone; reduced motion respected
-- [ ] Nothing under `.github/workflows/`; no secrets committed
+- [ ] No secrets committed

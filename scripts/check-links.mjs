@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 export const DOCS = ['README.md', 'CONTRIBUTING.md', 'CHANGELOG.md', 'docs/DESIGN.md', 'docs/EXTENDING.md', 'docs/GOOD_FIRST_ISSUES.md', 'docs/LAUNCH.md', 'docs/DEPLOY.md', 'examples/README.md'];
 const SOURCE_DIRS = ['src', 'worker', 'scripts'];
-const PATH_SPAN = /^(?:src|worker|scripts|samples|docs|examples|public|ci)\/[\w./-]*$/;
+const PATH_SPAN = /^(?:src|worker|scripts|samples|docs|examples|public)\/[\w./-]*$/;
 
 /** Relative link and image targets, without #fragment or ?query; external and in-page links are skipped. */
 export function linkTargets(markdown) {

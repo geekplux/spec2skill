@@ -74,8 +74,8 @@ Keep it current so an outside monitor can read progress. **The first line is alw
 - Nothing finance-related (no prices, trading, crypto, payments features or sample data).
 - No company names in project content, samples, docs, commits or PRs, apart from tools, services and cited sources.
 
-## GitHub token limitation
-The `gh` token on this box has `repo` scope but **not `workflow` scope**, so pushes that add or change files under `.github/workflows/` are rejected. Do not commit anything under `.github/workflows/`. Put CI definitions in `ci/github-workflow.yml` (same content) and list "move ci/github-workflow.yml to .github/workflows/ (needs workflow scope)" under follow-ups in `docs/STATUS.md`. This is not a blocker.
+## CI
+CI lives in `.github/workflows/ci.yml` and runs on every push to `main` and every pull request. Keep it in step with the checks contributors run locally.
 
 ## Hard rules: secrets
 - Never commit secrets. Local secrets go in `.dev.vars` (gitignored); deployed secrets via `wrangler secret put`.
@@ -90,7 +90,7 @@ An agent skill counts as done only when it meets the wheresryan22/anatomy bar (h
 - `examples/`: at least two complete worked examples that build from a single command.
 - `scripts/`: audit scripts that prove the output is correct (e.g. `node scripts/audit.mjs <output>` ending in `audit passed`), plus `node --test scripts/*.test.mjs` regression tests.
 - `evals/evals.json`: realistic prompts with `id`, `prompt`, `expected_output` (concrete, checkable) and `files`; at least 5 evals, including edge cases.
-- A CI workflow that runs the tests and rebuilds the examples (see the GitHub token note in CLAUDE.md: keep it at `ci/github-workflow.yml`, not under `.github/workflows/`).
+- A CI workflow that runs the tests and rebuilds the examples (`.github/workflows/ci.yml`).
 
 ## North star: a star-worthy open-source project (added by Sean, 2026-10-19)
 
@@ -100,7 +100,7 @@ This project will be released as open source and is not meant to be commercializ
 - **Value, then convenience.** Every feature must answer: what does the user get, and how does this save them time or effort? Cut anything that doesn't.
 - **Its own design.** Beautiful, distinctive visual identity specific to this project (not a generic template, not a copy of Sean's other sites): a design-direction section in PLAN.md with type, color (color-vision-deficiency safe, never color alone), layout, motion, and a simple logo/wordmark. Polish empty, loading, and error states.
 - **Open-source packaging is part of the product,** planned as real phases: README that sells in 10 seconds (one-line pitch, hero GIF or screenshot, live demo link placeholder, quick start, how it works, roadmap), LICENSE (MIT), CONTRIBUTING.md, CODE_OF_CONDUCT.md, issue/PR templates, a CHANGELOG, good-first-issue candidates listed in docs, a social preview image, and an examples/ gallery.
-- **Quality signals:** tests and CI config (in ci/ until workflow scope is granted), typed public APIs, small dependency footprint, fast load, accessible (keyboard + screen reader), docs for extending it.
+- **Quality signals:** tests and CI config (`.github/workflows/ci.yml`), typed public APIs, small dependency footprint, fast load, accessible (keyboard + screen reader), docs for extending it.
 - **Launch-ready:** include a short launch kit in docs/LAUNCH.md (Show HN / X post draft, 3 demo scenarios, comparison with alternatives). Do not post anything anywhere.
 
 ## Rename 2026-10-20 (Sean)
