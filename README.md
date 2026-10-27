@@ -131,6 +131,8 @@ Ideas and small, scoped tasks for new contributors are in [docs/GOOD_FIRST_ISSUE
 
 Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) to set up and run the checks, [docs/EXTENDING.md](docs/EXTENDING.md) to add a source format, a relationship rule or a skill section, and the [Code of Conduct](CODE_OF_CONDUCT.md). Changes are listed in the [CHANGELOG](CHANGELOG.md).
 
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains how the code fits together: the modules, the relationship rules and the decisions behind them.
+
 This repository is also developed by a Claude Code main agent acting as product manager and delegating to specialist sub-agents (`.claude/agents/`); [docs/PLAN.md](docs/PLAN.md) is the plan and [docs/STATUS.md](docs/STATUS.md) the live progress.
 
 ## Licence
