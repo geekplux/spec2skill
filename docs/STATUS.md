@@ -33,7 +33,6 @@ STATE: DONE
 | 21 | phase-21-deploy-prep | [#22](https://github.com/geekplux/spec2skill/pull/22) | PR open (review PASS); awaiting Sean's approval to deploy | 1 |
 
 ## Follow-ups
-- Move ci/github-workflow.yml to .github/workflows/ (needs workflow scope).
 - Phase 18 calm polish: one accent per view (Generate skill vs Download .zip), raw backticks in the not-a-spec error, empty-spec view focal point and install hint, migrate older views to --calm-* tokens.
 - Large specs: allow collapsing an expanded cluster again; name the source on stacked bundle labels.
 - Before any npm publish: give the CLI package its own engines range (CLI targets Node 20; repo toolchain needs 22).

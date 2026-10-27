@@ -59,10 +59,10 @@ describe('repo packaging', () => {
     }
     expect(load(read('.github/ISSUE_TEMPLATE/config.yml')).blank_issues_enabled).toBe(false);
     expect(existsSync(join(root, '.github', 'pull_request_template.md'))).toBe(true);
-    expect(existsSync(join(root, '.github', 'workflows'))).toBe(false);
+    expect(existsSync(join(root, 'ci'))).toBe(false);
   });
   it('has a CI workflow that parses and runs every check', () => {
-    const ci = load(read('ci/github-workflow.yml'));
+    const ci = load(read('.github/workflows/ci.yml'));
     const runs = Object.values(ci.jobs).flatMap((job) => job.steps.map((s) => s.run ?? '')).join('\n');
     for (const cmd of ['pnpm lint', 'pnpm typecheck', 'pnpm test', 'pnpm build', 'pnpm check:size', 'pnpm check:browser', 'pnpm build:cli', 'pnpm gallery --check', 'node --test', 'scripts/audit.mjs']) {
       expect(runs).toContain(cmd);

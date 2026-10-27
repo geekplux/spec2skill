@@ -23,9 +23,14 @@ const active = (page) => page.evaluate(() => document.activeElement?.getAttribut
 const frames = (page) => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
 const said = async (page) => (await frames(page), page.getByTestId('announcer').textContent());
 
+// A slower machine (the CI runner) can move focus a frame or two after the key: wait for it, up to 2 s.
 async function press(page, key, op) {
   await page.keyboard.press(key);
-  if (op) expect((await active(page)) === op, `${key}: focus on ${await active(page)}, expected ${op}`);
+  if (!op) return;
+  const moved = await page
+    .waitForFunction((id) => (document.activeElement?.getAttribute('data-op') ?? document.activeElement?.textContent?.trim()) === id, op, { timeout: 2000 })
+    .then(() => true, () => false);
+  expect(moved, `${key}: focus on ${await active(page)}, expected ${op}`);
 }
 
 async function clipboard(page) {
@@ -157,6 +162,7 @@ export default {
 
     // Reduced motion: the fades are instant.
     await page.emulateMedia({ reducedMotion: 'reduce' });
+    await settled(page); // the card's close fade and the media change re-render the map first
     await press(page, 'ArrowDown', 'createTask');
     const motion = await page.locator('.op[data-op="createTask"]').evaluate((el) => [getComputedStyle(el).transitionDuration, getComputedStyle(el.querySelector('.id')).transitionDuration]);
     expect(motion.every((d) => d === '0s'), `reduced motion: row transitions ${motion}`);
