@@ -1,4 +1,4 @@
-// Route map columns (docs/redesign/DESIGN.md 5, layout rule 1): resources in columns by
+// Route map columns (docs/DESIGN.md 5, layout rule 1): resources in columns by
 // longest-path depth over the cross-cluster feed graph. Cycles are broken with the greedy
 // feedback-arc order of Eades, Lin and Smyth on distinct cluster pairs, ties by model order;
 // pairs that run against the strongest workflow are dropped first so its line runs forward

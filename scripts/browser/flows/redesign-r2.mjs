@@ -1,4 +1,4 @@
-// Redesign R2 (docs/redesign/PLAN.md): the page shell (DESIGN.md section 8 on the home page, with the
+// Redesign R2: the page shell (DESIGN.md section 8 on the home page, with the
 // grid, moved to redesign-acceptance in R7). Checks the shell's behaviour: the fluid grid at 1024, the frame 16 px clear of
 // the window, the one-line placeholder and uncut samples from 640 to 1440, header links scroll to their
 // sections without touching the URL, the phone menu (Escape, outside tap), the footer's Keyboard
@@ -47,7 +47,7 @@ export default {
   name: 'redesign-r2',
   phase: 21,
   async run({ page, origin, axe, outDir, capture }) {
-    // Committed shots only with --capture redesign-r2; otherwise into this run's folder (never over an earlier phase's).
+    // Reference shots only with --capture redesign-r2; otherwise into this run's folder (never over an earlier run's).
     const dir = capture ? OUT : outDir;
     for (const { width, height, scheme } of VIEWS) {
       await page.setViewportSize({ width, height });

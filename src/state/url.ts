@@ -1,4 +1,4 @@
-// URL state (F13): `?sample=`, `?url=` (a loaded spec or MCP URL; pasted text never), `?view=`, `?q=` and `#op=`, so any view can be shared and
+// URL state: `?sample=`, `?url=` (a loaded spec or MCP URL; pasted text never), `?view=`, `?q=` and `#op=`, so any view can be shared and
 // back/forward walk through samples and selections. Pure parse/serialise; App owns history.
 import { opFromHash } from '../map/keyboard';
 

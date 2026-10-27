@@ -1,4 +1,4 @@
-// The page shell (docs/redesign/DESIGN.md 4, R2): structure and copy, rendered to static markup.
+// The page shell (docs/DESIGN.md 4, R2): structure and copy, rendered to static markup.
 // Behaviour (Enter, drop, arrow keys, in-page links) is covered by scripts/browser/flows/redesign-r2.mjs
 // and phase-15-source-input.mjs.
 import { createElement, createRef } from 'react';

@@ -1,4 +1,4 @@
-// Search for the map and the list view (F11). Pure: a lowercase index built once per model, then
+// Search for the map and the list view. Pure: a lowercase index built once per model, then
 // each keystroke is a scan of short strings (well under a frame for 1000 operations). The Filters
 // menu is gone since redesign R4 (DESIGN.md 4): search is the one way to narrow the view.
 import type { Edge } from '../graph';

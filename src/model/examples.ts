@@ -1,4 +1,4 @@
-// Ready-to-paste examples for one operation (F10): curl for HTTP endpoints, a JSON-RPC
+// Ready-to-paste examples for one operation: curl for HTTP endpoints, a JSON-RPC
 // `tools/call` body for MCP tools; plus the short type names the detail panel shows. Pure.
 import { envPrefix, skillSlug } from '../skillgen/slug';
 import type { ApiModel, Operation, Param, SchemaField, SchemaRef } from './types';

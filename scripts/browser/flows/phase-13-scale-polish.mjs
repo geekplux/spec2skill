@@ -1,10 +1,10 @@
 // Phase 13 (map parts rewritten for the route map in redesign R4): edge-noise trims and bundles on
 // the samples' maps, the pinned operation card floating over (not shrinking) the map, map focus
-// following back/forward, theme following OS changes (A10), the mobile hero (since redesign R2: the
+// following back/forward, theme following OS changes, the mobile hero (since redesign R2: the
 // field over Generate, the samples on one line), the map scrolling natively on phones (two-pointer
-// pinch-zoom, F9, went with zoom in R4), the skill browser's preview taking the wide column (R5; was the
+// pinch-zoom went with zoom in R4), the skill browser's preview taking the wide column (R5; was the
 // pane's 40/60 split), the list at 640 px, and the
-// synthetic large-spec fixture staying out of the production bundle (P4).
+// synthetic large-spec fixture staying out of the production bundle.
 import { settled } from '../redesign-checks.mjs';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -125,7 +125,7 @@ export default {
     await page.locator('#skill-preview').scrollIntoViewIfNeeded();
     await screenshot('skill-pane-split');
 
-    // 5. The theme follows the OS live (A10) while nothing is pinned, and so does the theme button's
+    // 5. The theme follows the OS live while nothing is pinned, and so does the theme button's
     // name (R8, D82: it says what a click does).
     const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     await page.emulateMedia({ colorScheme: 'dark' });
@@ -154,7 +154,7 @@ export default {
     await axe('mobile hero');
     await screenshot('mobile-hero');
 
-    // 7. Phones: no zoom and no pinch (F9 went with zoom in R4); the map scrolls sideways natively in
+    // 7. Phones: no zoom and no pinch (pinch-zoom went with zoom in R4); the map scrolls sideways natively in
     // its region (touch panning left to the browser) and the page itself never does.
     await page.locator('#tab-map').click();
     await mapReady(page);
@@ -182,7 +182,7 @@ export default {
     await screenshot('list-compact-640');
     await page.setViewportSize(viewports.desktop);
 
-    // 9. The synthetic 1000-operation fixture is test-only (P4 checks it in Vitest).
+    // 9. The synthetic 1000-operation fixture is test-only (Vitest checks it).
     const leaked = readdirSync(join(DIST, 'assets')).filter((f) => /getFacet|syntheticSpec/.test(readFileSync(join(DIST, 'assets', f), 'latin1')));
     expect(leaked.length === 0, `synthetic fixture in the bundle: ${leaked}`);
   },

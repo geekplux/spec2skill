@@ -1,10 +1,10 @@
-// The list view (F12, A3; docs/redesign/DESIGN.md 6, redesign R5): the map as text, grouped by
+// The list view (docs/DESIGN.md 6, redesign R5): the map as text, grouped by
 // resource. Each group is a 14/600 heading with its count (a disclosure: on phones only the groups on
 // the strongest workflow start open, V2Phone); each operation a 44 px row with its method, id and
 // path, the stop disc and the destructive mark as on the map. A row opens the same operation card,
 // pinned and docked under the list. Each row keeps its relationships in words for screen readers
 // (a list named "13 relationships"; the card lists them on screen). Obeys search. Spec strings are
-// React text only (S3).
+// React text only.
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import { CHEVRON_ICON } from '../design/icons';
 import { useFadeOut } from '../design/motion';

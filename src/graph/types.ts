@@ -1,4 +1,4 @@
-// The relationship graph inferred from an ApiModel (docs/PLAN.md 5.3/5.4): plain JSON,
+// The relationship graph inferred from an ApiModel: plain JSON,
 // deterministic for a given model, snapshot-tested.
 import type { Crud } from '../model/types';
 

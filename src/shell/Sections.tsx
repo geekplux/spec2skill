@@ -1,4 +1,4 @@
-// The page below the result frame (docs/redesign/DESIGN.md 4.4-4.7): Command line, How it works,
+// The page below the result frame (docs/DESIGN.md 4.4-4.7): Command line, How it works,
 // Made by GeekPlux and the footer. Copy as in docs/redesign/target/V2Home.
 import { useAnnounce } from '../a11y/Announcer';
 import { COPY_ICON, checkIcon } from '../design/icons';

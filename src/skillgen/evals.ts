@@ -1,4 +1,4 @@
-// evals/evals.json: graded prompts (PLAN 5.7). Every expected_output names real operation ids,
+// evals/evals.json: graded prompts. Every expected_output names real operation ids,
 // so a grader can check the agent picked the right calls. Prompts use the API's own words.
 // Always at least MIN evals, however small the API: per-operation variants and further
 // unsupported-capability prompts pad the list (the generated audit requires MIN).

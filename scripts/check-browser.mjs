@@ -3,9 +3,9 @@
 //
 //   pnpm build && pnpm check:browser -- --phase 1 [--flow <name>[,<name>...]] [--no-axe] [--no-cvd] [--label <name>]
 //     [--capture <flow>[,<flow>...]]
-//   --capture lets the named flows write their committed screenshots (the redesign flows' docs/screenshots/
+//   --capture lets the named flows write their reference screenshots (the redesign flows' docs/screenshots/
 //   redesign-rN/); without it they write into the run's phase-<n> folder, so a later run never
-//   overwrites an earlier phase's committed images.
+//   overwrites another flow's reference images.
 //   pnpm check:browser -- --phase 18 --audit [--viewports 1440x900,390x844] --label before
 //   --audit visits every view (scripts/browser/audit.mjs) once per viewport instead of running the flows;
 //   --label puts the screenshots in docs/screenshots/phase-<n>/<label>/.
@@ -73,7 +73,7 @@ async function loadFlows(maxPhase, only) {
     }
     flows.push(flow);
   }
-  // --flow takes one name or a comma-separated list (speed mode: run only the flows a phase touched).
+  // --flow takes one name or a comma-separated list (to run only the flows a change touches).
   const names = only ? only.split(',').map((n) => n.trim()).filter(Boolean) : null;
   const selected = flows
     .filter((flow) => flow.phase <= maxPhase && (!names || names.includes(flow.name)))
@@ -136,7 +136,7 @@ async function main() {
     const axe = async (label) => args.axe && problems.push(...(await runAxe(page, `${flow.name}: ${label}`)));
     // null when --no-cvd, so flows skip their simulated screenshots.
     const cvd = args.cvd ? (type) => simulateCvd(page, type) : null;
-    // `outDir`: where screenshots go; `capture`: this flow may write its committed screenshots (--capture).
+    // `outDir`: where screenshots go; `capture`: this flow may write its reference screenshots (--capture).
     return { page, context, origin: ORIGIN, viewports: VIEWPORTS, screenshot, axe, cvd, outDir, capture: args.capture.includes(flow.name) };
   };
   if (args.audit) {

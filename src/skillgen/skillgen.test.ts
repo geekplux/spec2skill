@@ -132,7 +132,7 @@ describe('a spec with no feeds edges', () => {
   });
 });
 
-describe('hostile spec text (S3)', () => {
+describe('hostile spec text', () => {
   it('yields no HTML, balanced fences, one frontmatter block and safe file names', async () => {
     const { model, tree } = await skillOf(injection);
     for (const path of Object.keys(tree)) {

@@ -1,5 +1,5 @@
-// Phase 7 (rewritten for the route map in redesign R4): keyboard-only map (A1), screen-reader names
-// and live announcements (A2), the pinned operation card (F10, which replaced the detail panel) with
+// Phase 7 (rewritten for the route map in redesign R4): keyboard-only map, screen-reader names
+// and live announcements, the pinned operation card (which replaced the detail panel) with
 // Copy example, #op=<id> on load, the bottom sheet at 390 px, focus never hidden by the card (2.4.11)
 // (the shortcut help dialog is checked in phase 12).
 import { settled } from '../redesign-checks.mjs';
@@ -73,7 +73,7 @@ export default {
     await page.evaluate(() => document.fonts.ready);
     await page.mouse.move(1, 1);
 
-    // A1: Tab reaches the map after the tools row (Map | List, search), the map is one Tab stop, then Tab leaves it.
+    // Tab reaches the map after the tools row (Map | List, search), the map is one Tab stop, then Tab leaves it.
     const stops = [];
     for (let i = 0; i < 40 && !(await page.evaluate(() => document.activeElement?.matches('.op'))); i++) {
       await page.keyboard.press('Tab');
@@ -95,7 +95,7 @@ export default {
     expect(!(await page.evaluate(() => document.activeElement?.matches('.op'))), 'Tab moved to a second row: the map must be one Tab stop');
     await page.keyboard.press('Shift+Tab');
 
-    // Arrows (spatial, on the columns), A2 row name, live region, focus highlights like hover.
+    // Arrows (spatial, on the columns), row name, live region, focus highlights like hover.
     await press(page, 'PageUp', 'listComments'); // wraps from Projects to the last card
     await press(page, 'PageUp', 'listTasks');
     await press(page, 'ArrowDown', 'createTask');
@@ -131,7 +131,7 @@ export default {
     await press(page, 'ArrowDown', 'createTask');
     await press(page, 'ArrowDown', 'getTask');
 
-    // F10: Enter pins the card; Fed by lists listTasks; a related button moves focus; the hash names the row.
+    // Enter pins the card; Fed by lists listTasks; a related button moves focus; the hash names the row.
     await press(page, 'Enter', 'getTask');
     const card = page.getByTestId('op-card');
     await card.waitFor();

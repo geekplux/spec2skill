@@ -1,4 +1,4 @@
-// URL validation for everything the Worker fetches (S1). Pure: no DNS. The WHATWG URL parser
+// URL validation for everything the Worker fetches. Pure: no DNS. The WHATWG URL parser
 // normalises decimal, octal, hex and short IPv4 forms (`2130706433`, `0x7f.1`) and IPv6 text
 // before these checks run. DNS rebinding is out of reach without resolving names; Workers' own
 // `fetch` cannot reach private networks, and these literal and hostname checks cover the rest.

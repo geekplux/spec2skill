@@ -1,4 +1,4 @@
-// The browser side of lean AI (PLAN 5.8, D23): the compact summary of a user-loaded spec, one
+// The browser side of lean AI (D23): the compact summary of a user-loaded spec, one
 // /api/ai/describe call per summary at most (after /api/health says AI is on), a bounded
 // localStorage cache under the Worker's key, and how an answer renames clusters and fills SkillProse.
 // Samples and the CLI never come here. Any failure, or 5 s without an answer, keeps the deterministic text.

@@ -1,4 +1,4 @@
-// Built-in samples (docs/PLAN.md 5.6), bundled statically so they render offline with no key.
+// Built-in samples, bundled statically so they render offline with no key.
 import filesystem from '../../samples/mcp-filesystem.tools-list.json';
 import petstore from '../../samples/petstore-swagger2.json';
 import tasksText from '../../samples/tasks-openapi31.yaml?raw';
@@ -9,7 +9,7 @@ import { parseText } from '../parse/text';
 
 export interface Sample {
   id: string;
-  /** The name on the sample picker (docs/redesign/DESIGN.md 4.2). */
+  /** The name on the sample picker (docs/DESIGN.md 4.2). */
   label: string;
   kind: SourceKind;
   /** The raw document. */

@@ -49,7 +49,7 @@ const VIEW_TABS: TabDef<View>[] = [
 ];
 
 /**
- * The result (docs/redesign/DESIGN.md 4.3 and 6): the head, the tools row, the map or the list, the
+ * The result (docs/DESIGN.md 4.3 and 6): the head, the tools row, the map or the list, the
  * strongest workflow in words, then the skill browser. One scroll at every width (R5); phones open
  * on the list.
  */
@@ -89,7 +89,7 @@ function Workspace({ source, view, onView, phone, run, op, onOp, q, onQ, onHelp 
   // switch, Generate. `data-enter` lets app.css run it; it goes once the last stop disc has popped.
   const entering = useEnter([model, run], enterMs(workflow ? workflow.ops.length - 1 : 0));
 
-  // Each new skill is announced with its audit (A2), after the sample's summary when the sample changed;
+  // Each new skill is announced with its audit, after the sample's summary when the sample changed;
   // not on first load, where the page itself is the news.
   const said = useRef<{ hash: string; skill?: Skill }>({ hash: model.hash });
   useEffect(() => {
@@ -108,7 +108,7 @@ function Workspace({ source, view, onView, phone, run, op, onOp, q, onQ, onHelp 
     emptySaid.current = model.hash;
     announce(`${model.source.title}: no operations. This spec has no paths, so there is no skill to write.`);
   }, [announce, empty, model.hash, model.source.title]);
-  // `/` focuses search and `?` opens the shortcut help, from anywhere but a text field or the dialog itself (A1).
+  // `/` focuses search and `?` opens the shortcut help, from anywhere but a text field or the dialog itself.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || (e.target as Element).closest?.('input, textarea, select, [contenteditable], dialog')) return;
@@ -173,7 +173,7 @@ const painted = (): Promise<void> | undefined => document.visibilityState === 'h
   : new Promise((done) => requestAnimationFrame(() => setTimeout(done, 0)));
 
 export function App() {
-  // The URL is the source of truth (F13): each change writes history; back/forward re-read it.
+  // The URL is the source of truth: each change writes history; back/forward re-read it.
   const [url, setUrl] = useState(here);
   const [find, setFind] = useState(url.q);
   const sample = getSample(url.sample ?? '') ?? getSample(DEFAULT_SAMPLE_ID)!;

@@ -1,4 +1,4 @@
-// buildGraph: the deterministic AtlasGraph of an ApiModel (PLAN 5.4).
+// buildGraph: the deterministic AtlasGraph of an ApiModel (relationship rules in docs/ARCHITECTURE.md).
 import type { ApiModel } from '../model/types';
 import { buildClusters, clusterKeys } from './cluster';
 import { classifyCrud } from './crud';

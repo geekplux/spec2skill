@@ -1,5 +1,5 @@
 // Prints the synthetic large OpenAPI 3.1 spec as JSON (src/__fixtures__/synthetic.ts; 40 resources =
-// 1000 operations), for the browser check's large-paste flow (P4):
+// 1000 operations), for the browser check's large-paste flow:
 //   node scripts/gen-synthetic-spec.mjs [resources] > synthetic.json
 // Loads the TypeScript fixture through Vite's SSR loader (D16), like write-skill.mjs.
 import { fileURLToPath } from 'node:url';

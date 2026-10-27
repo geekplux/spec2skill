@@ -1,4 +1,4 @@
-// CRUD role of every operation (PLAN 5.4 rule 2): HTTP method + path shape, or the MCP verb prefix.
+// CRUD role of every operation (relationship rule 2 in docs/ARCHITECTURE.md): HTTP method + path shape, or the MCP verb prefix.
 import type { ApiModel, Crud, Operation, SchemaNode, SchemaRef } from '../model/types';
 import { VERBS, words } from './words';
 

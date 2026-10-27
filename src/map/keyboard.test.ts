@@ -130,7 +130,7 @@ describe('words for screen readers', () => {
     expect(mapName('Tasks API', 'operations', 22, 5, 85, null, 30)).toBe('Tasks API: 22 operations in 5 clusters, 30 of 85 relationships shown');
   });
 
-  it('names rows per A2 with the full path, writes, destructive (D41) and workflow steps in words', async () => {
+  it('names rows with the full path, writes, destructive (D41) and workflow steps in words', async () => {
     expect(nodeName(op('getTask'), row('getTask'), 'Tasks', 13)).toBe('GET getTask, /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 13 relationships');
     expect(nodeName(op('getProject'), row('getProject'), 'Projects', 2)).toBe('GET getProject, /projects/{projectId}, Get a project, cluster Projects, 2 relationships');
     expect(nodeName(op('deleteTask'), row('deleteTask'), 'Tasks', 1)).toBe('DELETE deleteTask, /tasks/{taskId}, Delete a task, destructive, cluster Tasks, 1 relationship');

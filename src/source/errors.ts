@@ -1,4 +1,4 @@
-// Every way loading a user's source can fail (PLAN 3.6), as one data table: a plain-language title,
+// Every way loading a user's source can fail, as one data table: a plain-language title,
 // the reason, and any command that helps. The panel always offers "Paste spec text instead" and
 // "Try a sample". Codes match the Worker's (worker/errors.ts) plus the ones only the browser sees.
 import { ParseError } from '../parse/text';

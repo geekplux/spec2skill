@@ -1,4 +1,4 @@
-// Redesign R5 (docs/redesign/PLAN.md): the result frame's head, the workflow caption, the skill
+// Redesign R5: the result frame's head, the workflow caption, the skill
 // browser, the list view and the phone single scroll (V2Home, V2Phone). Checks the head (title 20/600,
 // the meta line and its numbers, tags, Install command then Download .zip, the old head, Install and
 // Options disclosures gone), Copied and Downloaded for 2 s, the downloaded zip unzipped and audited,
@@ -123,7 +123,7 @@ export default {
   async run({ page, context, origin, axe: runAxe, outDir, capture }) {
     // Theme switches start colour transitions: axe reads colours at rest.
     const axe = async (label) => (await settle(page), runAxe(label));
-    // Committed shots only with --capture redesign-r5; otherwise into this run's folder.
+    // Reference shots only with --capture redesign-r5; otherwise into this run's folder.
     const dir = capture ? OUT : outDir;
     await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
     await page.setViewportSize({ width: 1440, height: 900 });

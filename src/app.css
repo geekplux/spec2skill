@@ -17,7 +17,7 @@ code { font-family: var(--font-mono); font-size: inherit; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 [hidden] { display: none !important; }
 
-/* The page shell (docs/redesign/DESIGN.md 2 and 4): one grid. The content column is 1072 px (.wrap:
+/* The page shell (docs/DESIGN.md 2 and 4): one grid. The content column is 1072 px (.wrap:
    1136 with 32 px side padding), four 202 px columns with 88 px gaps. Columns are always
    minmax(0, 1fr) and the gap is min(88 px, 7.75vw), so the grid is exact at 1136 and up and fluid
    below; below 640 px it is one column with a 16 px gutter. */
@@ -220,7 +220,7 @@ h3, h4 { font-weight: 600; }
 .install-cmds { display: flex; align-items: flex-start; gap: var(--space-8); margin: calc(-1 * var(--space-16)) 0 var(--space-32); padding: var(--space-8) var(--space-8) var(--space-8) var(--space-12); border-radius: var(--radius-box); background: var(--gray-2); box-shadow: inset 0 0 0 var(--line) var(--gray-6); }
 .install-cmds pre { flex: 1; min-width: 0; margin: 0; font: var(--text-12)/20px var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
 
-/* The route map (docs/redesign/DESIGN.md 4-5, redesign R4). Tools row: Map | List, search, legend. */
+/* The route map (docs/DESIGN.md 4-5, redesign R4). Tools row: Map | List, search, legend. */
 .tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-12) var(--space-16); margin-bottom: var(--space-24); }
 .tools-l { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); }
 .search {
@@ -504,7 +504,7 @@ html:has(.list-wrap[data-panel]) { scroll-padding-bottom: calc(var(--list-detail
 .empty-chart { display: grid; justify-items: center; gap: var(--space-24); padding: var(--space-64) var(--space-24); color: var(--gray-12); font-size: var(--text-20); line-height: var(--leading-20); text-align: center; }
 .empty-ring { fill: none; stroke: var(--gray-7); }
 
-/* Motion (docs/redesign/DESIGN.md 7, D65-D67). Ease-out, 250 ms base, one-shot (the Generate spinner is
+/* Motion (docs/DESIGN.md 7, D65-D67). Ease-out, 250 ms base, one-shot (the Generate spinner is
    the one loop); nothing else moves. The transitions above are the hover moment (an operation row's grey,
    lit and faded text, links fading to gray-5) and use --motion-map, 0 ms under reduced motion. Every
    animation is declared here, only under prefers-reduced-motion: no-preference, so under reduce each

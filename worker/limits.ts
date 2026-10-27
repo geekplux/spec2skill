@@ -1,4 +1,4 @@
-// Size, time and redirect limits for upstream requests (S1, P5). No Worker-only APIs: the CLI
+// Size, time and redirect limits for upstream requests. No Worker-only APIs: the CLI
 // (phase 16) reuses this module through the MCP client.
 import { ProxyError } from './errors';
 import { checkUrl } from './ssrf';

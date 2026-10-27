@@ -1,4 +1,4 @@
-// Spec text is untrusted data (S3): it reaches generated files only through these helpers,
+// Spec text is untrusted data: it reaches generated files only through these helpers,
 // as one capped line with no HTML, no control characters and nothing Markdown acts on.
 
 // Controls (tabs and newlines too), zero-width and bidi characters, BOM.

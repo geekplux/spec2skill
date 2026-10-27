@@ -20,7 +20,7 @@ export function singular(word: string): string {
 
 export const capitalise = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
 
-/** MCP verb prefixes (PLAN 5.4 rule 2). */
+/** MCP verb prefixes (relationship rule 2). */
 const VERB_TABLE = { list: 'list search find', create: 'create add write', read: 'get read fetch describe', update: 'update edit move rename set', delete: 'delete remove' } as const;
 export const VERBS = new Map(
   Object.entries(VERB_TABLE).flatMap(([crud, verbs]) => verbs.split(' ').map((verb) => [verb, crud as keyof typeof VERB_TABLE] as const)),

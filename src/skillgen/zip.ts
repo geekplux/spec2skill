@@ -1,5 +1,5 @@
 // The downloadable skill: every file under `<slug>/` in a zip with fixed timestamps, so the same
-// tree always gives the same bytes. Paths are re-checked before anything is packed (S3).
+// tree always gives the same bytes. Paths are re-checked before anything is packed.
 import { strToU8, zipSync } from 'fflate';
 import { assertSafePaths, kebab } from './sanitize';
 import type { FileTree } from './types';

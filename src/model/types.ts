@@ -1,5 +1,5 @@
 // The normalised model every source (OpenAPI 3.x, Swagger 2, MCP) is turned into.
-// See docs/PLAN.md section 5.3. Everything here is plain JSON so it can be hashed,
+// Everything here is plain JSON so it can be hashed,
 // snapshot-tested and cached.
 
 export type SourceKind = 'openapi3' | 'swagger2' | 'mcp';

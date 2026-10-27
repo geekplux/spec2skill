@@ -1,4 +1,4 @@
-// Path geometry for the route map (docs/redesign/DESIGN.md 5): a link is one direct curve when that
+// Path geometry for the route map (docs/DESIGN.md 5): a link is one direct curve when that
 // clears the columns it passes; otherwise it curves only inside the 88 px gaps (horizontal
 // tangents) and crosses each column through a free corridor on its own track, so no link crosses a
 // card or the main line's band and no two links share a straight run (D44). Pure.

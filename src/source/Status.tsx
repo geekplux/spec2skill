@@ -1,4 +1,4 @@
-// The loading and error states (docs/redesign/DESIGN.md 4.3): one focal point each, inside the result
+// The loading and error states (docs/DESIGN.md 4.3): one focal point each, inside the result
 // frame. While loading, the previous result stays below, greyscale; an error takes its place.
 import { useEffect, useRef } from 'react';
 import { useAnnounce } from '../a11y/Announcer';

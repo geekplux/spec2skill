@@ -34,7 +34,7 @@ const ROUTES: Record<string, (url: URL, request: Request, deps: Deps) => Promise
   '/api/mcp/tools': async (url, _request, deps) => json(await listMcpTools(url, { fetch: deps.fetch })),
 };
 
-/** Reads `{"url": "..."}` from the request body and validates the URL (S1). */
+/** Reads `{"url": "..."}` from the request body and validates the URL. */
 async function targetUrl(request: Request): Promise<URL> {
   const text = await readCapped(request, { left: MAX_REQUEST_BYTES });
   let body: unknown;

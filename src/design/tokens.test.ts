@@ -51,7 +51,7 @@ describe('tokens.css mirrors tokens.ts', () => {
     expect(LINE).toBe('0.5px');
   });
 
-  it('has the one spacing scale, each token named by its value, with the grid gap 88 and the section steps (docs/redesign/DESIGN.md 2)', () => {
+  it('has the one spacing scale, each token named by its value, with the grid gap 88 and the section steps (docs/DESIGN.md 2)', () => {
     expect(Object.entries(SPACE).map(([k, v]) => `${k}=${v}`)).toEqual(Object.keys(SPACE).map((k) => `${k}=${k}px`));
     expect(Object.keys(SPACE).map(Number)).toEqual([2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32, 40, 48, 64, 88, 96, 104]);
     expect(RADIUS).toMatchObject({ sm: '4px', row: '6px', md: '8px', box: '10px', frame: '16px' });

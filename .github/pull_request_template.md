@@ -9,7 +9,7 @@
 - [ ] `pnpm lint && pnpm typecheck && pnpm test`
 - [ ] `pnpm build && pnpm check:size`
 - [ ] `pnpm gallery --check` (if the generator or a sample changed)
-- [ ] `pnpm check:browser -- --phase <n>` (if the UI changed), and `pnpm capture:readme` if the first view changed
+- [ ] `pnpm check:browser -- --phase 21` (if the UI changed), and `pnpm capture:readme` if the first view changed
 - [ ] Tests or golden snapshots added or updated, and snapshot diffs reviewed
 
 ## Screenshots

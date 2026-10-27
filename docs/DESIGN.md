@@ -1,10 +1,10 @@
 # spec2skill design: the Route map
 
-This is the current design of the web app, as built. It was approved by Sean on 2026-10-24 as the "Route map" redesign and built in phases R1 to R7; [docs/redesign/DESIGN.md](redesign/DESIGN.md) is the historical spec it was built from, and `docs/redesign/target/` holds the approved boards (V2Home, V2HomeDark, V2Hover, V2Phone, V2Motion, V2System). Where the build departs from that spec, this file says what was built and names the decision in [docs/DECISIONS.md](DECISIONS.md) (D30 to D82) that records why.
+This is the current design of the web app, the "Route map", as built. `docs/redesign/target/` holds the target boards (V2Home, V2HomeDark, V2Hover, V2Phone, V2Motion, V2System). Where the build departs from them, this file says what was built and names the decision (D30 to D82) listed under [Decisions in docs/ARCHITECTURE.md](ARCHITECTURE.md#decisions) that records why.
 
 Every rule below is checked: `scripts/browser/flows/redesign-acceptance.mjs` runs section 8 on every sample, light and dark, at 1440 and 390 px, at rest, on hover, with the card pinned, in the list and on the phone; the unit tests guard tokens, contrast, colour vision, copy and motion.
 
-## 1. The rules (Sean's 11, binding on every change)
+## 1. The rules (binding on every change)
 
 1. Never use the middle dot as a separator in UI copy, titles, `aria-label`s, docs or generated skills (D58).
 2. No redundant explanatory text in the UI.

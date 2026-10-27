@@ -1,5 +1,5 @@
 // The files that make the skill self-proving and installable: scripts/ (audit + regression tests),
-// ci/github-workflow.yml and README.md with the spec2skill credit (F18).
+// ci/github-workflow.yml and README.md with the spec2skill credit.
 // oxlint-disable import/default -- `?raw` imports are the files' text, not the modules
 import auditMjs from './assets/scripts/audit.mjs?raw';
 import auditTest from './assets/scripts/audit-test.mjs?raw';

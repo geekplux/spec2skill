@@ -1,4 +1,4 @@
-// Redesign R7: the acceptance suite of docs/redesign/DESIGN.md section 8, in full, in one place.
+// Redesign R7: the acceptance suite of docs/DESIGN.md section 8, in full, in one place.
 // On every sample (Tasks API, Petstore, Filesystem MCP), light and dark, it runs on each state at rest
 // (after the load sequence, `settled`):
 //   1440  home at rest, hover (the workflow's last stop, its preview card), pinned card, the next row

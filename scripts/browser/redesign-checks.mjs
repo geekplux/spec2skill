@@ -1,4 +1,4 @@
-// The automated acceptance checks of docs/redesign/DESIGN.md section 8, for any page a flow has
+// The automated acceptance checks of docs/DESIGN.md section 8, for any page a flow has
 // open (reused by every redesign phase):
 //   1 type    every element with direct text uses one of the allowed font sizes (default 12/14/20/48)
 //   2 colour  every computed colour is a Radix step of the page's theme (src/design/tokens.css),

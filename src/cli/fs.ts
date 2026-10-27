@@ -1,4 +1,4 @@
-// Writes a generated skill to `<target>/` (S3): refuses a non-empty target unless forced, re-checks
+// Writes a generated skill to `<target>/`: refuses a non-empty target unless forced, re-checks
 // every path so nothing lands outside the target (no `..`, no absolute paths, no symlinked folders),
 // and marks the runnable scripts executable.
 import { chmodSync, lstatSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';

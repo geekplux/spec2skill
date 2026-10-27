@@ -1,4 +1,4 @@
-// The result frame's head (docs/redesign/DESIGN.md 4.3): the API title, the meta line (source kind and
+// The result frame's head (docs/DESIGN.md 4.3): the API title, the meta line (source kind and
 // version, counts, tags) and, right, Install command (copies both commands) and Download .zip (the
 // audited zip). "N warnings" opens the parser's warnings under the head.
 import { useId, useRef, useState } from 'react';

@@ -1,4 +1,4 @@
-// Deterministic edges (PLAN 5.4 rules 3-6). Pure: same model in, same edges out.
+// Deterministic edges (relationship rules 3-6 in docs/ARCHITECTURE.md). Pure: same model in, same edges out.
 import type { ApiModel, Crud, Operation, Param, SchemaRef } from '../model/types';
 import type { ClusterKey } from './cluster';
 import { type AtlasGraph, BUNDLE_OVER, type Bundle, type Cluster, type Confidence, type Edge, type EdgeKind, HUB_THRESHOLD, MAX_INCOMING_FEEDS } from './types';

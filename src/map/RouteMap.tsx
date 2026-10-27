@@ -1,4 +1,4 @@
-// The route map (docs/redesign/DESIGN.md 5, redesign R4): resource cards in columns on the grid,
+// The route map (docs/DESIGN.md 5, redesign R4): resource cards in columns on the grid,
 // operations as real buttons, feed links and bundles between columns, the strongest workflow as one
 // indigo line; hover or focus a row and its links appear, the rest fades, and the operation card
 // previews it; click or Enter pins the card. Positions come from the pure route layout

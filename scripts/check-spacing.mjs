@@ -1,4 +1,4 @@
-// The spacing rule of docs/redesign/DESIGN.md 2, as a lint step (`pnpm lint`): layout spacing (margin,
+// The spacing rule of docs/DESIGN.md 2, as a lint step (`pnpm lint`): layout spacing (margin,
 // padding, gap, inset, top/right/bottom/left) uses the --space-* tokens, named by value (2, 4, 8, 12, 14,
 // 16, 20, 24, 32, 40, 48, 64, 88, 96, 104; src/design/tokens.css), never raw px or rem.
 // The token file is exempt, and so is the short allow-list below.

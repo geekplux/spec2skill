@@ -1,5 +1,5 @@
 // The operation card (redesign R4), which replaces the detail panel: these are the detail panel's
-// checks (inputs, output, auth, related operations, example, "In skill", S3), moved to the card.
+// checks (inputs, output, auth, related operations, example, "In skill"), moved to the card.
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -82,7 +82,7 @@ describe('OpCard', () => {
     for (const l of links) expect(new Set(l.items.map((i) => i.id)).size).toBe(l.items.length);
   });
 
-  it('renders spec strings as literal text, never markup (S3)', async () => {
+  it('renders spec strings as literal text, never markup', async () => {
     const html = render(await normalise(hostile), 'getThing', true);
     expect(html).toContain('&lt;script&gt;alert(&#x27;summary&#x27;)&lt;/script&gt;');
     expect(html).toContain('&lt;img src=x onerror=alert(&#x27;description&#x27;)&gt;\nSecond line');
@@ -91,7 +91,7 @@ describe('OpCard', () => {
   });
 });
 
-describe('S3: no raw HTML injection anywhere in src/', () => {
+describe('no raw HTML injection anywhere in src/', () => {
   it('never uses dangerouslySetInnerHTML or innerHTML', () => {
     const sources = import.meta.glob<string>(['../**/*.{ts,tsx}', '!../**/*.test.ts'], { query: '?raw', import: 'default', eager: true });
     expect(Object.keys(sources).length).toBeGreaterThan(30);
