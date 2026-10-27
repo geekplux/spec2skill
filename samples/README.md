@@ -20,7 +20,7 @@ These files are bundled into the app so the samples render offline, with no API 
 - **What it exercises:** 22 operations over projects, tasks, comments, labels and members; cursor pagination
   (`cursor` + `limit`, `nextCursor` via an `allOf` page schema); bearer auth; path-level parameters;
   shared `components/parameters` and `components/responses`; 3.1 type arrays (`[string, 'null']`); and
-  `projectId` / `assigneeId` / `authorId` / `ownerId` fields that later phases link output-to-input.
+  `projectId` / `assigneeId` / `authorId` / `ownerId` fields that relationship inference links output-to-input.
 
 ## `mcp-filesystem.tools-list.json`
 

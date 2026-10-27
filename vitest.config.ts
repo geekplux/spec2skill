@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
-// Single process, no watch: the build machine is shared and RAM-tight.
+// Single process, no watch: one test file at a time keeps memory use low.
 export default defineConfig({
   test: {
     environment: 'node',

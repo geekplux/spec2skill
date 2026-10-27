@@ -1,8 +1,8 @@
-// The "Route map" design tokens (docs/redesign/DESIGN.md section 2). tokens.css mirrors these values;
+// The "Route map" design tokens (docs/DESIGN.md section 2). tokens.css mirrors these values;
 // tokens.test.ts fails if the two drift, and contrast/cvd tests check the pairs the UI draws.
 export type Theme = 'light' | 'dark';
 
-/** Radix Colors 3.0.0 (@radix-ui/colors), steps 1-12, copied rather than installed (docs/DECISIONS.md). */
+/** Radix Colors 3.0.0 (@radix-ui/colors), steps 1-12, copied rather than installed (D30 in docs/ARCHITECTURE.md). */
 export const RADIX = {
   gray: {
     light: ['#fcfcfc', '#f9f9f9', '#f0f0f0', '#e8e8e8', '#e0e0e0', '#d9d9d9', '#cecece', '#bbbbbb', '#8d8d8d', '#838383', '#646464', '#202020'],

@@ -1,4 +1,4 @@
-// The generated skills as they ship (F15, F17): written to temp dirs, then audited, tested and their
+// The generated skills as they ship: written to temp dirs, then audited, tested and their
 // examples run with plain `node`: the project's Node 22 and, when present, the system Node 20.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -17,7 +17,7 @@ const root = mkdtempSync(join(tmpdir(), 'spec2skill-audit-'));
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 const SYSTEM_NODE = '/usr/bin/node';
 const NODES = [process.execPath, ...(existsSync(SYSTEM_NODE) && execFileSync(SYSTEM_NODE, ['--version'], { encoding: 'utf8' }).startsWith('v20.') ? [SYSTEM_NODE] : [])];
-// Preloaded into every example run: any network use throws (F17).
+// Preloaded into every example run: any network use throws.
 const NO_NETWORK = join(root, 'no-network.mjs');
 writeFileSync(NO_NETWORK, "globalThis.fetch = () => { throw new Error('network use in a dry run'); };\n");
 
@@ -64,11 +64,11 @@ const passes = async (id, node) => {
 };
 
 describe.each(SAMPLES.map((s) => s.id))('the generated %s skill', (id) => {
-  it.each(NODES)('passes its audit and its own tests under %s (F15)', async (node) => {
+  it.each(NODES)('passes its audit and its own tests under %s', async (node) => {
     expect(await passes(id, node)).toHaveProperty(['SKILL.md']);
   }, TEST_TIMEOUT);
 
-  it('runs every example as a dry run with no network and a plan of known operations (F17)', async () => {
+  it('runs every example as a dry run with no network and a plan of known operations', async () => {
     const { tree, dir } = await written(id);
     const known = new Set(JSON.parse(tree['kit/operations.json']).operations.map((op) => op.id));
     const examples = Object.keys(tree).filter((p) => p.endsWith('/run.mjs'));
@@ -86,7 +86,7 @@ describe.each(SAMPLES.map((s) => s.id))('the generated %s skill', (id) => {
     }
   }, TEST_TIMEOUT);
 
-  it('has >= 5 evals with unique ids, the edge cases, a valid CI workflow and the README credit (F18)', async () => {
+  it('has >= 5 evals with unique ids, the edge cases, a valid CI workflow and the README credit', async () => {
     const { model, tree } = await written(id);
     const { skill_name, evals } = JSON.parse(tree['evals/evals.json']);
     expect(skill_name).toBe(tree['SKILL.md'].match(/^name: (.+)$/m)[1]);

@@ -1,4 +1,4 @@
-// One persistent polite live region for the whole app (A2). It lives in Layout, so it survives the
+// One persistent polite live region for the whole app. It lives in Layout, so it survives the
 // map remounting per sample. Each message clears the region and is set on the next frame, so a
 // repeated message ("Example copied") is announced again.
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';

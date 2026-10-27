@@ -1,4 +1,4 @@
-// The /api/ai/describe contract, shared by the Worker and the browser (PLAN 5.8, D23): the compact
+// The /api/ai/describe contract, shared by the Worker and the browser (D23): the compact
 // summary sent (ids, method/path, capped titles, cluster membership, top edges; never descriptions),
 // the hand-written checks for it and for the model's answer, and the cache key both sides compute.
 import { canonicalJson, sha256Hex } from '../model/hash';

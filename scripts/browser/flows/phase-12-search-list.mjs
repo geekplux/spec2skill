@@ -72,7 +72,7 @@ export default {
     const [total] = await counts(page);
     const skillBefore = await page.locator('#skill-preview').textContent();
 
-    // 1. `/` focuses search; typing narrows, fades and announces; arrows skip faded rows (AC1).
+    // 1. `/` focuses search; typing narrows, fades and announces; arrows skip faded rows.
     await page.locator('body').press('/');
     expect((await active(page)) === 'search-q', `/ focused ${await active(page)}`);
     await page.keyboard.type('member');
@@ -111,7 +111,7 @@ export default {
     await announced(page, 'Showing all 22 operations.');
     expect((await list(page).locator('.lrow').count()) === total, 'cleared list');
 
-    // 2. Relationship kinds (AC2; the Filters menu is gone since R4): the map draws feed links (and
+    // 2. Relationship kinds (the Filters menu is gone since R4): the map draws feed links (and
     // bundles of them) at rest; sub-path and shared-schema relations stay as text in the list and in
     // the operation card, and the map's E key still cycles all of them.
     const kinds = new Set((await list(page).locator('li[data-edge]').allTextContents()).map((t) => t.split(' ').slice(0, t.startsWith('has') || t.startsWith('sub') || t.startsWith('shares') || t.startsWith('fed') ? 2 : 1).join(' ')));
@@ -129,7 +129,7 @@ export default {
     await page.mouse.move(5, 5);
     await screenshot('relationship-kinds');
 
-    // 3. The list view is the whole map as text, for every sample (AC3, A3, F12).
+    // 3. The list view is the whole map as text, for every sample.
     await views(page).getByRole('tab', { name: 'List' }).click();
     for (const id of ['petstore', 'filesystem', 'tasks']) {
       await page.locator(`[data-sample="${id}"]`).click();
@@ -163,7 +163,7 @@ export default {
     await screenshot('list-dark');
     await page.emulateMedia({ colorScheme: 'light' });
 
-    // 4. URL state: a shared link opens sample, view and details; back/forward walk selections and samples (AC4).
+    // 4. URL state: a shared link opens sample, view and details; back/forward walk selections and samples.
     await page.goto(`${origin}/?sample=petstore&view=list#op=getPetById`);
     await page.getByRole('heading', { level: 3, name: 'petstore-api/ skill' }).waitFor();
     await list(page).waitFor();
@@ -217,7 +217,7 @@ export default {
     await page.goForward();
     await page.getByTestId('op-card').waitFor({ state: 'detached' });
 
-    // 5. `?` opens the shortcut help: modal, Esc closes, focus returns; also from the skill pane (AC5).
+    // 5. `?` opens the shortcut help: modal, Esc closes, focus returns; also from the skill pane.
     await page.locator('.op[data-op="getTask"]').focus();
     await page.keyboard.press('?');
     const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });

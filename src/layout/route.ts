@@ -1,4 +1,4 @@
-// The route map layout (docs/redesign/DESIGN.md 5): resource cards in columns by dependency on the
+// The route map layout (docs/DESIGN.md 5): resource cards in columns by dependency on the
 // 4 x 202 / 88 grid, operations as 32 px rows in CRUD order (8 at most, then "N more"), the
 // strongest workflow as one straight line across the main-line cards, feed links and bundles
 // between columns, and the hover-only links on demand. Pure and deterministic; plain JSON out.

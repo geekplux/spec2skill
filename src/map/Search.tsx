@@ -1,4 +1,4 @@
-// Search above the map and the list (F11, redesign R4): 202 x 40 with a search icon and a `/` key
+// Search above the map and the list (redesign R4): 202 x 40 with a search icon and a `/` key
 // hint; `/` focuses it, Esc clears it. Matches stay ink and the rest fade; the count is announced
 // (and is the field's description), not shown.
 import { type Ref, useEffect, useRef } from 'react';

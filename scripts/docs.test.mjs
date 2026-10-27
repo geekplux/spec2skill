@@ -1,4 +1,4 @@
-// Open-source packaging (phase 19): the docs link check, and the repo files a visitor and GitHub read.
+// Open-source packaging: the docs link check, and the repo files a visitor and GitHub read.
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -68,23 +68,8 @@ describe('repo packaging', () => {
       expect(runs).toContain(cmd);
     }
   });
-  it('has a launch kit that leads with the skill, names no other project and posts nothing', () => {
-    const launch = read('docs/LAUNCH.md');
-    expect(launch).toContain('**Do not post anywhere; Sean decides.**');
-    const title = /^> (Show HN: .+)$/m.exec(launch)[1];
-    expect(title).toMatch(/turn any OpenAPI spec or MCP server into an agent skill/);
-    expect([...title].length).toBeLessThanOrEqual(80);
-    const thread = launch.split('## X thread draft')[1].split('\n## ')[0];
-    const posts = [...thread.matchAll(/^\d\. (.+)$/gm)].map((m) => m[1]);
-    expect(posts.length).toBeGreaterThanOrEqual(5);
-    expect(posts.length).toBeLessThanOrEqual(6);
-    for (const post of posts) expect([...post].length).toBeLessThanOrEqual(280);
-    expect(thread.match(/\[[^\]]*(GIF|image)\]/g).length).toBe(thread.match(/\*Alt text:\*/g).length);
-    expect(launch.match(/^### \d\. /gm)).toHaveLength(3);
-    for (const category of ['Hand-written skills or prompts', 'MCP-to-skill converters', 'API documentation renderers', 'MCP inspectors']) {
-      expect(launch).toMatch(new RegExp(`^\\| ${category} \\|.*\\| [^|]{20,} \\|$`, 'm'));
-    }
-    expect(launch).not.toMatch(/\b(price|pricing|trading|crypto|payment|invoice)s?\b/i);
+  it('keeps the docs free of finance features', () => {
+    for (const file of DOCS) expect([file, /\b(price|pricing|trading|crypto|payment|invoice)s?\b/i.test(read(file))]).toEqual([file, false]);
   });
   it('has a 1280x640 social preview under 1 MB and a README hero', () => {
     const png = readFileSync(join(root, 'docs', 'social-preview.png'));

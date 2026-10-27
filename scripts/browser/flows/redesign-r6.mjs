@@ -1,4 +1,4 @@
-// Redesign R6 (docs/redesign/PLAN.md): motion and button states, DESIGN.md section 7 (V2Motion).
+// Redesign R6: motion and button states, DESIGN.md section 7 (V2Motion).
 // Checks the load sequence on a sample switch in real time (cards hidden or rising at t = 0, the
 // workflow's dash offset running from 1 to 0, the end state by 2 s after the map's mount: nothing
 // running, every card, link, segment, arrowhead and stop disc in place) and records it as three frames

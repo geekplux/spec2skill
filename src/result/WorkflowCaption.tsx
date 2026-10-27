@@ -1,4 +1,4 @@
-// The strongest workflow in words (docs/redesign/DESIGN.md 4.3): each stop's disc and operation id, and
+// The strongest workflow in words (docs/DESIGN.md 4.3): each stop's disc and operation id, and
 // between them the mapping that carries the id (`id → projectId`). Under the map; on phones one line
 // of stops above the list (V2Phone). Absent when the spec has no chain.
 import type { Chain } from '../skillgen/types';

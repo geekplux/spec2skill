@@ -1,4 +1,4 @@
-// Gzip size budgets for the initial page load (PLAN.md section 4, P1). The skill generator chunk
+// Gzip size budgets for the initial page load. The skill generator chunk
 // (assets/skill-*.js, modulepreloaded, D22) has its own budget and is not counted as initial JS.
 // Usage: pnpm build && pnpm check:size
 import { existsSync, readFileSync, readdirSync } from 'node:fs';

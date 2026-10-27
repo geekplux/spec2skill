@@ -1,4 +1,4 @@
-// Motion (docs/redesign/DESIGN.md 7, redesign R6): the timings of the load sequence, the window in which
+// Motion (docs/DESIGN.md 7, redesign R6): the timings of the load sequence, the window in which
 // it plays, the label swap of a button and the Generate spinner. The animations themselves are CSS
 // (app.css, "Motion"), declared only under prefers-reduced-motion: no-preference, so under reduce
 // everything is in its end state at once and the spinner is a still arc.

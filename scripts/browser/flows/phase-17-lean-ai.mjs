@@ -73,7 +73,7 @@ export default {
       expect(text.includes('Audit passed'), `${label}: audit says "${text}"`);
     };
 
-    // AC2: every built-in sample, zero /api requests of any kind.
+    // Every built-in sample, zero /api requests of any kind.
     await page.setViewportSize(viewports.desktop);
     await page.emulateMedia({ colorScheme: 'light' });
     await page.goto(origin);
@@ -86,7 +86,7 @@ export default {
     await page.waitForTimeout(300);
     expect(api.length === 0, `samples made /api requests: ${api}`);
 
-    // AC3: a URL spec shows its deterministic skill and map while the one describe call is held.
+    // A URL spec shows its deterministic skill and map while the one describe call is held.
     await page.locator('#source-field').fill(`${HOST}/notes.json`);
     await page.locator('#source-field').press('Enter');
     await page.locator('#result-title', { hasText: /^Field Notes API$/ }).waitFor();
@@ -114,7 +114,7 @@ export default {
     await screenshot('skill-pane-ai-prose', { clip: await page.locator('.skill-browser').boundingBox() });
     await axe('AI names and prose');
 
-    // AC5: the downloaded zip with AI prose passes its own audit in Node.
+    // The downloaded zip with AI prose passes its own audit in Node.
     const dir = mkdtempSync(join(tmpdir(), 'spec2skill-ai-'));
     try {
       const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download .zip' }).click()]);
@@ -167,7 +167,7 @@ export default {
     await names.filter({ hasText: 'Names: AI-drafted' }).waitFor();
     expect(describes() === 1, `reload made describe calls: ${describes()}`);
 
-    // AC1: no AI (health says ai: false, as without the binding): deterministic, nothing asked.
+    // No AI (health says ai: false, as without the binding): deterministic, nothing asked.
     aiOn = false;
     held = Promise.resolve();
     await page.evaluate(() => localStorage.clear());

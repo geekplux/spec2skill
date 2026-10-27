@@ -1,4 +1,4 @@
-// CVD safety of the colours that sit side by side (docs/redesign/DESIGN.md 8.5): Machado 2009
+// CVD safety of the colours that sit side by side (docs/DESIGN.md 8.5): Machado 2009
 // simulation, minimum OKLab distance under protanopia, deuteranopia and tritanopia, both themes.
 import { describe, expect, it } from 'vitest';
 import { CVD_TYPES, type CvdType, cvdDistance, oklab, simulate } from './cvd';

@@ -1,5 +1,5 @@
 // POST /api/ai/describe {summary}: one batched Workers AI call that names clusters, describes them
-// and drafts the skill's summary and idea (PLAN 5.8, D23). Optional: without the AI binding, or when
+// and drafts the skill's summary and idea (D23). Optional: without the AI binding, or when
 // the model fails or answers anything the contract rejects, or today's AI budget is spent, it is 501 {fallback: true} and the app
 // keeps its deterministic text. Results are cached in KV by a key computed from the checked summary.
 import { type AiSummary, MAX_SUMMARY_BYTES, checkOutput, checkSummary, cacheKey } from '../src/ai/contract';

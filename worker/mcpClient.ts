@@ -1,4 +1,4 @@
-// MCP Streamable HTTP client that only lists tools (section 5.8): initialize ->
+// MCP Streamable HTTP client that only lists tools: initialize ->
 // notifications/initialized -> paginated tools/list -> best-effort DELETE. It can never send
 // tools/call (ALLOWED_METHODS). Written against an injected `fetch` with no Worker-only APIs, so the
 // CLI (phase 16) runs it from Node, passing its own `checkUrl` (no SSRF filter on the user's machine).

@@ -1,4 +1,4 @@
-// The examples/ gallery: the generated skill of every built-in sample (F16).
+// The examples/ gallery: the generated skill of every built-in sample.
 //   pnpm gallery          writes each skill with write-skill.mjs, runs its audit (which also writes the
 //                         examples' dry-run plan.json files) and tests, then replaces examples/ with the result
 //   pnpm gallery --check  does the same in a temp dir and exits 1 if anything differs from examples/

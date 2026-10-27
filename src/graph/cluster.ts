@@ -1,4 +1,4 @@
-// Resource clusters (PLAN 5.4 rule 1): first tag; else first literal path segment that is
+// Resource clusters (relationship rule 1 in docs/ARCHITECTURE.md): first tag; else first literal path segment that is
 // not a version; else the noun in the operation/tool name. Keys are singular, so `files`
 // and `file` merge.
 import type { ApiModel, Crud, Operation } from '../model/types';

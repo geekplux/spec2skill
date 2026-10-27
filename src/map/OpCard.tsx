@@ -1,8 +1,8 @@
-// The operation card (docs/redesign/DESIGN.md 5): method and path, title, then a definition list of
+// The operation card (docs/DESIGN.md 5): method and path, title, then a definition list of
 // inputs, output, links and the skill file. On hover or focus it previews (hidden from assistive
 // tech: the row's name carries the essentials, the pinned card the rest); click or Enter pins it,
 // which adds Close, the description, output fields, auth, links that move to the related operation
-// and a ready-to-paste example (it replaces the detail panel, D46). Spec strings are React text only (S3).
+// and a ready-to-paste example (it replaces the detail panel, D46). Spec strings are React text only.
 import { type CSSProperties, Fragment, type ReactNode, useEffect, useId, useRef } from 'react';
 import { checkIcon } from '../design/icons';
 import { Swap } from '../design/motion';

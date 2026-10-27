@@ -1,9 +1,9 @@
-// Final pre-deploy smoke (phase 21): the built app served by the real Worker under `wrangler dev`
+// Pre-deploy smoke: the built app served by the real Worker under `wrangler dev`
 // (local env, no Cloudflare login, no AI), checked over HTTP and in one headless Chrome:
 // /api/health, the SSRF guard, cache headers from public/_headers, the first view (skill pane ready,
 // "Audit passed" beside the map) and a downloaded sample zip. Everything started is stopped at the end.
 //
-//   pnpm build && flock /tmp/browser.lock pnpm smoke:worker
+//   pnpm build && pnpm smoke:worker
 //   env: SMOKE_PORT (default 8787), CHROME_PATH, CHROME_ARGS
 //   Screenshots: docs/screenshots/phase-21/worker-dev-landing.png, worker-dev-health.png.
 // Manual cleanup if the script is SIGKILLed: pkill -f "wrangler.js dev -c wrangler.local.jsonc"; pkill workerd

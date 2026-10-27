@@ -1,4 +1,4 @@
-// The map's key, in the tools row (docs/redesign/DESIGN.md 4): the three line styles drawn at rest.
+// The map's key, in the tools row (docs/DESIGN.md 4): the three line styles drawn at rest.
 // Line style tells them apart, never colour alone: solid, dashed, and the thicker workflow line.
 /** `workflow`: the map draws a strongest workflow (no entry for a line that is not there). */
 export function Legend({ workflow }: { workflow: boolean }) {

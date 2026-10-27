@@ -2,7 +2,7 @@
 // fetch, then the /api/fetch-spec proxy; MCP via /api/mcp/tools, and any URL that is not a spec tried as
 // an MCP server), paste text, open a file, drop a file; loading steps with Cancel; every error state with
 // its two recovery actions; ?url= and back; Generate with an empty field; the empty spec, warnings and a
-// 1000-operation paste; the hero's focus order against its visual order (AC9). Offline: the fake hosts
+// 1000-operation paste; the hero's focus order against its visual order. Offline: the fake hosts
 // and /api/* are fulfilled here by page.route from fixtures, so nothing leaves the machine.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -142,7 +142,7 @@ export default {
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
     await openSample();
 
-    // AC9: the hero's focus order equals its visual order at 1440, 1024 and 390: the field, Open file,
+    // The hero's focus order equals its visual order at 1440, 1024 and 390: the field, Open file,
     // Generate, then the samples (one Tab stop; arrows move inside it).
     const heroOrder = async (label) => {
       await page.locator('#source-field').focus();
@@ -191,7 +191,7 @@ export default {
     await page.keyboard.press('Escape');
     await help.waitFor({ state: 'hidden' });
 
-    // F3: OpenAPI 3.1 YAML (direct), 3.0 JSON (direct), Swagger 2 JSON (proxy), MCP (proxy only).
+    // OpenAPI 3.1 YAML (direct), 3.0 JSON (direct), Swagger 2 JSON (proxy), MCP (proxy only).
     await loadOk(`${HOST}/tasks.yaml`, 'Tasks API', 'tasks.yaml');
     expect(new URL(page.url()).searchParams.get('url') === `${HOST}/tasks.yaml`, `?url= written: ${page.url()}`);
     expect(api.length === 0, `direct fetch used the proxy: ${api}`);
@@ -210,7 +210,7 @@ export default {
     expect(!api.some((a) => a.startsWith('/api/fetch-spec https://tools')), 'MCP URL never fetched as a spec');
     await screenshot('skill-from-mcp');
 
-    // AC5: ?url= opens straight to that skill and map; back returns to the sample before it.
+    // ?url= opens straight to that skill and map; back returns to the sample before it.
     await openSample('petstore');
     await page.goto(`${origin}/?url=${encodeURIComponent(`${HOST}/tasks.yaml`)}`);
     await title.filter({ hasText: /^Tasks API$/ }).waitFor();
@@ -218,7 +218,7 @@ export default {
     await page.goBack();
     await title.filter({ hasText: /^Swagger Petstore$/ }).waitFor();
 
-    // AC4: loading steps announced, Cancel aborts the request and restores the previous skill and map.
+    // Loading steps announced, Cancel aborts the request and restores the previous skill and map.
     await openSample('tasks');
     const aborted = page.waitForEvent('requestfailed', (r) => r.url() === `${HOST}/hang.yaml`);
     await submit(`${HOST}/hang.yaml`);
@@ -244,7 +244,7 @@ export default {
     expect(await page.evaluate(() => document.activeElement?.id === 'source-field'), 'Cancel returns focus to the field');
     await page.getByTestId('announcer').filter({ hasText: 'Cancelled.' }).waitFor();
 
-    // AC3: every error state, with its title; focus on the title; both recovery actions.
+    // Every error state, with its title; focus on the title; both recovery actions.
     const errors = [
       ['ftp://specs.example.test/x', 'invalid-url', 'not a web address'],
       ['http://10.0.0.8/openapi.json', 'blocked-host', 'can only fetch public URLs', 'error-blocked-host'],
@@ -312,7 +312,7 @@ export default {
     await ready();
     await auditPassed('empty Generate');
 
-    // AC2: pasted text and opened files give the built-in sample's skill, with no /api request.
+    // Pasted text and opened files give the built-in sample's skill, with no /api request.
     const tmp = mkdtempSync(join(tmpdir(), 'spec2skill-p15-'));
     try {
       for (const [id, file, heading] of [['tasks', 'tasks-openapi31.yaml', 'Tasks API'], ['petstore', 'petstore-swagger2.json', 'Swagger Petstore'], ['filesystem', 'mcp-filesystem.tools-list.json', 'MCP server']]) {
@@ -347,7 +347,7 @@ export default {
         else expect(gotPaste === want && gotFile === want && gotDrop === want, `${id}: pasted/opened/dropped zip differs from the sample's`);
       }
 
-      // The empty spec, a spec with warnings, and the 1000-operation paste (P4).
+      // The empty spec, a spec with warnings, and the 1000-operation paste.
       await submit(EMPTY);
       await page.getByTestId('empty-chart').waitFor();
       await page.getByTestId('announcer').filter({ hasText: 'Quiet API: no operations. This spec has no paths, so there is no skill to write.' }).waitFor();

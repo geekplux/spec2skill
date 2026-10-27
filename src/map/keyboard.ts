@@ -1,4 +1,4 @@
-// Keyboard navigation for the route map (PLAN phase 7, A1/A2; redesign R4). Pure: given the route
+// Keyboard navigation for the route map. Pure: given the route
 // layout's rows, the focused row and a key, what should happen; plus the words screen readers hear.
 import type { Edge } from '../graph';
 import { counted } from '../graph/words';
@@ -166,7 +166,7 @@ export function mapName(title: string, noun: string, operations: number, cluster
 const READS = new Set(['GET', 'HEAD', 'OPTIONS', 'read']);
 
 /**
- * A2 row name: "GET getTask, /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 13 relationships"
+ * Row name: "GET getTask, /tasks/{taskId}, Get a task, workflow step 3, cluster Tasks, 13 relationships"
  * (full, never truncated). It starts with the row's visible text, method and id (WCAG 2.5.3 label in
  * name), then the path. Destructive rows say so in words (D41); other writes "changes data".
  */

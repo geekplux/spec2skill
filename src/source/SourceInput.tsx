@@ -1,4 +1,4 @@
-// The hero's source field (docs/redesign/DESIGN.md 4.2): paste a URL or spec text, open or drop a file,
+// The hero's source field (docs/DESIGN.md 4.2): paste a URL or spec text, open or drop a file,
 // and Generate. The kind of source is detected (src/source/fetchSource.ts); there is no selector.
 // Enter submits, Shift+Enter adds a line. Generate with an empty field writes the current skill again.
 import { type DragEvent, type FormEvent, type KeyboardEvent, type RefObject, useRef, useState } from 'react';

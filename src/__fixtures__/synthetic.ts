@@ -1,4 +1,4 @@
-// A synthetic OpenAPI 3.1 spec for the large-spec checks (P4): `resources` x 25 operations
+// A synthetic OpenAPI 3.1 spec for the large-spec checks: `resources` x 25 operations
 // (40 resources = 1000 operations). Each resource points at the previous one and at r0 (a hub),
 // so feeds, sub-path and shared-schema edges all occur at scale. Test-only: never imported by the app.
 const ok = (ref: string) => ({ '200': { description: 'ok', content: { 'application/json': { schema: { $ref: `#/components/schemas/${ref}` } } } } });

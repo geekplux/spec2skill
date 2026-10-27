@@ -1,4 +1,4 @@
-// Redesign R4 (docs/redesign/PLAN.md): the route map of DESIGN.md section 5 inside the result frame.
+// Redesign R4: the route map of DESIGN.md section 5 inside the result frame.
 // Checks the drawing (cards, rows, links, the workflow and its draw order), the tools row (Map | List,
 // search with `/`, the legend) and that the old controls are gone; hover on getTask (related links,
 // fades, the operation card beside the row, flipped at the right edge); the pinned card (click or
@@ -6,7 +6,7 @@
 // announced count, q=); "N more" (filesystem); the sideways scroll region inside the frame, tight to
 // what it draws, with a vertical wheel scrolling the page; every hover link of every sample inside the
 // frame's ring; each sample at 1280x800 and 1440x900 loading at the top with its map inside the frame;
-// and, moved from the retired phase-6-map flow, data-ready within 1500 ms (P3), sample switching
+// and, moved from the retired phase-6-map flow, data-ready within 1500 ms, sample switching
 // online and offline, Map | List, no page scroll at 390 and 200 %, CVD shots, and DESIGN.md section 8
 // checks 1-4 on the keyboard-focused row and the search (rest, hover, pinned, phone and reduced motion
 // run in redesign-acceptance since R7). Saves viewport WebP shots in docs/screenshots/redesign-r4/.
@@ -166,7 +166,7 @@ export default {
   name: 'redesign-r4',
   phase: 21,
   async run({ page, context, origin, viewports, axe, cvd, screenshot, outDir, capture }) {
-    // Committed shots only with --capture redesign-r4; otherwise into this run's folder.
+    // Reference shots only with --capture redesign-r4; otherwise into this run's folder.
     const dir = capture ? OUT : outDir;
     const problems = [];
     const checks = async (label, theme, list = ['type', 'colour', 'lines', 'dot']) => {
@@ -178,7 +178,7 @@ export default {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
 
-    // P3 + F1: `/` shows the Tasks map, ready within 1500 ms of navigation start (from phase-6-map).
+    // `/` shows the Tasks map, ready within 1500 ms of navigation start (from phase-6-map).
     await page.goto(`${origin}/`, { waitUntil: 'commit' });
     const readyAt = await page.waitForFunction(() => document.querySelector('[data-testid="atlas"]')?.dataset.ready === 'true' && performance.now(), null, { polling: 'raf' });
     const ms = await readyAt.jsonValue();

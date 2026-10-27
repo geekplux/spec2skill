@@ -18,7 +18,7 @@ interface LayoutProps {
   onShortcuts: () => void;
 }
 
-/** The page shell (docs/redesign/DESIGN.md 4): header, hero, the result frame, the sections and the footer. */
+/** The page shell (docs/DESIGN.md 4): header, hero, the result frame, the sections and the footer. */
 export function Layout({ source, samples, children, status, busy, onShortcuts }: LayoutProps) {
   return (
     <div className="shell">

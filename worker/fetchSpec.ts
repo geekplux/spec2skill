@@ -1,4 +1,4 @@
-// POST /api/fetch-spec: fetches a validated public spec URL for the browser (section 5.8). The
+// POST /api/fetch-spec: fetches a validated public spec URL for the browser. The
 // upstream request is built from scratch, so no client header, cookie or credential is forwarded.
 // The body goes back as text/plain (never the upstream type), so nothing renders on our origin.
 import { ProxyError, SAFE_HEADERS, clean } from './errors';

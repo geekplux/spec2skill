@@ -1,4 +1,4 @@
-// generateSkill: the anatomy-grade agent skill for one API (PLAN 5.7), as a sorted FileTree.
+// generateSkill: the anatomy-grade agent skill for one API, as a sorted FileTree.
 // Pure and deterministic for the same model, graph and options; imports nothing from React or the DOM.
 import pkg from '../../package.json';
 import type { AtlasGraph } from '../graph/types';

@@ -17,7 +17,7 @@ const render = (props: Partial<Parameters<typeof SkillBrowser>[0]> = {}) =>
   })).replaceAll('<wbr/>', ''); // file names wrap at word boundaries (src/design/breaks.tsx)
 
 describe('SkillBrowser', () => {
-  it('previews the selected file as literal text with generated line numbers, never markup (S3)', () => {
+  it('previews the selected file as literal text with generated line numbers, never markup', () => {
     const html = render();
     expect(html).toContain('<h3 id="file-head"><span class="fname">SKILL.md</span><span class="visually-hidden">, </span><span class="lines">5 lines</span></h3>');
     expect(html).toContain('<div id="skill-preview" class="code" tabindex="0" role="region" aria-labelledby="file-head">');

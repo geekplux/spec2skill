@@ -1,6 +1,6 @@
-// The skill browser (docs/redesign/DESIGN.md 4.3, redesign R5): under a rule in the result frame, on
+// The skill browser (docs/DESIGN.md 4.3, redesign R5): under a rule in the result frame, on
 // the grid's 202 / 492 / 202 columns. Files (the skill's tree, "Edit name and licence"), the open
-// file as plain text with line numbers (never rendered as HTML: spec text is data, S3), and the
+// file as plain text with line numbers (never rendered as HTML: spec text is data), and the
 // in-browser audit, always open. Between 640 and 1136 px: files and preview over the audit; on phones
 // one column of 44 px file rows, each opening a full-width preview, then the audit as one row that
 // expands its checks (V2Phone).

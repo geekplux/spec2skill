@@ -1,6 +1,6 @@
-// Phase 11: the skill pane leads the first view beside the map (D21). Ready times (P3), sample
+// Phase 11: the skill pane leads the first view beside the map (D21). Ready times, sample
 // switching, tree keyboard model, "In skill" from the operation card (the detail panel until R4), Generate (an empty field), the zip
-// download (unzipped and audited in Node, identical bytes when regenerated offline, O1), mobile tabs.
+// download (unzipped and audited in Node, identical bytes when regenerated offline), mobile tabs.
 // Since R5 the skill browser (files, preview, audit) sits under the map in one scroll at every width:
 // Download .zip is in the frame head, and phones have no Skill tab (the browser follows the list).
 import { execFileSync, execSync } from 'node:child_process';
@@ -55,7 +55,7 @@ export default {
   async run({ page, context, origin, viewports, screenshot, axe, cvd }) {
     const dir = mkdtempSync(join(tmpdir(), 'spec2skill-download-'));
     try {
-      // 1. The first view: skill pane and map side by side, both ready fast (AC1, AC6).
+      // 1. The first view: skill pane and map side by side, both ready fast.
       await page.setViewportSize(viewports.desktop);
       await page.emulateMedia({ colorScheme: 'light' });
       await page.goto(origin);
@@ -96,7 +96,7 @@ export default {
         await cvd(null);
       }
 
-      // 2. Each sample (the hero's Samples control since R2) updates the skill and the map (AC2).
+      // 2. Each sample (the hero's Samples control since R2) updates the skill and the map.
       for (const [id, slug] of [['petstore', 'petstore-api'], ['filesystem', 'filesystem-mcp'], ['tasks', 'tasks-api']]) {
         await page.locator(`[data-sample="${id}"]`).click();
         await page.getByRole('heading', { level: 3, name: `${slug}/ skill` }).waitFor();
@@ -137,7 +137,7 @@ export default {
       await page.getByTestId('announcer').filter({ hasText: /Skill written: audit passed, (\d+) of \1 checks\./ }).waitFor();
       expect((await focused(page)) === 'skill-title', `Generate skill focused ${await focused(page)}`);
 
-      // 6. Download, unzip, audit; then again offline, byte for byte (AC3, AC4).
+      // 6. Download, unzip, audit; then again offline, byte for byte.
       const first = await downloadAndAudit(page, 'tasks-api', dir);
       await screenshot('download-done');
       const icon = await (await page.request.get(`${origin}/favicon.svg`)).body();
@@ -165,8 +165,8 @@ export default {
       await screenshot('first-view-dark');
       await page.emulateMedia({ colorScheme: 'light' });
 
-      // 8. Mobile (R5): one scroll, no Skill tab; Map | List with List first, then the skill browser
-      // (AC1, AC7, A9); Generate focuses the files heading in place.
+      // 8. Mobile (R5): one scroll, no Skill tab; Map | List with List first, then the skill browser;
+      // Generate focuses the files heading in place.
       await page.setViewportSize(viewports.mobile);
       await page.goto(origin);
       await paneReady(page);

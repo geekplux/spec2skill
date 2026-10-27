@@ -1,4 +1,4 @@
-// WCAG AA over the Radix tokens the UI draws (docs/redesign/DESIGN.md 8.5), both themes.
+// WCAG AA over the Radix tokens the UI draws (docs/DESIGN.md 8.5), both themes.
 import { describe, expect, it } from 'vitest';
 import appCss from '../app.css?raw';
 import { blend, contrastRatio, luminance } from './contrast';

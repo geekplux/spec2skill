@@ -1,4 +1,4 @@
-// Shapes of the skill generator (PLAN 5.7). Pure data: no React, no DOM.
+// Shapes of the skill generator. Pure data: no React, no DOM.
 import type { AtlasGraph } from '../graph/types';
 import type { ApiModel } from '../model/types';
 

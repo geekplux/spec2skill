@@ -133,8 +133,6 @@ Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) to set up and 
 
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains how the code fits together: the modules, the relationship rules and the decisions behind them.
 
-This repository is also developed by a Claude Code main agent acting as product manager and delegating to specialist sub-agents (`.claude/agents/`); [docs/PLAN.md](docs/PLAN.md) is the plan and [docs/STATUS.md](docs/STATUS.md) the live progress.
-
 ## Licence
 
 [MIT](LICENSE) © spec2skill contributors. The built-in samples keep their own licences, listed in [samples/README.md](samples/README.md).
