@@ -95,7 +95,7 @@ Replace `<worker>` with `spec2skill.geekplux.com`.
 3. Open `https://<worker>/`: the Tasks API sample's route map, with the skill browser under it showing **Audit passed**. Switch to the Petstore and Filesystem samples.
 4. Click **Download .zip**, unzip it and run `node scripts/audit.mjs .` inside the skill folder: it ends with `audit passed`.
 5. Paste a public spec URL, for example `https://petstore3.swagger.io/api/v3/openapi.json`, and press **Generate**: the map and skill appear; with AI enabled the names are credited "AI-drafted" after a moment.
-6. Open `https://<worker>/?sample=petstore` directly: the Petstore sample opens (shareable URL state), and an unknown path such as `https://<worker>/nope` still serves the app (single-page fallback).
+6. Open `https://<worker>/?sample=petstore` directly: the Petstore sample opens (shareable URL state), and an unknown path such as `https://<worker>/nope` answers 404 with the page titled "spec2skill: page not found" (`not_found_handling: "404-page"`; the build writes `dist/404.html`).
 
 ## 7. Rollback
 

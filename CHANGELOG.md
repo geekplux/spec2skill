@@ -6,6 +6,10 @@ All notable changes to spec2skill are listed here. The format follows [Keep a Ch
 
 The first release. Development started under an earlier working name; the project was renamed to spec2skill (repository, package, wordmark and generated skills) while 0.1.0 was being built.
 
+### Fixed
+
+- An unknown path answers 404 with the page "spec2skill: page not found" (noindex) instead of the home page with 200, and the home page names its canonical URL.
+
 ### Added
 
 - Page-view counts on spec2skill.geekplux.com with Google Analytics: the path only, never a spec or MCP URL. Self-hosted copies load no analytics.

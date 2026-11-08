@@ -1,6 +1,6 @@
 // Pre-deploy smoke: the built app served by the real Worker under `wrangler dev`
 // (local env, no Cloudflare login, no AI), checked over HTTP and in one headless Chrome:
-// /api/health, the SSRF guard, cache headers from public/_headers, the first view (skill pane ready,
+// /api/health, the SSRF guard, cache headers from public/_headers, the 404 page at an unknown path, the first view (skill pane ready,
 // "Audit passed" beside the map) and a downloaded sample zip. Everything started is stopped at the end.
 //
 //   pnpm build && pnpm smoke:worker
@@ -40,9 +40,13 @@ async function httpChecks() {
   expect(cached.includes('immutable'), `/${asset} Cache-Control: ${cached}`);
   console.log(`  GET / -> Cache-Control: ${shell.headers.get('cache-control')}; /${asset} -> ${cached}`);
 
-  const deepLink = await fetch(`${ORIGIN}/some/client/route`);
-  expect(deepLink.ok && (await deepLink.text()).includes('<div id="root">'), `SPA fallback: ${deepLink.status}`);
-  console.log('  GET /some/client/route -> app shell (SPA fallback)');
+  // One route, `/`: any other path is dist/404.html at status 404 (its own title, noindex), not the home page.
+  const missing = await fetch(`${ORIGIN}/some/client/route`);
+  const missingHtml = await missing.text();
+  const missingTitle = /<title>([^<]*)<\/title>/.exec(missingHtml)?.[1];
+  expect(missing.status === 404 && missingHtml.includes('<div id="root">'), `/some/client/route: ${missing.status}, expected the 404 page`);
+  expect(missingTitle === 'spec2skill: page not found' && missingHtml.includes('content="noindex"'), `404 page title: ${missingTitle}`);
+  console.log(`  GET /some/client/route -> ${missing.status} "${missingTitle}" (noindex)`);
 }
 
 async function browserChecks() {
