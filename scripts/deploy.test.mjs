@@ -13,11 +13,11 @@ const wrangler = jsonc('wrangler.jsonc');
 const local = jsonc('wrangler.local.jsonc');
 
 describe('wrangler.jsonc', () => {
-  it('is one Worker with static assets, /api/* routed to the Worker first', () => {
+  it('is one Worker with static assets, /api/* routed to the Worker first, unknown paths a 404 page', () => {
     expect(wrangler).toMatchObject({
       name: 'spec2skill',
       main: 'worker/index.ts',
-      assets: { directory: './dist', binding: 'ASSETS', not_found_handling: 'single-page-application', run_worker_first: ['/api/*'] },
+      assets: { directory: './dist', binding: 'ASSETS', not_found_handling: '404-page', run_worker_first: ['/api/*'] },
     });
     expect(wrangler.compatibility_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
